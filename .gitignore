@@ -1,0 +1,52 @@
+# Compiled files
+*.o
+*.obj
+*.exe
+*.out
+*.dll
+*.so
+*.dylib
+cmake-build-debug-built-in-clang/
+cmake-build-debug/
+3rdparty/cpm_cmake
+
+# CMake files
+CMakeFiles/
+CMakeCache.txt
+CMakeScripts/
+Makefile
+cmake_install.cmake
+compile_commands.json
+
+# Generated files
+bin/
+lib/
+build/
+
+# IDE-specific files
+.vscode/
+.idea/
+*.suo
+*.user
+*.sdf
+*.opensdf
+
+# OS-specific files
+Thumbs.db
+.DS_Store
+ehthumbs.db
+Icon?
+._*
+
+# Temporary files
+*.log
+*.swp
+*.swo
+*.tmp
+
+# Other generated files
+tags
+TAGS
+*.backup
+*.bak
+*.orig

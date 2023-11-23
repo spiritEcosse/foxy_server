@@ -1,0 +1,4 @@
+[submodule "3rdparty/cpm_cmake"]
+	path = 3rdparty/cpm_cmake
+	url = https://github.com/cpm-cmake/CPM.cmake
+	tag = v0.38.6
