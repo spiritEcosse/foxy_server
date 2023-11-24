@@ -13,4 +13,25 @@ CPMAddPackage(
         GIT_TAG v1.9.0
 )
 
+# start https://github.com/an-tao/trantor/issues/296
+set(EMPTY_STRING "")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(EMPTY_STRING "''")
+endif()
+
+execute_process(COMMAND bash -c "sed -i ${EMPTY_STRING} '396s/.*(bool)logger;//' ${PROJECT_BINARY_DIR}/_deps/drogon-src/trantor/trantor/utils/Logger.cc"
+        RESULT_VARIABLE FIX_WARNINGS)
+
+if (NOT FIX_WARNINGS EQUAL "0")
+    message(FATAL_ERROR "sed ,removing line 396, failed with : ${FIX_WARNINGS}, please check")
+endif()
+
+execute_process(COMMAND bash -c "sed -i ${EMPTY_STRING} '387s/void Logger::enableSpdLog(int index, std::shared_ptr<spdlog::logger> logger)/void Logger::enableSpdLog(int index, [[maybe_unused]] std::shared_ptr<spdlog::logger> logger)/' ${PROJECT_BINARY_DIR}/_deps/drogon-src/trantor/trantor/utils/Logger.cc"
+        RESULT_VARIABLE FIX_WARNINGS)
+
+if (NOT FIX_WARNINGS EQUAL "0")
+    message(FATAL_ERROR "sed, changing 387 line, failed with : ${FIX_WARNINGS}, please check")
+endif()
+# end https://github.com/an-tao/trantor/issues/296
+
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon)

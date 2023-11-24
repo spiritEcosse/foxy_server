@@ -8,7 +8,6 @@
 *.dylib
 cmake-build-debug-built-in-clang/
 cmake-build-debug/
-3rdparty/cpm_cmake
 
 # CMake files
 CMakeFiles/
