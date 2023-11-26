@@ -48,7 +48,7 @@ int main()
     if (!getenv("FOXY_HTTP_PORT", http_port)){
         throw std::invalid_argument("FOXY_HTTP_PORT is not set");
     }
-    std::string host = env == "prod" ? "0.0.0.0" : "127.0.0.1";
+    std::string host = env == "env" ? "127.0.0.1" : "0.0.0.0";
     app().addListener(host, static_cast<uint16_t>(std::stoi(http_port))).run();
     std::cout << "server started" << std::endl;
 }
