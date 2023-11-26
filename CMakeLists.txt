@@ -1,6 +1,27 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.22)
 project(foxy_server)
 
+set(BUILD_EXAMPLES OFF)
+set(BUILD_CTL OFF)
+set(BUILD_TESTING OFF)
+
+get_cmake_property(_variableNames VARIABLES)
+list(SORT _variableNames)
+foreach(_variableName ${_variableNames})
+    message(STATUS "${_variableName}=${${_variableName}}")
+endforeach()
+
+execute_process(COMMAND bash -c "cp -f config.json ${PROJECT_BINARY_DIR}"
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        RESULT_VARIABLE COPY_CONFIG)
+
+if (NOT COPY_CONFIG EQUAL "0")
+    message(FATAL_ERROR "cp config.json failed with : ${COPY_CONFIG}, please check")
+endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    link_directories(/usr/lib/x86_64-linux-gnu/)
+endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty")
 include(3rdparty)
