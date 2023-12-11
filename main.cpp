@@ -37,7 +37,8 @@ int main()
                               json["result"]="ok";
                               json["message"]=std::string("hello,")+name;
                               auto resp=HttpResponse::newHttpJsonResponse(json);
-                              callback(resp);
+                              auto callbackPtr = std::make_shared<std::function<void(const HttpResponsePtr &)>>(std::move(callback));
+                              (*callbackPtr)(resp);
                           });
     app().registerPostHandlingAdvice(
         [foxy_client]([[maybe_unused]] const drogon::HttpRequestPtr &req, const drogon::HttpResponsePtr &resp) {
@@ -48,7 +49,7 @@ int main()
     if (!getenv("FOXY_HTTP_PORT", http_port)){
         throw std::invalid_argument("FOXY_HTTP_PORT is not set");
     }
-    std::string host = env == "env" ? "127.0.0.1" : "0.0.0.0";
+    std::string host = env == "dev" ? "127.0.0.1" : "0.0.0.0";
     app().addListener(host, static_cast<uint16_t>(std::stoi(http_port))).run();
     std::cout << "server started" << std::endl;
 }

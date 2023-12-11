@@ -25,7 +25,7 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty")
 include(3rdparty)
-add_executable(foxy_server main.cpp gallery_ItemController.h gallery_ItemController.cc gallery_ItemController.cc gallery_PageController.h gallery_PageController.cc Page.h Image.cc Image.h Item.cc Item.h Page.cc)
+add_executable(foxy_server main.cpp gallery_ItemController.h gallery_ItemController.cc gallery_ItemController.cc gallery_PageController.h gallery_PageController.cc)
 set(CMAKE_SYSTEM_PROCESSOR arm)
 CPMAddPackage(
         NAME drogon

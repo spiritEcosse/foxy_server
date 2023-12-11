@@ -18,24 +18,26 @@ $$ LANGUAGE PLPGSQL;
 
 
 create table IF NOT EXISTS item (
-                                    id serial primary key,
+                                    item_id serial primary key,
                                     title varchar(255) NOT NULL,
                                     meta_description TEXT NOT NULL,
                                     description TEXT NOT NULL
     );
 
-create table IF NOT EXISTS image (
-                                     id serial primary key,
-                                     original varchar(255) NOT NULL,
+create table IF NOT EXISTS media (
+                                     media_id serial primary key,
+                                     src varchar(255) NOT NULL,
     item_id integer NOT NULL,
+    thumb varchar(255),
+    sort integer DEFAULT 1,
     CONSTRAINT fk_item
     FOREIGN KEY(item_id)
-    REFERENCES item(id)
+    REFERENCES item(item_id)
     ON DELETE CASCADE
     );
 
 create table if not EXISTS page (
-                                    id serial primary key,
+                                    page_id serial primary key,
                                     title varchar(255) NOT NULL,
                                     meta_description TEXT NOT NULL,
                                     description TEXT NOT NULL,
