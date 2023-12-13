@@ -23,10 +23,18 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     link_directories(/usr/lib/x86_64-linux-gnu/)
 endif()
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty" "${CMAKE_BINARY_DIR}/_deps/cmake-scripts-src/")
 include(3rdparty)
-add_executable(foxy_server main.cpp gallery_ItemController.h gallery_ItemController.cc gallery_ItemController.cc gallery_PageController.h gallery_PageController.cc)
-set(CMAKE_SYSTEM_PROCESSOR arm)
+
+# start src
+file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/src/*.cc ${PROJECT_SOURCE_DIR}/src/*.cpp
+        ${PROJECT_SOURCE_DIR}/src/*.h)
+add_executable(foxy_server ${RESOURCES})
+# end src
+
+set(CMAKE_SYSTEM_PROCESSOR arm) # why this?
+
+# start drogon
 CPMAddPackage(
         NAME drogon
         VERSION 1.9.0
@@ -56,3 +64,27 @@ endif()
 # end https://github.com/an-tao/trantor/issues/296
 
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
+# end drogon
+
+
+# Start Formatting
+CPMAddPackage(
+        NAME cmake-scripts
+        VERSION 23.09
+        GITHUB_REPOSITORY StableCoder/cmake-scripts
+        GIT_TAG 23.09
+)
+include(formatting)
+
+file(GLOB_RECURSE ALL_CODE_FILES ${PROJECT_SOURCE_DIR}/src/*.cc ${PROJECT_SOURCE_DIR}/src/*.cpp
+        ${PROJECT_SOURCE_DIR}/src/*.h ${PROJECT_SOURCE_DIR}/tests/*.cc
+        ${PROJECT_SOURCE_DIR}/tests/*.h)
+
+clang_format(format ${ALL_CODE_FILES})
+
+file(GLOB_RECURSE CMAKE_FILES ${PROJECT_SOURCE_DIR}/src/CMakeLists.txt
+        ${PROJECT_SOURCE_DIR}/tests/CMakeLists.txt)
+
+cmake_format(cmake-format ${CMAKE_FILES} CMakeLists.txt)
+
+# End Formatting

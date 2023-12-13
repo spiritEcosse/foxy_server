@@ -1,43 +1,42 @@
-#include <drogon/drogon.h>
+#include "drogon/drogon.h"
 
 using namespace drogon;
 
-bool getenv(const char *name, std::string &env)
-{
+bool getenv(const char *name, std::string &env) {
     const char *ret = getenv(name);
-    if (ret) env = std::string(ret);
+    if(ret)
+        env = std::string(ret);
     return ret != nullptr;
 }
 
-int main()
-{
+int main() {
     std::string config_app_path;
-    if (!getenv("CONFIG_APP_PATH", config_app_path)){
+    if(!getenv("CONFIG_APP_PATH", config_app_path)) {
         throw std::invalid_argument("CONFIG_APP_PATH is not set");
     }
 
     std::string env;
 
-    if (!getenv("ENV", env)){
+    if(!getenv("ENV", env)) {
         throw std::invalid_argument("ENV is not set");
     }
     std::string foxy_client;
 
-    if (!getenv("FOXY_CLIENT", foxy_client)){
+    if(!getenv("FOXY_CLIENT", foxy_client)) {
         throw std::invalid_argument("FOXY_CLIENT is not set");
     }
 
     drogon::app().loadConfigFile(config_app_path);
     app().registerHandler("/test?username={name}",
-                          []([[maybe_unused]] const HttpRequestPtr& req,
-                             std::function<void (const HttpResponsePtr &)> &&callback,
-                             const std::string &name)
-                          {
+                          []([[maybe_unused]] const HttpRequestPtr &req,
+                             std::function<void(const HttpResponsePtr &)> &&callback,
+                             const std::string &name) {
                               Json::Value json;
-                              json["result"]="ok";
-                              json["message"]=std::string("hello,")+name;
-                              auto resp=HttpResponse::newHttpJsonResponse(json);
-                              auto callbackPtr = std::make_shared<std::function<void(const HttpResponsePtr &)>>(std::move(callback));
+                              json["result"] = "ok";
+                              json["message"] = std::string("hello,") + name;
+                              auto resp = HttpResponse::newHttpJsonResponse(json);
+                              auto callbackPtr =
+                                  std::make_shared<std::function<void(const HttpResponsePtr &)>>(std::move(callback));
                               (*callbackPtr)(resp);
                           });
     app().registerPostHandlingAdvice(
@@ -46,7 +45,7 @@ int main()
         });
     app().setThreadNum(std::thread::hardware_concurrency() + 2);
     std::string http_port;
-    if (!getenv("FOXY_HTTP_PORT", http_port)){
+    if(!getenv("FOXY_HTTP_PORT", http_port)) {
         throw std::invalid_argument("FOXY_HTTP_PORT is not set");
     }
     std::string host = env == "dev" ? "127.0.0.1" : "0.0.0.0";
