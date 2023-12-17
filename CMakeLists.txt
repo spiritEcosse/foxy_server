@@ -88,3 +88,17 @@ file(GLOB_RECURSE CMAKE_FILES ${PROJECT_SOURCE_DIR}/src/CMakeLists.txt
 cmake_format(cmake-format ${CMAKE_FILES} CMakeLists.txt)
 
 # End Formatting
+
+if(BUILD_TESTING)
+    enable_testing()
+
+    if(CODE_COVERAGE)
+        list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+        include(CodeCoverage)
+        add_code_coverage_all_targets(EXCLUDE "3rdparty/*" "tests/*")
+
+        set(CMAKE_CXX_FLAGS
+                "${CMAKE_CXX_FLAGS} -g -O0 -fprofile-arcs -ftest-coverage")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0 -fprofile-arcs -ftest-coverage")
+    endif()
+endif()
