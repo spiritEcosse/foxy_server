@@ -1,4 +1,5 @@
 #include "drogon/drogon.h"
+#include <sentry.h>
 
 using namespace drogon;
 
@@ -10,6 +11,21 @@ bool getenv(const char *name, std::string &env) {
 }
 
 int main() {
+    std::string sentry_dsn;
+    if(!getenv("SENTRY_DSN", sentry_dsn)) {
+        throw std::invalid_argument("SENTRY_DSN is not set");
+    }
+
+    sentry_options_t *options = sentry_options_new();
+    sentry_options_set_dsn(options, sentry_dsn.c_str());
+    // This is also the default-path. For further information and recommendations:
+    // https://docs.sentry.io/platforms/native/configuration/options/#database-path
+    sentry_options_set_database_path(options, ".sentry-native");
+    sentry_options_set_handler_path(options, "/Users/ihor/projects/foxy_server/cmake-build-debug/_deps/sentry-build/crashpad_build/handler/crashpad_handler");
+    sentry_options_set_release(options, "faithfishart-server@0.0.1");
+    sentry_options_set_debug(options, 1);
+    sentry_init(options);
+
     std::string config_app_path;
     if(!getenv("CONFIG_APP_PATH", config_app_path)) {
         throw std::invalid_argument("CONFIG_APP_PATH is not set");
@@ -51,4 +67,5 @@ int main() {
     std::string host = env == "dev" ? "127.0.0.1" : "0.0.0.0";
     app().addListener(host, static_cast<uint16_t>(std::stoi(http_port))).run();
     std::cout << "server started" << std::endl;
+    sentry_close();
 }
