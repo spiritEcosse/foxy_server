@@ -27,9 +27,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty" "${CMAKE_BI
 include(3rdparty)
 
 # start src
-file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/src/*.cc ${PROJECT_SOURCE_DIR}/src/*.cpp
-        ${PROJECT_SOURCE_DIR}/src/*.h)
+file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS src/*.cc src/*.cpp /src/*.h)
 add_executable(foxy_server ${RESOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 # end src
 
 set(CMAKE_SYSTEM_PROCESSOR arm) # why this?
@@ -66,6 +66,15 @@ endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
 # end drogon
 
+# Start adding jwt-cpp
+CPMAddPackage(
+        NAME jwt-cpp
+        VERSION 0.7.0
+        GITHUB_REPOSITORY Thalhammer/jwt-cpp
+        GIT_TAG v0.7.0
+)
+target_link_libraries(${PROJECT_NAME} PRIVATE jwt-cpp)
+# End adding jwt-cpp
 
 # Start Formatting
 CPMAddPackage(
