@@ -66,6 +66,20 @@ endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
 # end drogon
 
+# start sentry
+set(SENTRY_BACKEND crashpad)
+
+CPMAddPackage(
+        NAME sentry
+        VERSION 0.7.0
+        GITHUB_REPOSITORY getsentry/sentry-native
+        GIT_TAG 0.7.0
+        OPTIONS "SENTRY_BACKEND=${SENTRY_BACKEND}"
+)
+target_link_libraries(${PROJECT_NAME} PRIVATE sentry)
+
+# end sentry
+
 
 # Start Formatting
 CPMAddPackage(
