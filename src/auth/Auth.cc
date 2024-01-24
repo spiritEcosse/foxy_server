@@ -1,39 +1,90 @@
 #include "Auth.h"
+#include <drogon/drogon.h>
+#include "src/models/UserModel.h"
+#include <src/utils/jwt/JWT.h>
 
 using namespace api::v1;
+using namespace drogon::orm;
+using namespace api::utils::jwt;
 
-void Auth::getToken(const HttpRequestPtr &request, std::function<void(const HttpResponsePtr &)> &&callback) {
+void Auth::getToken(const drogon::HttpRequestPtr &request,
+                    std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
+    auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
     Json::Value responseJson = *request->getJsonObject();
-    Json::Value resultJson;
 
-    // Verify if there's a missing values on body of request
-    if(!responseJson.isMember("email") || !responseJson.isMember("password")) {
-        resultJson["error"] = "Missing email or password.";
-        resultJson["status"] = 0;
+    std::string email = responseJson[UserModel::Field::email].asString();
+    std::string password = responseJson[UserModel::Field::password].asString();
 
-        auto res = HttpResponse::newHttpJsonResponse(resultJson);
-        res->setStatusCode(k400BadRequest);
-        return callback(res);
+    if(email.empty() || password.empty()) {
+        Json::Value jsonResponse;
+        jsonResponse["error"] = "Missing email or password.";
+        jsonResponse["status"] = 0;
+        auto res = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
+        res->setStatusCode(drogon::k400BadRequest);
+        (*callbackPtr)(res);
+        return;
     }
 
-    JWT jwtGenerated = JWT::generateToken(
-        {
-            {"email", picojson::value(responseJson["email"].asString())},
-        },
-        responseJson.isMember("remember") && responseJson["remember"].asBool());
-    std::int64_t jwtExpiration = jwtGenerated.getExpiration();
+    std::string query = UserModel::sqlAuth(email);
+    auto dbClient = drogon::app().getFastDbClient("default");
 
-    resultJson["token"] = jwtGenerated.getToken();
-    resultJson["expiresIn"] =
-        jwtExpiration -
-        std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    resultJson["expiresAt"] = jwtExpiration;
-    resultJson["status"] = 1;
+    *dbClient << query >> [callbackPtr, responseJson, password, email](const Result &r) {
+        if(r.empty()) {
+            Json::Value jsonResponse;
+            jsonResponse["error"] = "Invalid email or password.";
+            jsonResponse["status"] = 0;
 
-    return callback(HttpResponse::newHttpJsonResponse(resultJson));
+            auto res = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
+            res->setStatusCode(drogon::k400BadRequest);
+            (*callbackPtr)(res);
+            return;
+        }
+
+        UserModel userModel;
+        userModel.password = r[0][UserModel::Field::password].as<std::string>();
+
+        if(!userModel.checkPassword(password)) {
+            Json::Value jsonResponse;
+            jsonResponse["error"] = "Invalid email or password.";
+            jsonResponse["status"] = 0;
+
+            auto res = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
+            res->setStatusCode(drogon::k400BadRequest);
+            (*callbackPtr)(res);
+            return;
+        }
+        JWT jwtGenerated = JWT::generateToken(
+            {
+                {"email", picojson::value(email)},
+            },
+            responseJson.isMember("remember") && responseJson["remember"].asBool());
+        std::int64_t jwtExpiration = jwtGenerated.getExpiration();
+
+        Json::Value jsonResponse;
+        jsonResponse["token"] = jwtGenerated.getToken();
+        jsonResponse["expiresIn"] = jwtExpiration - std::chrono::duration_cast<std::chrono::seconds>(
+                                                        std::chrono::system_clock::now().time_since_epoch())
+                                                        .count();
+        jsonResponse["expiresAt"] = jwtExpiration;
+        jsonResponse["status"] = 1;
+
+        auto res = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
+        res->setStatusCode(drogon::k200OK);
+        (*callbackPtr)(res);
+        return;
+    } >> [callbackPtr](const DrogonDbException &e) {
+        LOG_ERROR << e.base().what();
+
+        auto res = drogon::HttpResponse::newHttpResponse();
+        res->setStatusCode(drogon::k500InternalServerError);
+        (*callbackPtr)(res);
+        return;
+    };
 }
 
-void Auth::verifyToken(const HttpRequestPtr &request, std::function<void(const HttpResponsePtr &)> &&callback) {
+void Auth::verifyToken(const drogon::HttpRequestPtr &request,
+                       std::function<void(const drogon::HttpResponsePtr &)> &&callback) {
+    auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
     Json::Value resultJson;
 
     resultJson["aud"] = request->getAttributes()->get<std::string>("jwt_aud");
@@ -45,5 +96,7 @@ void Auth::verifyToken(const HttpRequestPtr &request, std::function<void(const H
     resultJson["jwt_debugger"] = "https://jwt.io/#debugger-io?token=" + request->getHeader("Authorization").substr(7);
     resultJson["status"] = 1;
 
-    return callback(HttpResponse::newHttpJsonResponse(resultJson));
+    auto res = drogon::HttpResponse::newHttpJsonResponse(resultJson);
+    res->setStatusCode(drogon::k200OK);
+    return (*callbackPtr)(res);
 }

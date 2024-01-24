@@ -26,6 +26,10 @@ int main() {
         throw std::invalid_argument("FOXY_CLIENT is not set");
     }
 
+    std::string foxy_admin;
+    if (!getenv("FOXY_ADMIN", foxy_admin)) {
+        throw std::invalid_argument("FOXY_ADMIN is not set");
+    }
     drogon::app().loadConfigFile(config_app_path);
     app().registerHandler("/test?username={name}",
                           []([[maybe_unused]] const HttpRequestPtr &req,
@@ -40,8 +44,11 @@ int main() {
                               (*callbackPtr)(resp);
                           });
     app().registerPostHandlingAdvice(
-        [foxy_client]([[maybe_unused]] const drogon::HttpRequestPtr &req, const drogon::HttpResponsePtr &resp) {
-            resp->addHeader("Access-Control-Allow-Origin", foxy_client);
+        [foxy_client, foxy_admin]([[maybe_unused]] const drogon::HttpRequestPtr &req, const drogon::HttpResponsePtr &resp) {
+            auto origin = req->getHeader("Origin");
+            if (origin == foxy_client || origin == foxy_admin) {
+                resp->addHeader("Access-Control-Allow-Origin", origin);
+            }
         });
     app().setThreadNum(std::thread::hardware_concurrency() + 2);
     std::string http_port;

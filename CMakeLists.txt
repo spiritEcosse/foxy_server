@@ -3,7 +3,7 @@ project(foxy_server)
 
 set(BUILD_EXAMPLES OFF)
 set(BUILD_CTL OFF)
-set(BUILD_TESTING OFF)
+#set(BUILD_TESTING OFF)
 
 get_cmake_property(_variableNames VARIABLES)
 list(SORT _variableNames)
@@ -76,6 +76,25 @@ CPMAddPackage(
 target_link_libraries(${PROJECT_NAME} PRIVATE jwt-cpp)
 # End adding jwt-cpp
 
+# Start adding hilch/Bcrypt.cpp
+
+CPMAddPackage(
+        NAME bcrypt
+        VERSION V2.0_NODEBCRYPT
+        GITHUB_REPOSITORY hilch/Bcrypt.cpp
+        GIT_TAG V2.0_NODEBCRYPT
+)
+if (BUILD_TESTING)
+    execute_process(COMMAND bash -c "sed -i ${EMPTY_STRING} '11,12s/^/#/' ${PROJECT_BINARY_DIR}/_deps/bcrypt-src/CMakeLists.txt"
+            RESULT_VARIABLE EXCLUDE_BASH_SCRIPT)
+    if (NOT EXCLUDE_BASH_SCRIPT EQUAL "0")
+        message(FATAL_ERROR "sed failed with : ${EXCLUDE_BASH_SCRIPT}, please check")
+    endif()
+endif()
+
+target_link_libraries(${PROJECT_NAME} PRIVATE bcrypt)
+# End adding hilch/Bcrypt.cpp
+
 # Start Formatting
 CPMAddPackage(
         NAME cmake-scripts
@@ -97,3 +116,10 @@ file(GLOB_RECURSE CMAKE_FILES ${PROJECT_SOURCE_DIR}/src/CMakeLists.txt
 cmake_format(cmake-format ${CMAKE_FILES} CMakeLists.txt)
 
 # End Formatting
+
+# Tests
+if (BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+# End Tests
