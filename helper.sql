@@ -1,20 +1,19 @@
-CREATE OR REPLACE FUNCTION GetValidPage(RequestedPage INT, PageSize INT, OUT ValidPage INT)
+CREATE OR REPLACE FUNCTION GetValidPage(RequestedPage INT, PageSize INT, TotalCount INT, OUT ValidPage INT)
 AS $$
 DECLARE
-TotalPages INT;
+    TotalPages INT;
 BEGIN
     -- Calculate the total number of pages
-SELECT CEIL(COUNT(*)::FLOAT / PageSize) INTO TotalPages
-FROM item;
+    TotalPages := CEIL(TotalCount::FLOAT / PageSize);
 
--- Check if the requested page number is greater than the total number of pages
-IF RequestedPage > TotalPages THEN
+    -- Check if the requested page number is greater than the total number of pages
+    IF RequestedPage > TotalPages THEN
         ValidPage := 1; -- Set to the first page
-ELSE
+    ELSE
         ValidPage := RequestedPage;
-END IF;
-END
-$$ LANGUAGE PLPGSQL;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION trigger_set_timestamp()
     RETURNS TRIGGER AS $$
@@ -33,6 +32,8 @@ create table IF NOT EXISTS item (
                                     created_at timestamp NOT NULL DEFAULT NOW(),
                                     updated_at timestamp NOT NULL DEFAULT NOW()
     );
+
+INSERT INTO "user" (email, password) VALUES ('admin@localhost', '$2b$10$QBLgOdKLG8TdKLFG5UCKQulMDtD43LClVpSNwhC57c3SGjW4Sr.fG');
 
 create table IF NOT EXISTS "user" (
                                     id serial primary key,

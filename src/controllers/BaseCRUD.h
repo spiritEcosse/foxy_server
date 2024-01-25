@@ -27,6 +27,7 @@ namespace api::v1 {
         virtual void deleteItem(const drogon::HttpRequestPtr &req,
                                 std::function<void(const drogon::HttpResponsePtr &)> &&callback,
                                 const std::string &) const;
+        [[nodiscard]] virtual drogon::HttpResponsePtr checkBody(const drogon::HttpRequestPtr &req) const;
         [[nodiscard]] static Json::Value getJsonResponse(const drogon::orm::Result &r);
     };
 }

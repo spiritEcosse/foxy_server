@@ -113,37 +113,38 @@ BaseModel<T>::sqlSelectList(int page, int limit, const std::unordered_map<std::s
     std::string pageStr = std::to_string(page);
     std::string limitStr = std::to_string(limit);
 
-    std::string sql = "SELECT ";
-    sql += "(SELECT GetValidPage(" + pageStr + ", " + limitStr + ")) as page,\n";
-    sql += "(SELECT count(*) FROM \"" + T::tableName + "\"";
+    std::string sqlItems;
+    sqlItems += "SELECT * FROM \"" + T::tableName + "\" as t1 \n";
     if(!params.empty()) {
-        sql += "    WHERE ";
+        sqlItems += "    WHERE ";
     }
     for(const auto &[key, value]: params) {
-        sql.append(key).append(" = '").append(value).append("' AND ");
-    }
-    // Remove the last " AND "
-    if(sql.substr(sql.length() - 5) == " AND ") {
-        sql = sql.substr(0, sql.length() - 5);
-    }
-
-    sql += ") as count,\n";
-    sql += "(SELECT json_agg(t.*) FROM (\n";
-    sql += "    SELECT * FROM \"" + T::tableName + "\" as t1 \n";
-    if(!params.empty()) {
-        sql += "    WHERE ";
-    }
-    for(const auto &[key, value]: params) {
-        sql.append(key).append(" = '").append(value).append("' AND ");
+        sqlItems.append(key).append(" = '").append(value).append("' AND ");
     }
 
     // Remove the last " AND "
-    if(sql.substr(sql.length() - 5) == " AND ") {
-        sql = sql.substr(0, sql.length() - 5);
+    if(sqlItems.substr(sqlItems.length() - 5) == " AND ") {
+        sqlItems = sqlItems.substr(0, sqlItems.length() - 5);
     }
-    sql += "    ORDER BY t1." + orderBy + " DESC \n";
-    sql += "    OFFSET (GetValidPage(" + pageStr + ", " + limitStr + ") - 1) * " + limitStr + "\n";
-    sql += "    LIMIT " + limitStr + ") as t) AS items;";
+    sqlItems += "    ORDER BY t1." + T::orderBy + ", t1." + Field::id + " DESC \n";
+
+    std::string sql = "WITH items AS (";
+    sql += sqlItems;
+    sql += "), ";
+    sql += "item_count AS ( ";
+    sql += "    SELECT count(*)::integer as count FROM items ";
+    sql += "), ";
+    sql += "valid_page AS ( ";
+    sql += "    SELECT GetValidPage(" + pageStr + ", " + limitStr + ", (SELECT count FROM item_count)) as page ";
+    sql += ") ";
+    sql += "SELECT ";
+    sql += "   (SELECT page FROM valid_page) as page, ";
+    sql += "   (SELECT count FROM item_count) as count, ";
+    sql += "   (SELECT json_agg(t.*) FROM ( ";
+    sql += sqlItems;
+    sql += "        OFFSET ((SELECT page FROM valid_page) - 1) * " + limitStr + " LIMIT " + limitStr;
+    sql += "    ) as t ";
+    sql += ") as items;";
 
     return sql;
 }

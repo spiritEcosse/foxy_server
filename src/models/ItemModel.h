@@ -20,6 +20,7 @@ namespace api::v1 {
             static inline const std::string description = "description";
             static inline const std::string metaDescription = "meta_description";
             static inline const std::string slug = "slug";
+            static inline const std::string enabled = "enabled";
         };
 
         static inline const std::string tableName = "item";
@@ -28,6 +29,7 @@ namespace api::v1 {
         std::string title;
         std::string description;
         std::string slug;
+        bool enabled = false;
         std::string metaDescription;
         std::chrono::system_clock::time_point createdAt;
         std::chrono::system_clock::time_point updatedAt;
@@ -42,6 +44,7 @@ namespace api::v1 {
             description = json[Field::description].asString();
             metaDescription = json[Field::metaDescription].asString();
             slug = json[Field::slug].asString();
+            enabled = json[Field::enabled].asBool();
 
             Json::Value missingFields;
             if(title.empty()) {
@@ -56,6 +59,7 @@ namespace api::v1 {
             if(slug.empty()) {
                 missingFields[Field::slug] = Field::slug + " is required";
             }
+
             if(!missingFields.empty()) {
                 throw RequiredFieldsException(missingFields);
             }

@@ -41,17 +41,12 @@ void BaseCRUD<T, R>::createItem(const drogon::HttpRequestPtr &req,
                                 std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
 
-    if(!req->bodyLength()) {
-        Json::Value jsonResponse;
-        jsonResponse["error"] = "Empty body";
-        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
-        resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
+    if(auto resp = checkBody(req); resp) {
         (*callbackPtr)(resp);
         return;
     }
 
     Json::Value jsonObject = *req->getJsonObject();
-    auto dbClient = drogon::app().getFastDbClient("default");
     Json::Value jsonResponseError;
     T item;
     try {
@@ -64,6 +59,7 @@ void BaseCRUD<T, R>::createItem(const drogon::HttpRequestPtr &req,
         return;
     }
     std::string query = T::sqlInsert(item);
+    auto dbClient = drogon::app().getFastDbClient("default");
     *dbClient << query >> [callbackPtr](const Result &r) {
         if(r.empty()) {
             auto resp = drogon::HttpResponse::newHttpResponse();
@@ -71,7 +67,6 @@ void BaseCRUD<T, R>::createItem(const drogon::HttpRequestPtr &req,
             (*callbackPtr)(resp);
             return;
         }
-        Json::Value jsonResponse;
         auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(R::getJsonResponse(r)));
         resp->setStatusCode(drogon::HttpStatusCode::k201Created);
         (*callbackPtr)(resp);
@@ -88,11 +83,7 @@ void BaseCRUD<T, R>::createItems(const drogon::HttpRequestPtr &req,
                                  std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
 
-    if(!req->bodyLength()) {
-        Json::Value jsonResponse;
-        jsonResponse["error"] = "Empty body";
-        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
-        resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
+    if(auto resp = checkBody(req); resp) {
         (*callbackPtr)(resp);
         return;
     }
@@ -108,7 +99,6 @@ void BaseCRUD<T, R>::createItems(const drogon::HttpRequestPtr &req,
         return;
     }
 
-    auto dbClient = drogon::app().getFastDbClient("default");
     std::vector<T> items;
     int index = 1;
     Json::Value jsonResponseError;
@@ -125,6 +115,7 @@ void BaseCRUD<T, R>::createItems(const drogon::HttpRequestPtr &req,
         return;
     }
     std::string query = T::sqlInsertMultiple(items);
+    auto dbClient = drogon::app().getFastDbClient("default");
     *dbClient << query >> [callbackPtr](const Result &r) {
         Json::Value jsonResponse;
         for(const auto &row: r) {
@@ -149,7 +140,7 @@ void BaseCRUD<T, R>::getList(const drogon::HttpRequestPtr &req,
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
     auto dbClient = drogon::app().getFastDbClient("default");
     int page = getInt(req->getParameter("page"), 1);
-    int limit = 25;
+    int limit = getInt(req->getParameter("limit"), 25);
 
     auto params = req->parameters();
     std::unordered_map<std::string, std::string> paramsMap;
@@ -218,11 +209,8 @@ void BaseCRUD<T, R>::updateItem(const drogon::HttpRequestPtr &req,
                                 std::function<void(const drogon::HttpResponsePtr &)> &&callback,
                                 const std::string &stringId) const {
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
-    if(!req->bodyLength()) {
-        Json::Value jsonResponse;
-        jsonResponse["error"] = "Empty body";
-        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
-        resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
+
+    if(auto resp = checkBody(req); resp) {
         (*callbackPtr)(resp);
         return;
     }
@@ -230,7 +218,6 @@ void BaseCRUD<T, R>::updateItem(const drogon::HttpRequestPtr &req,
     Json::Value jsonObject = *req->getJsonObject();
     Json::Value jsonResponseError;
     T item;
-
     try {
         item = T(std::move(jsonObject));
     } catch(const RequiredFieldsException &e) {
@@ -249,9 +236,9 @@ void BaseCRUD<T, R>::updateItem(const drogon::HttpRequestPtr &req,
     }
     item.id = id;
 
-    auto dbClient = drogon::app().getFastDbClient("default");
     std::string query = T::sqlUpdate(item);
 
+    auto dbClient = drogon::app().getFastDbClient("default");
     *dbClient << query >> [callbackPtr](const Result &r) {
         if(r.empty()) {
             auto resp = drogon::HttpResponse::newHttpResponse();
@@ -259,8 +246,7 @@ void BaseCRUD<T, R>::updateItem(const drogon::HttpRequestPtr &req,
             (*callbackPtr)(resp);
             return;
         }
-        auto jsonResponse(r[0][0].as<Json::Value>());  // use getJsonResponse from BaseCRUD
-        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(R::getJsonResponse(r)));
         resp->setStatusCode(drogon::HttpStatusCode::k200OK);
         (*callbackPtr)(resp);
     } >> [callbackPtr](const DrogonDbException &e) {
@@ -276,6 +262,18 @@ Json::Value BaseCRUD<T, R>::getJsonResponse(const Result &r) {
     Json::Value jsonResponse;
     jsonResponse = r[0][0].as<Json::Value>();
     return jsonResponse;
+}
+
+template <class T, class R>
+drogon::HttpResponsePtr BaseCRUD<T, R>::checkBody(const drogon::HttpRequestPtr& req) const {
+    if (!req->bodyLength()) {
+        Json::Value jsonResponse;
+        jsonResponse["error"] = "Empty body";
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
+        resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
+        return resp;
+    }
+    return nullptr;
 }
 
 template class api::v1::BaseCRUD<ItemModel, Item>;
