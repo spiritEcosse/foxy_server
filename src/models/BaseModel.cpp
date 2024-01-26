@@ -2,11 +2,15 @@
 // Created by ihor on 14.01.2024.
 //
 
+#include <ctime>
+#include <sstream>
+#include <iomanip>
 #include "BaseModel.h"
 #include "src/models/ItemModel.h"
 #include "src/models/PageModel.h"
 #include "src/models/UserModel.h"
 #include "src/models/MediaModel.h"
+#include "src/orm/QuerySet.h"
 
 using namespace api::v1;
 
@@ -17,17 +21,16 @@ std::string timePointToString(std::chrono::system_clock::time_point tp) {
 
     localtime_r(&time_t, &local_time);
 
-    std::stringstream ss;
-    ss << std::put_time(&local_time, "%Y-%m-%d %H:%M:%S");
+    std::ostringstream oss;
+    oss << std::put_time(&local_time, "%Y-%m-%d %H:%M:%S");
 
     auto duration = tp.time_since_epoch();
     auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration);
     duration -= seconds;
     auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
 
-    ss << '.' << std::setfill('0') << std::setw(6) << milliseconds.count();
-
-    return ss.str();
+    std::string time_string = oss.str();
+    return time_string + "." + std::to_string(milliseconds.count());
 }
 
 template<class T>
@@ -109,44 +112,12 @@ std::string BaseModel<T>::fieldsToString() {
 
 template<class T>
 std::string
-BaseModel<T>::sqlSelectList(int page, int limit, const std::unordered_map<std::string, std::string> &params) {
-    std::string pageStr = std::to_string(page);
-    std::string limitStr = std::to_string(limit);
-
-    std::string sqlItems;
-    sqlItems += "SELECT * FROM \"" + T::tableName + "\" as t1 \n";
-    if(!params.empty()) {
-        sqlItems += "    WHERE ";
-    }
-    for(const auto &[key, value]: params) {
-        sqlItems.append(key).append(" = '").append(value).append("' AND ");
-    }
-
-    // Remove the last " AND "
-    if(sqlItems.substr(sqlItems.length() - 5) == " AND ") {
-        sqlItems = sqlItems.substr(0, sqlItems.length() - 5);
-    }
-    sqlItems += "    ORDER BY t1." + T::orderBy + ", t1." + Field::id + " DESC \n";
-
-    std::string sql = "WITH items AS (";
-    sql += sqlItems;
-    sql += "), ";
-    sql += "item_count AS ( ";
-    sql += "    SELECT count(*)::integer as count FROM items ";
-    sql += "), ";
-    sql += "valid_page AS ( ";
-    sql += "    SELECT GetValidPage(" + pageStr + ", " + limitStr + ", (SELECT count FROM item_count)) as page ";
-    sql += ") ";
-    sql += "SELECT ";
-    sql += "   (SELECT page FROM valid_page) as page, ";
-    sql += "   (SELECT count FROM item_count) as count, ";
-    sql += "   (SELECT json_agg(t.*) FROM ( ";
-    sql += sqlItems;
-    sql += "        OFFSET ((SELECT page FROM valid_page) - 1) * " + limitStr + " LIMIT " + limitStr;
-    sql += "    ) as t ";
-    sql += ") as items;";
-
-    return sql;
+BaseModel<T>::sqlSelectList(int page, int limit) {
+    QuerySet qs(T::tableName);
+    qs.order_by({{T::tableName + "." + T::orderBy, false}, {T::tableName + "." + T::Field::id, false}})
+        .limit(limit)
+        .page(page);
+    return qs.buildSelect();
 }
 
 template<class T>
@@ -196,6 +167,23 @@ std::string BaseModel<T>::sqlUpdate(const T &item) {
     sql.append(" WHERE " + T::primaryKey + " = " + std::to_string(item.id) + " RETURNING json_build_object(" +
                T::fieldsJsonObject() + ")");
     return sql;
+}
+
+// Recursive case: at least one parameter to process
+template<typename T, typename... Ts>
+void addWhereConditions(
+    std::string& sql, const std::vector<std::string>& fields, const T& param, const Ts&... params) {
+    // Check if param exists in fields
+    if (std::find(fields.begin(), fields.end(), param) != fields.end()) {
+        // Add WHERE condition to SQL query
+        if (!sql.empty()) {
+            sql += " AND ";
+        }
+        sql += param + " = :" + param;
+    }
+
+    // Process remaining parameters
+    addWhereConditions(sql, fields, params...);
 }
 
 template class api::v1::BaseModel<PageModel>;

@@ -30,8 +30,7 @@ namespace api::v1 {
         [[nodiscard]] static std::string sqlInsertMultiple(const std::vector<T> &item);
         [[nodiscard]] static std::string sqlInsert(const T &item);
         [[nodiscard]] static std::string sqlUpdate(const T &item);
-        [[nodiscard]] static std::string
-        sqlSelectList(int page, int limit, const std::unordered_map<std::string, std::string> &params);
+        [[nodiscard]] static std::string sqlSelectList(int page, int limit);
         [[nodiscard]] static std::string sqlSelectOne(const std::string &field, const std::string &value);
         [[nodiscard]] static std::string fieldsToString();
         [[nodiscard]] static std::string fieldsJsonObject();

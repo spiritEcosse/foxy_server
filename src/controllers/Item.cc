@@ -1,5 +1,7 @@
 #include "Item.h"
 #include "src/utils/request/Request.h"
+#include "src/orm/QuerySet.h"
+#include "src/models/MediaModel.h"
 
 using namespace api::v1;
 using namespace drogon::orm;
@@ -22,15 +24,13 @@ void Item::getListAdmin(
     int page = getInt(req->getParameter("page"), 1);
     int limit = getInt(req->getParameter("limit"), 25);
 
-    auto params = req->parameters();
-    std::unordered_map<std::string, std::string> paramsMap;
-    for(const auto &[key, value]: params) {
-        if(key != "page" && key != "limit") {
-            paramsMap[key] = value;
-        }
-    }
-    std::string query = ItemModel::BaseModel::sqlSelectList(page, limit, paramsMap);
-    *dbClient << query >> [callbackPtr](const Result &r) {
+    QuerySet qs(ItemModel::tableName);
+    qs.distinct({ItemModel::tableName + "." + ItemModel::orderBy, ItemModel::tableName + "." + ItemModel::Field::id})
+        .left_join(MediaModel::tableName, ItemModel::tableName + "." + ItemModel::Field::id + " = " + MediaModel::tableName + "." + MediaModel::Field::itemId)
+        .order_by({{ItemModel::tableName + "." + ItemModel::orderBy, false}, {ItemModel::tableName + "." + ItemModel::Field::id, false}})
+        .limit(limit)
+        .page(page);
+    *dbClient << qs.buildSelect() >> [callbackPtr](const Result &r) {
         Json::Value jsonResponse;
         jsonResponse["page"] = r[0][0].as<int>();
         jsonResponse["count"] = r[0][1].as<int>();

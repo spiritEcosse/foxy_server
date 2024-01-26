@@ -4,6 +4,7 @@
 #include "src/controllers/Page.h"
 #include "src/controllers/User.h"
 #include "src/controllers/Media.h"
+#include "src/orm/QuerySet.h"
 
 using namespace api::v1;
 using namespace drogon::orm;
@@ -142,15 +143,7 @@ void BaseCRUD<T, R>::getList(const drogon::HttpRequestPtr &req,
     int page = getInt(req->getParameter("page"), 1);
     int limit = getInt(req->getParameter("limit"), 25);
 
-    auto params = req->parameters();
-    std::unordered_map<std::string, std::string> paramsMap;
-    for(const auto &[key, value]: params) {
-        if(key != "page" && key != "limit") {
-            paramsMap[key] = value;
-        }
-    }
-    std::string query = T::sqlSelectList(page, limit, paramsMap);
-    *dbClient << query >> [callbackPtr](const Result &r) {
+    *dbClient << T::sqlSelectList(page, limit) >> [callbackPtr](const Result &r) {
         Json::Value jsonResponse;
         jsonResponse["page"] = r[0][0].as<int>();
         jsonResponse["count"] = r[0][1].as<int>();
