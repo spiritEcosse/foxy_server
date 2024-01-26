@@ -1,6 +1,8 @@
 #include "JwtFilter.h"
 
+using namespace drogon;
 using namespace api::v1::filters;
+using namespace api::utils::jwt;
 
 void JwtFilter::doFilter(const HttpRequestPtr &request, FilterCallback &&fcb, FilterChainCallback &&fccb) {
     // Skip the verification on method Options
@@ -23,7 +25,7 @@ void JwtFilter::doFilter(const HttpRequestPtr &request, FilterCallback &&fcb, Fi
     }
 
     // Remove the string "Bearer " on token and decode it
-    std::map<std::string, std::any> jwtAttributes = JWT::decodeToken(token.substr(7));
+    std::map<std::string, std::any, std::less<>> jwtAttributes = JWT::decodeToken(token.substr(7));
     if(jwtAttributes.empty()) {
         Json::Value resultJson;
         resultJson["error"] = "Token is invalid!";
@@ -36,8 +38,8 @@ void JwtFilter::doFilter(const HttpRequestPtr &request, FilterCallback &&fcb, Fi
     }
 
     // Save the claims on attributes, for on next endpoint to be accessible
-    for(auto &attribute: jwtAttributes)
-        request->getAttributes()->insert("jwt_" + attribute.first, attribute.second);
+    for(auto const&[key, value]: jwtAttributes)
+        request->getAttributes()->insert("jwt_" + key, value);
 
     // If everything is right, just move to other endpoint
     return fccb();
