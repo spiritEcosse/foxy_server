@@ -33,6 +33,7 @@ namespace api::v1 {
         [[nodiscard]] static std::string sqlSelectList(int page, int limit);
         [[nodiscard]] static std::string sqlSelectOne(const std::string &field, const std::string &value);
         [[nodiscard]] static std::string fieldsToString();
+        [[nodiscard]] static std::string fullFieldsWithTableToString();
         [[nodiscard]] static std::string fieldsJsonObject();
         [[nodiscard]] static std::string sqlDelete(int id);
     };

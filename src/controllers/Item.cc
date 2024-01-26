@@ -29,6 +29,7 @@ void Item::getListAdmin(
         .left_join(MediaModel::tableName, ItemModel::tableName + "." + ItemModel::Field::id + " = " + MediaModel::tableName + "." + MediaModel::Field::itemId)
         .order_by({{ItemModel::tableName + "." + ItemModel::orderBy, false}, {ItemModel::tableName + "." + ItemModel::Field::id, false}})
         .limit(limit)
+        .only({ItemModel::fullFieldsWithTableToString(), MediaModel::tableName + "." + MediaModel::Field::src})
         .page(page);
     *dbClient << qs.buildSelect() >> [callbackPtr](const Result &r) {
         Json::Value jsonResponse;

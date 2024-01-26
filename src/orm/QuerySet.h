@@ -7,6 +7,7 @@ private:
     std::string tableName;
     std::vector<std::pair<std::string, std::string>> filters;
     std::vector<std::pair<std::string, bool>> orderFields;
+    std::vector<std::string> onlyFields;
     std::string joinTable;
     std::string joinCondition;
     std::vector<std::string> distinctFields;
@@ -58,7 +59,12 @@ public:
         return *this;
     }
 
-    std::string buildSelect() {
+    QuerySet& only(std::vector<std::string> fields) {
+        onlyFields = std::move(fields);
+        return *this;
+    }
+
+    std::string buildSelect() const {
         std::string query = "WITH items AS (";
         std::string sqlItems;
         sqlItems += "SELECT ";
@@ -71,7 +77,15 @@ public:
             sqlItems.pop_back();
             sqlItems += ") ";
         }
-        sqlItems += tableName + ".* FROM " + tableName;
+        if (!onlyFields.empty()) {
+            for (const auto& field : onlyFields) {
+                sqlItems += field + ",";
+            }
+            sqlItems.pop_back();
+        } else {
+            sqlItems += "*";
+        }
+        sqlItems += " FROM " + tableName;
         if (!joinTable.empty()) {
             sqlItems += " INNER JOIN " + joinTable + " ON " + joinCondition;
         }

@@ -111,6 +111,19 @@ std::string BaseModel<T>::fieldsToString() {
 }
 
 template<class T>
+std::string BaseModel<T>::fullFieldsWithTableToString() {
+    std::stringstream ss;
+    auto fieldNames = T::fullFields();
+    for(const auto &fieldName: fieldNames) {
+        ss << T::tableName << "." << fieldName;
+        if(&fieldName != &fieldNames.back()) {
+            ss << ", ";
+        }
+    }
+    return ss.str();
+}
+
+template<class T>
 std::string
 BaseModel<T>::sqlSelectList(int page, int limit) {
     QuerySet qs(T::tableName);
@@ -167,23 +180,6 @@ std::string BaseModel<T>::sqlUpdate(const T &item) {
     sql.append(" WHERE " + T::primaryKey + " = " + std::to_string(item.id) + " RETURNING json_build_object(" +
                T::fieldsJsonObject() + ")");
     return sql;
-}
-
-// Recursive case: at least one parameter to process
-template<typename T, typename... Ts>
-void addWhereConditions(
-    std::string& sql, const std::vector<std::string>& fields, const T& param, const Ts&... params) {
-    // Check if param exists in fields
-    if (std::find(fields.begin(), fields.end(), param) != fields.end()) {
-        // Add WHERE condition to SQL query
-        if (!sql.empty()) {
-            sql += " AND ";
-        }
-        sql += param + " = :" + param;
-    }
-
-    // Process remaining parameters
-    addWhereConditions(sql, fields, params...);
 }
 
 template class api::v1::BaseModel<PageModel>;

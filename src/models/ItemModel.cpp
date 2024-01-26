@@ -46,6 +46,7 @@ std::string ItemModel::sqlSelectList(int page, int limit) {
         .order_by({{ItemModel::tableName + "." + ItemModel::orderBy, false}, {ItemModel::tableName + "." + ItemModel::Field::id, false}})
         .filter({{ItemModel::tableName + "." + ItemModel::Field::enabled, "true"}})
         .limit(limit)
+        .only({ItemModel::fullFieldsWithTableToString(), MediaModel::tableName + "." + MediaModel::Field::src})
         .page(page);
     return qs.buildSelect();
 }
