@@ -126,10 +126,8 @@ std::string BaseModel<T>::fullFieldsWithTableToString() {
 template<class T>
 std::string
 BaseModel<T>::sqlSelectList(int page, int limit) {
-    QuerySet qs(T::tableName);
-    qs.order_by({{T::tableName + "." + T::orderBy, false}, {T::tableName + "." + T::Field::id, false}})
-        .limit(limit)
-        .page(page);
+    QuerySet qs(T::tableName, false, limit, page, true);
+    qs.order_by(std::make_pair(T::tableName + "." + T::orderBy, false), std::make_pair(T::tableName + "." + T::Field::id, false));
     return qs.buildSelect();
 }
 
@@ -148,11 +146,10 @@ std::string BaseModel<T>::fieldsJsonObject() {
 
 template<class T>
 std::string BaseModel<T>::sqlSelectOne(const std::string &field, const std::string &value) {
-    std::string sql = "SELECT (SELECT "
-                      "json_build_object(" +
-                      T::fieldsJsonObject() + ") FROM \"" + T::tableName + "\" where " + field + " = \'" + value +
-                      "\') as " + T::tableName;
-    return sql;
+    QuerySet qs(T::tableName, true);
+    qs.jsonFields(T::fieldsJsonObject())
+    .filter(std::make_pair(field, value));
+    return qs.buildSelect();
 }
 
 template<class T>

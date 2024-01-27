@@ -15,20 +15,25 @@ private:
     std::string leftJoinCondition;
     std::string distinctOn;
     std::string orderBy;
+    std::string _jsonFields;
     int _limit;
     int _page;
+    bool _returnCount;
+    bool _one;
 
 public:
-    explicit QuerySet(std::string tableName, int limit = 0, int page = 1) :
-    tableName(std::move(tableName)), _limit(limit), _page(page) {}
+    explicit QuerySet(std::string tableName, bool one = false, int limit = 0, int page = 1, bool returnCount = false) :
+    tableName(std::move(tableName)), _limit(limit), _page(page), _returnCount(returnCount), _one(one) {}
 
-    QuerySet& filter(std::vector<std::pair<std::string, std::string>> fields) {
-        filters = std::move(fields);
+    template<typename... Args>
+    QuerySet& filter(Args... args) {
+        filter_impl(args...);
         return *this;
     }
 
-    QuerySet& order_by(std::vector<std::pair<std::string, bool>> fields) {
-        orderFields = std::move(fields);
+    template<typename... Args>
+    QuerySet& order_by(Args... args) {
+        order_by_impl(args...);
         return *this;
     }
 
@@ -44,8 +49,9 @@ public:
         return *this;
     }
 
-    QuerySet& distinct(std::vector<std::string> fields) {
-        distinctFields = std::move(fields);
+    template<typename... Args>
+    QuerySet& distinct(Args... args) {
+        distinct_impl(args...);
         return *this;
     }
 
@@ -54,8 +60,8 @@ public:
         return *this;
     }
 
-    QuerySet& page(int page) {
-        this->_page = page;
+    QuerySet& jsonFields(std::string jsonFields) {
+        this->_jsonFields = std::move(jsonFields);
         return *this;
     }
 
@@ -64,10 +70,37 @@ public:
         return *this;
     }
 
-    std::string buildSelect() const {
+    QuerySet& returnCount(bool returnCount = true) {
+        _returnCount = returnCount;
+        return *this;
+    }
+
+    [[nodiscard]] std::string filter() const {
+        if (filters.empty()) {
+            return "";
+        }
+        std::string query = " WHERE ";
+        for (const auto& [field, value] : filters) {
+            query += field;
+            query += " = '";
+            query += value;
+            query += "' AND ";
+        }
+        return query.substr(0, query.size() - 5);  // Remove the last " AND "
+    }
+
+    template<typename... Args>
+    std::string addQuery(Args... args) {
+        return buildSelect() + addQuery_impl(args...);
+    }
+
+    [[nodiscard]] std::string buildSelect() const {
+        if (_one) {
+            return buildSelectOne();
+        }
         std::string query = "WITH items AS (";
         std::string sqlItems;
-        sqlItems += "SELECT ";
+        sqlItems += " SELECT ";
 
         if (!distinctFields.empty()) {
             sqlItems += "DISTINCT ON (";
@@ -92,13 +125,7 @@ public:
         if (!leftJoinTable.empty()) {
             sqlItems += " LEFT JOIN " + leftJoinTable + " ON " + leftJoinCondition;
         }
-        if (!filters.empty()) {
-            sqlItems += " WHERE ";
-            for (const auto& [field, value] : filters) {
-                sqlItems += field + " = '" + value + "' AND ";
-            }
-            sqlItems = sqlItems.substr(0, sqlItems.size() - 5);  // Remove the last " AND "
-        }
+        sqlItems += filter();
         if (!orderFields.empty()) {
             sqlItems += " ORDER BY ";
             for (const auto& [field, asc] : orderFields) {
@@ -108,28 +135,108 @@ public:
         }
         query += sqlItems;
         query += ") ";
-        query += ", item_count AS ( ";
-        query += "    SELECT count(*)::integer as count FROM items ";
-        query += ") ";
-
-        query += ", valid_page AS ( ";
-        query += "    SELECT GetValidPage(" + std::to_string(_page) + ", " + std::to_string(_limit)
-            + ", (SELECT count FROM item_count)) as page ";
-        query += ") ";
-        query += "SELECT ";
-
-        query += "   (SELECT page FROM valid_page) as page, ";
-        query += "   (SELECT count FROM item_count) as count, ";
-        query += "   (SELECT json_agg(t.*) FROM ( ";
-        query += sqlItems;
-        if (_limit > 0) {
-            query += " LIMIT " + std::to_string(_limit);
+        if (_returnCount) {
+            query += ", item_count AS ( ";
+            query += "    SELECT count(*)::integer as count FROM items ";
+            query += ") ";
+            query += ", valid_page AS ( ";
+            query += "    SELECT GetValidPage(" + std::to_string(_page) + ", " + std::to_string(_limit)
+                + ", (SELECT count FROM item_count)) as page ";
+            query += ") ";
         }
-        if (_page > 0) {
+        query += " SELECT ";
+
+        if (_returnCount) {
+            query += "   (SELECT page FROM valid_page) as page, ";
+            query += "   (SELECT count FROM item_count) as count, ";
+        }
+        query += "   (SELECT json_agg(t.*) FROM ( ";
+        if (!_limit) {
+            query += "        SELECT * FROM items ";
+        } else {
+            query += sqlItems;
+            query += " LIMIT " + std::to_string(_limit);
             query += " OFFSET ((SELECT page FROM valid_page) - 1) * " + std::to_string(_limit);
         }
         query += "    ) as t ";
-        query += ") as items;";
+        query += ") as items";
         return query;
+    }
+
+    [[nodiscard]] std::string buildSelectOne() const {
+        std::string query = "SELECT ( SELECT json_build_object(";
+        query += _jsonFields;
+        query += ") FROM " + tableName;
+        query += filter();
+        query += ") as " + tableName;
+        return query;
+    }
+
+private:
+    template<typename T>
+    void distinct_impl(T t) {
+        std::string field = t;
+        distinctFields.push_back(field);
+    }
+
+    template<typename T, typename... Args>
+    void distinct_impl(T t, Args... args) {
+        std::string field = t;
+        distinctFields.push_back(field);
+        distinct_impl(args...);
+    }
+
+    // Base case: no arguments left
+    static std::string addQuery_impl() {
+        return "";
+    }
+
+    template<typename T, typename... Args>
+    std::string addQuery_impl(T t, Args... args) {
+        // Process the first argument here
+        std::string query = t.buildSelect();
+        if (size_t pos = query.find("SELECT"); pos == 0) { // Check if "SELECT" is at the start of the string
+            // Erase "SELECT " (7 characters)
+            query.erase(pos, 7);
+            query = ", " + query;
+        }
+        // Recursively call addQuery_impl with the rest of the arguments
+        query += addQuery_impl(args...);
+        return query;
+    }
+
+    template<typename T>
+    void filter_impl(T t) {
+        std::string field = t.first;
+        std::string value = t.second;
+        filters.emplace_back(field, value);
+    }
+
+    template<typename T, typename... Args>
+    void filter_impl(T t, Args... args) {
+        std::string field = t.first;
+        std::string value = t.second;
+        filters.emplace_back(field, value);
+        filter_impl(args...);
+    }
+
+    template<typename T>
+    void order_by_impl(T t) {
+        // Process the single argument here
+        std::string field = t.first;
+        bool ascending = t.second;
+        // Add field to order_by_fields with the correct order
+        orderFields.emplace_back(field, ascending);
+    }
+
+    template<typename T, typename... Args>
+    void order_by_impl(T t, Args... args) {
+        // Process the first argument here
+        std::string field = t.first;
+        bool ascending = t.second;
+        // Add field to order_by_fields with the correct order
+        orderFields.emplace_back(field, ascending);
+        // Recursively call order_by_impl with the rest of the arguments
+        order_by_impl(args...);
     }
 };
