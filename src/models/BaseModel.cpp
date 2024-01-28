@@ -61,7 +61,7 @@ std::string BaseModel<T>::sqlInsert(const T &item) {
     }
     sql.pop_back();
     sql.append(")");
-    sql.append(" ON CONFLICT DO NOTHING RETURNING json_build_object(" + T::fieldsJsonObject() + ")");
+    sql.append(" RETURNING json_build_object(" + T::fieldsJsonObject() + ")");
     return sql;
 }
 
@@ -131,6 +131,18 @@ BaseModel<T>::sqlSelectList(int page, int limit) {
     return qs.buildSelect();
 }
 
+std::string addExtraQuotes(const std::string& str) {
+    std::string result;
+    for (char c : str) {
+        if (c == '\'') {
+            result += "''";
+        } else {
+            result += c;
+        }
+    }
+    return result;
+}
+
 template<class T>
 std::string BaseModel<T>::fieldsJsonObject() {
     std::stringstream ss;
@@ -154,7 +166,7 @@ std::string BaseModel<T>::sqlSelectOne(const std::string &field, const std::stri
 
 template<class T>
 std::string BaseModel<T>::sqlUpdate(const T &item) {
-    std::string sql = "UPDATE \"" + T::tableName + "\" SET ";
+    std::string sql = "SELECT update_item('UPDATE \"" + T::tableName + "\" SET ";
     for(const auto &[key, value]: item.getObjectValues()) {
         std::visit(
             [&sql, &key](const auto &arg) {  // check it in c++20
@@ -169,13 +181,13 @@ std::string BaseModel<T>::sqlUpdate(const T &item) {
                 } else {
                     data = arg;
                 }
-                sql.append(key).append(" = '").append(data).append("',");
+                sql.append(key).append(" = ''").append(data).append("'',");
             },
             value);
     }
     sql.pop_back();
     sql.append(" WHERE " + T::primaryKey + " = " + std::to_string(item.id) + " RETURNING json_build_object(" +
-               T::fieldsJsonObject() + ")");
+        addExtraQuotes(T::fieldsJsonObject()) + ")')");
     return sql;
 }
 

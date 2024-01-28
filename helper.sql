@@ -23,6 +23,21 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION update_item(query TEXT) RETURNS json AS $$
+DECLARE
+    rows INTEGER;
+    result json;
+BEGIN
+    EXECUTE query INTO result;
+
+    GET DIAGNOSTICS rows = ROW_COUNT;
+    IF rows = 0 THEN
+        RAISE EXCEPTION 'not_found';
+    END IF;
+    RETURN result;
+END;
+$$ LANGUAGE plpgsql;
+
 create table IF NOT EXISTS item (
                                     id serial primary key,
                                     title varchar(255) NOT NULL,

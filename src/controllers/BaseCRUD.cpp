@@ -38,45 +38,37 @@ void BaseCRUD<T, R>::deleteItem(const drogon::HttpRequestPtr &req,
 }
 
 template<class T, class R>
-void BaseCRUD<T, R>::createItem(const drogon::HttpRequestPtr &req,
-                                std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
-    auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
-
+void BaseCRUD<T, R>::getItem(
+    const drogon::HttpRequestPtr &req, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr,
+    std::function<void(T)> successCallback) const {
     if(auto resp = checkBody(req); resp) {
         (*callbackPtr)(resp);
         return;
     }
 
     Json::Value jsonObject = *req->getJsonObject();
-    Json::Value jsonResponseError;
     T item;
     try {
         item = T(std::move(jsonObject));
     } catch(const RequiredFieldsException &e) {
-        jsonResponseError = e.getRequiredFields();
-        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponseError));
+        auto resp = drogon::HttpResponse::newHttpResponse();
         resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
         (*callbackPtr)(resp);
         return;
     }
-    std::string query = T::sqlInsert(item);
-    auto dbClient = drogon::app().getFastDbClient("default");
-    *dbClient << query >> [callbackPtr](const Result &r) {
-        if(r.empty()) {
-            auto resp = drogon::HttpResponse::newHttpResponse();
-            resp->setStatusCode(drogon::HttpStatusCode::k409Conflict);
-            (*callbackPtr)(resp);
-            return;
-        }
-        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(R::getJsonResponse(r)));
-        resp->setStatusCode(drogon::HttpStatusCode::k201Created);
-        (*callbackPtr)(resp);
-    } >> [callbackPtr](const DrogonDbException &e) {
-        LOG_ERROR << e.base().what();
-        auto resp = drogon::HttpResponse::newHttpResponse();
-        resp->setStatusCode(drogon::HttpStatusCode::k500InternalServerError);
-        (*callbackPtr)(resp);
-    };
+    successCallback(std::move(item));
+}
+
+template<class T, class R>
+void BaseCRUD<T, R>::createItem(const drogon::HttpRequestPtr &req,
+                                std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
+    auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
+
+    getItem(req, callbackPtr, [this, callbackPtr](T item)
+    {
+        std::string query = T::sqlInsert(item);
+        executeSqlQuery(callbackPtr, query, true);
+    });
 }
 
 template<class T, class R>
@@ -198,56 +190,62 @@ void BaseCRUD<T, R>::getOne([[maybe_unused]] const drogon::HttpRequestPtr &req,
 }
 
 template<class T, class R>
+void BaseCRUD<T, R>::executeSqlQuery(
+    std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr,
+    const std::string& query, bool isCreate) const {
+    auto dbClient = drogon::app().getFastDbClient("default");
+    *dbClient << query >> [this, callbackPtr, isCreate](const Result &r) {
+        this->handleSqlResult(r, callbackPtr, isCreate);
+    } >> [this, callbackPtr](const DrogonDbException &e) {
+        this->handleSqlError(e, callbackPtr);
+    };
+}
+
+template<class T, class R>
+void BaseCRUD<T, R>::handleSqlResult(const Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr, bool isCreate) const {
+    auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(R::getJsonResponse(r)));
+    resp->setStatusCode(isCreate ? drogon::HttpStatusCode::k201Created : drogon::HttpStatusCode::k200OK);
+    (*callbackPtr)(resp);
+}
+
+template<class T, class R>
+void BaseCRUD<T, R>::handleSqlError(const DrogonDbException &e, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const {
+    LOG_ERROR << e.base().what();
+    std::string errorMsg = e.base().what();
+    if (errorMsg.find("duplicate key value violates unique constraint") != std::string::npos) { // Check if the error is a unique violation
+        auto resp = drogon::HttpResponse::newHttpResponse();
+        resp->setStatusCode(drogon::HttpStatusCode::k409Conflict);
+        (*callbackPtr)(resp);
+    } else if (errorMsg.find("not_found") != std::string::npos) { // Check if the error is a not found error
+        auto resp = drogon::HttpResponse::newHttpResponse();
+        resp->setStatusCode(drogon::HttpStatusCode::k404NotFound);
+        (*callbackPtr)(resp);
+    } else {
+        auto resp = drogon::HttpResponse::newHttpResponse();
+        resp->setStatusCode(drogon::HttpStatusCode::k500InternalServerError);
+        (*callbackPtr)(resp);
+    }
+}
+
+template<class T, class R>
 void BaseCRUD<T, R>::updateItem(const drogon::HttpRequestPtr &req,
                                 std::function<void(const drogon::HttpResponsePtr &)> &&callback,
                                 const std::string &stringId) const {
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
 
-    if(auto resp = checkBody(req); resp) {
-        (*callbackPtr)(resp);
-        return;
-    }
-
-    Json::Value jsonObject = *req->getJsonObject();
-    Json::Value jsonResponseError;
-    T item;
-    try {
-        item = T(std::move(jsonObject));
-    } catch(const RequiredFieldsException &e) {
-        jsonResponseError = e.getRequiredFields();
-        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponseError));
-        resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
-        (*callbackPtr)(resp);
-        return;
-    }
-    int id = getInt(stringId, 0);
-    if(!id) {
-        auto resp = drogon::HttpResponse::newHttpResponse();
-        resp->setStatusCode(drogon::HttpStatusCode::k404NotFound);
-        (*callbackPtr)(resp);
-        return;
-    }
-    item.id = id;
-
-    std::string query = T::sqlUpdate(item);
-
-    auto dbClient = drogon::app().getFastDbClient("default");
-    *dbClient << query >> [callbackPtr](const Result &r) {
-        if(r.empty()) {
+    getItem(req, callbackPtr, [this, callbackPtr, stringId](T item)
+    {
+        int id = getInt(stringId, 0);
+        if(!id) {
             auto resp = drogon::HttpResponse::newHttpResponse();
             resp->setStatusCode(drogon::HttpStatusCode::k404NotFound);
             (*callbackPtr)(resp);
             return;
         }
-        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(R::getJsonResponse(r)));
-        resp->setStatusCode(drogon::HttpStatusCode::k200OK);
-        (*callbackPtr)(resp);
-    } >> [callbackPtr](const DrogonDbException &e) {
-        LOG_ERROR << e.base().what();
-        auto resp = drogon::HttpResponse::newHttpResponse();
-        resp->setStatusCode(drogon::HttpStatusCode::k500InternalServerError);
-        (*callbackPtr)(resp);
-    };
+        item.id = id;
+        std::string query = T::sqlUpdate(item);
+        executeSqlQuery(callbackPtr, query, false);
+    });
 }
 
 template<class T, class R>
