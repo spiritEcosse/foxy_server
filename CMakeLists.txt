@@ -5,6 +5,8 @@ set(BUILD_EXAMPLES OFF)
 set(BUILD_CTL OFF)
 #set(BUILD_TESTING OFF)
 
+set(CMAKE_CXX_STANDARD 20)
+
 get_cmake_property(_variableNames VARIABLES)
 list(SORT _variableNames)
 foreach(_variableName ${_variableNames})
@@ -116,6 +118,16 @@ file(GLOB_RECURSE CMAKE_FILES ${PROJECT_SOURCE_DIR}/src/CMakeLists.txt
 cmake_format(cmake-format ${CMAKE_FILES} CMakeLists.txt)
 
 # End Formatting
+
+# Start adding fmt
+CPMAddPackage(
+        NAME fmt
+        VERSION 10.2.1
+        GITHUB_REPOSITORY fmtlib/fmt
+        GIT_TAG 10.2.1
+)
+target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
+# End adding fmt
 
 # Tests
 if (BUILD_TESTING)

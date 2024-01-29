@@ -4,7 +4,8 @@
 
 #include <ctime>
 #include <sstream>
-#include <iomanip>
+#include <fmt/core.h>
+#include <fmt/chrono.h>
 #include "BaseModel.h"
 #include "src/models/ItemModel.h"
 #include "src/models/PageModel.h"
@@ -13,26 +14,22 @@
 #include "src/orm/QuerySet.h"
 #include "src/utils/db/String.h"
 
-
 using namespace api::v1;
 
 std::string timePointToString(std::chrono::system_clock::time_point tp) {
     auto time_t = std::chrono::system_clock::to_time_t(tp);
 
     struct tm local_time {};
-
     localtime_r(&time_t, &local_time);
 
-    std::ostringstream oss;
-    oss << std::put_time(&local_time, "%Y-%m-%d %H:%M:%S");
+    std::string time_string = fmt::format("{:%Y-%m-%d %H:%M:%S}", local_time);
 
     auto duration = tp.time_since_epoch();
     auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration);
     duration -= seconds;
     auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
 
-    std::string time_string = oss.str();
-    return time_string + "." + std::to_string(milliseconds.count());
+    return fmt::format("{}.{}", time_string, milliseconds.count());
 }
 
 template<class T>
