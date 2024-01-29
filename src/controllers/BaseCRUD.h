@@ -11,7 +11,7 @@ namespace api::v1 {
     template<class T, class R>
     class BaseCRUD {
     protected:
-        void handleSqlResult(const drogon::orm::Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr, bool isCreate) const;
+        virtual void handleSqlResult(const drogon::orm::Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr, bool isCreate) const;
         void executeSqlQuery(std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr, const std::string& query, bool isCreate) const;
         void handleSqlError(const drogon::orm::DrogonDbException &e, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const;
         [[nodiscard]] virtual drogon::HttpResponsePtr checkBody(const drogon::HttpRequestPtr &req) const;

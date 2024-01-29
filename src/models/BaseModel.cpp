@@ -11,6 +11,8 @@
 #include "src/models/UserModel.h"
 #include "src/models/MediaModel.h"
 #include "src/orm/QuerySet.h"
+#include "src/utils/db/String.h"
+
 
 using namespace api::v1;
 
@@ -129,18 +131,6 @@ BaseModel<T>::sqlSelectList(int page, int limit) {
     QuerySet qs(T::tableName, false, limit, page, true);
     qs.order_by(std::make_pair(T::tableName + "." + T::orderBy, false), std::make_pair(T::tableName + "." + T::Field::id, false));
     return qs.buildSelect();
-}
-
-std::string addExtraQuotes(const std::string& str) {
-    std::string result;
-    for (char c : str) {
-        if (c == '\'') {
-            result += "''";
-        } else {
-            result += c;
-        }
-    }
-    return result;
 }
 
 template<class T>
