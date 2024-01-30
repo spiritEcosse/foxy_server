@@ -23,7 +23,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION update_item(query TEXT) RETURNS json AS $$
+CREATE OR REPLACE FUNCTION do_and_check(query TEXT) RETURNS json AS $$
 DECLARE
     rows INTEGER;
     result json;

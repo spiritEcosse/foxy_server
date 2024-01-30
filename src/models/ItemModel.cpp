@@ -4,6 +4,8 @@
 #include "ItemModel.h"
 #include "MediaModel.h"
 #include "src/orm/QuerySet.h"
+#include "src/utils/db/String.h"
+
 
 using namespace api::v1;
 
@@ -50,9 +52,8 @@ std::string ItemModel::sqlSelectList(int page, int limit) {
 }
 
 std::string ItemModel::sqlSelectOne(const std::string &field, const std::string &value) {
-    std::string sql = BaseModel::sqlSelectOne(field, value);
     QuerySet qsItem(tableName, true);
-    qsItem.jsonFields(ItemModel::fieldsJsonObject())
+    qsItem.jsonFields(addExtraQuotes(ItemModel::fieldsJsonObject()))
         .filter(std::make_pair(field, value));
     QuerySet qsMedia(MediaModel::tableName, false, 0, 0, false);
     qsMedia.filter(std::make_pair(MediaModel::Field::itemId, value))

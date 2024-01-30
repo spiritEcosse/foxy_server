@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include "src/utils/db/String.h"
 
 class QuerySet {
 private:
@@ -164,11 +165,11 @@ public:
     }
 
     [[nodiscard]] std::string buildSelectOne() const {
-        std::string query = "SELECT ( SELECT json_build_object(";
+        std::string query = "SELECT do_and_check(\'SELECT json_build_object(";
         query += _jsonFields;
         query += ") FROM " + tableName;
-        query += filter();
-        query += ") as " + tableName;
+        query += addExtraQuotes(filter());
+        query += "\') as " + tableName;
         return query;
     }
 

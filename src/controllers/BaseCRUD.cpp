@@ -29,11 +29,8 @@ void BaseCRUD<T, R>::deleteItem(const drogon::HttpRequestPtr &req,
         auto resp = drogon::HttpResponse::newHttpResponse();
         resp->setStatusCode(drogon::HttpStatusCode::k204NoContent);
         (*callbackPtr)(resp);
-    } >> [callbackPtr](const DrogonDbException &e) {
-        LOG_ERROR << e.base().what();
-        auto resp = drogon::HttpResponse::newHttpResponse();
-        resp->setStatusCode(drogon::HttpStatusCode::k500InternalServerError);
-        (*callbackPtr)(resp);
+    } >> [this, callbackPtr](const DrogonDbException &e) {
+        handleSqlError(e, callbackPtr);
     };
 }
 
@@ -50,7 +47,7 @@ void BaseCRUD<T, R>::getItem(
     T item;
     try {
         item = T(std::move(jsonObject));
-    } catch(const RequiredFieldsException &e) {
+    } catch([[maybe_unused]] const RequiredFieldsException &e) {
         auto resp = drogon::HttpResponse::newHttpResponse();
         resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
         (*callbackPtr)(resp);
@@ -96,7 +93,7 @@ void BaseCRUD<T, R>::createItems(const drogon::HttpRequestPtr &req,
     int index = 1;
     Json::Value jsonResponseError;
     try {
-        std::for_each(itemsJson.begin(), itemsJson.end(), [&items, &index](const auto &item) {
+        std::ranges::for_each(itemsJson.begin(), itemsJson.end(), [&items, &index](const auto &item) {
             items.emplace_back(std::move(item));
             ++index;
         });
@@ -119,11 +116,8 @@ void BaseCRUD<T, R>::createItems(const drogon::HttpRequestPtr &req,
         auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
         resp->setStatusCode(drogon::HttpStatusCode::k201Created);
         (*callbackPtr)(resp);
-    } >> [callbackPtr](const DrogonDbException &e) {
-        LOG_ERROR << e.base().what();
-        auto resp = drogon::HttpResponse::newHttpResponse();
-        resp->setStatusCode(drogon::HttpStatusCode::k500InternalServerError);
-        (*callbackPtr)(resp);
+    } >> [this, callbackPtr](const DrogonDbException &e) {
+        handleSqlError(e, callbackPtr);
     };
 }
 
@@ -145,11 +139,8 @@ void BaseCRUD<T, R>::getList(const drogon::HttpRequestPtr &req,
         resp->addHeader("Access-Control-Expose-Headers", "X-Total-Count");
         resp->setStatusCode(drogon::HttpStatusCode::k200OK);
         (*callbackPtr)(resp);
-    } >> [callbackPtr](const DrogonDbException &e) {
-        LOG_ERROR << e.base().what();
-        auto resp = drogon::HttpResponse::newHttpResponse();
-        resp->setStatusCode(drogon::HttpStatusCode::k500InternalServerError);
-        (*callbackPtr)(resp);
+    } >> [this, callbackPtr](const DrogonDbException &e) {
+        handleSqlError(e, callbackPtr);
     };
 }
 
@@ -171,22 +162,7 @@ void BaseCRUD<T, R>::getOne([[maybe_unused]] const drogon::HttpRequestPtr &req,
     std::string filterKey = isInt ? T::primaryKey : T::Field::slug;
     std::string query = T::sqlSelectOne(filterKey, stringId);
 
-    *dbClient << query >> [callbackPtr](const Result &r) {
-        if(r[0][0].isNull()) {
-            auto resp = drogon::HttpResponse::newHttpResponse();
-            resp->setStatusCode(drogon::HttpStatusCode::k404NotFound);
-            (*callbackPtr)(resp);
-            return;
-        }
-        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(R::getJsonResponse(r)));
-        resp->setStatusCode(drogon::HttpStatusCode::k200OK);
-        (*callbackPtr)(resp);
-    } >> [callbackPtr](const DrogonDbException &e) {
-        LOG_ERROR << e.base().what();
-        auto resp = drogon::HttpResponse::newHttpResponse();
-        resp->setStatusCode(drogon::HttpStatusCode::k500InternalServerError);
-        (*callbackPtr)(resp);
-    };
+    executeSqlQuery(callbackPtr, query, false);
 }
 
 template<class T, class R>

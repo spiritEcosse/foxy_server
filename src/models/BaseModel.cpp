@@ -133,8 +133,7 @@ BaseModel<T>::sqlSelectList(int page, int limit) {
 template<class T>
 std::string BaseModel<T>::fieldsJsonObject() {
     std::stringstream ss;
-    auto fieldNames = T::fullFields();
-    for(const auto &fieldName: fieldNames) {
+    for(auto fieldNames = T::fullFields(); const auto &fieldName: fieldNames) {
         ss << "\'" << fieldName << "\', " << fieldName;
         if(&fieldName != &fieldNames.back()) {
             ss << ", ";
@@ -146,14 +145,14 @@ std::string BaseModel<T>::fieldsJsonObject() {
 template<class T>
 std::string BaseModel<T>::sqlSelectOne(const std::string &field, const std::string &value) {
     QuerySet qs(T::tableName, true);
-    qs.jsonFields(T::fieldsJsonObject())
+    qs.jsonFields(addExtraQuotes(T::fieldsJsonObject()))
     .filter(std::make_pair(field, value));
     return qs.buildSelect();
 }
 
 template<class T>
 std::string BaseModel<T>::sqlUpdate(const T &item) {
-    std::string sql = "SELECT update_item('UPDATE \"" + T::tableName + "\" SET ";
+    std::string sql = "SELECT do_and_check('UPDATE \"" + T::tableName + "\" SET ";
     for(const auto &[key, value]: item.getObjectValues()) {
         std::visit(
             [&sql, &key](const auto &arg) {  // check it in c++20
