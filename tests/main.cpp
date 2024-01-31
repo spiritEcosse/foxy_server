@@ -22,19 +22,19 @@ DROGON_TEST(ListItems)
         CHECK(resp->getStatusCode() == k200OK);
         CHECK(resp->contentType() == CT_APPLICATION_JSON);
         auto respJson = *resp->jsonObject();
-//        CHECK(respJson["count"].asInt() == 12);
+        CHECK(respJson["count"].asInt() == 12);
         CHECK(respJson["page"].asInt() == 1);
 
         // Check the first item as an example
         auto firstItem = respJson["items"][0];
-//        CHECK(firstItem["created_at"].asString() == "2024-01-21T22:02:21.197599");
-//        CHECK(firstItem["description"].asString() == "description description");
-//        CHECK(firstItem["item_id"].asInt() == 1);
-//        CHECK(firstItem["meta_description"].asString() == "meta_description");
-//        CHECK(firstItem["slug"].asString() == "breakfast");
-//        CHECK(firstItem["src"].asString() == "items/friend/tp-friend.jpg");
-//        CHECK(firstItem["title"].asString() == "Breakfast");
-//        CHECK(firstItem["updated_at"].asString() == "2024-01-21T22:02:21.197599");
+        CHECK(firstItem["created_at"].asString() == "2024-01-21T22:02:21.197599");
+        CHECK(firstItem["description"].asString() == "description description");
+        CHECK(firstItem["item_id"].asInt() == 1);
+        CHECK(firstItem["meta_description"].asString() == "meta_description");
+        CHECK(firstItem["slug"].asString() == "breakfast");
+        CHECK(firstItem["src"].asString() == "items/friend/tp-friend.jpg");
+        CHECK(firstItem["title"].asString() == "Breakfast");
+        CHECK(firstItem["updated_at"].asString() == "2024-01-21T22:02:21.197599");
     });
 }
 

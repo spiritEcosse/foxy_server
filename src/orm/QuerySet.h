@@ -141,8 +141,11 @@ public:
             query += "    SELECT count(*)::integer as count FROM items ";
             query += ") ";
             query += ", valid_page AS ( ";
-            query += "    SELECT GetValidPage(" + std::to_string(_page) + ", " + std::to_string(_limit)
-                + ", (SELECT count FROM item_count)) as page ";
+            query += "    SELECT GetValidPage(";
+            query += std::to_string(_page);
+            query += ", ";
+            query += std::to_string(_limit);
+            query += ", (SELECT count FROM item_count)) as page ";
             query += ") ";
         }
         query += " SELECT ";
@@ -156,8 +159,10 @@ public:
             query += "        SELECT * FROM items ";
         } else {
             query += sqlItems;
-            query += " LIMIT " + std::to_string(_limit);
-            query += " OFFSET ((SELECT page FROM valid_page) - 1) * " + std::to_string(_limit);
+            query += " LIMIT ";
+            query += std::to_string(_limit);
+            query += " OFFSET ((SELECT page FROM valid_page) - 1) * ";
+            query += std::to_string(_limit);
         }
         query += "    ) as t ";
         query += ") as items";

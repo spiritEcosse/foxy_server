@@ -99,8 +99,7 @@ std::string BaseModel<T>::sqlInsertMultiple(const std::vector<T> &items) {
 template<class T>
 std::string BaseModel<T>::fieldsToString() {
     std::stringstream ss;
-    auto fieldNames = T::fields();
-    for(const auto &fieldName: fieldNames) {
+    for(auto fieldNames = T::fields(); const auto &fieldName: fieldNames) {
         ss << fieldName;
         if(&fieldName != &fieldNames.back()) {
             ss << ", ";
@@ -112,8 +111,7 @@ std::string BaseModel<T>::fieldsToString() {
 template<class T>
 std::string BaseModel<T>::fullFieldsWithTableToString() {
     std::stringstream ss;
-    auto fieldNames = T::fullFields();
-    for(const auto &fieldName: fieldNames) {
+    for(auto fieldNames = T::fullFields(); const auto &fieldName: fieldNames) {
         ss << T::tableName << "." << fieldName;
         if(&fieldName != &fieldNames.back()) {
             ss << ", ";
