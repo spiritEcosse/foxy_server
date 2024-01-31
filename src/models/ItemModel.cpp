@@ -56,7 +56,14 @@ std::string ItemModel::sqlSelectOne(const std::string &field, const std::string 
     qsItem.jsonFields(addExtraQuotes(ItemModel::fieldsJsonObject()))
         .filter(std::make_pair(field, value));
     QuerySet qsMedia(MediaModel::tableName, false, 0, 0, false);
-    qsMedia.filter(std::make_pair(MediaModel::Field::itemId, value))
+    std::string itemField = field;
+    if (field == Field::id) {
+        itemField = MediaModel::tableName + "." + MediaModel::Field::itemId;
+    } else {
+        itemField = ItemModel::tableName + "." + field;
+    }
+    qsMedia.join(ItemModel::tableName, ItemModel::tableName + "." + ItemModel::Field::id + " = " + MediaModel::tableName + "." + MediaModel::Field::itemId)
+        .filter(std::make_pair(itemField, value))
         .order_by(std::make_pair(MediaModel::tableName + "." + MediaModel::Field::sort, true))
         .only({MediaModel::fullFieldsWithTableToString()});
     return qsMedia.addQuery(qsItem);

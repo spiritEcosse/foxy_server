@@ -16,18 +16,6 @@ Json::Value Item::getJsonResponse(const Result &r) {
     return jsonResponse;
 }
 
-void Item::handleSqlResult(const Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr, bool isCreate) const {
-    Json::Value jsonResponse;
-    jsonResponse["page"] = r[0][0].as<int>();
-    jsonResponse["count"] = r[0][1].as<int>();
-    jsonResponse["items"] = r[0][2].as<Json::Value>();
-    auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
-    resp->addHeader("X-Total-Count", r[0][1].as<std::string>());
-    resp->addHeader("Access-Control-Expose-Headers", "X-Total-Count");
-    resp->setStatusCode(drogon::HttpStatusCode::k200OK);
-    (*callbackPtr)(resp);
-}
-
 void Item::getListAdmin(
     const drogon::HttpRequestPtr &req,
     std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
@@ -40,5 +28,8 @@ void Item::getListAdmin(
         .left_join(MediaModel::tableName, ItemModel::tableName + "." + ItemModel::Field::id + " = " + MediaModel::tableName + "." + MediaModel::Field::itemId)
         .order_by(std::make_pair(ItemModel::tableName + "." + ItemModel::orderBy, false), std::make_pair(ItemModel::tableName + "." + ItemModel::Field::id, false))
         .only({ItemModel::fullFieldsWithTableToString(), MediaModel::tableName + "." + MediaModel::Field::src});
-    executeSqlQuery(callbackPtr, qs.buildSelect(), false);
+    executeSqlQuery(callbackPtr, qs.buildSelect(),
+                    [this](const drogon::orm::Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> _callbackPtr) {
+                        this->handleSqlResultList(r, _callbackPtr);
+                    });
 }

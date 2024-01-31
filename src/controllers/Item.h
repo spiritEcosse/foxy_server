@@ -9,8 +9,6 @@
 namespace api::v1 {
 
     class Item : public drogon::HttpController<Item>, public BaseCRUD<ItemModel, Item> {
-    protected:
-        void handleSqlResult(const drogon::orm::Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr, bool isCreate) const override;
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(Item::getList, "", drogon::Get, drogon::Options);

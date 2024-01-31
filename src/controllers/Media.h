@@ -15,7 +15,7 @@ namespace api::v1 {
         METHOD_ADD(Media::getOne, "/{1}", drogon::Get, drogon::Options);
         METHOD_ADD(Media::updateItem, "/{1}", drogon::Put, drogon::Options, "api::v1::filters::JwtFilter");
         METHOD_ADD(Media::createItem, "", drogon::Post, drogon::Options, "api::v1::filters::JwtFilter");
-        METHOD_ADD(Media::createItems, "items/", drogon::Post, drogon::Options, "api::v1::filters::JwtFilter");
+        METHOD_ADD(Media::createItems, "items", drogon::Post, drogon::Options, "api::v1::filters::JwtFilter");
         METHOD_ADD(Media::getList, "", drogon::Get, drogon::Options, "api::v1::filters::JwtFilter");
         METHOD_ADD(Media::deleteItem, "{1}", drogon::Delete, drogon::Options, "api::v1::filters::JwtFilter");
         METHOD_LIST_END
