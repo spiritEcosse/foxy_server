@@ -38,8 +38,8 @@ std::string BaseModel<T>::sqlDelete(int id) {
 }
 
 template<class T>
-std::string BaseModel<T>::sqlInsert(const T &item) {
-    std::string sql = "INSERT INTO \"" + T::tableName + "\" (" + T::fieldsToString() + ") VALUES (";
+std::string BaseModel<T>::sqlInsertSingle(const T &item) {
+    std::string sql = " (";
     for(const auto &[key, value]: item.getObjectValues()) {
         std::visit(
             [&sql](const auto &arg) {
@@ -60,6 +60,13 @@ std::string BaseModel<T>::sqlInsert(const T &item) {
     }
     sql.pop_back();
     sql.append(")");
+    return sql;
+}
+
+template<class T>
+std::string BaseModel<T>::sqlInsert(const T &item) {
+    std::string sql = "INSERT INTO \"" + T::tableName + "\" (" + T::fieldsToString() + ") VALUES ";
+    sql += sqlInsertSingle(item);
     sql.append(" RETURNING json_build_object(" + T::fieldsJsonObject() + ")");
     return sql;
 }
@@ -68,28 +75,7 @@ template<class T>
 std::string BaseModel<T>::sqlInsertMultiple(const std::vector<T> &items) {
     std::string sql = "INSERT INTO \"" + T::tableName + "\" (" + T::fieldsToString() + ") VALUES ";
     for(const auto &item: items) {
-        sql.append("(");
-
-        for(const auto &[key, value]: item.getObjectValues()) {
-            std::visit(
-                [&sql](const auto &arg) {
-                    std::string data;
-                    using Type = std::decay_t<decltype(arg)>;
-                    if constexpr(std::is_same_v<Type, std::chrono::system_clock::time_point>) {
-                        data = timePointToString(arg);
-                    } else if constexpr(std::is_same_v<Type, int>) {
-                        data = std::to_string(arg);
-                    } else if constexpr(std::is_same_v<Type, bool>) {
-                        data = arg ? "true" : "false";
-                    } else {
-                        data = arg;
-                    }
-                    sql.append("'").append(data).append("',");
-                },
-                value);
-        }
-        sql.pop_back();
-        sql.append("),");
+        sql.append(sqlInsertSingle(item)).append(",");
     }
     sql.pop_back();
     sql.append(" RETURNING json_build_object(" + T::fieldsJsonObject() + ")");

@@ -29,6 +29,7 @@ namespace api::v1 {
         static inline const std::string primaryKey = Field::id;
 
         [[nodiscard]] static std::string sqlInsertMultiple(const std::vector<T> &item);
+        [[nodiscard]] static std::string sqlInsertSingle(const T &item);
         [[nodiscard]] static std::string sqlInsert(const T &item);
         [[nodiscard]] static std::string sqlUpdate(const T &item);
         [[nodiscard]] static std::string sqlSelectList(int page, int limit);
