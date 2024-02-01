@@ -48,9 +48,7 @@ namespace api::v1 {
             if(!sort) {
                 missingFields[Field::sort] = Field::sort + " is required";
             }
-            if(!missingFields.empty()) {
-                throw RequiredFieldsException(missingFields);
-            }
+            checkMissingFields(missingFields);
         }
 
         [[nodiscard]] static std::vector<std::string> fields();

@@ -43,9 +43,7 @@ namespace api::v1 {
                 missingFields[Field::password] = Field::password + " is required";
             }
             hashPassword();
-            if(!missingFields.empty()) {
-                throw RequiredFieldsException(missingFields);
-            }
+            checkMissingFields(missingFields);
         }
 
         [[nodiscard]] static std::vector<std::string> fields();

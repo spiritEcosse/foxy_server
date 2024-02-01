@@ -175,6 +175,20 @@ std::string BaseModel<T>::sqlUpdate(const T &item) {
     return sql;
 }
 
+template<class T>
+void BaseModel<T>::checkMissingFields(const Json::Value& missingFields) const {
+    if(!missingFields.empty()) {
+        throw RequiredFieldsException(missingFields);
+    }
+}
+
+template<class T>
+void BaseModel<T>::validateField(const std::string& fieldName, const std::string& value, Json::Value& missingFields) const {
+    if(value.empty()) {
+        missingFields[fieldName] = fieldName + " is required";
+    }
+}
+
 template class api::v1::BaseModel<PageModel>;
 template class api::v1::BaseModel<ItemModel>;
 template class api::v1::BaseModel<UserModel>;

@@ -47,22 +47,11 @@ namespace api::v1 {
             enabled = json[Field::enabled].asBool();
 
             Json::Value missingFields;
-            if(title.empty()) {
-                missingFields[Field::title] = Field::title + " is required";
-            }
-            if(description.empty()) {
-                missingFields[Field::description] = Field::description + " is required";
-            }
-            if(metaDescription.empty()) {
-                missingFields[Field::metaDescription] = Field::metaDescription + " is required";
-            }
-            if(slug.empty()) {
-                missingFields[Field::slug] = Field::slug + " is required";
-            }
-
-            if(!missingFields.empty()) {
-                throw RequiredFieldsException(missingFields);
-            }
+            validateField(Field::title, title, missingFields);
+            validateField(Field::description, description, missingFields);
+            validateField(Field::metaDescription, metaDescription, missingFields);
+            validateField(Field::slug, slug, missingFields);
+            checkMissingFields(missingFields);
         }
 
         [[nodiscard]] static std::vector<std::string> fields();

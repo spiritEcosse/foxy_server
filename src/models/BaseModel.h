@@ -6,6 +6,7 @@
 #define BASEMODEL_H
 
 #include <string>
+#include <json/value.h>
 
 namespace api::v1 {
     template<class T>
@@ -36,6 +37,8 @@ namespace api::v1 {
         [[nodiscard]] static std::string fullFieldsWithTableToString();
         [[nodiscard]] static std::string fieldsJsonObject();
         [[nodiscard]] static std::string sqlDelete(int id);
+        void checkMissingFields(const Json::Value& missingFields) const;
+        void validateField(const std::string& fieldName, const std::string& value, Json::Value& missingFields) const;
     };
 }
 
