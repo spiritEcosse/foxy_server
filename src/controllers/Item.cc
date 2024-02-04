@@ -10,9 +10,8 @@ Json::Value Item::getJsonResponse(const Result &r) {
     if (r[0].size() != 2) {
         return BaseCRUD::getJsonResponse(r);
     }
-    Json::Value jsonResponse;
+    auto jsonResponse = r[0][1].as<Json::Value>();
     jsonResponse["media"] = r[0][0].as<Json::Value>();
-    jsonResponse["item"] = r[0][1].as<Json::Value>();
     return jsonResponse;
 }
 
