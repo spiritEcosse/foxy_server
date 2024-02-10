@@ -103,3 +103,10 @@ CREATE TRIGGER set_timestamp
     BEFORE UPDATE ON "user"
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
+
+CREATE OR REPLACE FUNCTION format_src(src TEXT, cloud_name TEXT)
+    RETURNS TEXT AS $$
+BEGIN
+    RETURN 'https://' || cloud_name || '.twic.pics/' || src || '?twic=v1';
+END;
+$$ LANGUAGE plpgsql;

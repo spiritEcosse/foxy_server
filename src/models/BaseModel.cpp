@@ -169,7 +169,7 @@ void BaseModel<T>::checkMissingFields(const Json::Value& missingFields) const {
 }
 
 template<class T>
-void BaseModel<T>::validateField(const std::string& fieldName, const std::string& value, Json::Value& missingFields) const {
+void BaseModel<T>::validateField(const std::string& fieldName, const std::string_view& value, Json::Value& missingFields) const {
     if(value.empty()) {
         missingFields[fieldName] = fieldName + " is required";
     }

@@ -26,7 +26,7 @@ DROGON_TEST(ListItems)
         CHECK(respJson["page"].asInt() == 1);
 
         // Check the first item as an example
-        auto firstItem = respJson["items"][0];
+        auto firstItem = respJson["data"][0];
         CHECK(firstItem["created_at"].asString() == "2024-01-21T22:02:21.197599");
         CHECK(firstItem["description"].asString() == "description description");
         CHECK(firstItem["item_id"].asInt() == 1);
@@ -41,7 +41,7 @@ DROGON_TEST(ListItems)
 DROGON_TEST(CreateItem) {
     auto client = HttpClient::newHttpClient("http://localhost:8848");
     auto req = HttpRequest::newHttpRequest();
-    req->setPath("/api/v1/item/");
+    req->setPath("/api/v1/item/admin");
     req->setMethod(drogon::Post);
     req->setContentTypeCode(CT_APPLICATION_JSON);
     std::string slug = "test" + std::to_string(getCurrentTimeSinceEpochInMilliseconds());

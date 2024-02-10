@@ -82,17 +82,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE jwt-cpp)
 
 CPMAddPackage(
         NAME bcrypt
-        VERSION V2.0_NODEBCRYPT
         GITHUB_REPOSITORY hilch/Bcrypt.cpp
-        GIT_TAG V2.0_NODEBCRYPT
+        GIT_TAG master
 )
-if (BUILD_TESTING)
-    execute_process(COMMAND bash -c "sed -i ${EMPTY_STRING} '11,12s/^/#/' ${PROJECT_BINARY_DIR}/_deps/bcrypt-src/CMakeLists.txt"
-            RESULT_VARIABLE EXCLUDE_BASH_SCRIPT)
-    if (NOT EXCLUDE_BASH_SCRIPT EQUAL "0")
-        message(FATAL_ERROR "sed failed with : ${EXCLUDE_BASH_SCRIPT}, please check")
-    endif()
-endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE bcrypt)
 # End adding hilch/Bcrypt.cpp

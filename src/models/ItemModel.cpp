@@ -5,6 +5,8 @@
 #include "MediaModel.h"
 #include "src/orm/QuerySet.h"
 #include "src/utils/db/String.h"
+#include "src/utils/env.h"
+#include <fmt/core.h>
 
 
 using namespace api::v1;
@@ -42,16 +44,22 @@ std::vector<std::pair<std::string, std::variant<int, bool, std::string>>> ItemMo
 }
 
 std::string ItemModel::sqlSelectList(int page, int limit) {
+    std::string app_cloud_name;
+    getenv("APP_CLOUD_NAME", app_cloud_name);
+
     QuerySet qs(ItemModel::tableName, false, limit, page, true);
     qs.distinct(ItemModel::tableName + "." + ItemModel::orderBy, ItemModel::tableName + "." + ItemModel::Field::id)
         .join(MediaModel::tableName, ItemModel::tableName + "." + ItemModel::Field::id + " = " + MediaModel::tableName + "." + MediaModel::Field::itemId)
         .order_by(std::make_pair(ItemModel::tableName + "." + ItemModel::orderBy, false), std::make_pair(ItemModel::tableName + "." + ItemModel::Field::id, false))
         .filter(std::make_pair(ItemModel::tableName + "." + ItemModel::Field::enabled, "true"))
-        .only({ItemModel::fullFieldsWithTableToString(), MediaModel::tableName + "." + MediaModel::Field::src});
+        .only({ItemModel::fullFieldsWithTableToString(), fmt::format("format_src(media.src, '{}') as src", app_cloud_name)});
     return qs.buildSelect();
 }
 
 std::string ItemModel::sqlSelectOne(const std::string &field, const std::string &value) {
+    std::string app_cloud_name;
+    getenv("APP_CLOUD_NAME", app_cloud_name);
+
     QuerySet qsItem(tableName, true);
     qsItem.jsonFields(addExtraQuotes(ItemModel::fieldsJsonObject()))
         .filter(std::make_pair(field, value));
@@ -65,6 +73,6 @@ std::string ItemModel::sqlSelectOne(const std::string &field, const std::string 
     qsMedia.join(ItemModel::tableName, ItemModel::tableName + "." + ItemModel::Field::id + " = " + MediaModel::tableName + "." + MediaModel::Field::itemId)
         .filter(std::make_pair(itemField, value))
         .order_by(std::make_pair(MediaModel::tableName + "." + MediaModel::Field::sort, true))
-        .only({MediaModel::fullFieldsWithTableToString()});
+        .only({MediaModel::fullFieldsWithTableToString(), fmt::format("format_src(media.src, '{}') as src", app_cloud_name)});
     return qsMedia.addQuery(qsItem);
 }

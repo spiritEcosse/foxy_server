@@ -1,13 +1,7 @@
 #include "drogon/drogon.h"
+#include "src/utils/env.h"
 
 using namespace drogon;
-
-bool getenv(const char *name, std::string &env) {
-    const char *ret = getenv(name);
-    if(ret)
-        env = std::string(ret);
-    return ret != nullptr;
-}
 
 int main() {
     std::string config_app_path;
@@ -24,6 +18,10 @@ int main() {
 
     if(!getenv("FOXY_CLIENT", foxy_client)) {
         throw std::invalid_argument("FOXY_CLIENT is not set");
+    }
+
+    if(std::string app_cloud_name; !getenv("APP_CLOUD_NAME", app_cloud_name)) {
+        throw std::invalid_argument("APP_CLOUD_NAME is not set");
     }
 
     std::string foxy_admin;
