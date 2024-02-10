@@ -3,7 +3,9 @@ project(foxy_server)
 
 set(BUILD_EXAMPLES OFF)
 set(BUILD_CTL OFF)
-set(BUILD_TESTING OFF)
+#set(BUILD_TESTING OFF)
+
+set(CMAKE_CXX_STANDARD 20)
 
 get_cmake_property(_variableNames VARIABLES)
 list(SORT _variableNames)
@@ -27,9 +29,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty" "${CMAKE_BI
 include(3rdparty)
 
 # start src
-file(GLOB_RECURSE RESOURCES ${PROJECT_SOURCE_DIR}/src/*.cc ${PROJECT_SOURCE_DIR}/src/*.cpp
-        ${PROJECT_SOURCE_DIR}/src/*.h)
+file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS src/*.cc src/*.cpp /src/*.h)
 add_executable(foxy_server ${RESOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 # end src
 
 set(CMAKE_SYSTEM_PROCESSOR arm) # why this?
@@ -66,6 +68,26 @@ endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
 # end drogon
 
+# Start adding jwt-cpp
+CPMAddPackage(
+        NAME jwt-cpp
+        VERSION 0.7.0
+        GITHUB_REPOSITORY Thalhammer/jwt-cpp
+        GIT_TAG v0.7.0
+)
+target_link_libraries(${PROJECT_NAME} PRIVATE jwt-cpp)
+# End adding jwt-cpp
+
+# Start adding hilch/Bcrypt.cpp
+
+CPMAddPackage(
+        NAME bcrypt
+        GITHUB_REPOSITORY hilch/Bcrypt.cpp
+        GIT_TAG master
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE bcrypt)
+# End adding hilch/Bcrypt.cpp
 
 # Start Formatting
 CPMAddPackage(
@@ -88,3 +110,20 @@ file(GLOB_RECURSE CMAKE_FILES ${PROJECT_SOURCE_DIR}/src/CMakeLists.txt
 cmake_format(cmake-format ${CMAKE_FILES} CMakeLists.txt)
 
 # End Formatting
+
+# Start adding fmt
+CPMAddPackage(
+        NAME fmt
+        VERSION 10.2.1
+        GITHUB_REPOSITORY fmtlib/fmt
+        GIT_TAG 10.2.1
+)
+target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
+# End adding fmt
+
+# Tests
+if (BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
+# End Tests
