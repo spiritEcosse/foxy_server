@@ -51,6 +51,47 @@ void BaseCRUD<T, R>::getItem(
 }
 
 template<class T, class R>
+void BaseCRUD<T, R>::getItems(
+    const drogon::HttpRequestPtr &req, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr,
+    std::function<void(std::vector<T>)> successCallback) const {
+    if(auto resp = checkBody(req); resp) {
+        (*callbackPtr)(resp);
+        return;
+    }
+
+    Json::Value jsonObject = *req->getJsonObject();
+    auto itemsJson = jsonObject["items"];
+    if(itemsJson.empty()) {
+        Json::Value jsonResponse;
+        jsonResponse["error"] = "Empty items";
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
+        resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
+        (*callbackPtr)(resp);
+        return;
+    }
+
+    std::vector<T> items;
+    int index = 1;
+    Json::Value jsonResponseError;
+    try {
+        std::ranges::for_each(itemsJson.begin(), itemsJson.end(), [&items, &index, &req](const auto &item) {
+            if (item[T::Field::id].asInt() == 0 && req->method() == drogon::Put) {
+                throw RequiredFieldsException("id is required");
+            }
+            items.emplace_back(std::move(item));
+            ++index;
+        });
+    } catch(const RequiredFieldsException &e) {
+        jsonResponseError[std::to_string(index)] = e.getRequiredFields();
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponseError));
+        resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
+        (*callbackPtr)(resp);
+        return;
+    }
+    successCallback(std::move(items));
+}
+
+template<class T, class R>
 void BaseCRUD<T, R>::createItem(const drogon::HttpRequestPtr &req,
                                 std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
@@ -70,42 +111,14 @@ void BaseCRUD<T, R>::createItems(const drogon::HttpRequestPtr &req,
                                  std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
 
-    if(auto resp = checkBody(req); resp) {
-        (*callbackPtr)(resp);
-        return;
-    }
-
-    Json::Value jsonObject = *req->getJsonObject();
-    auto itemsJson = jsonObject["items"];
-    if(itemsJson.empty()) {
-        Json::Value jsonResponse;
-        jsonResponse["error"] = "Empty items";
-        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
-        resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
-        (*callbackPtr)(resp);
-        return;
-    }
-
-    std::vector<T> items;
-    int index = 1;
-    Json::Value jsonResponseError;
-    try {
-        std::ranges::for_each(itemsJson.begin(), itemsJson.end(), [&items, &index](const auto &item) {
-            items.emplace_back(std::move(item));
-            ++index;
-        });
-    } catch(const RequiredFieldsException &e) {
-        jsonResponseError[std::to_string(index)] = e.getRequiredFields();
-        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponseError));
-        resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
-        (*callbackPtr)(resp);
-        return;
-    }
-    std::string query = T::sqlInsertMultiple(items);
-    executeSqlQuery(callbackPtr, query,
-                    [this](const drogon::orm::Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> _callbackPtr) {
-                        this->handleSqlResultCreatingItems(r, _callbackPtr);
-                    });
+    getItems(req, callbackPtr, [this, callbackPtr](std::vector<T> items)
+    {
+        std::string query = T::sqlInsertMultiple(items);
+        executeSqlQuery(callbackPtr, query,
+                        [this](const drogon::orm::Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> _callbackPtr) {
+                            this->handleSqlResultItems(r, _callbackPtr, drogon::HttpStatusCode::k201Created);
+                        });
+    });
 }
 
 template<class T, class R>
@@ -114,45 +127,14 @@ void BaseCRUD<T, R>::updateItems(const drogon::HttpRequestPtr &req,
 {
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
 
-    if(auto resp = checkBody(req); resp) {
-        (*callbackPtr)(resp);
-        return;
-    }
-
-    Json::Value jsonObject = *req->getJsonObject();
-    auto itemsJson = jsonObject["items"];
-    if(itemsJson.empty()) {
-        Json::Value jsonResponse;
-        jsonResponse["error"] = "Empty items";
-        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
-        resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
-        (*callbackPtr)(resp);
-        return;
-    }
-
-    std::vector<T> items;
-    int index = 1;
-    Json::Value jsonResponseError;
-    try {
-        std::ranges::for_each(itemsJson.begin(), itemsJson.end(), [&items, &index](const auto &item) {
-            if (item[T::Field::id].asInt() == 0) {
-                throw RequiredFieldsException("id is required");
-            }
-            items.emplace_back(std::move(item));
-            ++index;
-        });
-    } catch(const RequiredFieldsException &e) {
-        jsonResponseError[std::to_string(index)] = e.getRequiredFields();
-        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponseError));
-        resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
-        (*callbackPtr)(resp);
-        return;
-    }
-    std::string query = T::sqlUpdateMultiple(items);
-    executeSqlQuery(callbackPtr, query,
-                    [this](const drogon::orm::Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> _callbackPtr) {
-                        this->handleSqlResultCreatingItems(r, _callbackPtr);
-                    });
+    getItems(req, callbackPtr, [this, callbackPtr](std::vector<T> items)
+    {
+        std::string query = T::sqlUpdateMultiple(items);
+        executeSqlQuery(callbackPtr, query,
+                        [this](const drogon::orm::Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> _callbackPtr) {
+                            this->handleSqlResultItems(r, _callbackPtr, drogon::HttpStatusCode::k200OK);
+                        });
+    });
 }
 
 template<class T, class R>
@@ -253,7 +235,9 @@ void BaseCRUD<T, R>::handleSqlResultCreating(const Result &r, std::shared_ptr<st
 }
 
 template<class T, class R>
-void BaseCRUD<T, R>::handleSqlResultCreatingItems(const Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const {
+void BaseCRUD<T, R>::handleSqlResultItems(
+    const Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr,
+    drogon::HttpStatusCode statusCode) const {
     Json::Value jsonResponse;
     for(const auto &row: r) {
         Json::Value item;
@@ -261,7 +245,7 @@ void BaseCRUD<T, R>::handleSqlResultCreatingItems(const Result &r, std::shared_p
         jsonResponse["items"].append(item);
     }
     auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
-    resp->setStatusCode(drogon::HttpStatusCode::k201Created);
+    resp->setStatusCode(statusCode);
     (*callbackPtr)(resp);
 }
 

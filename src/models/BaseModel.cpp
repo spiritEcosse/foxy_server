@@ -85,7 +85,6 @@ std::string BaseModel<T>::sqlInsertMultiple(const std::vector<T> &items) {
 template<class T>
 void BaseModel<T>::sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColumns) {
     std::string sql;
-    // Loop over each field in the item
 
     for(const auto &[key, value]: item.getObjectValues()) {
         std::visit(
@@ -132,7 +131,6 @@ std::string BaseModel<T>::sqlUpdateMultiple(const std::vector<T> &items) {
 
     sql.append(fmt::format(" WHERE {} IN ({}) ", T::primaryKey, ids));
     sql.append(fmt::format(" RETURNING json_build_object({});", T::fieldsJsonObject()));
-    std::cout << sql << std::endl;
     return sql;
 }
 
