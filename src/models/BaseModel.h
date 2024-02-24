@@ -28,10 +28,20 @@ namespace api::v1 {
         static inline const std::string orderBy = Field::updatedAt;
         static inline const std::string primaryKey = Field::id;
 
+        struct ModelFieldHasher {
+            using is_transparent = void;
+            std::size_t operator()(std::string_view sv) const {
+                std::hash<std::string_view> hasher;
+                return hasher(sv);
+            }
+        };
         [[nodiscard]] static std::string sqlInsertMultiple(const std::vector<T> &item);
         [[nodiscard]] static std::string sqlInsertSingle(const T &item);
         [[nodiscard]] static std::string sqlInsert(const T &item);
-        [[nodiscard]] static std::string sqlUpdate(const T &item);
+        [[nodiscard]] static std::string sqlUpdateMultiple(const std::vector<T> &item);
+        using ModelFieldKeyHash = decltype(std::unordered_map<std::string, std::string, ModelFieldHasher, std::equal_to<>>());
+        static void sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColumns);
+        [[nodiscard]] static std::string sqlUpdate(T &&item);
         [[nodiscard]] static std::string sqlSelectList(int page, int limit);
         [[nodiscard]] static std::string sqlSelectOne(const std::string &field, const std::string &value);
         [[nodiscard]] static std::string fieldsToString();

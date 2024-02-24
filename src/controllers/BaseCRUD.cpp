@@ -109,6 +109,53 @@ void BaseCRUD<T, R>::createItems(const drogon::HttpRequestPtr &req,
 }
 
 template<class T, class R>
+void BaseCRUD<T, R>::updateItems(const drogon::HttpRequestPtr &req,
+                                             std::function<void(const drogon::HttpResponsePtr &)> &&callback) const
+{
+    auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
+
+    if(auto resp = checkBody(req); resp) {
+        (*callbackPtr)(resp);
+        return;
+    }
+
+    Json::Value jsonObject = *req->getJsonObject();
+    auto itemsJson = jsonObject["items"];
+    if(itemsJson.empty()) {
+        Json::Value jsonResponse;
+        jsonResponse["error"] = "Empty items";
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
+        resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
+        (*callbackPtr)(resp);
+        return;
+    }
+
+    std::vector<T> items;
+    int index = 1;
+    Json::Value jsonResponseError;
+    try {
+        std::ranges::for_each(itemsJson.begin(), itemsJson.end(), [&items, &index](const auto &item) {
+            if (item[T::Field::id].asInt() == 0) {
+                throw RequiredFieldsException("id is required");
+            }
+            items.emplace_back(std::move(item));
+            ++index;
+        });
+    } catch(const RequiredFieldsException &e) {
+        jsonResponseError[std::to_string(index)] = e.getRequiredFields();
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponseError));
+        resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
+        (*callbackPtr)(resp);
+        return;
+    }
+    std::string query = T::sqlUpdateMultiple(items);
+    executeSqlQuery(callbackPtr, query,
+                    [this](const drogon::orm::Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> _callbackPtr) {
+                        this->handleSqlResultCreatingItems(r, _callbackPtr);
+                    });
+}
+
+template<class T, class R>
 void BaseCRUD<T, R>::getList(const drogon::HttpRequestPtr &req,
                              std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
     int page = getInt(req->getParameter("page"), 1);
@@ -154,7 +201,7 @@ void BaseCRUD<T, R>::updateItem(const drogon::HttpRequestPtr &req,
             return;
         }
         item.id = id;
-        std::string query = T::sqlUpdate(item);
+        std::string query = T::sqlUpdate(std::move(item));
         executeSqlQuery(callbackPtr, query);
     });
 }

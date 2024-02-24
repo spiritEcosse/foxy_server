@@ -40,6 +40,7 @@ namespace api::v1 {
             if(src.empty()) {
                 missingFields[Field::src] = Field::src + " is required";
             }
+            id = json[Field::id].asInt();
             itemId = json[Field::itemId].asInt();
             if(!itemId) {
                 missingFields[Field::itemId] = Field::itemId + " is required";
