@@ -200,6 +200,13 @@ void BaseModel<T>::validateField(const std::string& fieldName, const std::string
     }
 }
 
+template<class T>
+std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>> BaseModel<T>::getObjectValues() const {
+    return {
+        {Field::updatedAt, updatedAt}
+    };
+}
+
 template class api::v1::BaseModel<PageModel>;
 template class api::v1::BaseModel<ItemModel>;
 template class api::v1::BaseModel<UserModel>;

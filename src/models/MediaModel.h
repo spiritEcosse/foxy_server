@@ -25,15 +25,12 @@ namespace api::v1 {
         MediaModel& operator=(const MediaModel&) = delete;  // Copy assignment operator
         MediaModel(MediaModel&&) noexcept = default;  // Move constructor
         MediaModel& operator=(MediaModel&&) noexcept = default;  // Move assignment operator
-        int id = 0;
         std::string src;
         std::string thumb;
         int itemId = 0;
         int sort = 0;
-        std::chrono::system_clock::time_point updatedAt;
-        std::chrono::system_clock::time_point createdAt;
 
-        explicit MediaModel(const Json::Value& json) {
+        explicit MediaModel(const Json::Value& json): BaseModel(json) {
             Json::Value missingFields;
 
             src = json[Field::src].asString();
@@ -54,7 +51,7 @@ namespace api::v1 {
 
         [[nodiscard]] static std::vector<std::string> fields();
         [[nodiscard]] static std::vector<std::string> fullFields();
-        [[nodiscard]] std::vector<std::pair<std::string, std::variant<int, bool, std::string>>> getObjectValues() const;
+        [[nodiscard]] std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>> getObjectValues() const override;
     };
 }
 

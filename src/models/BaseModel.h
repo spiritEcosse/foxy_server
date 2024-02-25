@@ -18,6 +18,13 @@ namespace api::v1 {
         BaseModel(BaseModel &&) noexcept = default;  // Move constructor
         BaseModel &operator=(BaseModel &&) noexcept = default;  // Move assignment operator
         virtual ~BaseModel() = default;
+        std::chrono::system_clock::time_point updatedAt;
+        std::chrono::system_clock::time_point createdAt;
+        int id = 0;
+
+        explicit BaseModel([[maybe_unused ]] const Json::Value& json) {
+            updatedAt = std::chrono::system_clock::now();
+        }
 
         struct Field {
             static inline const std::string id = "id";
@@ -48,6 +55,7 @@ namespace api::v1 {
         [[nodiscard]] static std::string fullFieldsWithTableToString();
         [[nodiscard]] static std::string fieldsJsonObject();
         [[nodiscard]] static std::string sqlDelete(int id);
+        [[nodiscard]] virtual std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>> getObjectValues() const;
         void checkMissingFields(const Json::Value& missingFields) const;
         void validateField(const std::string& fieldName, const std::string_view& value, Json::Value& missingFields) const;
     };

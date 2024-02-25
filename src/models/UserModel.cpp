@@ -24,11 +24,11 @@ std::vector<std::string> UserModel::fullFields() {
     };
 }
 
-std::vector<std::pair<std::string, std::variant<int, bool, std::string>>> UserModel::getObjectValues() const {
-    return {
-        {Field::email, email},
-        {Field::password, password},
-    };
+std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>> UserModel::getObjectValues() const {
+    auto baseValues = BaseModel::getObjectValues();
+    baseValues.emplace_back(Field::email, email);
+    baseValues.emplace_back(Field::password, password);
+    return baseValues;
 }
 
 void UserModel::hashPassword() {

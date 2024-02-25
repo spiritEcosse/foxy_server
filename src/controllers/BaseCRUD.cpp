@@ -223,7 +223,11 @@ void BaseCRUD<T, R>::handleSqlResultList(const Result &r, std::shared_ptr<std::f
 template<class T, class R>
 void BaseCRUD<T, R>::handleSqlResult(const Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const {
     auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(R::getJsonResponse(r)));
-    resp->setStatusCode(drogon::HttpStatusCode::k200OK);
+    if (r.empty()) {
+        resp->setStatusCode(drogon::HttpStatusCode::k404NotFound);
+    } else {
+        resp->setStatusCode(drogon::HttpStatusCode::k200OK);
+    }
     (*callbackPtr)(resp);
 }
 
@@ -278,7 +282,11 @@ void BaseCRUD<T, R>::handleSqlError(const DrogonDbException &e, std::shared_ptr<
 template<class T, class R>
 Json::Value BaseCRUD<T, R>::getJsonResponse(const Result &r) {
     Json::Value jsonResponse;
-    jsonResponse = r[0][0].as<Json::Value>();
+    if (r.empty()) {
+        jsonResponse["error"] = "Not found";
+    } else {
+        jsonResponse = r[0][0].as<Json::Value>();
+    }
     return jsonResponse;
 }
 

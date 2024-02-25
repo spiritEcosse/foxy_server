@@ -26,10 +26,10 @@ std::vector<std::string> MediaModel::fullFields() {
     };
 }
 
-std::vector<std::pair<std::string, std::variant<int, bool, std::string>>> MediaModel::getObjectValues() const {
-    return {
-        {Field::itemId, itemId},
-        {Field::sort, sort},
-        {Field::src, src},
-    };
+std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>> MediaModel::getObjectValues() const {
+    auto baseValues = BaseModel::getObjectValues();
+    baseValues.emplace_back(Field::src, src);
+    baseValues.emplace_back(Field::itemId, itemId);
+    baseValues.emplace_back(Field::sort, sort);
+    return baseValues;
 }
