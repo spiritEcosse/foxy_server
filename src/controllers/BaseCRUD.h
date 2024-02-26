@@ -13,7 +13,7 @@ namespace api::v1 {
     protected:
         virtual void handleSqlResult(const drogon::orm::Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const;
         virtual void handleSqlResultCreating(const drogon::orm::Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const;
-        virtual void handleSqlResultCreatingItems(const drogon::orm::Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const;
+        virtual void handleSqlResultItems(const drogon::orm::Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr, drogon::HttpStatusCode statusCode) const;
         virtual void handleSqlResultDeleting(const drogon::orm::Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const;
         virtual void handleSqlResultList(const drogon::orm::Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const;
         void executeSqlQuery(
@@ -26,6 +26,8 @@ namespace api::v1 {
         [[nodiscard]] static Json::Value getJsonResponse(const drogon::orm::Result &r);
         void getItem(
             const drogon::HttpRequestPtr &req, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr, std::function<void(T)> successCallback) const;
+        void getItems(
+            const drogon::HttpRequestPtr &req, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr, std::function<void(std::vector<T>)> successCallback) const;
 public:
         virtual ~BaseCRUD() = default;
         virtual void getOne(const drogon::HttpRequestPtr &req,
@@ -40,6 +42,8 @@ public:
         virtual void updateItem(const drogon::HttpRequestPtr &req,
                                 std::function<void(const drogon::HttpResponsePtr &)> &&callback,
                                 const std::string &) const;
+        virtual void updateItems(const drogon::HttpRequestPtr &req,
+                                std::function<void(const drogon::HttpResponsePtr &)> &&callback) const;
         virtual void deleteItem(const drogon::HttpRequestPtr &req,
                                 std::function<void(const drogon::HttpResponsePtr &)> &&callback,
                                 const std::string &) const;

@@ -29,12 +29,12 @@ std::vector<std::string> PageModel::fullFields() {
     };
 }
 
-std::vector<std::pair<std::string, std::variant<int, bool, std::string>>> PageModel::getObjectValues() const {
-    return {
-        {Field::title, title},
-        {Field::description, description},
-        {Field::metaDescription, metaDescription},
-        {Field::canonicalUrl, canonicalUrl},
-        {Field::slug, slug},
-    };
+std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>> PageModel::getObjectValues() const {
+    auto baseValues = BaseModel::getObjectValues();
+    baseValues.emplace_back(Field::title, title);
+    baseValues.emplace_back(Field::description, description);
+    baseValues.emplace_back(Field::metaDescription, metaDescription);
+    baseValues.emplace_back(Field::canonicalUrl, canonicalUrl);
+    baseValues.emplace_back(Field::slug, slug);
+    return baseValues;
 }

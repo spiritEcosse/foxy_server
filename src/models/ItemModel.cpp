@@ -33,14 +33,14 @@ std::vector<std::string> ItemModel::fullFields() {
     };
 }
 
-std::vector<std::pair<std::string, std::variant<int, bool, std::string>>> ItemModel::getObjectValues() const {
-    return {
-        {Field::title, title},
-        {Field::description, description},
-        {Field::metaDescription, metaDescription},
-        {Field::slug, slug},
-        {Field::enabled, enabled},
-    };
+std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>> ItemModel::getObjectValues() const {
+    auto baseValues = BaseModel::getObjectValues();
+    baseValues.emplace_back(Field::title, title);
+    baseValues.emplace_back(Field::description, description);
+    baseValues.emplace_back(Field::metaDescription, metaDescription);
+    baseValues.emplace_back(Field::slug, slug);
+    baseValues.emplace_back(Field::enabled, enabled);
+    return baseValues;
 }
 
 std::string ItemModel::sqlSelectList(int page, int limit) {
