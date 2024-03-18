@@ -19,6 +19,7 @@ namespace api::v1 {
         METHOD_ADD(Media::createItems, "admin/items", drogon::Post, drogon::Options, "api::v1::filters::JwtFilter");
         METHOD_ADD(Media::getList, "admin/", drogon::Get, drogon::Options, "api::v1::filters::JwtFilter");
         METHOD_ADD(Media::deleteItem, "admin/{1}", drogon::Delete, drogon::Options, "api::v1::filters::JwtFilter");
+        METHOD_ADD(Media::deleteItems, "admin/items", drogon::Delete, drogon::Options, "api::v1::filters::JwtFilter");
         METHOD_LIST_END
     };
 }

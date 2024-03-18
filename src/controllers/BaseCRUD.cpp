@@ -27,6 +27,29 @@ void BaseCRUD<T, R>::deleteItem(const drogon::HttpRequestPtr &req,
 }
 
 template<class T, class R>
+void BaseCRUD<T, R>::deleteItems(const drogon::HttpRequestPtr &req,
+                                 std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
+    auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
+
+    if(checkItemsEmpty(req, callbackPtr)) {
+        return;
+    }
+    Json::Value jsonObject = *req->getJsonObject();
+    auto itemsJson = jsonObject["items"];
+
+    std::vector<int> ids;
+    std::ranges::for_each(itemsJson.begin(), itemsJson.end(), [&ids](const auto &item) {
+        ids.emplace_back(item.asInt());
+    });
+
+    std::string query = T::sqlDeleteMultiple(ids);
+    executeSqlQuery(callbackPtr, query,
+                    [this](const drogon::orm::Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> _callbackPtr) {
+                        this->handleSqlResultDeleting(r, _callbackPtr);
+                    });
+}
+
+template<class T, class R>
 void BaseCRUD<T, R>::getItem(
     const drogon::HttpRequestPtr &req, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr,
     std::function<void(T)> successCallback) const {
@@ -288,6 +311,21 @@ Json::Value BaseCRUD<T, R>::getJsonResponse(const Result &r) {
         jsonResponse = r[0][0].as<Json::Value>();
     }
     return jsonResponse;
+}
+
+template <class T, class R>
+bool BaseCRUD<T, R>::checkItemsEmpty(const drogon::HttpRequestPtr &req, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const {
+    Json::Value jsonObject = *req->getJsonObject();
+    auto itemsJson = jsonObject["items"];
+    if(itemsJson.empty()) {
+        Json::Value jsonResponse;
+        jsonResponse["error"] = "Empty items";
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
+        resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
+        (*callbackPtr)(resp);
+        return true;
+    }
+    return false;
 }
 
 template <class T, class R>

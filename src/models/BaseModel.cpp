@@ -38,6 +38,17 @@ std::string BaseModel<T>::sqlDelete(int id) {
 }
 
 template<class T>
+std::string BaseModel<T>::sqlDeleteMultiple(const std::vector<int> &ids) {
+    std::string sql = "DELETE FROM \"" + T::tableName + "\" WHERE " + T::primaryKey + " IN (";
+    for(const auto &_id: ids) {
+        sql.append(std::to_string(_id)).append(",");
+    }
+    sql.pop_back();
+    sql.append(");");
+    return sql;
+}
+
+template<class T>
 std::string BaseModel<T>::sqlInsertSingle(const T &item) {
     std::string sql = " (";
     for(const auto &[key, value]: item.getObjectValues()) {

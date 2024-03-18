@@ -22,6 +22,7 @@ namespace api::v1 {
             std::function<void(const drogon::orm::Result &, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>>)> handler = nullptr) const;
         void handleSqlError(const drogon::orm::DrogonDbException &e, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const;
         [[nodiscard]] virtual drogon::HttpResponsePtr checkBody(const drogon::HttpRequestPtr &req) const;
+        [[nodiscard]] bool checkItemsEmpty(const drogon::HttpRequestPtr &req, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const;
         [[nodiscard]] virtual drogon::HttpResponsePtr check404(const drogon::HttpRequestPtr &req, bool raise404) const;
         [[nodiscard]] static Json::Value getJsonResponse(const drogon::orm::Result &r);
         void getItem(
@@ -47,6 +48,8 @@ public:
         virtual void deleteItem(const drogon::HttpRequestPtr &req,
                                 std::function<void(const drogon::HttpResponsePtr &)> &&callback,
                                 const std::string &) const;
+        virtual void deleteItems(const drogon::HttpRequestPtr &req,
+                                std::function<void(const drogon::HttpResponsePtr &)> &&callback) const;
     };
 }
 

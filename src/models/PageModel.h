@@ -38,7 +38,7 @@ namespace api::v1 {
         PageModel(PageModel&&) noexcept = default;  // Move constructor
         PageModel& operator=(PageModel&&) noexcept = default;  // Move assignment operator
 
-        explicit PageModel(const Json::Value& json) {
+        explicit PageModel(const Json::Value& json) : BaseModel(json) {
             title = json[Field::title].asString();
             description = json[Field::description].asString();
             metaDescription = json[Field::metaDescription].asString();

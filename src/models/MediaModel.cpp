@@ -3,14 +3,16 @@
 //
 
 #include "MediaModel.h"
+#include <fmt/core.h>
 
 using namespace api::v1;
 
 std::vector<std::string> MediaModel::fields() {
     return {
+        Field::updatedAt,
+        Field::src,
         Field::itemId,
         Field::sort,
-        Field::src,
     };
 }
 
@@ -32,4 +34,19 @@ std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chr
     baseValues.emplace_back(Field::itemId, itemId);
     baseValues.emplace_back(Field::sort, sort);
     return baseValues;
+}
+
+std::string MediaModel::fieldsJsonObject() {
+    std::stringstream ss;
+    for(auto fieldNames = fullFields(); const auto &fieldName: fieldNames) {
+        if(fieldName == "src") {
+            ss << fmt::format("'{}', format_src({}) ", fieldName, fieldName);
+        } else {
+            ss << fmt::format("'{}', {} ", fieldName, fieldName);
+        }
+        if(&fieldName != &fieldNames.back()) {
+            ss << ", ";
+        }
+    }
+    return ss.str();
 }

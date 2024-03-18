@@ -55,6 +55,7 @@ namespace api::v1 {
         [[nodiscard]] static std::string fullFieldsWithTableToString();
         [[nodiscard]] static std::string fieldsJsonObject();
         [[nodiscard]] static std::string sqlDelete(int id);
+        [[nodiscard]] static std::string sqlDeleteMultiple(const std::vector<int> &ids);
         [[nodiscard]] virtual std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>> getObjectValues() const;
         void checkMissingFields(const Json::Value& missingFields) const;
         void validateField(const std::string& fieldName, const std::string_view& value, Json::Value& missingFields) const;
