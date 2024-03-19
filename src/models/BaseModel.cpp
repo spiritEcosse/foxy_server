@@ -193,7 +193,7 @@ template<class T>
 std::string BaseModel<T>::sqlSelectOne(const std::string &field, const std::string &value) {
     QuerySet qs(T::tableName, true);
     qs.jsonFields(addExtraQuotes(T::fieldsJsonObject()))
-    .filter(std::make_pair(field, value));
+    .filter(field, std::string(value));
     return qs.buildSelect();
 }
 

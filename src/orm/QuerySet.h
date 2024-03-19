@@ -2,11 +2,12 @@
 #include <vector>
 #include <map>
 #include "src/utils/db/String.h"
+#include <fmt/core.h>
 
 class QuerySet {
 private:
     std::string tableName;
-    std::vector<std::pair<std::string, std::string>> filters;
+    std::vector<std::tuple<std::string, std::string, std::string, std::string>> filters;
     std::vector<std::pair<std::string, bool>> orderFields;
     std::vector<std::string> onlyFields;
     std::string joinTable;
@@ -29,6 +30,22 @@ public:
     template<typename... Args>
     QuerySet& filter(Args... args) {
         filter_impl(args...);
+        return *this;
+    }
+
+    QuerySet& filter(std::string field, std::string value) {
+        filters.emplace_back(field, "=", value, "AND");
+        return *this;
+    }
+
+    template<typename... Args>
+    QuerySet& or_filter(Args... args) {
+        or_filter_impl(args...);
+        return *this;
+    }
+
+    QuerySet& or_filter(std::string field, std::string value) {
+        filters.emplace_back(field, "=", value, "OR");
         return *this;
     }
 
@@ -81,13 +98,14 @@ public:
             return "";
         }
         std::string query = " WHERE ";
-        for (const auto& [field, value] : filters) {
-            query += field;
-            query += " = '";
-            query += value;
-            query += "' AND ";
+        for (const auto& [field, op, value, conjunction] : filters) {
+            if (value == "NULL") {
+                query += fmt::format("{} {} {} {} ", field, op, value, conjunction);
+            } else {
+                query += fmt::format("{} {} '{}' {} ", field, op, value, conjunction);
+            }
         }
-        return query.substr(0, query.size() - 5);  // Remove the last " AND "
+        return query.substr(0, query.size() - 4);  // Remove the last " AND " or " OR "
     }
 
     template<typename... Args>
@@ -213,16 +231,18 @@ private:
 
     template<typename T>
     void filter_impl(T t) {
-        std::string field = t.first;
-        std::string value = t.second;
-        filters.emplace_back(field, value);
+        std::string field = std::get<0>(t);
+        std::string op = std::get<1>(t);
+        std::string value = std::get<2>(t);
+        filters.emplace_back(field, op, value, "AND");
     }
 
     template<typename T, typename... Args>
     void filter_impl(T t, Args... args) {
-        std::string field = t.first;
-        std::string value = t.second;
-        filters.emplace_back(field, value);
+        std::string field = std::get<0>(t);
+        std::string op = std::get<1>(t);
+        std::string value = std::get<2>(t);
+        filters.emplace_back(field, op, value, "AND");
         filter_impl(args...);
     }
 
@@ -244,5 +264,22 @@ private:
         orderFields.emplace_back(field, ascending);
         // Recursively call order_by_impl with the rest of the arguments
         order_by_impl(args...);
+    }
+
+    template<typename T>
+    void or_filter_impl(T t) {
+        std::string field = std::get<0>(t);
+        std::string op = std::get<1>(t);
+        std::string value = std::get<2>(t);
+        filters.emplace_back(field, op, value, "OR");
+    }
+
+    template<typename T, typename... Args>
+    void or_filter_impl(T t, Args... args) {
+        std::string field = std::get<0>(t);
+        std::string op = std::get<1>(t);
+        std::string value = std::get<2>(t);
+        filters.emplace_back(field, op, value, "OR");
+        or_filter_impl(args...);
     }
 };

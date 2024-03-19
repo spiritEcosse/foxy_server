@@ -52,7 +52,7 @@ std::string ItemModel::sqlSelectList(int page, int limit) {
     qs.distinct(ItemModel::tableName + "." + ItemModel::orderBy, ItemModel::tableName + "." + ItemModel::Field::id)
         .join(MediaModel::tableName, ItemModel::tableName + "." + ItemModel::Field::id + " = " + MediaModel::tableName + "." + MediaModel::Field::itemId)
         .order_by(std::make_pair(ItemModel::tableName + "." + ItemModel::orderBy, false), std::make_pair(ItemModel::tableName + "." + ItemModel::Field::id, false))
-        .filter(std::make_pair(ItemModel::tableName + "." + ItemModel::Field::enabled, "true"))
+        .filter(ItemModel::tableName + "." + ItemModel::Field::enabled, std::string("true"))
         .only({ItemModel::fullFieldsWithTableToString(), fmt::format("format_src(media.src, '{}') as src", app_cloud_name)});
     return qs.buildSelect();
 }
@@ -63,7 +63,7 @@ std::string ItemModel::sqlSelectOne(const std::string &field, const std::string 
 
     QuerySet qsItem(tableName, true);
     qsItem.jsonFields(addExtraQuotes(ItemModel::fieldsJsonObject()))
-        .filter(std::make_pair(field, value));
+        .filter(field, std::string(value));
     QuerySet qsMedia(MediaModel::tableName, false, 0, 0, false);
     std::string itemField = field;
     if (field == Field::id) {
@@ -72,7 +72,7 @@ std::string ItemModel::sqlSelectOne(const std::string &field, const std::string 
         itemField = ItemModel::tableName + "." + field;
     }
     qsMedia.join(ItemModel::tableName, ItemModel::tableName + "." + ItemModel::Field::id + " = " + MediaModel::tableName + "." + MediaModel::Field::itemId)
-        .filter(std::make_pair(itemField, value))
+        .filter(itemField, std::string(value))
         .order_by(std::make_pair(MediaModel::tableName + "." + MediaModel::Field::sort, true))
         .only({MediaModel::fullFieldsWithTableToString(), fmt::format("format_src(media.src, '{}') as src", app_cloud_name)});
     return qsMedia.addQuery(qsItem);
