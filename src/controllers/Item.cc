@@ -38,7 +38,6 @@ void Item::getListAdmin(
             std::make_pair(orderByItemField, false),
             std::make_pair(orderByItemID, false))
         .only({ItemModel::fullFieldsWithTableToString(), fmt::format("format_src(media.src, '{}') as src", app_cloud_name)});
-    std::cout << qs.buildSelect() << std::endl;
     executeSqlQuery(callbackPtr, qs.buildSelect(),
                     [this](const drogon::orm::Result &r, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> _callbackPtr) {
                         this->handleSqlResultList(r, _callbackPtr);
