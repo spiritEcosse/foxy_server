@@ -9,6 +9,7 @@ namespace api::v1 {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(Page::getOne, "{1}", drogon::Get, drogon::Options);
+        METHOD_ADD(Page::getOne, "admin/{1}", drogon::Get, drogon::Options, "api::v1::filters::JwtFilter");
         METHOD_ADD(Page::updateItem, "admin/{1}", drogon::Put, drogon::Options, "api::v1::filters::JwtFilter");
         METHOD_ADD(Page::createItem, "admin", drogon::Post, drogon::Options, "api::v1::filters::JwtFilter");
         METHOD_ADD(Page::getList, "admin", drogon::Get, drogon::Options, "api::v1::filters::JwtFilter");
