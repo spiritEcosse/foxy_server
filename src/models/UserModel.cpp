@@ -9,6 +9,7 @@ using namespace api::v1;
 
 std::vector<std::string> UserModel::fields() {
     return {
+        Field::updatedAt,
         Field::email,
         Field::password,
     };

@@ -31,7 +31,7 @@ namespace api::v1 {
         UserModel(UserModel&&) noexcept = default;  // Move constructor
         UserModel& operator=(UserModel&&) noexcept = default;  // Move assignment operator
 
-        explicit UserModel(const Json::Value& json) {
+        explicit UserModel(const Json::Value& json) : BaseModel(json) {
             password = json[Field::password].asString();
             email = json[Field::email].asString();
 

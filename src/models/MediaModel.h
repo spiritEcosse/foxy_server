@@ -48,7 +48,7 @@ namespace api::v1 {
             }
             checkMissingFields(missingFields);
         }
-
+        [[nodiscard]] static std::string fieldsJsonObject();
         [[nodiscard]] static std::vector<std::string> fields();
         [[nodiscard]] static std::vector<std::string> fullFields();
         [[nodiscard]] std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>> getObjectValues() const override;

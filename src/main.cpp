@@ -55,5 +55,4 @@ int main() {
     }
     std::string host = env == "dev" ? "127.0.0.1" : "0.0.0.0";
     app().addListener(host, static_cast<uint16_t>(std::stoi(http_port))).run();
-    std::cout << "server started" << std::endl;
 }

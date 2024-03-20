@@ -39,7 +39,7 @@ namespace api::v1 {
         ItemModel(ItemModel&&) noexcept = default;  // Move constructor
         ItemModel& operator=(ItemModel&&) noexcept = default;  // Move assignment operator
 
-        explicit ItemModel(const Json::Value& json) {
+        explicit ItemModel(const Json::Value& json) : BaseModel(json) {
             title = json[Field::title].asString();
             description = json[Field::description].asString();
             metaDescription = json[Field::metaDescription].asString();
