@@ -14,6 +14,7 @@ std::vector<std::string> PageModel::fields() {
         Field::metaDescription,
         Field::canonicalUrl,
         Field::slug,
+        Field::enabled,
     };
 }
 
@@ -21,6 +22,7 @@ std::vector<std::string> PageModel::fullFields() {
     return {
         Field::id,
         Field::title,
+        Field::enabled,
         Field::description,
         Field::metaDescription,
         Field::canonicalUrl,
@@ -37,5 +39,6 @@ std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chr
     baseValues.emplace_back(Field::metaDescription, metaDescription);
     baseValues.emplace_back(Field::canonicalUrl, canonicalUrl);
     baseValues.emplace_back(Field::slug, slug);
+    baseValues.emplace_back(Field::enabled, enabled);
     return baseValues;
 }

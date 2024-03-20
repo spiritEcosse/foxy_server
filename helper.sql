@@ -44,6 +44,7 @@ create table IF NOT EXISTS item (
                                     meta_description TEXT NOT NULL,
                                     description TEXT NOT NULL,
                                     slug varchar(255) NOT NULL unique,
+                                    enabled boolean DEFAULT true,
                                     created_at timestamp NOT NULL DEFAULT NOW(),
                                     updated_at timestamp NOT NULL DEFAULT NOW()
     );
@@ -79,6 +80,7 @@ create table if not EXISTS page (
                                     slug varchar(255) NOT NULL unique,
                                     meta_description TEXT NOT NULL,
                                     description TEXT NOT NULL,
+                                    enabled boolean DEFAULT true,
                                     canonical_url varchar(255) NOT NULL unique,
                                     created_at timestamp NOT NULL DEFAULT NOW(),
                                     updated_at timestamp NOT NULL DEFAULT NOW()
