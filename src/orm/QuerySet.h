@@ -137,7 +137,7 @@ public:
         } else {
             sqlItems += "*";
         }
-        sqlItems += " FROM " + tableName;
+        sqlItems += fmt::format(" FROM \"{}\" ", tableName);
         if (!joinTable.empty()) {
             sqlItems += " INNER JOIN " + joinTable + " ON " + joinCondition;
         }
@@ -188,12 +188,9 @@ public:
     }
 
     [[nodiscard]] std::string buildSelectOne() const {
-        std::string query = "SELECT do_and_check(\'SELECT json_build_object(";
-        query += _jsonFields;
-        query += ") FROM " + tableName;
-        query += addExtraQuotes(filter());
-        query += "\') as " + tableName;
-        return query;
+        return fmt::format(
+            "SELECT do_and_check(\'SELECT json_build_object({}) FROM \"{}\" {} \') as {} ",
+            _jsonFields, tableName, addExtraQuotes(filter()), tableName);
     }
 
 private:

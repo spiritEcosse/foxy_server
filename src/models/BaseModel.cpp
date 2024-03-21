@@ -173,7 +173,7 @@ template<class T>
 std::string
 BaseModel<T>::sqlSelectList(int page, int limit) {
     QuerySet qs(T::tableName, false, limit, page, true);
-    qs.order_by(std::make_pair(T::tableName + "." + T::orderBy, false), std::make_pair(T::tableName + "." + T::Field::id, false));
+    qs.order_by(std::make_pair(fmt::format("\"{}\".{}", T::tableName, T::orderBy), false), std::make_pair(fmt::format("\"{}\".{}", T::tableName, T::Field::id), false));
     return qs.buildSelect();
 }
 
