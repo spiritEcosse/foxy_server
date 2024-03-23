@@ -189,7 +189,7 @@ public:
 
     [[nodiscard]] std::string buildSelectOne() const {
         return fmt::format(
-            "SELECT do_and_check(\'SELECT json_build_object({}) FROM \"{}\" {} \') as {} ",
+            R"(SELECT do_and_check('SELECT json_build_object({}) FROM "{}" {} ') as {} )",
             _jsonFields, tableName, addExtraQuotes(filter()), tableName);
     }
 
