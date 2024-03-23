@@ -20,6 +20,7 @@ namespace api::v1 {
             static inline const std::string metaDescription = "meta_description";
             static inline const std::string slug = "slug";
             static inline const std::string canonicalUrl = "canonical_url";
+            static inline const std::string enabled = "enabled";
         };
 
         static inline const std::string tableName = "page";
@@ -30,6 +31,7 @@ namespace api::v1 {
         std::string description;
         std::string metaDescription;
         std::string canonicalUrl;
+        bool enabled = false;
         std::chrono::system_clock::time_point createdAt;
         std::chrono::system_clock::time_point updatedAt;
         PageModel() = default;
@@ -44,6 +46,7 @@ namespace api::v1 {
             metaDescription = json[Field::metaDescription].asString();
             canonicalUrl = json[Field::canonicalUrl].asString();
             slug = json[Field::slug].asString();
+            enabled = json[Field::enabled].asBool();
 
             Json::Value missingFields;
             validateField(Field::title, title, missingFields);
