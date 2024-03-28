@@ -7,6 +7,9 @@
 
 #include <string>
 #include <json/value.h>
+#include <variant>
+#include <chrono>
+#include <unordered_map>
 
 namespace api::v1 {
     template<class T>

@@ -29,6 +29,17 @@ int main() {
         throw std::invalid_argument("FOXY_ADMIN is not set");
     }
     drogon::app().loadConfigFile(config_app_path);
+    app().registerHandler("/",
+                          [](const HttpRequestPtr &req,
+                             std::function<void(const HttpResponsePtr &)> &&callback) {
+                              Json::Value json;
+                              json["result"] = "ok";
+                              json["message"] = "hello,world!";
+                              auto resp = HttpResponse::newHttpJsonResponse(json);
+                              auto callbackPtr =
+                                  std::make_shared<std::function<void(const HttpResponsePtr &)>>(std::move(callback));
+                              (*callbackPtr)(resp);
+                          });
     app().registerHandler("/test?username={name}",
                           []([[maybe_unused]] const HttpRequestPtr &req,
                              std::function<void(const HttpResponsePtr &)> &&callback,
