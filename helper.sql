@@ -62,7 +62,6 @@ create table IF NOT EXISTS "user" (
                                     updated_at timestamp NOT NULL DEFAULT NOW()
     );
 
-INSERT INTO "user" (email, password) VALUES ('admin@localhost', '$2b$10$QBLgOdKLG8TdKLFG5UCKQulMDtD43LClVpSNwhC57c3SGjW4Sr.fG');
 
 create table IF NOT EXISTS media (
                                     id serial primary key,
