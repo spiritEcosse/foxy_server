@@ -113,6 +113,6 @@ EXECUTE PROCEDURE trigger_set_timestamp();
 CREATE OR REPLACE FUNCTION format_src(src TEXT, cloud_name TEXT)
     RETURNS TEXT AS $$
 BEGIN
-    RETURN 'https://' || cloud_name || '.twic.pics/' || src || '?twic=v1';
+    RETURN 'https://' || cloud_name || '.twic.pics/' || src;
 END;
 $$ LANGUAGE plpgsql;
