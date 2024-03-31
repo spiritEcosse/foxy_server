@@ -48,11 +48,19 @@ std::string ItemModel::sqlSelectList(int page, int limit) {
     std::string app_cloud_name;
     getenv("APP_CLOUD_NAME", app_cloud_name);
 
+    auto orderByItemField = fmt::format("{}.{}", ItemModel::tableName, ItemModel::orderBy);
+    auto orderByItemID = fmt::format("{}.{}", ItemModel::tableName, ItemModel::Field::id);
+    auto mediaSort = fmt::format("{}.{}", MediaModel::tableName, MediaModel::Field::sort);
+
     QuerySet qs(ItemModel::tableName, false, limit, page, true);
-    qs.distinct(ItemModel::tableName + "." + ItemModel::orderBy, ItemModel::tableName + "." + ItemModel::Field::id)
+    qs.distinct(orderByItemField, orderByItemID)
         .join(MediaModel::tableName, ItemModel::tableName + "." + ItemModel::Field::id + " = " + MediaModel::tableName + "." + MediaModel::Field::itemId)
         .order_by(std::make_pair(ItemModel::tableName + "." + ItemModel::orderBy, false), std::make_pair(ItemModel::tableName + "." + ItemModel::Field::id, false))
         .filter(ItemModel::tableName + "." + ItemModel::Field::enabled, std::string("true"))
+        .filter(mediaSort, std::string("1"))
+        .order_by(
+            std::make_pair(orderByItemField, false),
+            std::make_pair(orderByItemID, false))
         .only({ItemModel::fullFieldsWithTableToString(), fmt::format("format_src(media.src, '{}') as src", app_cloud_name)});
     return qs.buildSelect();
 }
