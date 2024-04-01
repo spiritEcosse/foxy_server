@@ -15,7 +15,6 @@ namespace api::v1 {
         struct Field : public BaseModel::Field {
             static inline const std::string src = "src";
             static inline const std::string itemId = "item_id";
-            static inline const std::string thumb = "thumb";
             static inline const std::string sort = "sort";
         };
 
@@ -26,7 +25,6 @@ namespace api::v1 {
         MediaModel(MediaModel&&) noexcept = default;  // Move constructor
         MediaModel& operator=(MediaModel&&) noexcept = default;  // Move assignment operator
         std::string src;
-        std::string thumb;
         int itemId = 0;
         int sort = 0;
 

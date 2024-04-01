@@ -68,7 +68,6 @@ create table IF NOT EXISTS media (
                                     id serial primary key,
                                      src varchar(255) NOT NULL,
     item_id integer NOT NULL,
-    thumb varchar(255),
     sort integer DEFAULT 1,
     created_at timestamp NOT NULL DEFAULT NOW(),
     updated_at timestamp NOT NULL DEFAULT NOW(),
