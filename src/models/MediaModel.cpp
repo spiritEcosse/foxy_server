@@ -22,7 +22,6 @@ std::vector<std::string> MediaModel::fullFields() {
         Field::itemId,
         Field::sort,
         Field::src,
-        Field::thumb,
         Field::createdAt,
         Field::updatedAt,
     };
