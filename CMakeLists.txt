@@ -13,6 +13,8 @@ foreach(_variableName ${_variableNames})
     message(STATUS "${_variableName}=${${_variableName}}")
 endforeach()
 
+add_definitions(-DCMAKE_BINARY_DIR="${CMAKE_BINARY_DIR}")
+
 execute_process(COMMAND bash -c "cp -f config.json ${PROJECT_BINARY_DIR}"
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         RESULT_VARIABLE COPY_CONFIG)
@@ -88,6 +90,31 @@ CPMAddPackage(
 
 target_link_libraries(${PROJECT_NAME} PRIVATE bcrypt)
 # End adding hilch/Bcrypt.cpp
+
+# start sentry
+set(SENTRY_BACKEND crashpad)
+
+CPMAddPackage(
+        NAME sentry
+        VERSION 0.7.0
+        GITHUB_REPOSITORY getsentry/sentry-native
+        GIT_TAG 0.7.0
+        OPTIONS "SENTRY_BACKEND=${SENTRY_BACKEND}"
+)
+execute_process(COMMAND bash -c "sed -n '191p' ${PROJECT_BINARY_DIR}/_deps/sentry-src/external/crashpad/snapshot/CMakeLists.txt | tr -d '\n'"
+        OUTPUT_VARIABLE LINE_191_CONTENT)
+
+if("${LINE_191_CONTENT}" STREQUAL "")
+    execute_process(COMMAND bash -c "sed -i ${EMPTY_STRING} '191i\\
+target_sources(crashpad_snapshot PRIVATE x86/cpuid_reader.cc x86/cpuid_reader.h)' ${PROJECT_BINARY_DIR}/_deps/sentry-src/external/crashpad/snapshot/CMakeLists.txt"
+            RESULT_VARIABLE FIX_MATCHING_ARCHITECTURE_SENTRY)
+    message(STATUS "FIX_MATCHING_ARCHITECTURE_SENTRY : ${FIX_MATCHING_ARCHITECTURE_SENTRY}")
+    if(NOT FIX_MATCHING_ARCHITECTURE_SENTRY EQUAL "0")
+        message(FATAL_ERROR "sed, changing architecture matching in sentry failed with : ${FIX_MATCHING_ARCHITECTURE_SENTRY}, please check")
+    endif()
+endif()
+target_link_libraries(${PROJECT_NAME} PRIVATE sentry)
+# end sentry
 
 # Start Formatting
 CPMAddPackage(
