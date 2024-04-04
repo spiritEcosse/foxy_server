@@ -4,6 +4,7 @@
 
 #include "MediaModel.h"
 #include <fmt/core.h>
+#include "src/utils/env.h"
 
 using namespace api::v1;
 
@@ -36,10 +37,13 @@ std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chr
 }
 
 std::string MediaModel::fieldsJsonObject() {
+    std::string app_cloud_name;
+    getenv("APP_CLOUD_NAME", app_cloud_name);
+
     std::stringstream ss;
     for(auto fieldNames = fullFields(); const auto &fieldName: fieldNames) {
         if(fieldName == "src") {
-            ss << fmt::format("'{}', format_src({}) ", fieldName, fieldName);
+            ss << fmt::format("'{}', format_src({}, '{}') ", fieldName, fieldName, app_cloud_name);
         } else {
             ss << fmt::format("'{}', {} ", fieldName, fieldName);
         }
