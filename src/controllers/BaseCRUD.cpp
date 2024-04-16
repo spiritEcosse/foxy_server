@@ -4,6 +4,7 @@
 #include "src/controllers/Page.h"
 #include "src/controllers/User.h"
 #include "src/controllers/Media.h"
+#include <sentry.h>
 
 using namespace api::v1;
 using namespace drogon::orm;
@@ -289,7 +290,6 @@ void BaseCRUD<T, R>::handleSqlResultDeleting(const Result &r, std::shared_ptr<st
 
 template<class T, class R>
 void BaseCRUD<T, R>::handleSqlError(const DrogonDbException &e, std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const {
-    LOG_ERROR << e.base().what();
     std::string errorMsg = e.base().what();
     if (errorMsg.find("duplicate key value violates unique constraint") != std::string::npos) { // Check if the error is a unique violation
         auto resp = drogon::HttpResponse::newHttpResponse();
@@ -300,6 +300,12 @@ void BaseCRUD<T, R>::handleSqlError(const DrogonDbException &e, std::shared_ptr<
         resp->setStatusCode(drogon::HttpStatusCode::k404NotFound);
         (*callbackPtr)(resp);
     } else {
+        LOG_ERROR << e.base().what();
+        sentry_capture_event(sentry_value_new_message_event(
+            /*   level */ SENTRY_LEVEL_ERROR,
+            /*  logger */ "handleSqlError",
+            /* message */ e.base().what()
+        ));
         auto resp = drogon::HttpResponse::newHttpResponse();
         resp->setStatusCode(drogon::HttpStatusCode::k500InternalServerError);
         (*callbackPtr)(resp);
