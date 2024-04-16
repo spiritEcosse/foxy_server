@@ -58,6 +58,8 @@ std::string BaseModel<T>::sqlInsertSingle(const T &item) {
                 using Type = std::decay_t<decltype(arg)>;
                 if constexpr(std::is_same_v<Type, std::chrono::system_clock::time_point>) {
                     data = timePointToString(arg);
+                } else if constexpr (std::is_same_v<Type, std::string>) {
+                    data = addExtraQuotes(arg);
                 } else if constexpr(std::is_same_v<Type, int>) {
                     data = std::to_string(arg);
                 } else if constexpr(std::is_same_v<Type, bool>) {
@@ -104,6 +106,8 @@ void BaseModel<T>::sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColum
                 using Type = std::decay_t<decltype(arg)>;
                 if constexpr(std::is_same_v<Type, std::chrono::system_clock::time_point>) {
                     data = timePointToString(arg);
+                } else if constexpr (std::is_same_v<Type, std::string>) {
+                    data = addExtraQuotes(arg);
                 } else if constexpr(std::is_same_v<Type, int>) {
                     data = std::to_string(arg);
                 } else if constexpr(std::is_same_v<Type, bool>) {
