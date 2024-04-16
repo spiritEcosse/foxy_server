@@ -224,8 +224,13 @@ void BaseCRUD<T, R>::executeSqlQuery(
     }
     auto dbClient = drogon::app().getFastDbClient("default");
     *dbClient << query >> [callbackPtr, handler](const Result &r) {
-        // Call the handler function
-        handler(r, callbackPtr);
+        if (r.affectedRows() == 0) {
+            auto resp = drogon::HttpResponse::newHttpResponse();
+            resp->setStatusCode(drogon::HttpStatusCode::k404NotFound);
+            (*callbackPtr)(resp);
+        } else {
+            handler(r, callbackPtr);
+        }
     } >> [this, callbackPtr](const DrogonDbException &e) {
         this->handleSqlError(e, callbackPtr);
     };
