@@ -235,7 +235,11 @@ void BaseCRUD<T, R>::handleSqlResultList(const Result &r, std::shared_ptr<std::f
     Json::Value jsonResponse;
     jsonResponse["page"] = r[0][0].as<int>();
     jsonResponse["total"] = r[0][1].as<int>();
-    jsonResponse["data"] = r[0][2].as<Json::Value>();
+    if (!r[0][2].isNull()) {
+        jsonResponse["data"] = r[0][2].as<Json::Value>();
+    } else {
+        jsonResponse["data"] = Json::arrayValue; // assign an empty array by default
+    }
     auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
     resp->addHeader("X-Total-Count", r[0][1].as<std::string>());
     resp->addHeader("Access-Control-Expose-Headers", "X-Total-Count");
