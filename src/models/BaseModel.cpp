@@ -20,6 +20,7 @@ std::string timePointToString(std::chrono::system_clock::time_point tp) {
     auto time_t = std::chrono::system_clock::to_time_t(tp);
 
     struct tm local_time {};
+
     localtime_r(&time_t, &local_time);
 
     std::string time_string = fmt::format("{:%Y-%m-%d %H:%M:%S}", local_time);
@@ -58,7 +59,7 @@ std::string BaseModel<T>::sqlInsertSingle(const T &item) {
                 using Type = std::decay_t<decltype(arg)>;
                 if constexpr(std::is_same_v<Type, std::chrono::system_clock::time_point>) {
                     data = timePointToString(arg);
-                } else if constexpr (std::is_same_v<Type, std::string>) {
+                } else if constexpr(std::is_same_v<Type, std::string>) {
                     data = addExtraQuotes(arg);
                 } else if constexpr(std::is_same_v<Type, int>) {
                     data = std::to_string(arg);
@@ -106,7 +107,7 @@ void BaseModel<T>::sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColum
                 using Type = std::decay_t<decltype(arg)>;
                 if constexpr(std::is_same_v<Type, std::chrono::system_clock::time_point>) {
                     data = timePointToString(arg);
-                } else if constexpr (std::is_same_v<Type, std::string>) {
+                } else if constexpr(std::is_same_v<Type, std::string>) {
                     data = addExtraQuotes(arg);
                 } else if constexpr(std::is_same_v<Type, int>) {
                     data = std::to_string(arg);
@@ -174,10 +175,10 @@ std::string BaseModel<T>::fullFieldsWithTableToString() {
 }
 
 template<class T>
-std::string
-BaseModel<T>::sqlSelectList(int page, int limit) {
+std::string BaseModel<T>::sqlSelectList(int page, int limit) {
     QuerySet qs(T::tableName, false, limit, page, true);
-    qs.order_by(std::make_pair(fmt::format("\"{}\".{}", T::tableName, T::orderBy), false), std::make_pair(fmt::format("\"{}\".{}", T::tableName, T::Field::id), false));
+    qs.order_by(std::make_pair(fmt::format("\"{}\".{}", T::tableName, T::orderBy), false),
+                std::make_pair(fmt::format("\"{}\".{}", T::tableName, T::Field::id), false));
     return qs.buildSelect();
 }
 
@@ -196,30 +197,30 @@ std::string BaseModel<T>::fieldsJsonObject() {
 template<class T>
 std::string BaseModel<T>::sqlSelectOne(const std::string &field, const std::string &value) {
     QuerySet qs(T::tableName, true);
-    qs.jsonFields(addExtraQuotes(T::fieldsJsonObject()))
-    .filter(field, std::string(value));
+    qs.jsonFields(addExtraQuotes(T::fieldsJsonObject())).filter(field, std::string(value));
     return qs.buildSelect();
 }
 
 template<class T>
-void BaseModel<T>::checkMissingFields(const Json::Value& missingFields) const {
+void BaseModel<T>::checkMissingFields(const Json::Value &missingFields) const {
     if(!missingFields.empty()) {
         throw RequiredFieldsException(missingFields);
     }
 }
 
 template<class T>
-void BaseModel<T>::validateField(const std::string& fieldName, const std::string_view& value, Json::Value& missingFields) const {
+void BaseModel<T>::validateField(const std::string &fieldName,
+                                 const std::string_view &value,
+                                 Json::Value &missingFields) const {
     if(value.empty()) {
         missingFields[fieldName] = fieldName + " is required";
     }
 }
 
 template<class T>
-std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>> BaseModel<T>::getObjectValues() const {
-    return {
-        {Field::updatedAt, updatedAt}
-    };
+std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+BaseModel<T>::getObjectValues() const {
+    return {{Field::updatedAt, updatedAt}};
 }
 
 template class api::v1::BaseModel<PageModel>;

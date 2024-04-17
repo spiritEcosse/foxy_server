@@ -20,8 +20,7 @@ namespace api::v1 {
         METHOD_ADD(Item::deleteItem, "admin/{1}", drogon::Delete, drogon::Options, "api::v1::filters::JwtFilter");
         METHOD_LIST_END
         [[nodiscard]] static Json::Value getJsonResponse(const drogon::orm::Result &r);
-        void getListAdmin(
-            const drogon::HttpRequestPtr &req,
-            std::function<void(const drogon::HttpResponsePtr &)> &&callback) const;
+        void getListAdmin(const drogon::HttpRequestPtr &req,
+                          std::function<void(const drogon::HttpResponsePtr &)> &&callback) const;
     };
 }

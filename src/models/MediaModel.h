@@ -28,7 +28,7 @@ namespace api::v1 {
         int itemId = 0;
         int sort = 0;
 
-        explicit MediaModel(const Json::Value& json): BaseModel(json) {
+        explicit MediaModel(const Json::Value& json) : BaseModel(json) {
             Json::Value missingFields;
 
             src = json[Field::src].asString();
@@ -46,10 +46,13 @@ namespace api::v1 {
             }
             checkMissingFields(missingFields);
         }
+
         [[nodiscard]] static std::string fieldsJsonObject();
         [[nodiscard]] static std::vector<std::string> fields();
         [[nodiscard]] static std::vector<std::string> fullFields();
-        [[nodiscard]] std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>> getObjectValues() const override;
+        [[nodiscard]] std::vector<
+            std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+        getObjectValues() const override;
     };
 }
 

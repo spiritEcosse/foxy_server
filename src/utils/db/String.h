@@ -4,8 +4,8 @@
 
 inline std::string addExtraQuotes(const std::string& str) {
     std::string result;
-    for (char c : str) {
-        if (c == '\'') {
+    for(char c: str) {
+        if(c == '\'') {
             result += "''";
         } else {
             result += c;
@@ -13,4 +13,4 @@ inline std::string addExtraQuotes(const std::string& str) {
     }
     return result;
 }
-#endif // STRING_H
+#endif  // STRING_H

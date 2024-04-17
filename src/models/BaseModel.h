@@ -25,7 +25,7 @@ namespace api::v1 {
         std::chrono::system_clock::time_point createdAt;
         int id = 0;
 
-        explicit BaseModel([[maybe_unused ]] const Json::Value& json) {
+        explicit BaseModel([[maybe_unused]] const Json::Value &json) {
             updatedAt = std::chrono::system_clock::now();
         }
 
@@ -35,21 +35,25 @@ namespace api::v1 {
             static inline const std::string createdAt = "created_at";
             static inline const std::string updatedAt = "updated_at";
         };
+
         static inline const std::string orderBy = Field::updatedAt;
         static inline const std::string primaryKey = Field::id;
 
         struct ModelFieldHasher {
             using is_transparent = void;
+
             std::size_t operator()(std::string_view sv) const {
                 std::hash<std::string_view> hasher;
                 return hasher(sv);
             }
         };
+
         [[nodiscard]] static std::string sqlInsertMultiple(const std::vector<T> &item);
         [[nodiscard]] static std::string sqlInsertSingle(const T &item);
         [[nodiscard]] static std::string sqlInsert(const T &item);
         [[nodiscard]] static std::string sqlUpdateMultiple(const std::vector<T> &item);
-        using ModelFieldKeyHash = decltype(std::unordered_map<std::string, std::string, ModelFieldHasher, std::equal_to<>>());
+        using ModelFieldKeyHash =
+            decltype(std::unordered_map<std::string, std::string, ModelFieldHasher, std::equal_to<>>());
         static void sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColumns);
         [[nodiscard]] static std::string sqlUpdate(T &&item);
         [[nodiscard]] static std::string sqlSelectList(int page, int limit);
@@ -59,9 +63,12 @@ namespace api::v1 {
         [[nodiscard]] static std::string fieldsJsonObject();
         [[nodiscard]] static std::string sqlDelete(int id);
         [[nodiscard]] static std::string sqlDeleteMultiple(const std::vector<int> &ids);
-        [[nodiscard]] virtual std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>> getObjectValues() const;
-        void checkMissingFields(const Json::Value& missingFields) const;
-        void validateField(const std::string& fieldName, const std::string_view& value, Json::Value& missingFields) const;
+        [[nodiscard]] virtual std::vector<
+            std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+        getObjectValues() const;
+        void checkMissingFields(const Json::Value &missingFields) const;
+        void
+        validateField(const std::string &fieldName, const std::string_view &value, Json::Value &missingFields) const;
     };
 }
 
