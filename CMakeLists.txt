@@ -101,6 +101,7 @@ CPMAddPackage(
         GIT_TAG 0.7.0
         OPTIONS "SENTRY_BACKEND=${SENTRY_BACKEND}"
 )
+
 execute_process(COMMAND bash -c "sed -n '191p' ${PROJECT_BINARY_DIR}/_deps/sentry-src/external/crashpad/snapshot/CMakeLists.txt | tr -d '\n'"
         OUTPUT_VARIABLE LINE_191_CONTENT)
 
@@ -115,6 +116,7 @@ target_sources(crashpad_snapshot PRIVATE x86/cpuid_reader.cc x86/cpuid_reader.h)
 endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE sentry)
 # end sentry
+
 
 # Start Formatting
 CPMAddPackage(
