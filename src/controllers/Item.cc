@@ -33,6 +33,7 @@ void Item::getListAdmin(
     qs.distinct(orderByItemField, orderByItemID)
         .left_join(MediaModel::tableName, ItemModel::tableName + "." + ItemModel::Field::id + " = " + MediaModel::tableName + "." + MediaModel::Field::itemId)
         .or_filter(std::make_tuple(mediaSort, "IS", "NULL"))
+        .or_filter(std::make_tuple(mediaSort, "IS", "NOT NULL"))
         .or_filter(mediaSort, std::string("1"))
         .order_by(
             std::make_pair(orderByItemField, false),

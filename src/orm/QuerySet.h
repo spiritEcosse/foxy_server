@@ -99,7 +99,7 @@ public:
         }
         std::string query = " WHERE ";
         for (const auto& [field, op, value, conjunction] : filters) {
-            if (value == "NULL") {
+            if (value == "NULL" or value == "NOT NULL") {
                 query += fmt::format("{} {} {} {} ", field, op, value, conjunction);
             } else {
                 query += fmt::format("{} {} '{}' {} ", field, op, value, conjunction);
