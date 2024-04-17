@@ -41,9 +41,9 @@ std::map<std::string, std::any, std::less<>> JWT::decodeToken(const std::string&
         return {};
     } catch(const std::invalid_argument& e) {
         return {};
-    } catch (const ::jwt::error::signature_verification_exception& e) {
+    } catch(const ::jwt::error::signature_verification_exception& e) {
         return {};
-    } catch (const std::runtime_error& e) {
+    } catch(const std::runtime_error& e) {
         return {};
     }
 }

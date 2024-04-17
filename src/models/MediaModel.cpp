@@ -28,7 +28,8 @@ std::vector<std::string> MediaModel::fullFields() {
     };
 }
 
-std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>> MediaModel::getObjectValues() const {
+std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+MediaModel::getObjectValues() const {
     auto baseValues = BaseModel::getObjectValues();
     baseValues.emplace_back(Field::src, src);
     baseValues.emplace_back(Field::itemId, itemId);

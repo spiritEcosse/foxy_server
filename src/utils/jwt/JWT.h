@@ -6,9 +6,7 @@
 namespace api::utils::jwt {
     class JWT {
     public:
-        JWT(const std::string_view& token, const std::int64_t& expiration) :
-            token(token), expiration(expiration) {
-        }
+        JWT(const std::string_view& token, const std::int64_t& expiration) : token(token), expiration(expiration) {}
 
         [[nodiscard]] std::string getToken() const {
             return this->token;
@@ -18,8 +16,9 @@ namespace api::utils::jwt {
             return this->expiration;
         }
 
-        static JWT generateToken(const std::map<std::string, ::jwt::traits::kazuho_picojson::value_type, std::less<>>& claims = {},
-                                 const bool& extension = false);
+        static JWT
+        generateToken(const std::map<std::string, ::jwt::traits::kazuho_picojson::value_type, std::less<>>& claims = {},
+                      const bool& extension = false);
         static std::map<std::string, std::any, std::less<>> decodeToken(const std::string& encodedToken);
 
     private:
@@ -27,8 +26,8 @@ namespace api::utils::jwt {
         std::int64_t expiration;
 
         static bool verifyToken(const ::jwt::decoded_jwt<::jwt::traits::kazuho_picojson>& jwt);
-        static void addClaimToAttributes(
-            std::map<std::string, std::any, std::less<>>& attributes,
-            const std::pair<std::string, ::jwt::basic_claim<::jwt::traits::kazuho_picojson>>& claim);
+        static void
+        addClaimToAttributes(std::map<std::string, std::any, std::less<>>& attributes,
+                             const std::pair<std::string, ::jwt::basic_claim<::jwt::traits::kazuho_picojson>>& claim);
     };
 }

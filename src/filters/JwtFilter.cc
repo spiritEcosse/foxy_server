@@ -38,7 +38,7 @@ void JwtFilter::doFilter(const HttpRequestPtr &request, FilterCallback &&fcb, Fi
     }
 
     // Save the claims on attributes, for on next endpoint to be accessible
-    for(auto const&[key, value]: jwtAttributes)
+    for(auto const &[key, value]: jwtAttributes)
         request->getAttributes()->insert("jwt_" + key, value);
 
     // If everything is right, just move to other endpoint
