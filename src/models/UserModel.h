@@ -20,11 +20,8 @@ namespace api::v1 {
         };
 
         static inline const std::string tableName = "user";
-        int id = 0;
         std::string email;
         std::string password;
-        std::chrono::system_clock::time_point createdAt;
-        std::chrono::system_clock::time_point updatedAt;
         UserModel() = default;
         UserModel(const UserModel&) = delete;  // Copy constructor
         UserModel& operator=(const UserModel&) = delete;  // Copy assignment operator

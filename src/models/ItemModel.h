@@ -25,14 +25,11 @@ namespace api::v1 {
 
         static inline const std::string tableName = "item";
 
-        int id = 0;
         std::string title;
         std::string description;
         std::string slug;
         bool enabled = false;
         std::string metaDescription;
-        std::chrono::system_clock::time_point createdAt;
-        std::chrono::system_clock::time_point updatedAt;
         ItemModel() = default;
         ItemModel(const ItemModel&) = delete;  // Copy constructor
         ItemModel& operator=(const ItemModel&) = delete;  // Copy assignment operator

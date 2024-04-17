@@ -25,15 +25,12 @@ namespace api::v1 {
 
         static inline const std::string tableName = "page";
 
-        int id = 0;
         std::string title;
         std::string slug;
         std::string description;
         std::string metaDescription;
         std::string canonicalUrl;
         bool enabled = false;
-        std::chrono::system_clock::time_point createdAt;
-        std::chrono::system_clock::time_point updatedAt;
         PageModel() = default;
         PageModel(const PageModel&) = delete;  // Copy constructor
         PageModel& operator=(const PageModel&) = delete;  // Copy assignment operator
