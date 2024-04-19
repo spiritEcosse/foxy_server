@@ -64,13 +64,9 @@ void BaseCRUD<T, R>::getItem(const drogon::HttpRequestPtr &req,
     }
 
     Json::Value jsonObject = *req->getJsonObject();
-    T item;
-    try {
-        item = T(std::move(jsonObject));
-    } catch([[maybe_unused]] const RequiredFieldsException &e) {
-        Json::Value jsonResponseError;
-        jsonResponseError = e.getRequiredFields();
-        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponseError));
+    T item(std::move(jsonObject));
+    if (!item.missingFields.empty()) {
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(item.missingFields));
         resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
         (*callbackPtr)(resp);
         return;

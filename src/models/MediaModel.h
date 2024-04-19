@@ -44,7 +44,6 @@ namespace api::v1 {
             if(!sort) {
                 missingFields[Field::sort] = Field::sort + " is required";
             }
-            checkMissingFields(missingFields);
         }
 
         [[nodiscard]] static std::string fieldsJsonObject();

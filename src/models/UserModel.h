@@ -40,7 +40,6 @@ namespace api::v1 {
                 missingFields[Field::password] = Field::password + " is required";
             }
             hashPassword();
-            checkMissingFields(missingFields);
         }
 
         [[nodiscard]] static std::vector<std::string> fields();
