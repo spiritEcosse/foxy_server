@@ -5,6 +5,13 @@ set(BUILD_EXAMPLES OFF)
 set(BUILD_CTL OFF)
 #set(BUILD_TESTING OFF)
 
+# start https://github.com/an-tao/trantor/issues/296
+set(EMPTY_STRING "")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(EMPTY_STRING "''")
+    set(CMAKE_BUILD_RPATH "${CMAKE_LLVM_LIB_DIR}")
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 
 get_cmake_property(_variableNames VARIABLES)
@@ -45,12 +52,6 @@ CPMAddPackage(
         GITHUB_REPOSITORY drogonframework/drogon
         GIT_TAG v1.9.0
 )
-
-# start https://github.com/an-tao/trantor/issues/296
-set(EMPTY_STRING "")
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(EMPTY_STRING "''")
-endif()
 
 execute_process(COMMAND bash -c "sed -i ${EMPTY_STRING} '396s/.*(bool)logger;//' ${PROJECT_BINARY_DIR}/_deps/drogon-src/trantor/trantor/utils/Logger.cc"
         RESULT_VARIABLE FIX_WARNINGS)

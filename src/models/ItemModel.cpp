@@ -18,28 +18,37 @@ std::vector<std::string> ItemModel::fields() {
         Field::metaDescription,
         Field::slug,
         Field::enabled,
+        Field::price,
     };
 }
 
 std::vector<std::string> ItemModel::fullFields() {
-    return {Field::id,
-            Field::title,
-            Field::enabled,
-            Field::description,
-            Field::metaDescription,
-            Field::slug,
-            Field::createdAt,
-            Field::updatedAt};
+    return {
+        Field::id,
+        Field::title,
+        Field::enabled,
+        Field::description,
+        Field::metaDescription,
+        Field::slug,
+        Field::createdAt,
+        Field::updatedAt,
+        Field::price,
+    };
 }
 
-std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+std::vector<std::pair<std::string,
+                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
 ItemModel::getObjectValues() const {
-    auto baseValues = BaseModel::getObjectValues();
+    std::vector<std::pair<std::string,
+                          std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
+        baseValues = {};
     baseValues.emplace_back(Field::title, title);
+    baseValues.emplace_back(Field::updatedAt, updatedAt);
     baseValues.emplace_back(Field::description, description);
     baseValues.emplace_back(Field::metaDescription, metaDescription);
     baseValues.emplace_back(Field::slug, slug);
     baseValues.emplace_back(Field::enabled, enabled);
+    baseValues.emplace_back(Field::price, price);
     return baseValues;
 }
 

@@ -43,11 +43,15 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+ALTER TABLE item
+    ADD COLUMN price decimal(10, 2) DEFAULT 0;
+
 create table IF NOT EXISTS item (
                                     id serial primary key,
                                     title varchar(255) NOT NULL,
                                     meta_description TEXT NOT NULL,
                                     description TEXT NOT NULL,
+                                    price decimal(10, 2) DEFAULT 0,
                                     slug varchar(255) NOT NULL unique,
                                     enabled boolean DEFAULT true,
                                     created_at timestamp NOT NULL DEFAULT NOW(),

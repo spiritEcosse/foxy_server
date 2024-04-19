@@ -19,5 +19,13 @@ if(EXISTS "${PROJECT_SOURCE_DIR}/.git")
     message(STATUS "========================End of Submodule update========================")
 
     include(3rdparty/cpm_cmake/cmake/CPM.cmake)
+
+    set(LIB_DECIMAL_FOR_CPP decimal_for_cpp)
+    unset(LIB_DECIMAL_FOR_CPP_INCLUDE_DIR CACHE)
+    add_subdirectory(3rdparty/${LIB_DECIMAL_FOR_CPP})
+    set(LIB_DECIMAL_FOR_CPP_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/${LIB_DECIMAL_FOR_CPP}/include
+            CACHE PATH "decimal_for_cpp include directory")
+    message(STATUS "Decimal include directory: ${LIB_DECIMAL_FOR_CPP_INCLUDE_DIR}")
+    include_directories(${LIB_DECIMAL_FOR_CPP_INCLUDE_DIR})
 endif()
 

@@ -13,6 +13,7 @@
 #include "src/models/MediaModel.h"
 #include "src/orm/QuerySet.h"
 #include "src/utils/db/String.h"
+#include "decimal.h"
 
 using namespace api::v1;
 
@@ -65,6 +66,10 @@ std::string BaseModel<T>::sqlInsertSingle(const T &item) {
                     data = std::to_string(arg);
                 } else if constexpr(std::is_same_v<Type, bool>) {
                     data = arg ? "true" : "false";
+                } else if constexpr(std::is_same_v<Type, dec::decimal<2>>) {
+                    std::stringstream ss;
+                    ss << arg;
+                    data = ss.str();
                 } else {
                     data = arg;
                 }
@@ -113,7 +118,13 @@ void BaseModel<T>::sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColum
                     data = std::to_string(arg);
                 } else if constexpr(std::is_same_v<Type, bool>) {
                     data = arg ? "true" : "false";
-                } else {
+                }
+                else if constexpr (std::is_same_v<Type, dec::decimal<2>>) {
+                    std::stringstream ss;
+                    ss << arg;
+                    data = ss.str();
+                }
+                else {
                     data = arg;
                 }
                 uniqueColumns[key].append(fmt::format("WHEN {} = {} THEN '{}' ", T::primaryKey, item.id, data));
@@ -204,9 +215,9 @@ std::string BaseModel<T>::sqlSelectOne(const std::string &field, const std::stri
 template<class T>
 void BaseModel<T>::validateField(const std::string &fieldName,
                                  const std::string_view &value,
-                                 Json::Value &missingFields) const {
+                                 Json::Value &fields) const {
     if(value.empty()) {
-        missingFields[fieldName] = fieldName + " is required";
+        fields[fieldName] = fieldName + " is required";
     }
 }
 

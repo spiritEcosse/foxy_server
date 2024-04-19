@@ -2,3 +2,7 @@
 	path = 3rdparty/cpm_cmake
 	url = https://github.com/cpm-cmake/CPM.cmake
 	tag = v0.38.6
+
+[submodule "3rdparty/decimal_for_cpp"]
+	path = 3rdparty/decimal_for_cpp
+	url = https://github.com/vpiotr/decimal_for_cpp

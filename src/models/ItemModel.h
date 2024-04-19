@@ -10,6 +10,9 @@
 #include <drogon/drogon.h>
 #include "BaseModel.h"
 #include "src/utils/exceptions/RequiredFieldsException.h"
+#include <iomanip>
+#include <iostream>
+#include "decimal.h"
 
 namespace api::v1 {
 
@@ -21,6 +24,7 @@ namespace api::v1 {
             static inline const std::string metaDescription = "meta_description";
             static inline const std::string slug = "slug";
             static inline const std::string enabled = "enabled";
+            static inline const std::string price = "price";
         };
 
         static inline const std::string tableName = "item";
@@ -29,6 +33,7 @@ namespace api::v1 {
         std::string description;
         std::string slug;
         bool enabled = false;
+        dec::decimal<2> price;
         std::string metaDescription;
         ItemModel() = default;
         ItemModel(const ItemModel&) = delete;  // Copy constructor
@@ -42,18 +47,24 @@ namespace api::v1 {
             metaDescription = json[Field::metaDescription].asString();
             slug = json[Field::slug].asString();
             enabled = json[Field::enabled].asBool();
+            auto priceString = json[Field::price].asString();
 
             validateField(Field::title, title, missingFields);
             validateField(Field::description, description, missingFields);
             validateField(Field::metaDescription, metaDescription, missingFields);
             validateField(Field::slug, slug, missingFields);
+            validateField(Field::price, priceString, missingFields);
+            if (missingFields.empty()) {
+                price = std::stod(priceString);
+            }
         }
 
         [[nodiscard]] static std::vector<std::string> fields();
         [[nodiscard]] static std::vector<std::string> fullFields();
         [[nodiscard]] std::vector<
-            std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        getObjectValues() const override;
+            std::pair<std::string,
+                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
+        getObjectValues() const;
         [[nodiscard]] static std::string sqlSelectList(int page, int limit);
         [[nodiscard]] static std::string sqlSelectOne(const std::string& field, const std::string& value);
     };
