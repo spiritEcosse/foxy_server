@@ -51,7 +51,6 @@ namespace api::v1 {
             validateField(Field::metaDescription, metaDescription, missingFields);
             validateField(Field::canonicalUrl, canonicalUrl, missingFields);
             validateField(Field::slug, slug, missingFields);
-            checkMissingFields(missingFields);
         }
 
         [[nodiscard]] static std::vector<std::string> fields();

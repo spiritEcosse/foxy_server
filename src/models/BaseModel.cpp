@@ -202,13 +202,6 @@ std::string BaseModel<T>::sqlSelectOne(const std::string &field, const std::stri
 }
 
 template<class T>
-void BaseModel<T>::checkMissingFields(const Json::Value &missingFields) const {
-    if(!missingFields.empty()) {
-        throw RequiredFieldsException(missingFields);
-    }
-}
-
-template<class T>
 void BaseModel<T>::validateField(const std::string &fieldName,
                                  const std::string_view &value,
                                  Json::Value &missingFields) const {

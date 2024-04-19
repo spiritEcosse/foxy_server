@@ -43,12 +43,10 @@ namespace api::v1 {
             slug = json[Field::slug].asString();
             enabled = json[Field::enabled].asBool();
 
-            Json::Value missingFields;
             validateField(Field::title, title, missingFields);
             validateField(Field::description, description, missingFields);
             validateField(Field::metaDescription, metaDescription, missingFields);
             validateField(Field::slug, slug, missingFields);
-            checkMissingFields(missingFields);
         }
 
         [[nodiscard]] static std::vector<std::string> fields();
