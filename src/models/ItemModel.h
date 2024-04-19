@@ -48,15 +48,13 @@ namespace api::v1 {
             slug = json[Field::slug].asString();
             enabled = json[Field::enabled].asBool();
             auto priceString = json[Field::price].asString();
+            price = std::stod(priceString);
 
-            Json::Value missingFields;
             validateField(Field::title, title, missingFields);
             validateField(Field::description, description, missingFields);
             validateField(Field::metaDescription, metaDescription, missingFields);
             validateField(Field::slug, slug, missingFields);
             validateField(Field::price, priceString, missingFields);
-            checkMissingFields(missingFields);
-            price = std::stod(priceString);
         }
 
         [[nodiscard]] static std::vector<std::string> fields();
