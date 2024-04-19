@@ -48,20 +48,23 @@ namespace api::v1 {
             slug = json[Field::slug].asString();
             enabled = json[Field::enabled].asBool();
             auto priceString = json[Field::price].asString();
-            price = std::stod(priceString);
 
             validateField(Field::title, title, missingFields);
             validateField(Field::description, description, missingFields);
             validateField(Field::metaDescription, metaDescription, missingFields);
             validateField(Field::slug, slug, missingFields);
             validateField(Field::price, priceString, missingFields);
+            if (missingFields.empty()) {
+                price = std::stod(priceString);
+            }
         }
 
         [[nodiscard]] static std::vector<std::string> fields();
         [[nodiscard]] static std::vector<std::string> fullFields();
         [[nodiscard]] std::vector<
-            std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        getObjectValues() const override;
+            std::pair<std::string,
+                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
+        getObjectValues() const;
         [[nodiscard]] static std::string sqlSelectList(int page, int limit);
         [[nodiscard]] static std::string sqlSelectOne(const std::string& field, const std::string& value);
     };

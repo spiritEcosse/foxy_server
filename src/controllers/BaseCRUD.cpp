@@ -65,7 +65,7 @@ void BaseCRUD<T, R>::getItem(const drogon::HttpRequestPtr &req,
 
     Json::Value jsonObject = *req->getJsonObject();
     T item(std::move(jsonObject));
-    if (!item.missingFields.empty()) {
+    if(!item.missingFields.empty()) {
         auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(item.missingFields));
         resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
         (*callbackPtr)(resp);
@@ -348,9 +348,7 @@ template<class T, class R>
 bool BaseCRUD<T, R>::checkItemsEmpty(
     const drogon::HttpRequestPtr &req,
     std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const {
-    Json::Value jsonObject = *req->getJsonObject();
-    auto itemsJson = jsonObject["items"];
-    if(itemsJson.empty()) {
+    if(const Json::Value jsonObject = *req->getJsonObject(); jsonObject["items"].empty()) {
         Json::Value jsonResponse;
         jsonResponse["error"] = "Empty items";
         auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
