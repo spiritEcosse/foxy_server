@@ -42,8 +42,8 @@ ItemModel::getObjectValues() const {
     std::vector<std::pair<std::string,
                           std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
         baseValues = {};
-    baseValues.emplace_back(Field::title, title);
     baseValues.emplace_back(Field::updatedAt, updatedAt);
+    baseValues.emplace_back(Field::title, title);
     baseValues.emplace_back(Field::description, description);
     baseValues.emplace_back(Field::metaDescription, metaDescription);
     baseValues.emplace_back(Field::slug, slug);
