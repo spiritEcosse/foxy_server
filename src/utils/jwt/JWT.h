@@ -20,6 +20,8 @@ namespace api::utils::jwt {
         generateToken(const std::map<std::string, ::jwt::traits::kazuho_picojson::value_type, std::less<>>& claims = {},
                       const bool& extension = false);
         static std::map<std::string, std::any, std::less<>> decodeToken(const std::string& encodedToken);
+        [[nodiscard]] static std::tuple<drogon::HttpStatusCode, Json::Value>
+        verifyGoogleToken(const std::string& token);
 
     private:
         std::string token;

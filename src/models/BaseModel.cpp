@@ -118,13 +118,11 @@ void BaseModel<T>::sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColum
                     data = std::to_string(arg);
                 } else if constexpr(std::is_same_v<Type, bool>) {
                     data = arg ? "true" : "false";
-                }
-                else if constexpr (std::is_same_v<Type, dec::decimal<2>>) {
+                } else if constexpr(std::is_same_v<Type, dec::decimal<2>>) {
                     std::stringstream ss;
                     ss << arg;
                     data = ss.str();
-                }
-                else {
+                } else {
                     data = arg;
                 }
                 uniqueColumns[key].append(fmt::format("WHEN {} = {} THEN '{}' ", T::primaryKey, item.id, data));

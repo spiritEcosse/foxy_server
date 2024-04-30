@@ -4,6 +4,7 @@
 #include "src/controllers/Page.h"
 #include "src/controllers/User.h"
 #include "src/controllers/Media.h"
+#include "src/auth/Auth.h"
 #include <sentry.h>
 
 using namespace api::v1;
@@ -385,3 +386,4 @@ template class api::v1::BaseCRUD<ItemModel, Item>;
 template class api::v1::BaseCRUD<PageModel, Page>;
 template class api::v1::BaseCRUD<UserModel, User>;
 template class api::v1::BaseCRUD<MediaModel, Media>;
+template class api::v1::BaseCRUD<UserModel, Auth>;

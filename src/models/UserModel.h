@@ -50,6 +50,7 @@ namespace api::v1 {
         void hashPassword();
         [[nodiscard]] bool checkPassword(const std::string& passwordIn) const;
         [[nodiscard]] static std::string sqlAuth(const std::string& email);
+        [[nodiscard]] static std::string sqlGetOrCreateUser(const std::string& email);
     };
 }
 

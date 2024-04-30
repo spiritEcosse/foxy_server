@@ -4,6 +4,7 @@
 
 #include "bcrypt.h"
 #include "UserModel.h"
+#include <fmt/core.h>
 
 using namespace api::v1;
 
@@ -43,4 +44,12 @@ bool UserModel::checkPassword(const std::string& passwordIn) const {
 
 std::string UserModel::sqlAuth(const std::string& email) {
     return "SELECT * FROM \"" + tableName + "\" WHERE email = '" + email + "'";
+}
+
+std::string UserModel::sqlGetOrCreateUser(const std::string& email) {
+    return fmt::format("INSERT INTO \"{}\" (email) VALUES (\'{}\') \n"
+                       "ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email RETURNING json_build_object({})",
+                       tableName,
+                       email,
+                       fieldsJsonObject());
 }
