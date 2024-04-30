@@ -67,8 +67,7 @@ namespace api::v1 {
         [[nodiscard]] std::vector<
             std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         getObjectValues() const;
-        void
-        validateField(const std::string &fieldName, const std::string_view &value, Json::Value &fields) const;
+        void validateField(const std::string &fieldName, const std::string_view &value, Json::Value &fields) const;
     };
 }
 

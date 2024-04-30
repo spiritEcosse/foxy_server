@@ -61,10 +61,14 @@ create table IF NOT EXISTS item (
 create table IF NOT EXISTS "user" (
                                     id serial primary key,
                                     email varchar(255) NOT NULL unique,
-                                    password varchar(255) NOT NULL,
+                                    password varchar(255) DEFAULT '',
                                     created_at timestamp NOT NULL DEFAULT NOW(),
                                     updated_at timestamp NOT NULL DEFAULT NOW()
     );
+
+ALTER TABLE "user"
+    ALTER COLUMN password TYPE varchar(255),
+    ALTER COLUMN password SET DEFAULT '';
 
 INSERT INTO "user" (email, password) VALUES ('admin@localhost', '$2b$10$QBLgOdKLG8TdKLFG5UCKQulMDtD43LClVpSNwhC57c3SGjW4Sr.fG');
 

@@ -2,6 +2,8 @@
 #include <drogon/drogon.h>
 #include "src/models/UserModel.h"
 #include <src/utils/jwt/JWT.h>
+#include <json/json.h>
+#include <string>
 
 using namespace api::v1;
 using namespace drogon::orm;
@@ -99,4 +101,23 @@ void Auth::verifyToken(const drogon::HttpRequestPtr &request,
     auto res = drogon::HttpResponse::newHttpJsonResponse(resultJson);
     res->setStatusCode(drogon::k200OK);
     return (*callbackPtr)(res);
+}
+
+void Auth::googleLogin(const drogon::HttpRequestPtr &request,
+                       std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
+    auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
+    Json::Value responseJson = *request->getJsonObject();
+
+    std::string credentialsStr = responseJson["credentials"].asString();
+
+    auto [statusCode, jsonResponse] = JWT::verifyGoogleToken(credentialsStr);
+    if(statusCode != drogon::k200OK) {
+        Json::Value resultJson;
+        resultJson["error"] = jsonResponse["error"];
+        auto res = drogon::HttpResponse::newHttpJsonResponse(std::move(resultJson));
+        res->setStatusCode(statusCode);
+        return (*callbackPtr)(res);
+    }
+    std::string email = jsonResponse["email"].asString();
+    executeSqlQuery(callbackPtr, UserModel::sqlGetOrCreateUser(email));
 }

@@ -54,7 +54,7 @@ namespace api::v1 {
             validateField(Field::metaDescription, metaDescription, missingFields);
             validateField(Field::slug, slug, missingFields);
             validateField(Field::price, priceString, missingFields);
-            if (missingFields.empty()) {
+            if(missingFields.empty()) {
                 price = std::stod(priceString);
             }
         }
