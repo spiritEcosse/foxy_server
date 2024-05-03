@@ -1,0 +1,18 @@
+name: CMake Build
+
+
+on:
+    push:
+        branches:
+            - '*'
+
+jobs:
+    build:
+        runs-on: ubuntu-22.04 # Must be the same as on server
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v2
+
+            - name: CMake Build
+              run: curl https://spiritecosse.github.io/aws-sailfish-sdk/install.sh | bash -s -- --func='aws_run_commands_simple=cmake_build'
