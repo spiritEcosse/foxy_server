@@ -85,13 +85,6 @@ CPMAddPackage(
         GIT_TAG 0.7.0
         OPTIONS "SENTRY_BACKEND=${SENTRY_BACKEND}"
 )
-execute_process(COMMAND bash -c "git submodule" WORKING_DIRECTORY ${PROJECT_BINARY_DIR}/_deps/sentry-src
-        RESULT_VARIABLE GIT_SUBMODULE)
-
-if (NOT GIT_SUBMODULE EQUAL "0")
-    message(FATAL_ERROR "git submodule failed with : ${GIT_SUBMODULE}, please check")
-endif()
-
 execute_process(COMMAND bash -c "sed -n '191p' ${PROJECT_BINARY_DIR}/_deps/sentry-src/external/crashpad/snapshot/CMakeLists.txt | tr -d '\n'"
         OUTPUT_VARIABLE LINE_191_CONTENT)
 
