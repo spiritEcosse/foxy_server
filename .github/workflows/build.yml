@@ -8,13 +8,37 @@ on:
 
 jobs:
     build:
-        runs-on: ubuntu-22.04 # Must be the same as on server
+        runs-on: ubuntu-latest
 
         steps:
-            - name: Checkout repository
-              uses: actions/checkout@v2
+            -   name: Checkout repository
+                uses: actions/checkout@v2
 
-            - name: CMake Build
-              env:
-                  SRC_FOLDER_NAME: 'work/foxy_server/foxy_server'
-              run: curl https://spiritecosse.github.io/aws-sailfish-sdk/install.sh | bash -s -- --func='cmake_build'
+            -   name: Extract branch name
+                shell: bash
+                run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" >> $GITHUB_ENV
+
+            -   name: Login to GitHub Container Registry
+                run: echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u spiritEcosse --password-stdin
+
+            -   name: Build Docker image
+                run: docker build -t ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} .
+
+            -   name: Push Docker image
+                run: docker push ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME}
+
+            -   name: CMake Build
+                run: >
+                    docker run --rm --privileged
+                    -e APP_CLOUD_NAME="${{ secrets.APP_CLOUD_NAME }}"
+                    -e CMAKE_BUILD_TYPE="${{ secrets.CMAKE_BUILD_TYPE }}"
+                    -e CONFIG_APP="${{ secrets.CONFIG_APP }}"
+                    -e FOXY_ADMIN="${{ secrets.FOXY_ADMIN }}"
+                    -e FOXY_CLIENT="${{ secrets.FOXY_CLIENT }}"
+                    -e SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
+                    -e SERVER_HOST="${{ secrets.SERVER_HOST }}"
+                    -e SERVER_USER="${{ secrets.SERVER_USER }}"
+                    -e IDENTITY_FILE="${{ secrets.IDENTITY_FILE }}"
+                    -v $PWD:/share ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} /bin/bash -c "
+                      curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='cmake_build;rsync_from_host_to_sever;server_run_commands=(create_config_file;supervisorctl)'
+                    "
