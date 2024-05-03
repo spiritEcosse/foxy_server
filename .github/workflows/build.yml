@@ -15,4 +15,6 @@ jobs:
               uses: actions/checkout@v2
 
             - name: CMake Build
+              env:
+                  SRC_FOLDER_NAME: '/home/runner/work/foxy_server/foxy_server'
               run: curl https://spiritecosse.github.io/aws-sailfish-sdk/install.sh | bash -s -- --func='cmake_build'
