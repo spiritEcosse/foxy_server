@@ -42,7 +42,7 @@ jobs:
                     docker run --rm --privileged
                     -e APP_CLOUD_NAME="${{ secrets.APP_CLOUD_NAME }}"
                     -e CMAKE_BUILD_TYPE="${{ secrets.CMAKE_BUILD_TYPE }}"
-                    -e CONFIG_APP="$(printf '%q' "${{ secrets.CONFIG_APP }}")"
+                    -e CONFIG_APP="${{ secrets.CONFIG_APP }}"
                     -e FOXY_ADMIN="${{ secrets.FOXY_ADMIN }}"
                     -e FOXY_CLIENT="${{ secrets.FOXY_CLIENT }}"
                     -e SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
