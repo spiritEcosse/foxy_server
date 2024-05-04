@@ -21,11 +21,20 @@ jobs:
             -   name: Login to GitHub Container Registry
                 run: echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u spiritEcosse --password-stdin
 
+            -   name: Check Docker image
+                id: check_image
+                run: |
+                    docker pull ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} && echo "::set-output name=exists::true" || echo "::set-output name=exists::false"
+                continue-on-error: true
+
             -   name: Build Docker image
+                id: build_image
                 run: docker build -t ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} .
+                if: steps.check_image.outputs.exists == 'false'
 
             -   name: Push Docker image
                 run: docker push ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME}
+                if: steps.build_image.outputs.exists == 'true'
 
             -   name: CMake Build
                 run: >
