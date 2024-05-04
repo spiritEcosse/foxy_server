@@ -30,7 +30,7 @@ jobs:
             -   name: Build Docker image
                 id: build_image
                 run: docker build -t ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} .
-                if: steps.check_image.outputs.exists == 'false'
+                if: steps.check_image.outputs.exists == 'false' || echo "::set-output name=exists::true"
 
             -   name: Push Docker image
                 run: docker push ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME}
@@ -41,7 +41,7 @@ jobs:
                     docker run --rm --privileged
                     -e APP_CLOUD_NAME="${{ secrets.APP_CLOUD_NAME }}"
                     -e CMAKE_BUILD_TYPE="${{ secrets.CMAKE_BUILD_TYPE }}"
-                    -e CONFIG_APP="${{ secrets.CONFIG_APP }}"
+                    -e CONFIG_APP="$(printf '%q' "${{ secrets.CONFIG_APP }}")"
                     -e FOXY_ADMIN="${{ secrets.FOXY_ADMIN }}"
                     -e FOXY_CLIENT="${{ secrets.FOXY_CLIENT }}"
                     -e SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
