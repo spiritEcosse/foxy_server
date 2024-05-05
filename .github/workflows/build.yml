@@ -48,7 +48,7 @@ jobs:
                     -e SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
                     -e SERVER_HOST="${{ secrets.SERVER_HOST }}"
                     -e SERVER_USER="${{ secrets.SERVER_USER }}"
-                    -e IDENTITY_FILE="${{ secrets.IDENTITY_FILE }}"
+                    -e SERVER_PASSWORD="${{ secrets.SERVER_PASSWORD }}"
                     -v $PWD:/share ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} /bin/bash -c "
                       curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='set_up_instance_server_host_to_known_hosts'
                     "
