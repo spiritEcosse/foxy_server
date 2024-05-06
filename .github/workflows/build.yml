@@ -50,5 +50,5 @@ jobs:
                     -e SERVER_USER="${{ secrets.SERVER_USER }}"
                     -e SERVER_PASSWORD="${{ secrets.SERVER_PASSWORD }}"
                     -v $PWD:/share ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} /bin/bash -c "
-                      curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='set_up_instance_server_host_to_known_hosts'
+                      curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='cmake_build;rsync_from_host_to_sever;server_run_commands=(create_config_file;supervisorctl)'
                     "
