@@ -42,13 +42,15 @@ jobs:
                     docker run --rm --privileged
                     -e APP_CLOUD_NAME="${{ secrets.APP_CLOUD_NAME }}"
                     -e CMAKE_BUILD_TYPE="${{ secrets.CMAKE_BUILD_TYPE }}"
-                    -e CONFIG_APP="${{ secrets.CONFIG_APP }}"
                     -e FOXY_ADMIN="${{ secrets.FOXY_ADMIN }}"
                     -e FOXY_CLIENT="${{ secrets.FOXY_CLIENT }}"
                     -e SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
                     -e SERVER_HOST="${{ secrets.SERVER_HOST }}"
                     -e SERVER_USER="${{ secrets.SERVER_USER }}"
                     -e SERVER_PASSWORD="${{ secrets.SERVER_PASSWORD }}"
+                    -e SERVER_PSQL_DBNAME="${{ secrets.SERVER_PSQL_DBNAME }}"
+                    -e SERVER_PSQL_USER="${{ secrets.SERVER_PSQL_USER }}"
+                    -e SERVER_PSQL_PASSWORD="${{ secrets.SERVER_PSQL_PASSWORD }}"
                     -v $PWD:/share ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} /bin/bash -c "
                       curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='cmake_build;rsync_from_host_to_sever;server_run_commands=(create_config_file;supervisorctl)'
                     "
