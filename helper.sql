@@ -43,9 +43,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-ALTER TABLE item
-    ADD COLUMN price decimal(10, 2) DEFAULT 0;
-
 create table IF NOT EXISTS item (
                                     id serial primary key,
                                     title varchar(255) NOT NULL,
@@ -65,8 +62,6 @@ create table IF NOT EXISTS "user" (
                                     created_at timestamp NOT NULL DEFAULT NOW(),
                                     updated_at timestamp NOT NULL DEFAULT NOW()
     );
-
-INSERT INTO "user" (email, password) VALUES ('admin@localhost', '$2b$10$QBLgOdKLG8TdKLFG5UCKQulMDtD43LClVpSNwhC57c3SGjW4Sr.fG');
 
 create table IF NOT EXISTS media (
                                     id serial primary key,
