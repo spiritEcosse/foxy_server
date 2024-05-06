@@ -1,10 +1,5 @@
-name: CMake Build
-
-
-on:
-    push:
-        branches:
-            - '*'
+env:
+    FORCE_REBUILD_IMAGE: ${{ secrets.FORCE_REBUILD_IMAGE }}
 
 jobs:
     build:
