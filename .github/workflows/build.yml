@@ -1,6 +1,11 @@
 env:
     FORCE_REBUILD_IMAGE: ${{ secrets.FORCE_REBUILD_IMAGE }}
 
+on:
+    push:
+        branches:
+            - '*'
+
 jobs:
     build:
         runs-on: ubuntu-latest
