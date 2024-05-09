@@ -12,11 +12,11 @@ using namespace api::v1;
 
 std::vector<std::string> ItemModel::fields() {
     return {
-        Field::updatedAt,
         Field::title,
         Field::description,
         Field::metaDescription,
         Field::slug,
+        Field::profileId,
         Field::enabled,
         Field::price,
     };
@@ -30,6 +30,7 @@ std::vector<std::string> ItemModel::fullFields() {
         Field::description,
         Field::metaDescription,
         Field::slug,
+        Field::profileId,
         Field::createdAt,
         Field::updatedAt,
         Field::price,
@@ -42,11 +43,11 @@ ItemModel::getObjectValues() const {
     std::vector<std::pair<std::string,
                           std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
         baseValues = {};
-    baseValues.emplace_back(Field::updatedAt, updatedAt);
     baseValues.emplace_back(Field::title, title);
     baseValues.emplace_back(Field::description, description);
     baseValues.emplace_back(Field::metaDescription, metaDescription);
     baseValues.emplace_back(Field::slug, slug);
+    baseValues.emplace_back(Field::profileId, profileId);
     baseValues.emplace_back(Field::enabled, enabled);
     baseValues.emplace_back(Field::price, price);
     return baseValues;

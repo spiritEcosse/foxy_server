@@ -128,7 +128,11 @@ void BaseModel<T>::sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColum
                 } else {
                     data = arg;
                 }
-                uniqueColumns[key].append(fmt::format("WHEN {} = {} THEN '{}' ", T::primaryKey, item.id, data));
+                if (data == "Null") {
+                    uniqueColumns[key].append(fmt::format("WHEN {} = {} THEN NULL ", T::primaryKey, item.id));
+                } else {
+                    uniqueColumns[key].append(fmt::format("WHEN {} = {} THEN '{}' ", T::primaryKey, item.id, data));
+                }
             },
             value);
     }
@@ -216,7 +220,7 @@ std::string BaseModel<T>::sqlSelectOne(const std::string &field, const std::stri
 template<class T>
 std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 BaseModel<T>::getObjectValues() const {
-    return {{Field::updatedAt, updatedAt}};
+    return {};
 }
 
 template class api::v1::BaseModel<PageModel>;

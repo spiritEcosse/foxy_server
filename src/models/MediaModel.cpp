@@ -10,7 +10,6 @@ using namespace api::v1;
 
 std::vector<std::string> MediaModel::fields() {
     return {
-        Field::updatedAt,
         Field::src,
         Field::itemId,
         Field::sort,

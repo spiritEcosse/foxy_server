@@ -27,7 +27,6 @@ namespace api::v1 {
         int id = 0;
 
         explicit BaseModel([[maybe_unused]] const Json::Value &json) {
-            updatedAt = std::chrono::system_clock::now();
         }
 
         struct Field {

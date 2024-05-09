@@ -14,7 +14,6 @@ namespace api::v1 {
     class ShippingRateModel : public BaseModel<ShippingRateModel> {
     public:
         struct Field : public BaseModel::Field {
-            static inline const std::string title = "title";
             static inline const std::string countryId = "country_id";
             static inline const std::string profileId = "profile_id";
             static inline const std::string deliveryDaysMin = "delivery_days_min";
@@ -23,7 +22,6 @@ namespace api::v1 {
 
         static inline const std::string tableName = "shipping_rate";
 
-        std::string title;
         int countryId{};
         int profileId{};
         int deliveryDaysMin{};
@@ -35,15 +33,12 @@ namespace api::v1 {
         ShippingRateModel& operator=(ShippingRateModel&&) noexcept = default;  // Move assignment operator
 
         explicit ShippingRateModel(const Json::Value& json) : BaseModel(json) {
-            title = json[Field::title].asString();
             countryId = json[Field::countryId].asInt();
             profileId = json[Field::profileId].asInt();
             deliveryDaysMin = json[Field::deliveryDaysMin].asInt();
             deliveryDaysMax = json[Field::deliveryDaysMax].asInt();
 
             Json::Value missingFields;
-            validateField(Field::title, title, missingFields);
-            validateField(Field::countryId, countryId, missingFields);
             validateField(Field::profileId, profileId, missingFields);
             validateField(Field::deliveryDaysMin, deliveryDaysMin, missingFields);
             validateField(Field::deliveryDaysMax, deliveryDaysMax, missingFields);

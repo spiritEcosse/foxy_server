@@ -8,7 +8,6 @@ using namespace api::v1;
 
 std::vector<std::string> ShippingProfileModel::fields() {
     return {
-        Field::updatedAt,
         Field::title,
         Field::processingTime,
         Field::countryId,

@@ -21,6 +21,7 @@ namespace api::v1 {
             static inline const std::string title = "title";
             static inline const std::string description = "description";
             static inline const std::string metaDescription = "meta_description";
+            static inline const std::string profileId = "profile_id";
             static inline const std::string slug = "slug";
             static inline const std::string enabled = "enabled";
             static inline const std::string price = "price";
@@ -29,6 +30,7 @@ namespace api::v1 {
         static inline const std::string tableName = "item";
 
         std::string title;
+        int profileId{};
         std::string description;
         std::string slug;
         bool enabled = false;
@@ -45,11 +47,13 @@ namespace api::v1 {
             description = json[Field::description].asString();
             metaDescription = json[Field::metaDescription].asString();
             slug = json[Field::slug].asString();
+            profileId = json[Field::profileId].asInt();
             enabled = json[Field::enabled].asBool();
             auto priceString = json[Field::price].asString();
 
             validateField(Field::title, title, missingFields);
             validateField(Field::description, description, missingFields);
+            validateField(Field::profileId, profileId, missingFields);
             validateField(Field::metaDescription, metaDescription, missingFields);
             validateField(Field::slug, slug, missingFields);
             validateField(Field::price, priceString, missingFields);

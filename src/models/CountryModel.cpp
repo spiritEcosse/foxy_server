@@ -8,7 +8,6 @@ using namespace api::v1;
 
 std::vector<std::string> CountryModel::fields() {
     return {
-        Field::updatedAt,
         Field::title,
     };
 }
