@@ -48,12 +48,50 @@ create table IF NOT EXISTS item (
                                     title varchar(255) NOT NULL,
                                     meta_description TEXT NOT NULL,
                                     description TEXT NOT NULL,
+                                    profile_id INT NOT NULL,
                                     price decimal(10, 2) DEFAULT 0,
                                     slug varchar(255) NOT NULL unique,
                                     enabled boolean DEFAULT true,
                                     created_at timestamp NOT NULL DEFAULT NOW(),
+                                    FOREIGN KEY (profile_id) REFERENCES shipping_profile(id) ON DELETE CASCADE,
                                     updated_at timestamp NOT NULL DEFAULT NOW()
     );
+
+CREATE TABLE IF NOT EXISTS country (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL UNIQUE,
+    created_at timestamp NOT NULL DEFAULT NOW(),
+    updated_at timestamp NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO country (title) VALUES
+    ('United States of America'),
+    ('Spain');
+
+
+CREATE TABLE IF NOT EXISTS shipping_profile (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    country_id INT NOT NULL,
+    postal_code VARCHAR(255) NOT NULL,
+    processing_time INT NOT NULL,
+    shipping_upgrade_cost DECIMAL(10, 2) default 0,
+    created_at timestamp NOT NULL DEFAULT NOW(),
+    updated_at timestamp NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (country_id) REFERENCES country(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS shipping_rate (
+    id SERIAL PRIMARY KEY,
+    profile_id INT NOT NULL,
+    country_id INT,
+    delivery_days_min INT NOT NULL,
+    delivery_days_max INT NOT NULL,
+    created_at timestamp NOT NULL DEFAULT NOW(),
+    updated_at timestamp NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (profile_id) REFERENCES shipping_profile(id) ON DELETE CASCADE,
+    FOREIGN KEY (country_id) REFERENCES country(id) ON DELETE CASCADE
+);
 
 create table IF NOT EXISTS "user" (
                                     id serial primary key,
@@ -89,22 +127,37 @@ create table if not EXISTS page (
 );
 
 CREATE TRIGGER set_timestamp
-    BEFORE UPDATE ON item
+    BEFORE UPDATE ON "item"
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
 CREATE TRIGGER set_timestamp
-    BEFORE UPDATE ON media
+    BEFORE UPDATE ON "media"
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
 CREATE TRIGGER set_timestamp
-    BEFORE UPDATE ON page
+    BEFORE UPDATE ON "page"
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 
 CREATE TRIGGER set_timestamp
     BEFORE UPDATE ON "user"
+    FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_timestamp();
+
+CREATE TRIGGER set_timestamp
+    BEFORE UPDATE ON "shipping_profile"
+    FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_timestamp();
+
+CREATE TRIGGER set_timestamp
+    BEFORE UPDATE ON "shipping_rate"
+    FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_timestamp();
+
+CREATE TRIGGER set_timestamp
+    BEFORE UPDATE ON "country"
     FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
 

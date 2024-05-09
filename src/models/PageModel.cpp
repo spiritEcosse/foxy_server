@@ -8,7 +8,6 @@ using namespace api::v1;
 
 std::vector<std::string> PageModel::fields() {
     return {
-        Field::updatedAt,
         Field::title,
         Field::description,
         Field::metaDescription,

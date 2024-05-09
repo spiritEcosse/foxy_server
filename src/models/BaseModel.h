@@ -27,7 +27,6 @@ namespace api::v1 {
         int id = 0;
 
         explicit BaseModel([[maybe_unused]] const Json::Value &json) {
-            updatedAt = std::chrono::system_clock::now();
         }
 
         struct Field {
@@ -67,7 +66,19 @@ namespace api::v1 {
         [[nodiscard]] std::vector<
             std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         getObjectValues() const;
-        void validateField(const std::string &fieldName, const std::string_view &value, Json::Value &fields) const;
+        template<class V>
+        void validateField(const std::string &fieldName, const V &value, Json::Value &fields) const {
+            // Check if V is int or std::string_view and apply appropriate validation
+            if constexpr (std::is_same_v<T, int>) {
+                if(!value) {
+                    fields[fieldName] = fieldName + " is required";
+                }
+            } else if constexpr (std::is_same_v<T, std::string_view>) {
+                if(value.empty()) {
+                    fields[fieldName] = fieldName + " is required";
+                }
+            }
+        }
     };
 }
 

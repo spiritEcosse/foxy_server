@@ -9,7 +9,6 @@
 #include <chrono>
 #include <drogon/drogon.h>
 #include "BaseModel.h"
-#include "src/utils/exceptions/RequiredFieldsException.h"
 
 namespace api::v1 {
     class UserModel : public BaseModel<UserModel> {
