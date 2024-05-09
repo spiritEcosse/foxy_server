@@ -9,7 +9,6 @@
 #include <chrono>
 #include <drogon/drogon.h>
 #include "BaseModel.h"
-#include "src/utils/exceptions/RequiredFieldsException.h"
 #include <iomanip>
 #include <iostream>
 #include "decimal.h"

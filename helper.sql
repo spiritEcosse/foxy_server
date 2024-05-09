@@ -55,6 +55,45 @@ create table IF NOT EXISTS item (
                                     updated_at timestamp NOT NULL DEFAULT NOW()
     );
 
+CREATE TABLE IF NOT EXISTS country (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    created_at timestamp NOT NULL DEFAULT NOW(),
+    updated_at timestamp NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO country (name) VALUES
+    ('United States of America'),
+    ('Spain');
+
+
+CREATE TABLE IF NOT EXISTS shipping_profile (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    country_id INT NOT NULL,
+    postal_code VARCHAR(255) NOT NULL,
+    processing_time INT NOT NULL,
+    shipping_upgrade_cost DECIMAL(10, 2) default 0,
+    created_at timestamp NOT NULL DEFAULT NOW(),
+    updated_at timestamp NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (country_id) REFERENCES country(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS shipping_rate (
+    id SERIAL PRIMARY KEY,
+    profile_id INT NOT NULL,
+    country_id INT,
+    delivery_days_min INT NOT NULL,
+    delivery_days_max INT NOT NULL,
+    created_at timestamp NOT NULL DEFAULT NOW(),
+    updated_at timestamp NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (profile_id) REFERENCES shipping_profile(id) ON DELETE CASCADE,
+    FOREIGN KEY (country_id) REFERENCES country(id) ON DELETE CASCADE
+);
+
+ALTER table shipping_rate ADD COLUMN created_at timestamp NOT NULL DEFAULT NOW();
+ALTER table shipping_rate ADD COLUMN updated_at timestamp NOT NULL DEFAULT NOW();
+
 create table IF NOT EXISTS "user" (
                                     id serial primary key,
                                     email varchar(255) NOT NULL unique,

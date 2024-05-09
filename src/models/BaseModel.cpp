@@ -11,6 +11,9 @@
 #include "src/models/PageModel.h"
 #include "src/models/UserModel.h"
 #include "src/models/MediaModel.h"
+#include "src/models/ShippingProfileModel.h"
+#include "src/models/ShippingRateModel.h"
+#include "src/models/CountryModel.h"
 #include "src/orm/QuerySet.h"
 #include "src/utils/db/String.h"
 #include "decimal.h"
@@ -211,15 +214,6 @@ std::string BaseModel<T>::sqlSelectOne(const std::string &field, const std::stri
 }
 
 template<class T>
-void BaseModel<T>::validateField(const std::string &fieldName,
-                                 const std::string_view &value,
-                                 Json::Value &fields) const {
-    if(value.empty()) {
-        fields[fieldName] = fieldName + " is required";
-    }
-}
-
-template<class T>
 std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 BaseModel<T>::getObjectValues() const {
     return {{Field::updatedAt, updatedAt}};
@@ -229,3 +223,6 @@ template class api::v1::BaseModel<PageModel>;
 template class api::v1::BaseModel<ItemModel>;
 template class api::v1::BaseModel<UserModel>;
 template class api::v1::BaseModel<MediaModel>;
+template class api::v1::BaseModel<ShippingProfileModel>;
+template class api::v1::BaseModel<ShippingRateModel>;
+template class api::v1::BaseModel<CountryModel>;

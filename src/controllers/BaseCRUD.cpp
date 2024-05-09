@@ -4,8 +4,12 @@
 #include "src/controllers/Page.h"
 #include "src/controllers/User.h"
 #include "src/controllers/Media.h"
+#include "src/controllers/ShippingProfile.h"
+#include "src/controllers/ShippingRate.h"
+#include "src/controllers/Country.h"
 #include "src/auth/Auth.h"
 #include <sentry.h>
+#include "src/utils/exceptions/RequiredFieldsException.h"
 
 using namespace api::v1;
 using namespace drogon::orm;
@@ -387,3 +391,6 @@ template class api::v1::BaseCRUD<PageModel, Page>;
 template class api::v1::BaseCRUD<UserModel, User>;
 template class api::v1::BaseCRUD<MediaModel, Media>;
 template class api::v1::BaseCRUD<UserModel, Auth>;
+template class api::v1::BaseCRUD<ShippingProfileModel, ShippingProfile>;
+template class api::v1::BaseCRUD<CountryModel, Country>;
+template class api::v1::BaseCRUD<ShippingRateModel, ShippingRate>;

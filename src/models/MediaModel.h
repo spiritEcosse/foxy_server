@@ -7,7 +7,6 @@
 
 #include "BaseModel.h"
 #include "json/json.h"
-#include "src/utils/exceptions/RequiredFieldsException.h"
 
 namespace api::v1 {
     class MediaModel : public BaseModel<MediaModel> {
