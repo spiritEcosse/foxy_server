@@ -16,7 +16,7 @@ std::vector<std::string> ItemModel::fields() {
         Field::description,
         Field::metaDescription,
         Field::slug,
-        Field::profileId,
+        Field::shippingProfileId,
         Field::enabled,
         Field::price,
     };
@@ -30,7 +30,7 @@ std::vector<std::string> ItemModel::fullFields() {
         Field::description,
         Field::metaDescription,
         Field::slug,
-        Field::profileId,
+        Field::shippingProfileId,
         Field::createdAt,
         Field::updatedAt,
         Field::price,
@@ -47,7 +47,7 @@ ItemModel::getObjectValues() const {
     baseValues.emplace_back(Field::description, description);
     baseValues.emplace_back(Field::metaDescription, metaDescription);
     baseValues.emplace_back(Field::slug, slug);
-    baseValues.emplace_back(Field::profileId, profileId);
+    baseValues.emplace_back(Field::shippingProfileId, shippingProfileId);
     baseValues.emplace_back(Field::enabled, enabled);
     baseValues.emplace_back(Field::price, price);
     return baseValues;

@@ -9,7 +9,7 @@ using namespace api::v1;
 std::vector<std::string> ShippingRateModel::fields() {
     return {
         Field::countryId,
-        Field::profileId,
+        Field::shippingProfileId,
         Field::deliveryDaysMin,
         Field::deliveryDaysMax,
     };
@@ -21,7 +21,7 @@ std::vector<std::string> ShippingRateModel::fullFields() {
         Field::createdAt,
         Field::updatedAt,
         Field::countryId,
-        Field::profileId,
+        Field::shippingProfileId,
         Field::deliveryDaysMin,
         Field::deliveryDaysMax,
     };
@@ -35,7 +35,7 @@ ShippingRateModel::getObjectValues() const {
     } else {
         baseValues.emplace_back(Field::countryId, "Null");
     }
-    baseValues.emplace_back(Field::profileId, profileId);
+    baseValues.emplace_back(Field::shippingProfileId, shippingProfileId);
     baseValues.emplace_back(Field::deliveryDaysMin, deliveryDaysMin);
     baseValues.emplace_back(Field::deliveryDaysMax, deliveryDaysMax);
     return baseValues;

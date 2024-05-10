@@ -48,12 +48,12 @@ create table IF NOT EXISTS item (
                                     title varchar(255) NOT NULL,
                                     meta_description TEXT NOT NULL,
                                     description TEXT NOT NULL,
-                                    profile_id INT NOT NULL,
+                                    shipping_profile_id INT NOT NULL,
                                     price decimal(10, 2) DEFAULT 0,
                                     slug varchar(255) NOT NULL unique,
                                     enabled boolean DEFAULT true,
                                     created_at timestamp NOT NULL DEFAULT NOW(),
-                                    FOREIGN KEY (profile_id) REFERENCES shipping_profile(id) ON DELETE CASCADE,
+                                    FOREIGN KEY (shipping_profile_id) REFERENCES shipping_profile(id) ON DELETE CASCADE,
                                     updated_at timestamp NOT NULL DEFAULT NOW()
     );
 
@@ -83,13 +83,13 @@ CREATE TABLE IF NOT EXISTS shipping_profile (
 
 CREATE TABLE IF NOT EXISTS shipping_rate (
     id SERIAL PRIMARY KEY,
-    profile_id INT NOT NULL,
+    shipping_profile_id INT NOT NULL,
     country_id INT,
     delivery_days_min INT NOT NULL,
     delivery_days_max INT NOT NULL,
     created_at timestamp NOT NULL DEFAULT NOW(),
     updated_at timestamp NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (profile_id) REFERENCES shipping_profile(id) ON DELETE CASCADE,
+    FOREIGN KEY (shipping_profile_id) REFERENCES shipping_profile(id) ON DELETE CASCADE,
     FOREIGN KEY (country_id) REFERENCES country(id) ON DELETE CASCADE
 );
 

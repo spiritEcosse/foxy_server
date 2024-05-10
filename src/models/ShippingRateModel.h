@@ -15,7 +15,7 @@ namespace api::v1 {
     public:
         struct Field : public BaseModel::Field {
             static inline const std::string countryId = "country_id";
-            static inline const std::string profileId = "profile_id";
+            static inline const std::string shippingProfileId = "shipping_profile_id";
             static inline const std::string deliveryDaysMin = "delivery_days_min";
             static inline const std::string deliveryDaysMax = "delivery_days_max";
         };
@@ -23,7 +23,7 @@ namespace api::v1 {
         static inline const std::string tableName = "shipping_rate";
 
         int countryId{};
-        int profileId{};
+        int shippingProfileId{};
         int deliveryDaysMin{};
         int deliveryDaysMax{};
         ShippingRateModel() = default;
@@ -34,12 +34,12 @@ namespace api::v1 {
 
         explicit ShippingRateModel(const Json::Value& json) : BaseModel(json) {
             countryId = json[Field::countryId].asInt();
-            profileId = json[Field::profileId].asInt();
+            shippingProfileId = json[Field::shippingProfileId].asInt();
             deliveryDaysMin = json[Field::deliveryDaysMin].asInt();
             deliveryDaysMax = json[Field::deliveryDaysMax].asInt();
 
             Json::Value missingFields;
-            validateField(Field::profileId, profileId, missingFields);
+            validateField(Field::shippingProfileId, shippingProfileId, missingFields);
             validateField(Field::deliveryDaysMin, deliveryDaysMin, missingFields);
             validateField(Field::deliveryDaysMax, deliveryDaysMax, missingFields);
         }
