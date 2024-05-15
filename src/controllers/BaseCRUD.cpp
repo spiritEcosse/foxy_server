@@ -174,12 +174,7 @@ void BaseCRUD<T, R>::getList(const drogon::HttpRequestPtr &req,
     int page = getInt(req->getParameter("page"), 1);
     int limit = getInt(req->getParameter("limit"), 25);
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
-    executeSqlQuery(callbackPtr,
-                    T::sqlSelectList(page, limit),
-                    [this](const drogon::orm::Result &r,
-                           std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> _callbackPtr) {
-                        this->handleSqlResultList(r, _callbackPtr);
-                    });
+    executeSqlQuery(callbackPtr, T::sqlSelectList(page, limit));
 }
 
 template<class T, class R>
@@ -244,25 +239,6 @@ void BaseCRUD<T, R>::executeSqlQuery(
     } >> [this, callbackPtr](const DrogonDbException &e) {
         this->handleSqlError(e, callbackPtr);
     };
-}
-
-template<class T, class R>
-void BaseCRUD<T, R>::handleSqlResultList(
-    const Result &r,
-    std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const {
-    Json::Value jsonResponse;
-    jsonResponse["page"] = r[0][0].as<int>();
-    jsonResponse["total"] = r[0][1].as<int>();
-    if(!r[0][2].isNull()) {
-        jsonResponse["data"] = r[0][2].as<Json::Value>();
-    } else {
-        jsonResponse["data"] = Json::arrayValue;  // assign an empty array by default
-    }
-    auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
-    resp->addHeader("X-Total-Count", r[0][1].as<std::string>());
-    resp->addHeader("Access-Control-Expose-Headers", "X-Total-Count");
-    resp->setStatusCode(drogon::HttpStatusCode::k200OK);
-    (*callbackPtr)(resp);
 }
 
 template<class T, class R>
@@ -340,13 +316,7 @@ void BaseCRUD<T, R>::handleSqlError(
 
 template<class T, class R>
 Json::Value BaseCRUD<T, R>::getJsonResponse(const Result &r) {
-    Json::Value jsonResponse;
-    if(r.empty()) {
-        jsonResponse["error"] = "Not found";
-    } else {
-        jsonResponse = r[0][0].as<Json::Value>();
-    }
-    return jsonResponse;
+    return r[0][0].as<Json::Value>();
 }
 
 template<class T, class R>

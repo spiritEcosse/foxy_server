@@ -10,6 +10,7 @@
 #include <variant>
 #include <chrono>
 #include <unordered_map>
+#include "src/orm/QuerySet.h"
 
 namespace api::v1 {
     template<class T>
@@ -26,8 +27,7 @@ namespace api::v1 {
         std::chrono::system_clock::time_point createdAt;
         int id = 0;
 
-        explicit BaseModel([[maybe_unused]] const Json::Value &json) {
-        }
+        explicit BaseModel([[maybe_unused]] const Json::Value &json) {}
 
         struct Field {
             static inline const std::string id = "id";
@@ -52,12 +52,17 @@ namespace api::v1 {
         [[nodiscard]] static std::string sqlInsertSingle(const T &item);
         [[nodiscard]] static std::string sqlInsert(const T &item);
         [[nodiscard]] static std::string sqlUpdateMultiple(const std::vector<T> &item);
+        [[nodiscard]] static QuerySet qsCount();
+        [[nodiscard]] static QuerySet qsPage(int page, int limit);
         using ModelFieldKeyHash =
             decltype(std::unordered_map<std::string, std::string, ModelFieldHasher, std::equal_to<>>());
         static void sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColumns);
         [[nodiscard]] static std::string sqlUpdate(T &&item);
         [[nodiscard]] static std::string sqlSelectList(int page, int limit);
-        [[nodiscard]] static std::string sqlSelectOne(const std::string &field, const std::string &value);
+        [[nodiscard]] static std::string
+        sqlSelectOne(const std::string &field,
+                     const std::string &value,
+                     const std::map<std::string, std::string, std::less<>> &params = {});
         [[nodiscard]] static std::string fieldsToString();
         [[nodiscard]] static std::string fullFieldsWithTableToString();
         [[nodiscard]] static std::string fieldsJsonObject();
@@ -66,14 +71,15 @@ namespace api::v1 {
         [[nodiscard]] std::vector<
             std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         getObjectValues() const;
+
         template<class V>
         void validateField(const std::string &fieldName, const V &value, Json::Value &fields) const {
             // Check if V is int or std::string_view and apply appropriate validation
-            if constexpr (std::is_same_v<T, int>) {
+            if constexpr(std::is_same_v<T, int>) {
                 if(!value) {
                     fields[fieldName] = fieldName + " is required";
                 }
-            } else if constexpr (std::is_same_v<T, std::string_view>) {
+            } else if constexpr(std::is_same_v<T, std::string_view>) {
                 if(value.empty()) {
                     fields[fieldName] = fieldName + " is required";
                 }

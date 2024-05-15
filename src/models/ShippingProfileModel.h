@@ -26,9 +26,9 @@ namespace api::v1 {
 
         std::string title;
         int processingTime{};
-        int countryId{}; // The country from where the items are shipped.
-        std::string postalCode; // The postal code from where the items are shipped.
-        dec::decimal<2> shippingUpgradeCost; // offer buyers the option to pay more for faster shipping.
+        int countryId{};  // The country from where the items are shipped.
+        std::string postalCode;  // The postal code from where the items are shipped.
+        dec::decimal<2> shippingUpgradeCost;  // offer buyers the option to pay more for faster shipping.
         ShippingProfileModel() = default;
         ShippingProfileModel(const ShippingProfileModel&) = delete;  // Copy constructor
         ShippingProfileModel& operator=(const ShippingProfileModel&) = delete;  // Copy assignment operator
@@ -52,7 +52,8 @@ namespace api::v1 {
         [[nodiscard]] static std::vector<std::string> fields();
         [[nodiscard]] static std::vector<std::string> fullFields();
         [[nodiscard]] std::vector<
-            std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
+            std::pair<std::string,
+                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
         getObjectValues() const;
     };
 }

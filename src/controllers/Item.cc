@@ -8,15 +8,6 @@
 using namespace api::v1;
 using namespace drogon::orm;
 
-Json::Value Item::getJsonResponse(const Result &r) {
-    if(r[0].size() != 2) {
-        return BaseCRUD::getJsonResponse(r);
-    }
-    auto jsonResponse = r[0][1].as<Json::Value>();
-    jsonResponse["media"] = r[0][0].as<Json::Value>();
-    return jsonResponse;
-}
-
 void Item::getListAdmin(const drogon::HttpRequestPtr &req,
                         std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
@@ -25,7 +16,7 @@ void Item::getListAdmin(const drogon::HttpRequestPtr &req,
 
     std::string app_cloud_name;
     getenv("APP_CLOUD_NAME", app_cloud_name);
-    QuerySet qs(ItemModel::tableName, false, limit, page, true);
+    QuerySet qs(ItemModel::tableName, limit, "items");
     auto mediaSort = fmt::format("{}.{}", MediaModel::tableName, MediaModel::Field::sort);
     auto orderByItemField = fmt::format("{}.{}", ItemModel::tableName, ItemModel::orderBy);
     auto itemID = fmt::format("{}.{}", ItemModel::tableName, ItemModel::Field::id);
@@ -34,21 +25,47 @@ void Item::getListAdmin(const drogon::HttpRequestPtr &req,
         .left_join(MediaModel::tableName,
                    ItemModel::tableName + "." + ItemModel::Field::id + " = " + MediaModel::tableName + "." +
                        MediaModel::Field::itemId)
-        .or_filter(std::make_tuple(mediaSort, "IS", "NULL", false))
-        .or_filter(mediaSort,
-                   std::string(fmt::format("(SELECT MIN({}) FROM {} WHERE {} = {})",
-                                           mediaSort,
-                                           MediaModel::tableName,
-                                           itemID,
-                                           mediaItemID)),
-                   false)
+        .filter(mediaSort, std::string("NULL"), false, std::string("IS"), std::string("OR"))
+        .filter(mediaSort,
+                std::string(fmt::format("(SELECT MIN({}) FROM {} WHERE {} = {})",
+                                        mediaSort,
+                                        MediaModel::tableName,
+                                        itemID,
+                                        mediaItemID)),
+                false)
         .order_by(std::make_pair(orderByItemField, false), std::make_pair(itemID, false))
         .only({ItemModel::fullFieldsWithTableToString(),
                fmt::format("format_src(media.src, '{}') as src", app_cloud_name)});
-    executeSqlQuery(callbackPtr,
-                    qs.buildSelect(),
-                    [this](const drogon::orm::Result &r,
-                           std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> _callbackPtr) {
-                        this->handleSqlResultList(r, _callbackPtr);
-                    });
+    std::cout << qs.buildSelect() << std::endl;
+    executeSqlQuery(callbackPtr, qs.buildSelect());
+}
+
+void Item::getOne(const drogon::HttpRequestPtr &req,
+                  std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                  const std::string &stringId) const {
+    auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
+
+    bool isInt = canBeInt(stringId);
+    if(auto resp = check404(req, !isInt && ItemModel::Field::slug.empty())) {
+        (*callbackPtr)(resp);
+        return;
+    }
+
+    auto ip_address = req->getPeerAddr().toIp();
+    std::stringstream ss(ip_address);
+    std::string octet;
+    std::vector<int> octets;
+
+    while(std::getline(ss, octet, '.')) {
+        octets.push_back(std::stoi(octet));
+    }
+
+    auto integer_ip = (octets[0] * (256 * 256 * 256)) + (octets[1] * (256 * 256)) + (octets[2] * 256) + octets[3];
+    std::map<std::string, std::string, std::less<>> params;
+    params["client_ip"] = std::to_string(integer_ip);
+
+    std::string filterKey = isInt ? ItemModel::primaryKey : ItemModel::Field::slug;
+    std::string query = ItemModel::sqlSelectOne(filterKey, stringId, params);
+
+    executeSqlQuery(callbackPtr, query);
 }

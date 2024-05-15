@@ -24,9 +24,6 @@ namespace api::v1 {
         virtual void handleSqlResultDeleting(
             const drogon::orm::Result &r,
             std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const;
-        virtual void
-        handleSqlResultList(const drogon::orm::Result &r,
-                            std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const;
         void executeSqlQuery(std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr,
                              const std::string &query,
                              std::function<void(const drogon::orm::Result &,
