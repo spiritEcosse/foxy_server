@@ -24,11 +24,11 @@ private:
     std::string orderBy;
     std::string _jsonFields;
     int _limit{};
-    bool _one{};
-    bool _doAndCheck{};
-    bool _returnInMain{};
-    std::string _offset;
     std::string _alias;
+    bool _one{};
+    bool _returnInMain{};
+    bool _doAndCheck{};
+    std::string _offset;
 
 public:
     QuerySet() = default;
@@ -39,7 +39,10 @@ public:
     virtual ~QuerySet() = default;
 
     explicit QuerySet(std::string tableName, int limit, std::string alias, bool returnInMain = true) :
-        tableName(std::move(tableName)), _limit(limit), _alias(std::move(alias)), _returnInMain(returnInMain),
+        tableName(std::move(tableName)),
+        _limit(limit),
+        _alias(std::move(alias)),
+        _returnInMain(returnInMain),
         _doAndCheck(false) {}
 
     explicit QuerySet(std::string tableName,
@@ -47,7 +50,10 @@ public:
                       bool doAndCheck = false,
                       bool returnInMain = true) :
         tableName(std::move(tableName)),
-        _one(true), _doAndCheck(doAndCheck), _alias(std::move(alias)), _returnInMain(returnInMain) {}
+        _alias(std::move(alias)),
+        _one(true),
+        _doAndCheck(doAndCheck),
+        _returnInMain(returnInMain) {}
 
     std::string alias() {
         return _alias;

@@ -16,7 +16,11 @@ void Item::getListAdmin(const drogon::HttpRequestPtr &req,
 
     std::string app_cloud_name;
     getenv("APP_CLOUD_NAME", app_cloud_name);
-    QuerySet qs(ItemModel::tableName, limit, "items");
+
+    QuerySet qsCount = ItemModel::qsCount();
+    QuerySet qsPage = ItemModel::qsPage(page, limit);
+
+    QuerySet qs(ItemModel::tableName, limit, "data");
     auto mediaSort = fmt::format("{}.{}", MediaModel::tableName, MediaModel::Field::sort);
     auto orderByItemField = fmt::format("{}.{}", ItemModel::tableName, ItemModel::orderBy);
     auto itemID = fmt::format("{}.{}", ItemModel::tableName, ItemModel::Field::id);
@@ -35,9 +39,9 @@ void Item::getListAdmin(const drogon::HttpRequestPtr &req,
                 false)
         .order_by(std::make_pair(orderByItemField, false), std::make_pair(itemID, false))
         .only({ItemModel::fullFieldsWithTableToString(),
-               fmt::format("format_src(media.src, '{}') as src", app_cloud_name)});
-    std::cout << qs.buildSelect() << std::endl;
-    executeSqlQuery(callbackPtr, qs.buildSelect());
+               fmt::format("format_src(media.src, '{}') as src", app_cloud_name)})
+        .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit));
+    executeSqlQuery(callbackPtr, QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs)));
 }
 
 void Item::getOne(const drogon::HttpRequestPtr &req,
@@ -51,21 +55,8 @@ void Item::getOne(const drogon::HttpRequestPtr &req,
         return;
     }
 
-    auto ip_address = req->getPeerAddr().toIp();
-    std::stringstream ss(ip_address);
-    std::string octet;
-    std::vector<int> octets;
-
-    while(std::getline(ss, octet, '.')) {
-        octets.push_back(std::stoi(octet));
-    }
-
-    auto integer_ip = (octets[0] * (256 * 256 * 256)) + (octets[1] * (256 * 256)) + (octets[2] * 256) + octets[3];
-    std::map<std::string, std::string, std::less<>> params;
-    params["client_ip"] = std::to_string(integer_ip);
-
     std::string filterKey = isInt ? ItemModel::primaryKey : ItemModel::Field::slug;
-    std::string query = ItemModel::sqlSelectOne(filterKey, stringId, params);
+    std::string query = ItemModel::sqlSelectOne(filterKey, stringId);
 
     executeSqlQuery(callbackPtr, query);
 }

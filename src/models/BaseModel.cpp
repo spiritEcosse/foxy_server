@@ -196,7 +196,7 @@ std::string BaseModel<T>::sqlSelectList(int page, int limit) {
     QuerySet qsCount = std::move(T::qsCount());
     QuerySet qsPage = std::move(T::qsPage(page, limit));
 
-    QuerySet qs(T::tableName, limit, "items");
+    QuerySet qs(T::tableName, limit, "data");
     qs.offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
         .order_by(std::make_pair(fmt::format("\"{}\".{}", T::tableName, T::orderBy), false),
                   std::make_pair(fmt::format("\"{}\".{}", T::tableName, T::Field::id), false));
@@ -236,7 +236,7 @@ std::string BaseModel<T>::sqlSelectOne(const std::string &field,
     qs
     .jsonFields(addExtraQuotes(T::fieldsJsonObject()))
     .filter(field, std::string(value));
-    return QuerySet::buildQuery(std::move(qs));
+    return qs.buildSelect();
 }
 
 template<class T>
