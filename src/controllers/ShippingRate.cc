@@ -9,8 +9,8 @@ using namespace api::v1;
 using namespace drogon::orm;
 
 void ShippingRate::getShippingRateByItem(const drogon::HttpRequestPtr &req,
-                  std::function<void(const drogon::HttpResponsePtr &)> &&callback,
-                  const std::string &stringId) const {
+                                         std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                                         const std::string &stringId) const {
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
 
     bool isInt = canBeInt(stringId);

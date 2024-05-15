@@ -213,7 +213,8 @@ template<class T>
 QuerySet BaseModel<T>::qsPage(int page, int limit) {
     QuerySet qsCount = std::move(T::qsCount());
     QuerySet qsPage(ItemModel::tableName, "_page", false, true);
-    return std::move(qsPage.only({fmt::format("GetValidPage({}, {}, (SELECT * FROM {}))", page, limit, qsCount.alias())}));
+    return std::move(
+        qsPage.only({fmt::format("GetValidPage({}, {}, (SELECT * FROM {}))", page, limit, qsCount.alias())}));
 }
 
 template<class T>
@@ -233,9 +234,7 @@ std::string BaseModel<T>::sqlSelectOne(const std::string &field,
                                        const std::string &value,
                                        const std::map<std::string, std::string, std::less<>> &params) {
     QuerySet qs(T::tableName, T::tableName, true);
-    qs
-    .jsonFields(addExtraQuotes(T::fieldsJsonObject()))
-    .filter(field, std::string(value));
+    qs.jsonFields(addExtraQuotes(T::fieldsJsonObject())).filter(field, std::string(value));
     return qs.buildSelect();
 }
 

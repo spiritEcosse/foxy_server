@@ -39,20 +39,11 @@ public:
     virtual ~QuerySet() = default;
 
     explicit QuerySet(std::string tableName, int limit, std::string alias, bool returnInMain = true) :
-        tableName(std::move(tableName)),
-        _limit(limit),
-        _alias(std::move(alias)),
-        _returnInMain(returnInMain),
+        tableName(std::move(tableName)), _limit(limit), _alias(std::move(alias)), _returnInMain(returnInMain),
         _doAndCheck(false) {}
 
-    explicit QuerySet(std::string tableName,
-                      std::string alias,
-                      bool doAndCheck = false,
-                      bool returnInMain = true) :
-        tableName(std::move(tableName)),
-        _alias(std::move(alias)),
-        _one(true),
-        _doAndCheck(doAndCheck),
+    explicit QuerySet(std::string tableName, std::string alias, bool doAndCheck = false, bool returnInMain = true) :
+        tableName(std::move(tableName)), _alias(std::move(alias)), _one(true), _doAndCheck(doAndCheck),
         _returnInMain(returnInMain) {}
 
     std::string alias() {
