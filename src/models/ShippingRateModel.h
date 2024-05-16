@@ -51,8 +51,8 @@ namespace api::v1 {
         getObjectValues() const;
         [[nodiscard]] static std::string
         getShippingRateByItem(const std::string& field,
-                     const std::string& value,
-                     const std::map<std::string, std::string, std::less<>>& params = {});
+                              const std::string& value,
+                              const std::map<std::string, std::string, std::less<>>& params = {});
     };
 }
 
