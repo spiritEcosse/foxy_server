@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS countries_ips
     end_range bigint NOT NULL,
     country_code text NOT NULL,
     country_name text NOT NULL,
-    country_id INT NOT NULL,
+    country_id INT,
     PRIMARY KEY (start_range, end_range),
     FOREIGN KEY (country_id) REFERENCES country(id) ON DELETE CASCADE
 );
