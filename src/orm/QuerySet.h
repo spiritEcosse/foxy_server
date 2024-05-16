@@ -1,4 +1,7 @@
+#pragma once
+
 #include <string>
+#include <utility>
 #include <vector>
 #include <map>
 #include "src/utils/db/String.h"
@@ -8,24 +11,49 @@ class QuerySet {
 private:
     std::string tableName;
     std::vector<std::tuple<std::string, std::string, std::string, std::string, bool>> filters;
+    std::vector<std::tuple<std::string, std::string, std::string, std::string, bool>> groupFilters;
     std::vector<std::pair<std::string, bool>> orderFields;
     std::vector<std::string> onlyFields;
-    std::string joinTable;
-    std::string joinCondition;
+    std::vector<std::string> joinTable;
+    std::vector<std::string> joinCondition;
+    std::vector<std::string> leftJoinTable;
+    std::vector<std::string> leftJoinCondition;
     std::vector<std::string> distinctFields;
-    std::string leftJoinTable;
-    std::string leftJoinCondition;
+    std::vector<std::string> groupByFields;
     std::string distinctOn;
     std::string orderBy;
     std::string _jsonFields;
-    int _limit;
-    int _page;
-    bool _returnCount;
-    bool _one;
+    int _limit{};
+    std::string _alias;
+    bool _one{};
+    bool _doAndCheck{};
+    bool _returnInMain{};
+    std::string _offset;
 
 public:
-    explicit QuerySet(std::string tableName, bool one = false, int limit = 0, int page = 1, bool returnCount = false) :
-        tableName(std::move(tableName)), _limit(limit), _page(page), _returnCount(returnCount), _one(one) {}
+    QuerySet() = default;
+    QuerySet(const QuerySet&) = delete;  // Copy constructor
+    QuerySet& operator=(const QuerySet&) = delete;  // Copy assignment operator
+    QuerySet(QuerySet&&) noexcept = default;  // Move constructor
+    QuerySet& operator=(QuerySet&&) noexcept = default;  // Move assignment operator
+    virtual ~QuerySet() = default;
+
+    explicit QuerySet(std::string tableName, int limit, std::string alias, bool returnInMain = true) :
+        tableName(std::move(tableName)), _limit(limit), _alias(std::move(alias)), _doAndCheck(false),
+        _returnInMain(returnInMain) {}
+
+    explicit QuerySet(std::string tableName, std::string alias, bool doAndCheck = false, bool returnInMain = true) :
+        tableName(std::move(tableName)), _alias(std::move(alias)), _one(true), _doAndCheck(doAndCheck),
+        _returnInMain(returnInMain) {}
+
+    std::string alias() const {
+        return _alias;
+    }
+
+    QuerySet& group_by(std::string field) {
+        groupByFields.push_back(std::move(field));
+        return *this;
+    }
 
     template<typename... Args>
     QuerySet& filter(Args... args) {
@@ -33,19 +61,21 @@ public:
         return *this;
     }
 
-    QuerySet& filter(std::string field, std::string value, bool escape = true) {
-        filters.emplace_back(field, "=", value, "AND", escape);
+    QuerySet& filter(const std::string& field,
+                     std::string value,
+                     bool escape = true,
+                     std::string op = "=",
+                     std::string conjunction = "") {
+        filters.emplace_back(field, op, value, conjunction, escape);
         return *this;
     }
 
-    template<typename... Args>
-    QuerySet& or_filter(Args... args) {
-        or_filter_impl(args...);
-        return *this;
-    }
-
-    QuerySet& or_filter(std::string field, std::string value, bool escape = true) {
-        filters.emplace_back(field, "=", value, "OR", escape);
+    QuerySet&
+    filter(const std::vector<std::tuple<std::string, std::string, std::string, bool, std::string>>& conditions) {
+        for(const auto& condition: conditions) {
+            const auto& [field, op, value, escape, conjunction] = condition;
+            groupFilters.emplace_back(field, op, value, conjunction, escape);
+        }
         return *this;
     }
 
@@ -56,14 +86,14 @@ public:
     }
 
     QuerySet& join(std::string table, std::string condition) {
-        joinTable = std::move(table);
-        joinCondition = std::move(condition);
+        joinTable.push_back(std::move(table));
+        joinCondition.push_back(std::move(condition));
         return *this;
     }
 
     QuerySet& left_join(std::string table, std::string condition) {
-        leftJoinTable = std::move(table);
-        leftJoinCondition = std::move(condition);
+        leftJoinTable.push_back(std::move(table));
+        leftJoinCondition.push_back(std::move(condition));
         return *this;
     }
 
@@ -78,6 +108,11 @@ public:
         return *this;
     }
 
+    QuerySet& offset(std::string offset) {
+        _offset = std::move(offset);
+        return *this;
+    }
+
     QuerySet& jsonFields(std::string jsonFields) {
         this->_jsonFields = std::move(jsonFields);
         return *this;
@@ -88,114 +123,137 @@ public:
         return *this;
     }
 
-    QuerySet& returnCount(bool returnCount = true) {
-        _returnCount = returnCount;
-        return *this;
-    }
-
     [[nodiscard]] std::string filter() const {
         if(filters.empty()) {
             return "";
         }
         std::string query = " WHERE ";
-        for(const auto& [field, op, value, conjunction, escape]: filters) {
+
+        if(!groupFilters.empty())
+            query += " ( ";
+        for(const auto& [field, op, value, conjunction, escape]: groupFilters) {
             if(escape) {
-                query += fmt::format("{} {} '{}' {} ", field, op, value, conjunction);
+                query += fmt::format(" {} {} '{}' {} ", field, op, value, conjunction);
             } else {
-                query += fmt::format("{} {} {} {} ", field, op, value, conjunction);
+                query += fmt::format(" {} {} {} {} ", field, op, value, conjunction);
             }
         }
-        return query.substr(0, query.size() - 4);  // Remove the last " AND " or " OR "
+        if(!groupFilters.empty()) {
+            query += " ) ";
+            if(!filters.empty()) {
+                query += " AND ";
+            }
+        }
+        for(const auto& [field, op, value, conjunction, escape]: filters) {
+            if(escape) {
+                query += fmt::format(" {} {} '{}' {} ", field, op, value, conjunction);
+            } else {
+                query += fmt::format(" {} {} {} {} ", field, op, value, conjunction);
+            }
+        }
+
+        if(_doAndCheck) {
+            query = addExtraQuotes(query);
+        }
+        return query;
     }
 
     template<typename... Args>
-    std::string addQuery(Args... args) {
-        return buildSelect() + addQuery_impl(args...);
+    static std::string buildQuery(Args&&... args) {
+        std::string query = removeLastComma(fmt::format("WITH {}", addQuery_impl(args...)));
+        return fmt::format(" {} SELECT json_build_object({}) as result",
+                           query,
+                           removeLastComma(addQueryMain_impl(std::forward<Args>(args)...)));
     }
 
     [[nodiscard]] std::string buildSelect() const {
         if(_one) {
             return buildSelectOne();
         }
-        std::string query = "WITH items AS (";
-        std::string sqlItems;
-        sqlItems += " SELECT ";
+        std::string sql;
+        sql += " SELECT ";
 
         if(!distinctFields.empty()) {
-            sqlItems += "DISTINCT ON (";
+            sql += "DISTINCT ON (";
             for(const auto& field: distinctFields) {
-                sqlItems += field + ",";
+                sql += field + ",";
             }
-            sqlItems.pop_back();
-            sqlItems += ") ";
+            sql.pop_back();
+            sql += ") ";
         }
-        if(!onlyFields.empty()) {
-            for(const auto& field: onlyFields) {
-                sqlItems += field + ",";
-            }
-            sqlItems.pop_back();
-        } else {
-            sqlItems += "*";
-        }
-        sqlItems += fmt::format(" FROM \"{}\" ", tableName);
-        if(!joinTable.empty()) {
-            sqlItems += " INNER JOIN " + joinTable + " ON " + joinCondition;
-        }
-        if(!leftJoinTable.empty()) {
-            sqlItems += " LEFT JOIN " + leftJoinTable + " ON " + leftJoinCondition;
-        }
-        sqlItems += filter();
+        sql += buildOnlyFields();
+        sql += fmt::format(" FROM \"{}\" ", tableName);
+        sql += generateJoinSQL(joinTable, joinCondition, "INNER");
+        sql += generateJoinSQL(leftJoinTable, leftJoinCondition, "LEFT");
+        sql += filter();
         if(!orderFields.empty()) {
-            sqlItems += " ORDER BY ";
+            sql += " ORDER BY ";
             for(const auto& [field, asc]: orderFields) {
-                sqlItems += field + (asc ? " ASC" : " DESC") + ",";
+                sql += field + (asc ? " ASC" : " DESC") + ",";
             }
-            sqlItems.pop_back();  // Remove the last comma
+            sql.pop_back();  // Remove the last comma
         }
-        query += sqlItems;
-        query += ") ";
-        if(_returnCount) {
-            query += ", item_count AS ( ";
-            query += "    SELECT count(*)::integer as count FROM items ";
-            query += ") ";
-            query += ", valid_page AS ( ";
-            query += "    SELECT GetValidPage(";
-            query += std::to_string(_page);
-            query += ", ";
-            query += std::to_string(_limit);
-            query += ", (SELECT count FROM item_count)) as page ";
-            query += ") ";
-        }
-        query += " SELECT ";
-
-        if(_returnCount) {
-            query += "   (SELECT page FROM valid_page) as page, ";
-            query += "   (SELECT count FROM item_count) as count, ";
-        }
-        query += "   (SELECT json_agg(t.*) FROM ( ";
-        if(!_limit) {
-            query += "        SELECT * FROM items ";
-        } else {
-            query += sqlItems;
-            query += " LIMIT ";
-            query += std::to_string(_limit);
-            query += " OFFSET ((SELECT page FROM valid_page) - 1) * ";
-            query += std::to_string(_limit);
-        }
-        query += "    ) as t ";
-        query += ") as items";
-        return query;
+        sql += limit();
+        return sql;
     }
 
     [[nodiscard]] std::string buildSelectOne() const {
-        return fmt::format(R"(SELECT do_and_check('SELECT json_build_object({}) FROM "{}" {} ') as {} )",
-                           _jsonFields,
-                           tableName,
-                           addExtraQuotes(filter()),
-                           tableName);
+        std::string sql = "SELECT ";
+        if(_doAndCheck) {
+            sql += " do_and_check('SELECT ";
+        }
+        if(_jsonFields.empty()) {
+            sql += buildOnlyFields();
+        } else {
+            sql += fmt::format(" json_build_object({}) ", _jsonFields);
+        }
+        sql += fmt::format(" FROM \"{}\" ", tableName);
+        sql += generateJoinSQL(joinTable, joinCondition, "INNER");
+        sql += generateJoinSQL(leftJoinTable, leftJoinCondition, "LEFT");
+        sql += filter();
+        sql += " LIMIT 1 ";
+        if(_doAndCheck) {
+            sql += "')";
+        }
+        return sql;
     }
 
 private:
+    [[nodiscard]] std::string aliasQueryMain() const {
+        std::string query;
+        if(!_returnInMain) {
+            return query;
+        }
+        if(_one) {
+            query += fmt::format("'{0}', (SELECT * FROM {0} ),", _alias);
+        } else {
+            query += fmt::format("'{0}', (SELECT json_agg({0}.*) FROM ( SELECT * FROM {0} ) as {0}),", _alias);
+        }
+        return query;
+    }
+
+    [[nodiscard]] std::string aliasQuery() const {
+        return fmt::format(" {} AS ( {} ),", _alias, buildSelect());
+    }
+
+    [[nodiscard]] static std::string removeLastComma(const std::string_view& query) {
+        return std::string(query.substr(0, query.size() - 2));  // remove last comma and space
+    }
+
+    [[nodiscard]] std::string buildOnlyFields() const {
+        std::string onlyFieldsString;
+
+        if(!onlyFields.empty()) {
+            for(const auto& field: onlyFields) {
+                onlyFieldsString += fmt::format("{},", field);
+            }
+            onlyFieldsString.pop_back();
+        } else {
+            onlyFieldsString += "*";
+        }
+        return onlyFieldsString;
+    }
+
     template<typename T>
     void distinct_impl(T t) {
         std::string field = t;
@@ -215,17 +273,20 @@ private:
     }
 
     template<typename T, typename... Args>
-    std::string addQuery_impl(T t, Args... args) {
-        // Process the first argument here
-        std::string query = t.buildSelect();
-        if(size_t pos = query.find("SELECT"); pos == 0) {  // Check if "SELECT" is at the start of the string
-            // Erase "SELECT " (7 characters)
-            query.erase(pos, 7);
-            query = ", " + query;
-        }
-        // Recursively call addQuery_impl with the rest of the arguments
-        query += addQuery_impl(args...);
-        return query;
+    static std::string addQuery_impl(T&& t, Args&&... args) {
+        return fmt::format("{} {}", std::forward<T>(t).aliasQuery(), addQuery_impl(std::forward<Args>(args)...));
+    }
+
+    // Base case: no arguments left
+    static std::string addQueryMain_impl() {
+        return "";
+    }
+
+    template<typename T, typename... Args>
+    static std::string addQueryMain_impl(T&& t, Args&&... args) {
+        return fmt::format("{} {}",
+                           std::forward<T>(t).aliasQueryMain(),
+                           addQueryMain_impl(std::forward<Args>(args)...));
     }
 
     template<typename T>
@@ -234,7 +295,8 @@ private:
         std::string op = std::get<1>(t);
         std::string value = std::get<2>(t);
         bool escape = std::get<3>(t);
-        filters.emplace_back(field, op, value, "AND", escape);
+        std::string conjunction = std::get<4>(t);
+        filters.emplace_back(field, op, value, conjunction, escape);
     }
 
     template<typename T, typename... Args>
@@ -243,7 +305,8 @@ private:
         std::string op = std::get<1>(t);
         std::string value = std::get<2>(t);
         bool escape = std::get<3>(t);
-        filters.emplace_back(field, op, value, "AND", escape);
+        std::string conjunction = std::get<4>(t);
+        filters.emplace_back(field, op, value, conjunction, escape);
         filter_impl(args...);
     }
 
@@ -267,22 +330,38 @@ private:
         order_by_impl(args...);
     }
 
-    template<typename T>
-    void or_filter_impl(T t) {
-        std::string field = std::get<0>(t);
-        std::string op = std::get<1>(t);
-        std::string value = std::get<2>(t);
-        bool escape = std::get<3>(t);
-        filters.emplace_back(field, op, value, "OR", escape);
+    static std::string generateJoinSQL(const std::vector<std::string>& tables,
+                                       const std::vector<std::string>& conditions,
+                                       const std::string& joinType) {
+        std::string sql;
+        for(size_t i = 0; i < tables.size(); ++i) {
+            if(!tables[i].empty()) {
+                sql += fmt::format(" {} JOIN {} ON {}", joinType, tables[i], conditions[i]);
+            }
+        }
+        return sql;
     }
 
-    template<typename T, typename... Args>
-    void or_filter_impl(T t, Args... args) {
-        std::string field = std::get<0>(t);
-        std::string op = std::get<1>(t);
-        std::string value = std::get<2>(t);
-        bool escape = std::get<3>(t);
-        filters.emplace_back(field, op, value, "OR", escape);
-        or_filter_impl(args...);
+    static std::string generateGroupBySQL(const std::vector<std::string>& fields) {
+        std::string sql;
+        if(!fields.empty()) {
+            sql += " GROUP BY ";
+            for(const auto& field: fields) {
+                sql += field + ", ";
+            }
+            sql = sql.substr(0, sql.size() - 2);  // Remove the last comma and space
+        }
+        return sql;
+    }
+
+    [[nodiscard]] std::string limit() const {
+        std::string sql;
+        if(_limit) {
+            sql += fmt::format(" LIMIT {}", std::to_string(_limit));
+            if(!_offset.empty()) {
+                sql += fmt::format(" OFFSET {}", _offset);
+            }
+        }
+        return sql;
     }
 };

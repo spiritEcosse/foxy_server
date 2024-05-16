@@ -1,6 +1,8 @@
 #ifndef STRING_H
 #define STRING_H
 #include <string>
+#include <string>
+#include <random>
 
 inline std::string addExtraQuotes(const std::string& str) {
     std::string result;
@@ -13,4 +15,5 @@ inline std::string addExtraQuotes(const std::string& str) {
     }
     return result;
 }
+
 #endif  // STRING_H

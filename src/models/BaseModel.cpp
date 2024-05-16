@@ -13,6 +13,7 @@
 #include "src/models/MediaModel.h"
 #include "src/models/ShippingProfileModel.h"
 #include "src/models/ShippingRateModel.h"
+#include "src/models/CountriesIpsModel.h"
 #include "src/models/CountryModel.h"
 #include "src/orm/QuerySet.h"
 #include "src/utils/db/String.h"
@@ -128,7 +129,7 @@ void BaseModel<T>::sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColum
                 } else {
                     data = arg;
                 }
-                if (data == "Null") {
+                if(data == "Null") {
                     uniqueColumns[key].append(fmt::format("WHEN {} = {} THEN NULL ", T::primaryKey, item.id));
                 } else {
                     uniqueColumns[key].append(fmt::format("WHEN {} = {} THEN '{}' ", T::primaryKey, item.id, data));
@@ -192,17 +193,35 @@ std::string BaseModel<T>::fullFieldsWithTableToString() {
 
 template<class T>
 std::string BaseModel<T>::sqlSelectList(int page, int limit) {
-    QuerySet qs(T::tableName, false, limit, page, true);
-    qs.order_by(std::make_pair(fmt::format("\"{}\".{}", T::tableName, T::orderBy), false),
-                std::make_pair(fmt::format("\"{}\".{}", T::tableName, T::Field::id), false));
-    return qs.buildSelect();
+    QuerySet qsCount = std::move(T::qsCount());
+    QuerySet qsPage = std::move(T::qsPage(page, limit));
+
+    QuerySet qs(T::tableName, limit, "data");
+    qs.offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
+        .order_by(std::make_pair(fmt::format("\"{}\".{}", T::tableName, T::orderBy), false),
+                  std::make_pair(fmt::format("\"{}\".{}", T::tableName, T::Field::id), false));
+    return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
+}
+
+template<class T>
+QuerySet BaseModel<T>::qsCount() {
+    QuerySet qsCount(T::tableName, "total", false, true);
+    return std::move(qsCount.only({fmt::format("count(*)::integer")}));
+}
+
+template<class T>
+QuerySet BaseModel<T>::qsPage(int page, int limit) {
+    QuerySet qsCount = std::move(T::qsCount());
+    QuerySet qsPage(ItemModel::tableName, "_page", false, true);
+    return std::move(
+        qsPage.only({fmt::format("GetValidPage({}, {}, (SELECT * FROM {}))", page, limit, qsCount.alias())}));
 }
 
 template<class T>
 std::string BaseModel<T>::fieldsJsonObject() {
     std::stringstream ss;
     for(auto fieldNames = T::fullFields(); const auto &fieldName: fieldNames) {
-        ss << "\'" << fieldName << "\', " << fieldName;
+        ss << "\'" << fieldName << "\', " << T::tableName << "." << fieldName;
         if(&fieldName != &fieldNames.back()) {
             ss << ", ";
         }
@@ -211,8 +230,10 @@ std::string BaseModel<T>::fieldsJsonObject() {
 }
 
 template<class T>
-std::string BaseModel<T>::sqlSelectOne(const std::string &field, const std::string &value) {
-    QuerySet qs(T::tableName, true);
+std::string BaseModel<T>::sqlSelectOne(const std::string &field,
+                                       const std::string &value,
+                                       [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
+    QuerySet qs(T::tableName, T::tableName, true);
     qs.jsonFields(addExtraQuotes(T::fieldsJsonObject())).filter(field, std::string(value));
     return qs.buildSelect();
 }
@@ -230,3 +251,4 @@ template class api::v1::BaseModel<MediaModel>;
 template class api::v1::BaseModel<ShippingProfileModel>;
 template class api::v1::BaseModel<ShippingRateModel>;
 template class api::v1::BaseModel<CountryModel>;
+template class api::v1::BaseModel<CountriesIpsModel>;

@@ -60,13 +60,15 @@ create table IF NOT EXISTS item (
 CREATE TABLE IF NOT EXISTS country (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL UNIQUE,
+    code VARCHAR(255) NOT NULL UNIQUE,
     created_at timestamp NOT NULL DEFAULT NOW(),
     updated_at timestamp NOT NULL DEFAULT NOW()
 );
 
-INSERT INTO country (title) VALUES
-    ('United States of America'),
-    ('Spain');
+
+INSERT INTO country (title, code) VALUES
+    ('United States of America', 'US'),
+    ('Spain', 'ES');
 
 
 CREATE TABLE IF NOT EXISTS shipping_profile (
@@ -126,6 +128,28 @@ create table if not EXISTS page (
                                     updated_at timestamp NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS countries_ips
+(
+    start_range bigint NOT NULL,
+    end_range bigint NOT NULL,
+    country_code text NOT NULL,
+    country_name text NOT NULL,
+    country_id INT NOT NULL,
+    PRIMARY KEY (start_range, end_range),
+    FOREIGN KEY (country_id) REFERENCES country(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_media_item_id_sort ON media(item_id, sort ASC);
+CREATE INDEX idx_item_slug ON item(slug);
+CREATE INDEX idx_shipping_rate_shipping_profile_id_country_id ON shipping_rate(shipping_profile_id, country_id);
+CREATE INDEX idx_shipping_rate_country_id ON shipping_rate(country_id);
+CREATE INDEX idx_item_shipping_profile_id ON item(shipping_profile_id);
+CREATE INDEX idx_countries_ips_country_id ON countries_ips(country_id);
+CREATE INDEX end_range_with_include_idx ON countries_ips USING btree (end_range ASC NULLS LAST) INCLUDE(start_range, country_id);
+
+CREATE INDEX idx_item_updated_at ON item (updated_at);
+CREATE INDEX idx_item_enabled ON item (enabled);
+
 CREATE TRIGGER set_timestamp
     BEFORE UPDATE ON "item"
     FOR EACH ROW
@@ -166,4 +190,6 @@ CREATE OR REPLACE FUNCTION format_src(src TEXT, cloud_name TEXT)
 BEGIN
     RETURN 'https://' || cloud_name || '.twic.pics/' || src;
 END;
+
+
 $$ LANGUAGE plpgsql;

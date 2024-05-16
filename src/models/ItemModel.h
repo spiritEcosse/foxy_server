@@ -62,6 +62,8 @@ namespace api::v1 {
             }
         }
 
+        [[nodiscard]] static QuerySet qsCount();
+
         [[nodiscard]] static std::vector<std::string> fields();
         [[nodiscard]] static std::vector<std::string> fullFields();
         [[nodiscard]] std::vector<
@@ -69,7 +71,10 @@ namespace api::v1 {
                       std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
         getObjectValues() const;
         [[nodiscard]] static std::string sqlSelectList(int page, int limit);
-        [[nodiscard]] static std::string sqlSelectOne(const std::string& field, const std::string& value);
+        [[nodiscard]] static std::string
+        sqlSelectOne(const std::string& field,
+                     const std::string& value,
+                     const std::map<std::string, std::string, std::less<>>& params = {});
     };
 }
 
