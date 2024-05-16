@@ -205,7 +205,7 @@ std::string BaseModel<T>::sqlSelectList(int page, int limit) {
 
 template<class T>
 QuerySet BaseModel<T>::qsCount() {
-    QuerySet qsCount(T::tableName, "count", false, true);
+    QuerySet qsCount(T::tableName, "total", false, true);
     return std::move(qsCount.only({fmt::format("count(*)::integer")}));
 }
 

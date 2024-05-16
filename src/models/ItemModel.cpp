@@ -57,7 +57,7 @@ ItemModel::getObjectValues() const {
 }
 
 QuerySet ItemModel::qsCount() {
-    QuerySet qsCount(ItemModel::tableName, "count", false, true);
+    QuerySet qsCount(ItemModel::tableName, "total", false, true);
     return std::move(qsCount
                          .filter(ItemModel::tableName + "." + ItemModel::Field::enabled,
                                  std::string("true"),
