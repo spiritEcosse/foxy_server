@@ -104,7 +104,7 @@ std::string ItemModel::sqlSelectList(int page, int limit) {
 
 std::string ItemModel::sqlSelectOne(const std::string &field,
                                     const std::string &value,
-                                    const std::map<std::string, std::string, std::less<>> &params) {
+                                    [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
     std::string app_cloud_name;
     getenv("APP_CLOUD_NAME", app_cloud_name);
 

@@ -26,8 +26,8 @@ private:
     int _limit{};
     std::string _alias;
     bool _one{};
-    bool _returnInMain{};
     bool _doAndCheck{};
+    bool _returnInMain{};
     std::string _offset;
 
 public:
@@ -39,14 +39,14 @@ public:
     virtual ~QuerySet() = default;
 
     explicit QuerySet(std::string tableName, int limit, std::string alias, bool returnInMain = true) :
-        tableName(std::move(tableName)), _limit(limit), _alias(std::move(alias)), _returnInMain(returnInMain),
-        _doAndCheck(false) {}
+        tableName(std::move(tableName)), _limit(limit), _alias(std::move(alias)), _doAndCheck(false),
+        _returnInMain(returnInMain) {}
 
     explicit QuerySet(std::string tableName, std::string alias, bool doAndCheck = false, bool returnInMain = true) :
         tableName(std::move(tableName)), _alias(std::move(alias)), _one(true), _doAndCheck(doAndCheck),
         _returnInMain(returnInMain) {}
 
-    std::string alias() {
+    std::string alias() const {
         return _alias;
     }
 
@@ -163,7 +163,7 @@ public:
         std::string query = removeLastComma(fmt::format("WITH {}", addQuery_impl(args...)));
         return fmt::format(" {} SELECT json_build_object({}) as result",
                            query,
-                           removeLastComma(addQueryMain_impl(args...)));
+                           removeLastComma(addQueryMain_impl(std::forward<Args>(args)...)));
     }
 
     [[nodiscard]] std::string buildSelect() const {
@@ -236,8 +236,8 @@ private:
         return fmt::format(" {} AS ( {} ),", _alias, buildSelect());
     }
 
-    [[nodiscard]] static std::string removeLastComma(const std::string& query) {
-        return query.substr(0, query.size() - 2);  // remove last comma and space
+    [[nodiscard]] static std::string removeLastComma(const std::string_view& query) {
+        return std::string(query.substr(0, query.size() - 2));  // remove last comma and space
     }
 
     [[nodiscard]] std::string buildOnlyFields() const {
@@ -274,7 +274,7 @@ private:
 
     template<typename T, typename... Args>
     static std::string addQuery_impl(T&& t, Args&&... args) {
-        return fmt::format("{} {}", t.aliasQuery(), addQuery_impl(args...));
+        return fmt::format("{} {}", std::forward<T>(t).aliasQuery(), addQuery_impl(std::forward<Args>(args)...));
     }
 
     // Base case: no arguments left
@@ -284,7 +284,9 @@ private:
 
     template<typename T, typename... Args>
     static std::string addQueryMain_impl(T&& t, Args&&... args) {
-        return fmt::format("{} {}", t.aliasQueryMain(), addQueryMain_impl(args...));
+        return fmt::format("{} {}",
+                           std::forward<T>(t).aliasQueryMain(),
+                           addQueryMain_impl(std::forward<Args>(args)...));
     }
 
     template<typename T>

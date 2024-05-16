@@ -232,7 +232,7 @@ std::string BaseModel<T>::fieldsJsonObject() {
 template<class T>
 std::string BaseModel<T>::sqlSelectOne(const std::string &field,
                                        const std::string &value,
-                                       const std::map<std::string, std::string, std::less<>> &params) {
+                                       [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
     QuerySet qs(T::tableName, T::tableName, true);
     qs.jsonFields(addExtraQuotes(T::fieldsJsonObject())).filter(field, std::string(value));
     return qs.buildSelect();
