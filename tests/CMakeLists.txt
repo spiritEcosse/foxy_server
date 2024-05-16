@@ -1,0 +1,5 @@
+project(foxy_tests LANGUAGES CXX)
+file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS ../src/utils/*.h)
+add_executable(${PROJECT_NAME} ${RESOURCES} main.cpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
+ParseAndAddDrogonTests(${PROJECT_NAME})

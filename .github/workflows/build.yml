@@ -1,0 +1,66 @@
+env:
+    FORCE_REBUILD_IMAGE: ${{ secrets.FORCE_REBUILD_IMAGE }}
+
+on:
+    push:
+        branches:
+            - '*'
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            -   name: Checkout repository
+                uses: actions/checkout@v2
+
+            -   name: Extract branch name
+                shell: bash
+                run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" >> $GITHUB_ENV
+
+            -   name: Execute shell script based on branch
+                run: |
+                    CONTENT="cmake_build"
+                    if [ "$BRANCH_NAME" = "main" ]; then
+                        CONTENT+=";rsync_from_host_to_sever;server_run_commands=(create_config_file;supervisorctl)"
+                    fi
+                    echo "CONTENT=$CONTENT" >> $GITHUB_ENV
+
+            -   name: Login to GitHub Container Registry
+                run: echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u spiritEcosse --password-stdin
+
+            -   name: Check Docker image
+                id: check_image
+                run: |
+                    docker pull ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} && echo "::set-output name=exists::true" || echo "::set-output name=exists::false"
+                continue-on-error: true
+
+            -   name: Build Docker image
+                id: build_image
+                run: |
+                    docker build -t ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} . && echo "::set-output name=exists::true" || echo "::set-output name=exists::false"
+                if: steps.check_image.outputs.exists == 'false' || env.FORCE_REBUILD_IMAGE == 'true'
+
+            -   name: Push Docker image
+                run: docker push ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME}
+                if: steps.build_image.outputs.exists == 'true'
+
+            -   name: CMake Build
+                run: >
+                    docker run --rm --privileged
+                    -e APP_CLOUD_NAME="${{ secrets.APP_CLOUD_NAME }}"
+                    -e CMAKE_BUILD_TYPE="${{ secrets.CMAKE_BUILD_TYPE }}"
+                    -e FOXY_ADMIN="${{ secrets.FOXY_ADMIN }}"
+                    -e FOXY_CLIENT="${{ secrets.FOXY_CLIENT }}"
+                    -e SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
+                    -e SERVER_HOST="${{ secrets.SERVER_HOST }}"
+                    -e SERVER_USER="${{ secrets.SERVER_USER }}"
+                    -e SERVER_PASSWORD="${{ secrets.SERVER_PASSWORD }}"
+                    -e SERVER_PSQL_DBNAME="${{ secrets.SERVER_PSQL_DBNAME }}"
+                    -e SERVER_PSQL_USER="${{ secrets.SERVER_PSQL_USER }}"
+                    -e SERVER_PSQL_PASSWORD="${{ secrets.SERVER_PSQL_PASSWORD }}"
+                    -e CERT_PATH="${{ secrets.CERT_PATH }}"
+                    -e KEY_PATH="${{ secrets.KEY_PATH }}"
+                    -v $PWD:/share ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} /bin/bash -c "
+                      curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func=$CONTENT
+                    "
