@@ -227,7 +227,8 @@ private:
         if(_one) {
             query += fmt::format("'{0}', (SELECT * FROM {0} ),", _alias);
         } else {
-            query += fmt::format("'{0}', (SELECT json_agg({0}.*) FROM ( SELECT * FROM {0} ) as {0}),", _alias);
+            query += fmt::format("'{0}', COALESCE((SELECT json_agg({0}.*) FROM ( SELECT * FROM {0} ) as {0}), '[]'),",
+                                 _alias);
         }
         return query;
     }

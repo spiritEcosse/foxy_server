@@ -77,7 +77,10 @@ std::string BaseModel<T>::sqlInsertSingle(const T &item) {
                 } else {
                     data = arg;
                 }
-                sql.append("'").append(data).append("',");
+                if(data != "Null") {
+                    data = addExtraQuotes(data);
+                }
+                sql.append(data).append(",");
             },
             value);
     }
@@ -129,11 +132,10 @@ void BaseModel<T>::sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColum
                 } else {
                     data = arg;
                 }
-                if(data == "Null") {
-                    uniqueColumns[key].append(fmt::format("WHEN {} = {} THEN NULL ", T::primaryKey, item.id));
-                } else {
-                    uniqueColumns[key].append(fmt::format("WHEN {} = {} THEN '{}' ", T::primaryKey, item.id, data));
+                if(data != "Null") {
+                    data = addExtraQuotes(data);
                 }
+                uniqueColumns[key].append(fmt::format("WHEN {} = {} THEN {} ", T::primaryKey, item.id, data));
             },
             value);
     }
