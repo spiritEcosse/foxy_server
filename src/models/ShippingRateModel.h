@@ -50,7 +50,7 @@ namespace api::v1 {
             std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         getObjectValues() const;
         [[nodiscard]] static std::string
-        sqlSelectOne(const std::string& field,
+        getShippingRateByItem(const std::string& field,
                      const std::string& value,
                      const std::map<std::string, std::string, std::less<>>& params = {});
     };

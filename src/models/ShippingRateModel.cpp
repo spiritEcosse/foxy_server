@@ -44,7 +44,7 @@ ShippingRateModel::getObjectValues() const {
     return baseValues;
 }
 
-std::string ShippingRateModel::sqlSelectOne(const std::string &field,
+std::string ShippingRateModel::getShippingRateByItem(const std::string &field,
                                             const std::string &value,
                                             const std::map<std::string, std::string, std::less<>> &params) {
     std::string app_cloud_name;
