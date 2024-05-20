@@ -4,6 +4,8 @@
 #include "src/controllers/Page.h"
 #include "src/controllers/User.h"
 #include "src/controllers/Media.h"
+#include "src/controllers/Order.h"
+#include "src/controllers/BasketItem.h"
 #include "src/controllers/ShippingProfile.h"
 #include "src/controllers/ShippingRate.h"
 #include "src/controllers/Country.h"
@@ -364,3 +366,5 @@ template class api::v1::BaseCRUD<UserModel, Auth>;
 template class api::v1::BaseCRUD<ShippingProfileModel, ShippingProfile>;
 template class api::v1::BaseCRUD<CountryModel, Country>;
 template class api::v1::BaseCRUD<ShippingRateModel, ShippingRate>;
+template class api::v1::BaseCRUD<OrderModel, Order>;
+template class api::v1::BaseCRUD<BasketItemModel, BasketItem>;

@@ -32,7 +32,7 @@ std::vector<std::string> ShippingRateModel::fullFields() {
 
 std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 ShippingRateModel::getObjectValues() const {
-    auto baseValues = BaseModel::getObjectValues();
+    std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>> baseValues = {};
     if(countryId) {
         baseValues.emplace_back(Field::countryId, countryId);
     } else {

@@ -11,8 +11,11 @@
 #include "src/models/PageModel.h"
 #include "src/models/UserModel.h"
 #include "src/models/MediaModel.h"
+#include "src/models/BasketModel.h"
+#include "src/models/BasketItemModel.h"
 #include "src/models/ShippingProfileModel.h"
 #include "src/models/ShippingRateModel.h"
+#include "src/models/OrderModel.h"
 #include "src/models/CountriesIpsModel.h"
 #include "src/models/CountryModel.h"
 #include "src/orm/QuerySet.h"
@@ -240,11 +243,6 @@ std::string BaseModel<T>::sqlSelectOne(const std::string &field,
     return qs.buildSelect();
 }
 
-template<class T>
-std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-BaseModel<T>::getObjectValues() const {
-    return {};
-}
 
 template class api::v1::BaseModel<PageModel>;
 template class api::v1::BaseModel<ItemModel>;
@@ -254,3 +252,6 @@ template class api::v1::BaseModel<ShippingProfileModel>;
 template class api::v1::BaseModel<ShippingRateModel>;
 template class api::v1::BaseModel<CountryModel>;
 template class api::v1::BaseModel<CountriesIpsModel>;
+template class api::v1::BaseModel<OrderModel>;
+template class api::v1::BaseModel<BasketItemModel>;
+template class api::v1::BaseModel<BasketModel>;

@@ -68,9 +68,6 @@ namespace api::v1 {
         [[nodiscard]] static std::string fieldsJsonObject();
         [[nodiscard]] static std::string sqlDelete(int id);
         [[nodiscard]] static std::string sqlDeleteMultiple(const std::vector<int> &ids);
-        [[nodiscard]] std::vector<
-            std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        getObjectValues() const;
 
         template<class V>
         void validateField(const std::string &fieldName, const V &value, Json::Value &fields) const {
