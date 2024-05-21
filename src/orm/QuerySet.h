@@ -50,8 +50,9 @@ public:
         return _alias;
     }
 
-    QuerySet& group_by(std::string field) {
-        groupByFields.push_back(std::move(field));
+    template<typename... Args>
+    QuerySet& group_by(Args... args) {
+        group_by_impl(args...);
         return *this;
     }
 
@@ -85,15 +86,43 @@ public:
         return *this;
     }
 
+    template<class T>
+    QuerySet& join(const T& model) {
+        if (auto it = model.joinMap.find(tableName); it != model.joinMap.end()) {
+            const auto& [joinField, joinModelField] = it->second;
+            joinTable.emplace_back(model.tableName);
+            joinCondition.emplace_back(std::move(fmt::format(R"("{}".{} = "{}".{})", model.tableName, joinField, tableName, joinModelField)));
+        } else {
+            // Table name not found in the map
+            // You can either return an empty string or throw an exception
+            // For this example, we do nothing
+        }
+        return *this;
+    }
+
     QuerySet& join(std::string table, std::string condition) {
-        joinTable.push_back(std::move(table));
-        joinCondition.push_back(std::move(condition));
+        joinTable.emplace_back(std::move(table));
+        joinCondition.emplace_back(std::move(condition));
+        return *this;
+    }
+
+    template<class T>
+    QuerySet& left_join(const T& model) {
+        if (auto it = model.joinMap.find(tableName); it != model.joinMap.end()) {
+            const auto& [joinField, joinModelField] = it->second;
+            leftJoinTable.emplace_back(std::move(model.tableName));
+            leftJoinCondition.emplace_back(std::move(fmt::format(R"("{}".{} = "{}".{})", tableName, joinField, model.tableName, joinModelField)));
+        } else {
+            // Table name not found in the map
+            // You can either return an empty string or throw an exception
+            // For this example, we do nothing
+        }
         return *this;
     }
 
     QuerySet& left_join(std::string table, std::string condition) {
-        leftJoinTable.push_back(std::move(table));
-        leftJoinCondition.push_back(std::move(condition));
+        leftJoinTable.emplace_back(std::move(table));
+        leftJoinCondition.emplace_back(std::move(condition));
         return *this;
     }
 
@@ -186,6 +215,7 @@ public:
         sql += generateJoinSQL(joinTable, joinCondition, "INNER");
         sql += generateJoinSQL(leftJoinTable, leftJoinCondition, "LEFT");
         sql += filter();
+        sql += generateGroupBySQL(groupByFields);
         if(!orderFields.empty()) {
             sql += " ORDER BY ";
             for(const auto& [field, asc]: orderFields) {
@@ -219,6 +249,19 @@ public:
     }
 
 private:
+    template<typename T>
+    void group_by_impl(T t) {
+        std::string field = t;
+        groupByFields.emplace_back(field);
+    }
+
+    template<typename T, typename... Args>
+    void group_by_impl(T t, Args... args) {
+        std::string field = t;
+        groupByFields.emplace_back(field);
+        group_by_impl(args...);
+    }
+
     [[nodiscard]] std::string aliasQueryMain() const {
         std::string query;
         if(!_returnInMain) {
@@ -258,13 +301,13 @@ private:
     template<typename T>
     void distinct_impl(T t) {
         std::string field = t;
-        distinctFields.push_back(field);
+        distinctFields.emplace_back(field);
     }
 
     template<typename T, typename... Args>
     void distinct_impl(T t, Args... args) {
         std::string field = t;
-        distinctFields.push_back(field);
+        distinctFields.emplace_back(field);
         distinct_impl(args...);
     }
 

@@ -7,6 +7,7 @@
 
 #include "BaseModel.h"
 #include "json/json.h"
+#include "ItemModel.h"
 
 namespace api::v1 {
     class MediaModel : public BaseModel<MediaModel> {
@@ -15,6 +16,10 @@ namespace api::v1 {
             static inline const std::string src = "src";
             static inline const std::string itemId = "item_id";
             static inline const std::string sort = "sort";
+        };
+
+        static inline std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap = {
+            {ItemModel::tableName, {Field::itemId, "id"}}, // Check it, why hard code "id", ItemModel::Field::id gives empty string
         };
 
         static inline const std::string tableName = "media";

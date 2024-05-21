@@ -188,7 +188,7 @@ template<class T>
 std::string BaseModel<T>::fullFieldsWithTableToString() {
     std::stringstream ss;
     for(auto fieldNames = T::fullFields(); const auto &fieldName: fieldNames) {
-        ss << T::tableName << "." << fieldName;
+        ss << "\"" << T::tableName <<  "\"" << "." << fieldName;
         if(&fieldName != &fieldNames.back()) {
             ss << ", ";
         }

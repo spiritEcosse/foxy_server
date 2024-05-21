@@ -3,9 +3,6 @@
 //
 #include "ItemModel.h"
 #include "MediaModel.h"
-#include "ShippingProfileModel.h"
-#include "ShippingRateModel.h"
-#include "CountriesIpsModel.h"
 #include "src/orm/QuerySet.h"
 #include "src/utils/db/String.h"
 #include "src/utils/env.h"
@@ -80,9 +77,7 @@ std::string ItemModel::sqlSelectList(int page, int limit) {
 
     QuerySet qs(ItemModel::tableName, limit, "data");
     qs.distinct(orderByItemField, itemID)
-        .join(MediaModel::tableName,
-              ItemModel::tableName + "." + ItemModel::Field::id + " = " + MediaModel::tableName + "." +
-                  MediaModel::Field::itemId)
+        .join(MediaModel())
         .filter(ItemModel::tableName + "." + ItemModel::Field::enabled,
                 std::string("true"),
                 false,

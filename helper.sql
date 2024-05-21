@@ -143,41 +143,41 @@ create table if not EXISTS page
 
 CREATE TABLE IF NOT EXISTS "basket"
 (
-    id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
-    created_at       timestamp    NOT NULL DEFAULT NOW(),
-    updated_at       timestamp    NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (user_id) REFERENCES "user"(id)
+    id         SERIAL PRIMARY KEY,
+    user_id    INT       NOT NULL,
+    created_at timestamp NOT NULL DEFAULT NOW(),
+    updated_at timestamp NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (user_id) REFERENCES "user" (id)
 );
 
 CREATE TABLE IF NOT EXISTS "basket_item"
 (
-    id SERIAL PRIMARY KEY,
-    item_id INT NOT NULL,
-    quantity INT NOT NULL,
-    basket_id INT NOT NULL,
-    created_at       timestamp    NOT NULL DEFAULT NOW(),
-    updated_at       timestamp    NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (item_id) REFERENCES item(id),
-    FOREIGN KEY (basket_id) REFERENCES basket(id)
+    id         SERIAL PRIMARY KEY,
+    item_id    INT       NOT NULL,
+    quantity   INT       NOT NULL,
+    basket_id  INT       NOT NULL,
+    created_at timestamp NOT NULL DEFAULT NOW(),
+    updated_at timestamp NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (item_id) REFERENCES item (id),
+    FOREIGN KEY (basket_id) REFERENCES basket (id)
 );
 
 CREATE TABLE IF NOT EXISTS "order"
 (
-    id SERIAL PRIMARY KEY,
-    status VARCHAR(255) NOT NULL,
-    basket_id INT NOT NULL,
-    total DECIMAL(10, 2) NOT NULL,
+    id             SERIAL PRIMARY KEY,
+    status         VARCHAR(255)   NOT NULL,
+    basket_id      INT            NOT NULL UNIQUE,
+    total          DECIMAL(10, 2) NOT NULL,
     total_ex_taxes DECIMAL(10, 2) NOT NULL,
-    delivery_fees DECIMAL(10, 2) NOT NULL,
-    tax_rate DECIMAL(10, 2) NOT NULL,
-    taxes DECIMAL(10, 2) NOT NULL,
-    user_id INT NOT NULL,
-    reference VARCHAR(255) NOT NULL,
-    created_at timestamp NOT NULL DEFAULT NOW(),
-    updated_at timestamp NOT NULL DEFAULT NOW(),
-    FOREIGN KEY (basket_id) REFERENCES "basket"(id),
-    FOREIGN KEY (user_id) REFERENCES "user"(id)
+    delivery_fees  DECIMAL(10, 2) NOT NULL,
+    tax_rate       DECIMAL(10, 2) NOT NULL,
+    taxes          DECIMAL(10, 2) NOT NULL,
+    user_id        INT            NOT NULL,
+    reference      VARCHAR(255)   NOT NULL,
+    created_at     timestamp      NOT NULL DEFAULT NOW(),
+    updated_at     timestamp      NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (basket_id) REFERENCES "basket" (id),
+    FOREIGN KEY (user_id) REFERENCES "user" (id)
 );
 
 CREATE TABLE IF NOT EXISTS countries_ips

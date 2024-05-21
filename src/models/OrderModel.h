@@ -9,6 +9,7 @@
 #include <chrono>
 #include <drogon/drogon.h>
 #include "BaseModel.h"
+#include "BasketModel.h"
 
 enum class OrderStatus {
     ordered,
@@ -33,6 +34,9 @@ namespace api::v1 {
         };
 
         static inline const std::string tableName = "order";
+        static inline std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap = {
+            {BasketModel::tableName, {Field::basketId, BasketModel::Field::id}},
+        };
 
         OrderModel() = default;
         OrderModel(const OrderModel&) = delete;  // Copy constructor
@@ -77,6 +81,7 @@ namespace api::v1 {
         [[nodiscard]] std::vector<
             std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         getObjectValues() const;
+        [[nodiscard]] static std::string sqlSelectList(int page, int limit);
     };
 }
 
