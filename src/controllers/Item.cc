@@ -26,9 +26,7 @@ void Item::getListAdmin(const drogon::HttpRequestPtr &req,
     auto itemID = fmt::format("{}.{}", ItemModel::tableName, ItemModel::Field::id);
     auto mediaItemID = fmt::format("{}.{}", MediaModel::tableName, MediaModel::Field::itemId);
     qs.distinct(orderByItemField, itemID)
-        .left_join(MediaModel::tableName,
-                   ItemModel::tableName + "." + ItemModel::Field::id + " = " + MediaModel::tableName + "." +
-                       MediaModel::Field::itemId)
+        .left_join(MediaModel())
         .filter(mediaSort, std::string("NULL"), false, std::string("IS"), std::string("OR"))
         .filter(mediaSort,
                 std::string(fmt::format("(SELECT MIN({}) FROM {} WHERE {} = {})",

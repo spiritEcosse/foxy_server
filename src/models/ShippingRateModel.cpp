@@ -32,7 +32,8 @@ std::vector<std::string> ShippingRateModel::fullFields() {
 
 std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 ShippingRateModel::getObjectValues() const {
-    std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>> baseValues = {};
+    std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+        baseValues = {};
     if(countryId) {
         baseValues.emplace_back(Field::countryId, countryId);
     } else {
@@ -65,8 +66,7 @@ std::string ShippingRateModel::getShippingRateByItem(const std::string &field,
         .only({fmt::format("{}.{}", CountriesIpsModel::tableName, CountriesIpsModel::Field::countryId)});
 
     QuerySet qsShipping(ShippingRateModel::tableName, "shipping", false);
-    qsShipping
-        .join(ShippingProfileModel())
+    qsShipping.join(ShippingProfileModel())
         .join(ItemModel())
         .filter({{fmt::format("{}.{}", ShippingRateModel::tableName, ShippingRateModel::Field::countryId),
                   "=",

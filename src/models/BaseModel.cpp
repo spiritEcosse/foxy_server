@@ -188,7 +188,8 @@ template<class T>
 std::string BaseModel<T>::fullFieldsWithTableToString() {
     std::stringstream ss;
     for(auto fieldNames = T::fullFields(); const auto &fieldName: fieldNames) {
-        ss << "\"" << T::tableName <<  "\"" << "." << fieldName;
+        ss << "\"" << T::tableName << "\""
+           << "." << fieldName;
         if(&fieldName != &fieldNames.back()) {
             ss << ", ";
         }
@@ -242,7 +243,6 @@ std::string BaseModel<T>::sqlSelectOne(const std::string &field,
     qs.jsonFields(addExtraQuotes(T::fieldsJsonObject())).filter(field, std::string(value));
     return qs.buildSelect();
 }
-
 
 template class api::v1::BaseModel<PageModel>;
 template class api::v1::BaseModel<ItemModel>;

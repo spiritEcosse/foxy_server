@@ -33,7 +33,8 @@ std::vector<std::string> PageModel::fullFields() {
 
 std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 PageModel::getObjectValues() const {
-    std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>> baseValues = {};
+    std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+        baseValues = {};
     baseValues.emplace_back(Field::title, title);
     baseValues.emplace_back(Field::description, description);
     baseValues.emplace_back(Field::metaDescription, metaDescription);

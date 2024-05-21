@@ -118,8 +118,7 @@ std::string ItemModel::sqlSelectOne(const std::string &field,
     std::string itemField = ItemModel::tableName + "." + field;
     if(field == Field::id)
         itemField = MediaModel::tableName + "." + MediaModel::Field::itemId;
-    qsMedia
-        .join(ItemModel())
+    qsMedia.join(ItemModel())
         .filter(itemField, std::string(value))
         .order_by(std::make_pair(MediaModel::tableName + "." + MediaModel::Field::sort, true))
         .only({MediaModel::fullFieldsWithTableToString(),

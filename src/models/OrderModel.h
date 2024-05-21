@@ -11,12 +11,7 @@
 #include "BaseModel.h"
 #include "BasketModel.h"
 
-enum class OrderStatus {
-    ordered,
-    delivered,
-    cancelled
-};
-
+enum class OrderStatus { ordered, delivered, cancelled };
 
 namespace api::v1 {
     class OrderModel : public BaseModel<OrderModel> {

@@ -16,6 +16,7 @@ std::vector<std::string> CountriesIpsModel::fullFields() {
 
 std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 CountriesIpsModel::getObjectValues() const {
-    std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>> baseValues = {};
+    std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+        baseValues = {};
     return baseValues;
 }

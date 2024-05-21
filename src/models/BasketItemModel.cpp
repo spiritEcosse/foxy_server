@@ -7,8 +7,7 @@
 using namespace api::v1;
 
 std::vector<std::string> BasketItemModel::fields() {
-    return {
-    };
+    return {};
 }
 
 std::vector<std::string> BasketItemModel::fullFields() {
@@ -20,6 +19,7 @@ std::vector<std::string> BasketItemModel::fullFields() {
 
 std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 BasketItemModel::getObjectValues() const {
-    std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>> baseValues = {};
+    std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+        baseValues = {};
     return baseValues;
 }
