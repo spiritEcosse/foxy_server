@@ -3,10 +3,17 @@
 //
 
 #include "MediaModel.h"
+#include "ItemModel.h"
 #include <fmt/core.h>
 #include "src/utils/env.h"
 
 using namespace api::v1;
+
+template<>
+std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseModel<MediaModel>::joinMap = {
+    {ItemModel::tableName, {MediaModel::Field::itemId, ItemModel::Field::id}},
+};
+
 
 std::vector<std::string> MediaModel::fields() {
     return {

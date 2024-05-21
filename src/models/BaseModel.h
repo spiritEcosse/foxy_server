@@ -16,7 +16,7 @@ namespace api::v1 {
     template<class T>
     class BaseModel {
     public:
-        static inline std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap = {};
+        static std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap;
 
         BaseModel() = default;
         BaseModel(const BaseModel &) = delete;  // Copy constructor

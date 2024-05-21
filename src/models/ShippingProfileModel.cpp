@@ -3,8 +3,14 @@
 //
 
 #include "ShippingProfileModel.h"
+#include "ShippingRateModel.h"
 
 using namespace api::v1;
+
+template<>
+std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseModel<ShippingProfileModel>::joinMap = {
+    {ShippingRateModel::tableName, {ShippingProfileModel::Field::id, ShippingRateModel::Field::shippingProfileId}},
+};
 
 std::vector<std::string> ShippingProfileModel::fields() {
     return {

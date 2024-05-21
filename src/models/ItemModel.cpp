@@ -3,12 +3,19 @@
 //
 #include "ItemModel.h"
 #include "MediaModel.h"
+#include "ShippingRateModel.h"
 #include "src/orm/QuerySet.h"
 #include "src/utils/db/String.h"
 #include "src/utils/env.h"
 #include <fmt/core.h>
 
 using namespace api::v1;
+
+template<>
+std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseModel<ItemModel>::joinMap = {
+    {MediaModel::tableName, {ItemModel::Field::id, MediaModel::Field::itemId}},
+    {ShippingRateModel::tableName, {ItemModel::Field::shippingProfileId, ShippingRateModel::Field::shippingProfileId}},
+};
 
 std::vector<std::string> ItemModel::fields() {
     return {
@@ -112,9 +119,7 @@ std::string ItemModel::sqlSelectOne(const std::string &field,
     if(field == Field::id)
         itemField = MediaModel::tableName + "." + MediaModel::Field::itemId;
     qsMedia
-        .join(ItemModel::tableName,
-              ItemModel::tableName + "." + ItemModel::Field::id + " = " + MediaModel::tableName + "." +
-                  MediaModel::Field::itemId)
+        .join(ItemModel())
         .filter(itemField, std::string(value))
         .order_by(std::make_pair(MediaModel::tableName + "." + MediaModel::Field::sort, true))
         .only({MediaModel::fullFieldsWithTableToString(),

@@ -66,18 +66,8 @@ std::string ShippingRateModel::getShippingRateByItem(const std::string &field,
 
     QuerySet qsShipping(ShippingRateModel::tableName, "shipping", false);
     qsShipping
-        .join(ShippingProfileModel::tableName,
-              fmt::format("{}.{} = {}.{}",
-                          ShippingProfileModel::tableName,
-                          ShippingProfileModel::Field::id,
-                          ShippingRateModel::tableName,
-                          ShippingRateModel::Field::shippingProfileId))
-        .join(ItemModel::tableName,
-              fmt::format("{}.{} = {}.{}",
-                          ShippingProfileModel::tableName,
-                          ShippingProfileModel::Field::id,
-                          ItemModel::tableName,
-                          ItemModel::Field::shippingProfileId))
+        .join(ShippingProfileModel())
+        .join(ItemModel())
         .filter({{fmt::format("{}.{}", ShippingRateModel::tableName, ShippingRateModel::Field::countryId),
                   "=",
                   fmt::format("(SELECT {} FROM {})", CountriesIpsModel::Field::countryId, qsCountry.alias()),
