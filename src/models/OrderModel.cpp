@@ -9,13 +9,13 @@
 
 using namespace api::v1;
 
-std::vector<std::string> OrderModel::fields() {
+std::vector<BaseField<OrderModel>> OrderModel::fields() {
     return {};
 }
 
-std::vector<std::string> OrderModel::fullFields() {
+std::vector<BaseField<OrderModel>> OrderModel::fullFields() {
     return {
-        Field::id,
+        BaseModel::Field::id,
         Field::status,
         Field::basketId,
         Field::total,
@@ -25,14 +25,16 @@ std::vector<std::string> OrderModel::fullFields() {
         Field::taxes,
         Field::userId,
         Field::reference,
-        Field::createdAt,
-        Field::updatedAt,
+        BaseModel::Field::createdAt,
+        BaseModel::Field::updatedAt,
     };
 }
 
-std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+std::vector<
+    std::pair<BaseField<OrderModel>, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 OrderModel::getObjectValues() const {
-    std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+    std::vector<
+        std::pair<BaseField<OrderModel>, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         baseValues = {};
     return baseValues;
 }
@@ -44,11 +46,10 @@ std::string OrderModel::sqlSelectList(int page, int limit) {
     QuerySet qs(OrderModel::tableName, limit, "data");
     qs.join(BasketItemModel())
         .only({OrderModel::fullFieldsWithTableToString(),
-               fmt::format(R"(COUNT("{}".{}) as count_items)", BasketItemModel::tableName, BasketItemModel::Field::id)})
-        .order_by(std::make_pair(fmt::format(R"("{}".{})", OrderModel::tableName, OrderModel::Field::updatedAt), false),
-                  std::make_pair(fmt::format(R"("{}".{})", OrderModel::tableName, OrderModel::Field::id), false))
-        .group_by(fmt::format(R"("{}".{})", OrderModel::tableName, OrderModel::Field::id),
-                  fmt::format(R"("{}".{})", OrderModel::tableName, OrderModel::Field::updatedAt));
+               fmt::format(R"(COUNT({}) as count_items)", BaseModel::Field::id.getFullFieldName())})
+        .order_by(std::make_pair(BaseModel::Field::updatedAt.getFullFieldName(), false),
+                  std::make_pair(BaseModel::Field::id.getFullFieldName(), false))
+        .group_by(BaseModel::Field::id.getFullFieldName(), BaseModel::Field::updatedAt.getFullFieldName());
 
     return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
 }

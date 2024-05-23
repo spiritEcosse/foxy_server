@@ -14,41 +14,43 @@
 namespace api::v1 {
     class BasketItemModel : public BaseModel<BasketItemModel> {
     public:
-        struct Field : public BaseModel::Field {
-            static inline const std::string basketId = "basket_id";
-            static inline const std::string itemId = "item_id";
-            static inline const std::string quantity = "quantity";
-        };
-
         static inline const std::string tableName = "basket_item";
 
+        struct Field : public BaseModel::Field {
+            static inline BaseField<BasketItemModel> basketId = BaseField<BasketItemModel>("basket_id");
+            static inline BaseField<BasketItemModel> itemId = BaseField<BasketItemModel>("item_id");
+            static inline BaseField<BasketItemModel> quantity = BaseField<BasketItemModel>("quantity");
+        };
+
         static inline std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap = {
-            {OrderModel::tableName, {Field::basketId, OrderModel::Field::basketId}},
+            {OrderModel::tableName,
+             {Field::basketId.getFullFieldName(), OrderModel::Field::basketId.getFullFieldName()}},
         };
 
         int basketId{};
         int itemId{};
         int quantity{};
         BasketItemModel() = default;
-        BasketItemModel(const BasketItemModel&) = delete;  // Copy constructor
-        BasketItemModel& operator=(const BasketItemModel&) = delete;  // Copy assignment operator
-        BasketItemModel(BasketItemModel&&) noexcept = default;  // Move constructor
-        BasketItemModel& operator=(BasketItemModel&&) noexcept = default;  // Move assignment operator
+        BasketItemModel(const BasketItemModel &) = delete;  // Copy constructor
+        BasketItemModel &operator=(const BasketItemModel &) = delete;  // Copy assignment operator
+        BasketItemModel(BasketItemModel &&) noexcept = default;  // Move constructor
+        BasketItemModel &operator=(BasketItemModel &&) noexcept = default;  // Move assignment operator
 
-        explicit BasketItemModel(const Json::Value& json) : BaseModel(json) {
-            basketId = json[Field::basketId].asInt();
-            itemId = json[Field::itemId].asInt();
-            quantity = json[Field::quantity].asInt();
+        explicit BasketItemModel(const Json::Value &json) : BaseModel(json) {
+            basketId = json[Field::basketId.getFieldName()].asInt();
+            itemId = json[Field::itemId.getFieldName()].asInt();
+            quantity = json[Field::quantity.getFieldName()].asInt();
 
-            validateField(Field::basketId, basketId, missingFields);
-            validateField(Field::itemId, itemId, missingFields);
-            validateField(Field::quantity, quantity, missingFields);
+            validateField(Field::basketId.getFieldName(), basketId, missingFields);
+            validateField(Field::itemId.getFieldName(), itemId, missingFields);
+            validateField(Field::quantity.getFieldName(), quantity, missingFields);
         }
 
-        [[nodiscard]] static std::vector<std::string> fields();
-        [[nodiscard]] static std::vector<std::string> fullFields();
+        [[nodiscard]] static std::vector<BaseField<BasketItemModel>> fields();
+        [[nodiscard]] static std::vector<BaseField<BasketItemModel>> fullFields();
         [[nodiscard]] std::vector<
-            std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+            std::pair<BaseField<BasketItemModel>,
+                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         getObjectValues() const;
     };
 }

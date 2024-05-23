@@ -21,10 +21,10 @@ void Item::getListAdmin(const drogon::HttpRequestPtr &req,
     QuerySet qsPage = ItemModel::qsPage(page, limit);
 
     QuerySet qs(ItemModel::tableName, limit, "data");
-    auto mediaSort = fmt::format("{}.{}", MediaModel::tableName, MediaModel::Field::sort);
-    auto orderByItemField = fmt::format("{}.{}", ItemModel::tableName, ItemModel::orderBy);
-    auto itemID = fmt::format("{}.{}", ItemModel::tableName, ItemModel::Field::id);
-    auto mediaItemID = fmt::format("{}.{}", MediaModel::tableName, MediaModel::Field::itemId);
+    auto mediaSort = MediaModel::Field::sort.getFullFieldName();
+    auto orderByItemField = ItemModel::getOrderByFullName();
+    auto itemID = ItemModel::getPrimaryKeyFullName();
+    auto mediaItemID = MediaModel::Field::itemId.getFullFieldName();
     qs.distinct(orderByItemField, itemID)
         .left_join(MediaModel())
         .filter(mediaSort, std::string("NULL"), false, std::string("IS"), std::string("OR"))
@@ -53,7 +53,7 @@ void Item::getOne(const drogon::HttpRequestPtr &req,
         return;
     }
 
-    std::string filterKey = isInt ? ItemModel::primaryKey : ItemModel::Field::slug;
+    std::string filterKey = isInt ? ItemModel::getPrimaryKeyFullName() : ItemModel::Field::slug.getFullFieldName();
     std::string query = ItemModel::sqlSelectOne(filterKey, stringId);
 
     executeSqlQuery(callbackPtr, query);

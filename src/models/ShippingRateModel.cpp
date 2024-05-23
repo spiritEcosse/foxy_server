@@ -9,7 +9,7 @@
 
 using namespace api::v1;
 
-std::vector<std::string> ShippingRateModel::fields() {
+std::vector<BaseField<ShippingRateModel>> ShippingRateModel::fields() {
     return {
         Field::countryId,
         Field::shippingProfileId,
@@ -18,11 +18,11 @@ std::vector<std::string> ShippingRateModel::fields() {
     };
 }
 
-std::vector<std::string> ShippingRateModel::fullFields() {
+std::vector<BaseField<ShippingRateModel>> ShippingRateModel::fullFields() {
     return {
-        Field::id,
-        Field::createdAt,
-        Field::updatedAt,
+        BaseModel::Field::id,
+        BaseModel::Field::createdAt,
+        BaseModel::Field::updatedAt,
         Field::countryId,
         Field::shippingProfileId,
         Field::deliveryDaysMin,
@@ -30,9 +30,11 @@ std::vector<std::string> ShippingRateModel::fullFields() {
     };
 }
 
-std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+std::vector<std::pair<BaseField<ShippingRateModel>,
+                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 ShippingRateModel::getObjectValues() const {
-    std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+    std::vector<std::pair<BaseField<ShippingRateModel>,
+                          std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         baseValues = {};
     if(countryId) {
         baseValues.emplace_back(Field::countryId, countryId);
@@ -54,37 +56,30 @@ std::string ShippingRateModel::getShippingRateByItem(const std::string &field,
 
     QuerySet qsCountry(CountriesIpsModel::tableName, "one_country_id", false, false);
     qsCountry
-        .filter(fmt::format("{}.{}", CountriesIpsModel::tableName, CountriesIpsModel::Field::startRange),
+        .filter(CountriesIpsModel::Field::startRange.getFullFieldName(),
                 clientIp,
                 true,
                 std::string("<="),
                 std::string("AND"))
-        .filter(fmt::format("{}.{}", CountriesIpsModel::tableName, CountriesIpsModel::Field::endRange),
-                clientIp,
-                true,
-                std::string(">="))
-        .only({fmt::format("{}.{}", CountriesIpsModel::tableName, CountriesIpsModel::Field::countryId)});
+        .filter(CountriesIpsModel::Field::endRange.getFullFieldName(), clientIp, true, std::string(">="))
+        .only({CountriesIpsModel::Field::countryId.getFullFieldName()});
 
     QuerySet qsShipping(ShippingRateModel::tableName, "shipping", false);
     qsShipping.join(ShippingProfileModel())
         .join(ItemModel())
-        .filter({{fmt::format("{}.{}", ShippingRateModel::tableName, ShippingRateModel::Field::countryId),
-                  "=",
-                  fmt::format("(SELECT {} FROM {})", CountriesIpsModel::Field::countryId, qsCountry.alias()),
-                  false,
-                  "OR"},
-                 {fmt::format("{}.{}", ShippingRateModel::tableName, ShippingRateModel::Field::countryId),
-                  "IS",
-                  "NULL",
-                  false,
-                  ""}})
-        .filter(fmt::format("{}.{}", ItemModel::tableName, field), std::string(value), true, std::string("="))
-        .jsonFields(fmt::format("'{0}', {1}.{0} + {2}.{3}, '{4}', {1}.{4} + {2}.{3}",
-                                ShippingRateModel::Field::deliveryDaysMax,
-                                ShippingRateModel::tableName,
-                                ShippingProfileModel::tableName,
-                                ShippingProfileModel::Field::processingTime,
-                                ShippingRateModel::Field::deliveryDaysMin));
-
+        .filter(
+            {{ShippingRateModel::Field::countryId.getFullFieldName(),
+              "=",
+              fmt::format("(SELECT {} FROM {})", CountriesIpsModel::Field::countryId.getFieldName(), qsCountry.alias()),
+              false,
+              "OR"},
+             {ShippingRateModel::Field::countryId.getFullFieldName(), "IS", "NULL", false, ""}})
+        .filter(field, std::string(value), true, std::string("="))
+        .jsonFields(fmt::format("'{0}', {1} + {2}, '{3}', {4} + {2}",
+                                ShippingRateModel::Field::deliveryDaysMax.getFieldName(),
+                                ShippingRateModel::Field::deliveryDaysMax.getFullFieldName(),
+                                ShippingProfileModel::Field::processingTime.getFullFieldName(),
+                                ShippingRateModel::Field::deliveryDaysMin.getFieldName(),
+                                ShippingRateModel::Field::deliveryDaysMin.getFullFieldName()));
     return QuerySet::buildQuery(std::move(qsCountry), std::move(qsShipping));
 }

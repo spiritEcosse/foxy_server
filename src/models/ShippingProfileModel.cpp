@@ -9,10 +9,12 @@ using namespace api::v1;
 
 template<>
 std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseModel<ShippingProfileModel>::joinMap = {
-    {ShippingRateModel::tableName, {ShippingProfileModel::Field::id, ShippingRateModel::Field::shippingProfileId}},
+    {ShippingRateModel::tableName,
+     {ShippingProfileModel::Field::id.getFullFieldName(),
+      ShippingRateModel::Field::shippingProfileId.getFullFieldName()}},
 };
 
-std::vector<std::string> ShippingProfileModel::fields() {
+std::vector<BaseField<ShippingProfileModel>> ShippingProfileModel::fields() {
     return {
         Field::title,
         Field::processingTime,
@@ -22,12 +24,12 @@ std::vector<std::string> ShippingProfileModel::fields() {
     };
 }
 
-std::vector<std::string> ShippingProfileModel::fullFields() {
+std::vector<BaseField<ShippingProfileModel>> ShippingProfileModel::fullFields() {
     return {
-        Field::id,
+        BaseModel::Field::id,
         Field::title,
-        Field::createdAt,
-        Field::updatedAt,
+        BaseModel::Field::createdAt,
+        BaseModel::Field::updatedAt,
         Field::processingTime,
         Field::countryId,
         Field::postalCode,
@@ -35,10 +37,10 @@ std::vector<std::string> ShippingProfileModel::fullFields() {
     };
 }
 
-std::vector<std::pair<std::string,
+std::vector<std::pair<BaseField<ShippingProfileModel>,
                       std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
 ShippingProfileModel::getObjectValues() const {
-    std::vector<std::pair<std::string,
+    std::vector<std::pair<BaseField<ShippingProfileModel>,
                           std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
         baseValues = {};
     baseValues.emplace_back(Field::title, title);

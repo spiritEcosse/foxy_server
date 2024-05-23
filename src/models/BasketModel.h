@@ -13,28 +13,29 @@
 namespace api::v1 {
     class BasketModel : public BaseModel<BasketModel> {
     public:
-        struct Field : public BaseModel::Field {
-            static inline const std::string userId = "user_id";
-        };
-
         static inline const std::string tableName = "basket";
+
+        struct Field : public BaseModel::Field {
+            static inline BaseField<BasketModel> userId = BaseField<BasketModel>("user_id");
+        };
 
         int userId{};
         BasketModel() = default;
-        BasketModel(const BasketModel&) = delete;  // Copy constructor
-        BasketModel& operator=(const BasketModel&) = delete;  // Copy assignment operator
-        BasketModel(BasketModel&&) noexcept = default;  // Move constructor
-        BasketModel& operator=(BasketModel&&) noexcept = default;  // Move assignment operator
+        BasketModel(const BasketModel &) = delete;  // Copy constructor
+        BasketModel &operator=(const BasketModel &) = delete;  // Copy assignment operator
+        BasketModel(BasketModel &&) noexcept = default;  // Move constructor
+        BasketModel &operator=(BasketModel &&) noexcept = default;  // Move assignment operator
 
-        explicit BasketModel(const Json::Value& json) : BaseModel(json) {
-            userId = json[Field::userId].asInt();
-            validateField(Field::userId, userId, missingFields);
+        explicit BasketModel(const Json::Value &json) : BaseModel(json) {
+            userId = json[Field::userId.getFieldName()].asInt();
+            validateField(Field::userId.getFieldName(), userId, missingFields);
         }
 
-        [[nodiscard]] static std::vector<std::string> fields();
-        [[nodiscard]] static std::vector<std::string> fullFields();
+        [[nodiscard]] static std::vector<BaseField<BasketModel>> fields();
+        [[nodiscard]] static std::vector<BaseField<BasketModel>> fullFields();
         [[nodiscard]] std::vector<
-            std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+            std::pair<BaseField<BasketModel>,
+                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         getObjectValues() const;
     };
 }

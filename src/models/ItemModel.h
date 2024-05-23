@@ -17,17 +17,17 @@ namespace api::v1 {
 
     class ItemModel : public BaseModel<ItemModel> {
     public:
-        struct Field : public BaseModel::Field {
-            static inline const std::string title = "title";
-            static inline const std::string description = "description";
-            static inline const std::string metaDescription = "meta_description";
-            static inline const std::string shippingProfileId = "shipping_profile_id";
-            static inline const std::string slug = "slug";
-            static inline const std::string enabled = "enabled";
-            static inline const std::string price = "price";
-        };
-
         static inline const std::string tableName = "item";
+
+        struct Field : public BaseModel::Field {
+            static inline BaseField<ItemModel> title = BaseField<ItemModel>("title");
+            static inline BaseField<ItemModel> description = BaseField<ItemModel>("description");
+            static inline BaseField<ItemModel> metaDescription = BaseField<ItemModel>("meta_description");
+            static inline BaseField<ItemModel> shippingProfileId = BaseField<ItemModel>("shipping_profile_id");
+            static inline BaseField<ItemModel> slug = BaseField<ItemModel>("slug");
+            static inline BaseField<ItemModel> enabled = BaseField<ItemModel>("enabled");
+            static inline BaseField<ItemModel> price = BaseField<ItemModel>("price");
+        };
 
         std::string title;
         int shippingProfileId{};
@@ -37,26 +37,26 @@ namespace api::v1 {
         dec::decimal<2> price;
         std::string metaDescription;
         ItemModel() = default;
-        ItemModel(const ItemModel&) = delete;  // Copy constructor
-        ItemModel& operator=(const ItemModel&) = delete;  // Copy assignment operator
-        ItemModel(ItemModel&&) noexcept = default;  // Move constructor
-        ItemModel& operator=(ItemModel&&) noexcept = default;  // Move assignment operator
+        ItemModel(const ItemModel &) = delete;  // Copy constructor
+        ItemModel &operator=(const ItemModel &) = delete;  // Copy assignment operator
+        ItemModel(ItemModel &&) noexcept = default;  // Move constructor
+        ItemModel &operator=(ItemModel &&) noexcept = default;  // Move assignment operator
 
-        explicit ItemModel(const Json::Value& json) : BaseModel(json) {
-            title = json[Field::title].asString();
-            description = json[Field::description].asString();
-            metaDescription = json[Field::metaDescription].asString();
-            slug = json[Field::slug].asString();
-            shippingProfileId = json[Field::shippingProfileId].asInt();
-            enabled = json[Field::enabled].asBool();
-            auto priceString = json[Field::price].asString();
+        explicit ItemModel(const Json::Value &json) : BaseModel(json) {
+            title = json[Field::title.getFieldName()].asString();
+            description = json[Field::description.getFieldName()].asString();
+            metaDescription = json[Field::metaDescription.getFieldName()].asString();
+            slug = json[Field::slug.getFieldName()].asString();
+            shippingProfileId = json[Field::shippingProfileId.getFieldName()].asInt();
+            enabled = json[Field::enabled.getFieldName()].asBool();
+            auto priceString = json[Field::price.getFieldName()].asString();
 
-            validateField(Field::title, title, missingFields);
-            validateField(Field::description, description, missingFields);
-            validateField(Field::shippingProfileId, shippingProfileId, missingFields);
-            validateField(Field::metaDescription, metaDescription, missingFields);
-            validateField(Field::slug, slug, missingFields);
-            validateField(Field::price, priceString, missingFields);
+            validateField(Field::title.getFieldName(), title, missingFields);
+            validateField(Field::description.getFieldName(), description, missingFields);
+            validateField(Field::shippingProfileId.getFieldName(), shippingProfileId, missingFields);
+            validateField(Field::metaDescription.getFieldName(), metaDescription, missingFields);
+            validateField(Field::slug.getFieldName(), slug, missingFields);
+            validateField(Field::price.getFieldName(), priceString, missingFields);
             if(missingFields.empty()) {
                 price = std::stod(priceString);
             }
@@ -64,17 +64,17 @@ namespace api::v1 {
 
         [[nodiscard]] static QuerySet qsCount();
 
-        [[nodiscard]] static std::vector<std::string> fields();
-        [[nodiscard]] static std::vector<std::string> fullFields();
+        [[nodiscard]] static std::vector<BaseField<ItemModel>> fields();
+        [[nodiscard]] static std::vector<BaseField<ItemModel>> fullFields();
         [[nodiscard]] std::vector<
-            std::pair<std::string,
+            std::pair<BaseField<ItemModel>,
                       std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
         getObjectValues() const;
         [[nodiscard]] static std::string sqlSelectList(int page, int limit);
         [[nodiscard]] static std::string
-        sqlSelectOne(const std::string& field,
-                     const std::string& value,
-                     const std::map<std::string, std::string, std::less<>>& params = {});
+        sqlSelectOne(const std::string &field,
+                     const std::string &value,
+                     const std::map<std::string, std::string, std::less<>> &params = {});
     };
 }
 

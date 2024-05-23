@@ -11,10 +11,10 @@ using namespace api::v1;
 
 template<>
 std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseModel<MediaModel>::joinMap = {
-    {ItemModel::tableName, {MediaModel::Field::itemId, ItemModel::Field::id}},
+    {ItemModel::tableName, {MediaModel::Field::itemId.getFullFieldName(), ItemModel::getPrimaryKeyFullName()}},
 };
 
-std::vector<std::string> MediaModel::fields() {
+std::vector<BaseField<MediaModel>> MediaModel::fields() {
     return {
         Field::src,
         Field::itemId,
@@ -22,20 +22,22 @@ std::vector<std::string> MediaModel::fields() {
     };
 }
 
-std::vector<std::string> MediaModel::fullFields() {
+std::vector<BaseField<MediaModel>> MediaModel::fullFields() {
     return {
-        Field::id,
+        BaseModel::Field::id,
         Field::itemId,
         Field::sort,
         Field::src,
-        Field::createdAt,
-        Field::updatedAt,
+        BaseModel::Field::createdAt,
+        BaseModel::Field::updatedAt,
     };
 }
 
-std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+std::vector<
+    std::pair<BaseField<MediaModel>, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 MediaModel::getObjectValues() const {
-    std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+    std::vector<
+        std::pair<BaseField<MediaModel>, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         baseValues = {};
     baseValues.emplace_back(Field::src, src);
     baseValues.emplace_back(Field::itemId, itemId);
@@ -49,10 +51,13 @@ std::string MediaModel::fieldsJsonObject() {
 
     std::stringstream ss;
     for(auto fieldNames = fullFields(); const auto &fieldName: fieldNames) {
-        if(fieldName == "src") {
-            ss << fmt::format("'{}', format_src({}, '{}') ", fieldName, fieldName, app_cloud_name);
+        if(fieldName.getFieldName() == "src") {
+            ss << fmt::format("'{}', format_src({}, '{}') ",
+                              fieldName.getFieldName(),
+                              fieldName.getFullFieldName(),
+                              app_cloud_name);
         } else {
-            ss << fmt::format("'{}', {} ", fieldName, fieldName);
+            ss << fmt::format("'{}', {} ", fieldName.getFieldName(), fieldName.getFullFieldName());
         }
         if(&fieldName != &fieldNames.back()) {
             ss << ", ";

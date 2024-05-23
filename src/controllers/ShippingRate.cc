@@ -32,7 +32,8 @@ void ShippingRate::getShippingRateByItem(const drogon::HttpRequestPtr &req,
     std::map<std::string, std::string, std::less<>> params;
     params["client_ip"] = std::to_string(integer_ip);
 
-    std::string query = ShippingRateModel::getShippingRateByItem(ItemModel::Field::slug, stringId, params);
+    std::string query =
+        ShippingRateModel::getShippingRateByItem(ItemModel::Field::slug.getFullFieldName(), stringId, params);
 
     executeSqlQuery(callbackPtr, query);
 }

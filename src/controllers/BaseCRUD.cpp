@@ -106,7 +106,7 @@ void BaseCRUD<T, R>::getItems(const drogon::HttpRequestPtr &req,
     Json::Value jsonResponseError;
     try {
         std::ranges::for_each(itemsJson.begin(), itemsJson.end(), [&items, &index, &req](const auto &item) {
-            if(item[T::Field::id].asInt() == 0 && req->method() == drogon::Put) {
+            if(item[T::getPrimaryKeyFieldName()].asInt() == 0 && req->method() == drogon::Put) {
                 throw RequiredFieldsException("id is required");
             }
             items.emplace_back(std::move(item));
@@ -191,7 +191,7 @@ void BaseCRUD<T, R>::getOne([[maybe_unused]] const drogon::HttpRequestPtr &req,
         return;
     }
 
-    std::string filterKey = isInt ? T::primaryKey : T::Field::slug;
+    std::string filterKey = isInt ? T::getPrimaryKeyFieldName() : T::Field::slug.getFullFieldName();
     std::string query = T::sqlSelectOne(filterKey, stringId);
 
     executeSqlQuery(callbackPtr, query);

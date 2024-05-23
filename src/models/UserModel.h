@@ -13,43 +13,46 @@
 namespace api::v1 {
     class UserModel : public BaseModel<UserModel> {
     public:
+        static inline const std::string tableName = "user";
+
         struct Field : public BaseModel::Field {
-            static inline const std::string email = "email";
-            static inline const std::string password = "password";
+            static inline BaseField<UserModel> email = BaseField<UserModel>("email");
+            static inline BaseField<UserModel> password = BaseField<UserModel>("password");
         };
 
-        static inline const std::string tableName = "user";
         std::string email;
         std::string password;
         UserModel() = default;
-        UserModel(const UserModel&) = delete;  // Copy constructor
-        UserModel& operator=(const UserModel&) = delete;  // Copy assignment operator
-        UserModel(UserModel&&) noexcept = default;  // Move constructor
-        UserModel& operator=(UserModel&&) noexcept = default;  // Move assignment operator
+        UserModel(const UserModel &) = delete;  // Copy constructor
+        UserModel &operator=(const UserModel &) = delete;  // Copy assignment operator
+        UserModel(UserModel &&) noexcept = default;  // Move constructor
+        UserModel &operator=(UserModel &&) noexcept = default;  // Move assignment operator
 
-        explicit UserModel(const Json::Value& json) : BaseModel(json) {
-            password = json[Field::password].asString();
-            email = json[Field::email].asString();
+        explicit UserModel(const Json::Value &json) : BaseModel(json) {
+            password = json[Field::password.getFieldName()].asString();
+            email = json[Field::email.getFieldName()].asString();
 
             Json::Value missingFields;
             if(email.empty()) {
-                missingFields[Field::email] = Field::email + " is required";
+                missingFields[Field::email.getFieldName()] = fmt::format("{} is required", Field::email.getFieldName());
             }
             if(password.empty()) {
-                missingFields[Field::password] = Field::password + " is required";
+                missingFields[Field::password.getFieldName()] =
+                    fmt::format("{} is required", Field::password.getFieldName());
             }
             hashPassword();
         }
 
-        [[nodiscard]] static std::vector<std::string> fields();
-        [[nodiscard]] static std::vector<std::string> fullFields();
+        [[nodiscard]] static std::vector<BaseField<UserModel>> fields();
+        [[nodiscard]] static std::vector<BaseField<UserModel>> fullFields();
         [[nodiscard]] std::vector<
-            std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+            std::pair<BaseField<UserModel>,
+                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         getObjectValues() const;
         void hashPassword();
-        [[nodiscard]] bool checkPassword(const std::string& passwordIn) const;
-        [[nodiscard]] static std::string sqlAuth(const std::string& email);
-        [[nodiscard]] static std::string sqlGetOrCreateUser(const std::string& email);
+        [[nodiscard]] bool checkPassword(const std::string &passwordIn) const;
+        [[nodiscard]] static std::string sqlAuth(const std::string &email);
+        [[nodiscard]] static std::string sqlGetOrCreateUser(const std::string &email);
     };
 }
 

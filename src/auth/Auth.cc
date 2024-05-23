@@ -14,8 +14,8 @@ void Auth::getToken(const drogon::HttpRequestPtr &request,
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
     Json::Value responseJson = *request->getJsonObject();
 
-    std::string email = responseJson[UserModel::Field::email].asString();
-    std::string password = responseJson[UserModel::Field::password].asString();
+    std::string email = responseJson[UserModel::Field::email.getFieldName()].asString();
+    std::string password = responseJson[UserModel::Field::password.getFieldName()].asString();
 
     if(email.empty() || password.empty()) {
         Json::Value jsonResponse;
@@ -43,7 +43,7 @@ void Auth::getToken(const drogon::HttpRequestPtr &request,
         }
 
         UserModel userModel;
-        userModel.password = r[0][UserModel::Field::password].as<std::string>();
+        userModel.password = r[0][UserModel::Field::password.getFieldName()].as<std::string>();
 
         if(!userModel.checkPassword(password)) {
             Json::Value jsonResponse;

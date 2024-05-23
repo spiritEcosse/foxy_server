@@ -7,15 +7,47 @@
 
 #include <string>
 #include <json/value.h>
+#include <utility>
 #include <variant>
 #include <chrono>
 #include <unordered_map>
 #include "src/orm/QuerySet.h"
 
 namespace api::v1 {
+
+    template<class T>
+    class BaseField {
+    public:
+        explicit BaseField(std::string fieldName) : fieldName(std::move(fieldName)) {}
+
+        [[nodiscard]] std::string getFieldName() const {
+            return fieldName;
+        }
+
+        [[nodiscard]] std::string getFullFieldName() const {
+            return fmt::format(R"("{}"."{}")", T::tableName, fieldName);
+        }
+
+        [[nodiscard]] bool empty() const {
+            return fieldName.empty();
+        }
+
+    private:
+        std::string fieldName;
+    };
+
     template<class T>
     class BaseModel {
     public:
+        static inline const std::string tableName;
+
+        struct Field {
+            static inline BaseField<T> id = BaseField<T>("id");
+            static inline BaseField<T> slug = BaseField<T>("");
+            static inline BaseField<T> createdAt = BaseField<T>("created_at");
+            static inline BaseField<T> updatedAt = BaseField<T>("updated_at");
+        };
+
         static std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap;
 
         BaseModel() = default;
@@ -30,16 +62,6 @@ namespace api::v1 {
         int id = 0;
 
         explicit BaseModel([[maybe_unused]] const Json::Value &json) {}
-
-        struct Field {
-            static inline const std::string id = "id";
-            static inline const std::string slug;
-            static inline const std::string createdAt = "created_at";
-            static inline const std::string updatedAt = "updated_at";
-        };
-
-        static inline const std::string orderBy = Field::updatedAt;
-        static inline const std::string primaryKey = Field::id;
 
         struct ModelFieldHasher {
             using is_transparent = void;
@@ -84,6 +106,38 @@ namespace api::v1 {
                 }
             }
         }
+
+        [[nodiscard]] inline static std::string getPrimaryKeyFieldName() {
+            return primaryKey.getFieldName();
+        }
+
+        [[nodiscard]] inline static std::string getPrimaryKeyFullName() {
+            return primaryKey.getFullFieldName();
+        }
+
+        [[nodiscard]] inline static std::string getOrderByFullName() {
+            return orderBy.getFullFieldName();
+        }
+
+        [[nodiscard]] inline static BaseField<T> getSlug() {
+            return Field::slug;
+        }
+
+        [[nodiscard]] inline static BaseField<T> getCreatedAt() {
+            return Field::createdAt;
+        }
+
+        [[nodiscard]] inline static BaseField<T> getUpdatedAt() {
+            return Field::updatedAt;
+        }
+
+        [[nodiscard]] inline static BaseField<T> getId() {
+            return Field::id;
+        }
+
+    private:
+        static inline BaseField<T> orderBy = Field::updatedAt;
+        static inline BaseField<T> primaryKey = Field::id;
     };
 }
 

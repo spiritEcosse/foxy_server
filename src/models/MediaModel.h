@@ -11,45 +11,42 @@
 namespace api::v1 {
     class MediaModel : public BaseModel<MediaModel> {
     public:
+        static inline const std::string tableName = "media";
+
         struct Field : public BaseModel::Field {
-            static inline const std::string src = "src";
-            static inline const std::string itemId = "item_id";
-            static inline const std::string sort = "sort";
+            static inline BaseField<MediaModel> src = BaseField<MediaModel>("src");
+            static inline BaseField<MediaModel> itemId = BaseField<MediaModel>("item_id");
+            static inline BaseField<MediaModel> sort = BaseField<MediaModel>("sort");
         };
 
-        static inline const std::string tableName = "media";
         MediaModel() = default;
-        MediaModel(const MediaModel&) = delete;  // Copy constructor
-        MediaModel& operator=(const MediaModel&) = delete;  // Copy assignment operator
-        MediaModel(MediaModel&&) noexcept = default;  // Move constructor
-        MediaModel& operator=(MediaModel&&) noexcept = default;  // Move assignment operator
+        MediaModel(const MediaModel &) = delete;  // Copy constructor
+        MediaModel &operator=(const MediaModel &) = delete;  // Copy assignment operator
+        MediaModel(MediaModel &&) noexcept = default;  // Move constructor
+        MediaModel &operator=(MediaModel &&) noexcept = default;  // Move assignment operator
         std::string src;
         int itemId = 0;
         int sort = 0;
 
-        explicit MediaModel(const Json::Value& json) : BaseModel(json) {
-            Json::Value missingFields;
+        explicit MediaModel(const Json::Value &json) : BaseModel(json) {
+            src = json[Field::src.getFieldName()].asString();
+            id = json[Field::id.getFieldName()].asInt();
+            itemId = json[Field::itemId.getFieldName()].asInt();
+            sort = json[Field::sort.getFieldName()].asInt();
 
-            src = json[Field::src].asString();
-            if(src.empty()) {
-                missingFields[Field::src] = Field::src + " is required";
-            }
-            id = json[Field::id].asInt();
-            itemId = json[Field::itemId].asInt();
-            if(!itemId) {
-                missingFields[Field::itemId] = Field::itemId + " is required";
-            }
-            sort = json[Field::sort].asInt();
-            if(!sort) {
-                missingFields[Field::sort] = Field::sort + " is required";
-            }
+            Json::Value missingFields;
+            validateField(Field::src.getFieldName(), src, missingFields);
+            validateField(Field::itemId.getFieldName(), itemId, missingFields);
+            validateField(Field::sort.getFieldName(), sort, missingFields);
+            validateField(Field::id.getFieldName(), id, missingFields);
         }
 
         [[nodiscard]] static std::string fieldsJsonObject();
-        [[nodiscard]] static std::vector<std::string> fields();
-        [[nodiscard]] static std::vector<std::string> fullFields();
+        [[nodiscard]] static std::vector<BaseField<MediaModel>> fields();
+        [[nodiscard]] static std::vector<BaseField<MediaModel>> fullFields();
         [[nodiscard]] std::vector<
-            std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+            std::pair<BaseField<MediaModel>,
+                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         getObjectValues() const;
     };
 }

@@ -8,26 +8,28 @@
 
 using namespace api::v1;
 
-std::vector<std::string> UserModel::fields() {
+std::vector<BaseField<UserModel>> UserModel::fields() {
     return {
         Field::email,
         Field::password,
     };
 }
 
-std::vector<std::string> UserModel::fullFields() {
+std::vector<BaseField<UserModel>> UserModel::fullFields() {
     return {
-        Field::id,
+        BaseModel::Field::id,
         Field::email,
         Field::password,
-        Field::createdAt,
-        Field::updatedAt,
+        BaseModel::Field::createdAt,
+        BaseModel::Field::updatedAt,
     };
 }
 
-std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+std::vector<
+    std::pair<BaseField<UserModel>, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 UserModel::getObjectValues() const {
-    std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+    std::vector<
+        std::pair<BaseField<UserModel>, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         baseValues = {};
     baseValues.emplace_back(Field::email, email);
     baseValues.emplace_back(Field::password, password);
@@ -38,18 +40,18 @@ void UserModel::hashPassword() {
     password = bcrypt::generateHash(password);
 }
 
-bool UserModel::checkPassword(const std::string& passwordIn) const {
+bool UserModel::checkPassword(const std::string &passwordIn) const {
     return bcrypt::validatePassword(passwordIn, this->password);
 }
 
-std::string UserModel::sqlAuth(const std::string& email) {
+std::string UserModel::sqlAuth(const std::string &email) {
     return "SELECT * FROM \"" + tableName + "\" WHERE email = '" + email + "'";
 }
 
-std::string UserModel::sqlGetOrCreateUser(const std::string& email) {
-    return fmt::format("INSERT INTO \"{}\" (email) VALUES (\'{}\') \n"
-                       "ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email RETURNING json_build_object({})",
-                       tableName,
-                       email,
-                       fieldsJsonObject());
+std::string UserModel::sqlGetOrCreateUser(const std::string &email) {
+    return fmt::format(
+        R"(INSERT INTO "{}" (email) VALUES ('{}') ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email RETURNING json_build_object({}))",
+        tableName,
+        email,
+        fieldsJsonObject());
 }

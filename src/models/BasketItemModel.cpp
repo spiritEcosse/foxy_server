@@ -6,20 +6,26 @@
 
 using namespace api::v1;
 
-std::vector<std::string> BasketItemModel::fields() {
+std::vector<BaseField<BasketItemModel>> BasketItemModel::fields() {
     return {};
 }
 
-std::vector<std::string> BasketItemModel::fullFields() {
+std::vector<BaseField<BasketItemModel>> BasketItemModel::fullFields() {
     return {
-        Field::createdAt,
-        Field::updatedAt,
+        BaseModel::Field::id,
+        Field::basketId,
+        Field::itemId,
+        Field::quantity,
+        BaseModel::Field::createdAt,
+        BaseModel::Field::updatedAt,
     };
 }
 
-std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+std::vector<
+    std::pair<BaseField<BasketItemModel>, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 BasketItemModel::getObjectValues() const {
-    std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+    std::vector<std::pair<BaseField<BasketItemModel>,
+                          std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         baseValues = {};
     return baseValues;
 }

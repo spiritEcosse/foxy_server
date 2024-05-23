@@ -13,46 +13,50 @@
 namespace api::v1 {
     class ShippingRateModel : public BaseModel<ShippingRateModel> {
     public:
-        struct Field : public BaseModel::Field {
-            static inline const std::string countryId = "country_id";
-            static inline const std::string shippingProfileId = "shipping_profile_id";
-            static inline const std::string deliveryDaysMin = "delivery_days_min";
-            static inline const std::string deliveryDaysMax = "delivery_days_max";
-        };
-
         static inline const std::string tableName = "shipping_rate";
+
+        struct Field : public BaseModel::Field {
+            static inline BaseField<ShippingRateModel> countryId = BaseField<ShippingRateModel>("country_id");
+            static inline BaseField<ShippingRateModel> shippingProfileId =
+                BaseField<ShippingRateModel>("shipping_profile_id");
+            static inline BaseField<ShippingRateModel> deliveryDaysMin =
+                BaseField<ShippingRateModel>("delivery_days_min");
+            static inline BaseField<ShippingRateModel> deliveryDaysMax =
+                BaseField<ShippingRateModel>("delivery_days_max");
+        };
 
         int countryId{};
         int shippingProfileId{};
         int deliveryDaysMin{};
         int deliveryDaysMax{};
         ShippingRateModel() = default;
-        ShippingRateModel(const ShippingRateModel&) = delete;  // Copy constructor
-        ShippingRateModel& operator=(const ShippingRateModel&) = delete;  // Copy assignment operator
-        ShippingRateModel(ShippingRateModel&&) noexcept = default;  // Move constructor
-        ShippingRateModel& operator=(ShippingRateModel&&) noexcept = default;  // Move assignment operator
+        ShippingRateModel(const ShippingRateModel &) = delete;  // Copy constructor
+        ShippingRateModel &operator=(const ShippingRateModel &) = delete;  // Copy assignment operator
+        ShippingRateModel(ShippingRateModel &&) noexcept = default;  // Move constructor
+        ShippingRateModel &operator=(ShippingRateModel &&) noexcept = default;  // Move assignment operator
 
-        explicit ShippingRateModel(const Json::Value& json) : BaseModel(json) {
-            countryId = json[Field::countryId].asInt();
-            shippingProfileId = json[Field::shippingProfileId].asInt();
-            deliveryDaysMin = json[Field::deliveryDaysMin].asInt();
-            deliveryDaysMax = json[Field::deliveryDaysMax].asInt();
+        explicit ShippingRateModel(const Json::Value &json) : BaseModel(json) {
+            countryId = json[Field::countryId.getFieldName()].asInt();
+            shippingProfileId = json[Field::shippingProfileId.getFieldName()].asInt();
+            deliveryDaysMin = json[Field::deliveryDaysMin.getFieldName()].asInt();
+            deliveryDaysMax = json[Field::deliveryDaysMax.getFieldName()].asInt();
 
             Json::Value missingFields;
-            validateField(Field::shippingProfileId, shippingProfileId, missingFields);
-            validateField(Field::deliveryDaysMin, deliveryDaysMin, missingFields);
-            validateField(Field::deliveryDaysMax, deliveryDaysMax, missingFields);
+            validateField(Field::shippingProfileId.getFieldName(), shippingProfileId, missingFields);
+            validateField(Field::deliveryDaysMin.getFieldName(), deliveryDaysMin, missingFields);
+            validateField(Field::deliveryDaysMax.getFieldName(), deliveryDaysMax, missingFields);
         }
 
-        [[nodiscard]] static std::vector<std::string> fields();
-        [[nodiscard]] static std::vector<std::string> fullFields();
+        [[nodiscard]] static std::vector<BaseField<ShippingRateModel>> fields();
+        [[nodiscard]] static std::vector<BaseField<ShippingRateModel>> fullFields();
         [[nodiscard]] std::vector<
-            std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+            std::pair<BaseField<ShippingRateModel>,
+                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         getObjectValues() const;
         [[nodiscard]] static std::string
-        getShippingRateByItem(const std::string& field,
-                              const std::string& value,
-                              const std::map<std::string, std::string, std::less<>>& params = {});
+        getShippingRateByItem(const std::string &field,
+                              const std::string &value,
+                              const std::map<std::string, std::string, std::less<>> &params = {});
     };
 }
 

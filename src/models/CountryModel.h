@@ -13,34 +13,35 @@
 namespace api::v1 {
     class CountryModel : public BaseModel<CountryModel> {
     public:
-        struct Field : public BaseModel::Field {
-            static inline const std::string title = "title";
-            static inline const std::string code = "code";
-        };
-
         static inline const std::string tableName = "country";
+
+        struct Field : public BaseModel::Field {
+            static inline BaseField<CountryModel> title = BaseField<CountryModel>("title");
+            static inline BaseField<CountryModel> code = BaseField<CountryModel>("code");
+        };
 
         std::string title;
         std::string code;
         CountryModel() = default;
-        CountryModel(const CountryModel&) = delete;  // Copy constructor
-        CountryModel& operator=(const CountryModel&) = delete;  // Copy assignment operator
-        CountryModel(CountryModel&&) noexcept = default;  // Move constructor
-        CountryModel& operator=(CountryModel&&) noexcept = default;  // Move assignment operator
+        CountryModel(const CountryModel &) = delete;  // Copy constructor
+        CountryModel &operator=(const CountryModel &) = delete;  // Copy assignment operator
+        CountryModel(CountryModel &&) noexcept = default;  // Move constructor
+        CountryModel &operator=(CountryModel &&) noexcept = default;  // Move assignment operator
 
-        explicit CountryModel(const Json::Value& json) : BaseModel(json) {
-            title = json[Field::title].asString();
-            code = json[Field::code].asString();
+        explicit CountryModel(const Json::Value &json) : BaseModel(json) {
+            title = json[Field::title.getFieldName()].asString();
+            code = json[Field::code.getFieldName()].asString();
 
             Json::Value missingFields;
-            validateField(Field::title, title, missingFields);
-            validateField(Field::code, code, missingFields);
+            validateField(Field::title.getFieldName(), title, missingFields);
+            validateField(Field::code.getFieldName(), code, missingFields);
         }
 
-        [[nodiscard]] static std::vector<std::string> fields();
-        [[nodiscard]] static std::vector<std::string> fullFields();
+        [[nodiscard]] static std::vector<BaseField<CountryModel>> fields();
+        [[nodiscard]] static std::vector<BaseField<CountryModel>> fullFields();
         [[nodiscard]] std::vector<
-            std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+            std::pair<BaseField<CountryModel>,
+                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         getObjectValues() const;
     };
 }
