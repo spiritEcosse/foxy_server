@@ -20,5 +20,6 @@ jobs:
                     fetch-depth: 0  # a full history is required for pull request analysis
             -   name: 'Qodana Scan'
                 uses: JetBrains/qodana-action@v2024.1
+                args: -l,jetbrains/qodana-clang:latest
                 env:
                     QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
