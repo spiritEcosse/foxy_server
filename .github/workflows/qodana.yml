@@ -9,10 +9,11 @@ on:
 jobs:
     build:
         uses: ./.github/workflows/build.yml
-        env:
+        secrets:
             CR_PAT: ${{ secrets.CR_PAT }}
 
     qodana:
+        needs: build
         runs-on: ubuntu-latest
         permissions:
             contents: write

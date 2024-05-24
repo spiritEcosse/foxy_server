@@ -10,7 +10,10 @@ on:
             CR_PAT:
                 required: true
                 type: string
-                
+        secrets:
+            CR_PAT:
+                required: true
+
 jobs:
     build:
         runs-on: ubuntu-latest
