@@ -33,13 +33,20 @@ jobs:
             pull-requests: write
             checks: write
         steps:
+            -   name: Checkout repository
+                uses: actions/checkout@v4
+
+            -   name: ls -la foxy_server
+                run: ls -la ~/work/foxy_server/foxy_server
+
             -   name: Download build directory
                 uses: actions/download-artifact@v4
                 with:
                     name: build
-                    path: ~/work/foxy_server/foxy_server
-            -   name: ls -la foxy_server
-                run: ls -la ~/work/foxy_server/foxy_server && ls -la ~/work/foxy_server/foxy_server/build
+                    path: ~/work/foxy_server/foxy_server/
+
+            -   name: ls -la foxy_server/build
+                run: ls -la ~/work/foxy_server/foxy_server/build
 
             -   name: 'Qodana Scan'
                 uses: JetBrains/qodana-action@v2024.1
