@@ -43,7 +43,7 @@ jobs:
                 uses: actions/download-artifact@v4
                 with:
                     name: build
-                    path: ~/work/foxy_server/foxy_server/
+                    path: ~/work/foxy_server/foxy_server/build
 
             -   name: ls -la foxy_server/build
                 run: ls -la ~/work/foxy_server/foxy_server/build
