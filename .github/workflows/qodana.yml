@@ -9,7 +9,7 @@ on:
 jobs:
     build:
         uses: ./.github/workflows/build.yml
-        with:
+        env:
             CR_PAT: ${{ secrets.CR_PAT }}
 
     qodana:
