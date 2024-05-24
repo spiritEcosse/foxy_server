@@ -9,6 +9,8 @@ on:
 jobs:
     build:
         uses: ./.github/workflows/build.yml
+        with:
+            CR_PAT: ${{ secrets.CR_PAT }}
 
     qodana:
         runs-on: ubuntu-latest

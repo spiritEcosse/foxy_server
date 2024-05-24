@@ -6,7 +6,11 @@ on:
         branches:
             - '*'
     workflow_call:
-
+        inputs:
+            CR_PAT:
+                required: true
+                type: string
+                
 jobs:
     build:
         runs-on: ubuntu-latest
