@@ -11,6 +11,26 @@ jobs:
         uses: ./.github/workflows/build.yml
         secrets:
             CR_PAT: ${{ secrets.CR_PAT }}
+            APP_CLOUD_NAME: ${{ secrets.APP_CLOUD_NAME }}
+            CMAKE_BUILD_TYPE: ${{ secrets.CMAKE_BUILD_TYPE }}
+            FOXY_ADMIN: ${{ secrets.FOXY_ADMIN }}
+            FOXY_CLIENT: ${{ secrets.FOXY_CLIENT }}
+            SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+            SERVER_HOST: ${{ secrets.SERVER_HOST }}
+            SERVER_USER: ${{ secrets.SERVER_USER }}
+            SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+            SERVER_PSQL_DBNAME: ${{ secrets.SERVER_PSQL_DBNAME }}
+            SERVER_PSQL_USER: ${{ secrets.SERVER_PSQL_USER }}
+            SERVER_PSQL_PASSWORD: ${{ secrets.SERVER_PSQL_PASSWORD }}
+            CERT_PATH: ${{ secrets.CERT_PATH }}
+            KEY_PATH: ${{ secrets.KEY_PATH }}
+
+        steps:
+            -   name: Archive build directory
+                uses: actions/upload-artifact@v4
+                with:
+                    name: build
+                    path: ~/build
 
     qodana:
         needs: build
@@ -20,6 +40,12 @@ jobs:
             pull-requests: write
             checks: write
         steps:
+            -   name: Download build directory
+                uses: actions/download-artifact@v2
+                with:
+                    name: build
+                    path: ~/build
+
             -   name: 'Qodana Scan'
                 uses: JetBrains/qodana-action@v2024.1
                 with:

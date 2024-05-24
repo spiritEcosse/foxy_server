@@ -50,8 +50,9 @@ set(CMAKE_SYSTEM_PROCESSOR arm) # why this?
 # start drogon
 CPMAddPackage(
         NAME drogon
+        VERSION v1.9.4
         GITHUB_REPOSITORY drogonframework/drogon
-        GIT_TAG master
+        GIT_TAG v1.9.4
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
 # end drogon
