@@ -72,3 +72,9 @@ jobs:
                     -v ~/build:/home/ubuntu/ubuntu_x86_64 ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} /bin/bash -c "
                       curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='$CONTENT'
                     "
+
+            -   name: Archive build directory
+                uses: actions/upload-artifact@v4
+                with:
+                    name: build
+                    path: ~/build

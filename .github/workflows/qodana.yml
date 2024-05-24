@@ -25,13 +25,6 @@ jobs:
             CERT_PATH: ${{ secrets.CERT_PATH }}
             KEY_PATH: ${{ secrets.KEY_PATH }}
 
-        steps:
-            -   name: Archive build directory
-                uses: actions/upload-artifact@v4
-                with:
-                    name: build
-                    path: ~/build
-
     qodana:
         needs: build
         runs-on: ubuntu-latest
@@ -41,7 +34,7 @@ jobs:
             checks: write
         steps:
             -   name: Download build directory
-                uses: actions/download-artifact@v2
+                uses: actions/download-artifact@v4
                 with:
                     name: build
                     path: ~/build
