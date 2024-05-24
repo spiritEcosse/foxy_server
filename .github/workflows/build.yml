@@ -76,7 +76,7 @@ jobs:
                 if: steps.build_image.outputs.exists == 'true'
 
             -   name: Create build folder in home directory
-                run: mkdir -p ~/build
+                run: mkdir -p ~/build && chmod 777 ~/build
 
             -   name: CMake Build
                 run: >
