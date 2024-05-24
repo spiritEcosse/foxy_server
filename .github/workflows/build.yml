@@ -9,6 +9,32 @@ on:
         secrets:
             CR_PAT:
                 required: true
+            APP_CLOUD_NAME:
+                required: true
+            CMAKE_BUILD_TYPE:
+                required: true
+            FOXY_ADMIN:
+                required: true
+            FOXY_CLIENT:
+                required: true
+            SENTRY_DSN:
+                required: true
+            SERVER_HOST:
+                required: true
+            SERVER_USER:
+                required: true
+            SERVER_PASSWORD:
+                required: true
+            SERVER_PSQL_DBNAME:
+                required: true
+            SERVER_PSQL_USER:
+                required: true
+            SERVER_PSQL_PASSWORD:
+                required: true
+            CERT_PATH:
+                required: true
+            KEY_PATH:
+                required: true
 
 jobs:
     build:
