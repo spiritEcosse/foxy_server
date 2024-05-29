@@ -243,6 +243,7 @@ CREATE INDEX end_range_with_include_idx ON countries_ips USING btree (end_range 
 
 CREATE INDEX idx_item_updated_at ON item (updated_at);
 CREATE INDEX idx_item_enabled ON item (enabled);
+CREATE INDEX idx_order_status ON "order" (status);
 
 CREATE TRIGGER set_timestamp
     BEFORE UPDATE

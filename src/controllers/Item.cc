@@ -23,8 +23,8 @@ void Item::getListAdmin(const drogon::HttpRequestPtr &req,
 
     QuerySet qs(ItemModel::tableName, limit, "data");
     auto mediaSort = MediaModel::Field::sort.getFullFieldName();
-    auto orderByItemField = BaseModel<ItemModel>::Field::updatedAt.getFullFieldName();
-    auto itemID = BaseModel<ItemModel>::Field::id.getFullFieldName();
+    auto orderByItemField = BaseModel<ItemModel>::Field::updatedAt;
+    auto itemID = BaseModel<ItemModel>::Field::id;
     auto mediaItemID = MediaModel::Field::itemId.getFullFieldName();
     qs.distinct(orderByItemField, itemID)
         .left_join(MediaModel())
@@ -33,12 +33,12 @@ void Item::getListAdmin(const drogon::HttpRequestPtr &req,
                 std::string(fmt::format("(SELECT MIN({}) FROM {} WHERE {} = {})",
                                         mediaSort,
                                         MediaModel::tableName,
-                                        itemID,
+                                        BaseModel<ItemModel>::Field::id.getFullFieldName(),
                                         mediaItemID)),
                 false)
         .order_by(std::make_pair(orderByItemField, false), std::make_pair(itemID, false))
-        .only({ItemModel().fullFieldsWithTableToString(),
-               fmt::format("format_src(media.src, '{}') as src", app_cloud_name)})
+        .only(ItemModel().allSetFields())
+        .functions(Function(fmt::format("format_src(media.src, '{}') as src", app_cloud_name)))
         .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit));
     executeSqlQuery(callbackPtr, QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs)));
 }

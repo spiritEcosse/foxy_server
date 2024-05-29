@@ -50,7 +50,7 @@ std::string ShippingRateModel::getShippingRateByItem(const std::string &field,
                 std::string("<="),
                 std::string("AND"))
         .filter(CountriesIpsModel::Field::endRange.getFullFieldName(), clientIp, true, std::string(">="))
-        .only({CountriesIpsModel::Field::countryId.getFullFieldName()});
+        .only(CountriesIpsModel::Field::countryId);
 
     QuerySet qsShipping(ShippingRateModel::tableName, "shipping", false);
     qsShipping.join(ShippingProfileModel())

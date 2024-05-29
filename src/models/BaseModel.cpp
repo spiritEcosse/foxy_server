@@ -217,14 +217,23 @@ std::string BaseModel<T>::fieldsToString()
 }
 
 template<class T>
-std::string BaseModel<T>::fullFieldsWithTableToString()
+std::vector<BaseField> BaseModel<T>::allSetFields() const
 {
     std::string str;
     const typename T::Field field;
+    std::vector<BaseField> fields;
+    fields.reserve(field.allFields.size());
     for (const auto &fieldNames = field.allFields; const auto &[fieldName, baseField]: fieldNames) {
-        str += fmt::format("{}, ", baseField.getFullFieldName());
+        fields.emplace_back(baseField);
     }
-    return str.substr(0, str.size() - 2);
+    return fields;
+}
+
+template<class T>
+bool BaseModel<T>::fieldExists(const std::string &fieldName) const
+{
+    const typename T::Field field;
+    return field.allFields.find(fieldName) != field.allFields.end();
 }
 
 template<class T>
@@ -236,8 +245,8 @@ BaseModel<T>::sqlSelectList(int page, int limit, const std::map<std::string, std
 
     QuerySet qs(T::tableName, limit, "data");
     qs.offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
-        .order_by(std::make_pair(T::Field::updatedAt.getFullFieldName(), false),
-                  std::make_pair(T::Field::id.getFullFieldName(), false));
+        .order_by(std::make_pair(T::Field::updatedAt, false),
+                  std::make_pair(T::Field::id, false));
     typename T::Field field;
     for (const auto &[key, value]: params) {
         if (fieldExists(key)) {
@@ -252,7 +261,7 @@ template<class T>
 QuerySet BaseModel<T>::qsCount()
 {
     QuerySet qsCount(T::tableName, "total", false, true);
-    return std::move(qsCount.only({fmt::format("count(*)::integer")}));
+    return std::move(qsCount.functions(Function(fmt::format("count(*)::integer"))));
 }
 
 template<class T>
@@ -261,7 +270,8 @@ QuerySet BaseModel<T>::qsPage(int page, int limit)
     QuerySet qsCount = T().qsCount();
     QuerySet qsPage(ItemModel::tableName, "_page", false, true);
     return std::move(
-        qsPage.only({fmt::format("GetValidPage({}, {}, (SELECT * FROM {}))", page, limit, qsCount.alias())}));
+        qsPage.functions(Function(
+            fmt::format("GetValidPage({}, {}, (SELECT * FROM {}))", page, limit, qsCount.alias()))));
 }
 
 template<class T>

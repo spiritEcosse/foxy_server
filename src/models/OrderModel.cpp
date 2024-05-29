@@ -49,11 +49,11 @@ std::string OrderModel::sqlSelectList(int page, int limit, const std::map<std::s
 
     QuerySet qs(OrderModel::tableName, limit, "data");
     qs.left_join(BasketItemModel())
-        .only({OrderModel::fullFieldsWithTableToString(),
-               fmt::format(R"(COUNT({}) as count_items)", BaseModel::Field::id.getFullFieldName())})
-        .order_by(std::make_pair(BaseModel::Field::updatedAt.getFullFieldName(), false),
-                  std::make_pair(BaseModel::Field::id.getFullFieldName(), false))
-        .group_by(BaseModel::Field::id.getFullFieldName(), BaseModel::Field::updatedAt.getFullFieldName());
+        .only(OrderModel().allSetFields())
+        .functions(Function(fmt::format(R"(COUNT({}) as count_items)", BaseModel::Field::id.getFullFieldName())))
+        .order_by(std::make_pair(BaseModel::Field::updatedAt, false),
+                  std::make_pair(BaseModel::Field::id, false))
+        .group_by(BaseModel::Field::id, BaseModel::Field::updatedAt);
 
     Field field;
     for (const auto &[key, value]: params) {

@@ -52,16 +52,16 @@ QuerySet ItemModel::qsCount() {
     QuerySet qsCount(ItemModel::tableName, "total", false, true);
     return std::move(
         qsCount.filter(Field::enabled.getFullFieldName(), std::string("true"), false, std::string("="))
-            .only({fmt::format("count(*)::integer")}));
+            .functions(Function(fmt::format("count(*)::integer"))));
 }
 
 std::string ItemModel::sqlSelectList(int page, int limit, [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
     std::string app_cloud_name;
     getenv("APP_CLOUD_NAME", app_cloud_name);
 
-    auto orderByItem = BaseModel<ItemModel>::Field::updatedAt.getFullFieldName();
+    auto orderByItem = BaseModel<ItemModel>::Field::updatedAt;
     auto mediaSort = MediaModel::Field::sort.getFullFieldName();
-    auto itemID = BaseModel<ItemModel>::Field::id.getFullFieldName();
+    auto itemID = BaseModel<ItemModel>::Field::id;
     auto mediaItemID = MediaModel::Field::itemId.getFullFieldName();
 
     QuerySet qsCount = ItemModel().qsCount();
@@ -79,12 +79,12 @@ std::string ItemModel::sqlSelectList(int page, int limit, [[maybe_unused]] const
                 std::string(fmt::format("(SELECT MIN({}) FROM {} WHERE {} = {})",
                                         mediaSort,
                                         MediaModel::tableName,
-                                        itemID,
+                                        BaseModel<ItemModel>::Field::id.getFullFieldName(),
                                         mediaItemID)),
                 false)
         .order_by(std::make_pair(orderByItem, false), std::make_pair(itemID, false))
-        .only({ItemModel::fullFieldsWithTableToString(),
-               fmt::format("format_src(media.src, '{}') as src", app_cloud_name)})
+        .only(allSetFields())
+        .functions(Function(fmt::format("format_src(media.src, '{}') as src", app_cloud_name)))
         .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit));
     return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
 }
@@ -104,8 +104,8 @@ std::string ItemModel::sqlSelectOne(const std::string &field,
         itemField = MediaModel::Field::itemId.getFullFieldName();
     qsMedia.join(ItemModel())
         .filter(itemField, std::string(value))
-        .order_by(std::make_pair(MediaModel::Field::sort.getFullFieldName(), true))
-        .only({MediaModel().fullFieldsWithTableToString(),
-               fmt::format("format_src(media.src, '{}') as src", app_cloud_name)});
+        .order_by(std::make_pair(MediaModel::Field::sort, true))
+        .only(MediaModel().allSetFields())
+        .functions(Function(fmt::format("format_src(media.src, '{}') as src", app_cloud_name)));
     return QuerySet::buildQuery(std::move(qsMedia), std::move(qsItem));
 }

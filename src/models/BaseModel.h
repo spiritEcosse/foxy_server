@@ -16,34 +16,6 @@
 namespace api::v1
 {
 
-class BaseField
-{
-public:
-    explicit BaseField() = default;
-    explicit BaseField(std::string fieldName, std::string tableName)
-        : fieldName(std::move(fieldName)), tableName(std::move(tableName))
-    {
-    }
-
-    [[nodiscard]] std::string getFieldName() const
-    {
-        return fieldName;
-    }
-
-    [[nodiscard]] std::string getFullFieldName() const
-    {
-        return fmt::format(R"("{}"."{}")", tableName, fieldName);
-    }
-
-    [[nodiscard]] bool empty() const
-    {
-        return fieldName.empty();
-    }
-private:
-    std::string fieldName;
-    std::string tableName;
-};
-
 template<class T>
 class BaseModel
 {
@@ -102,7 +74,6 @@ public:
                  const std::string &value,
                  const std::map<std::string, std::string, std::less<>> &params);
     [[nodiscard]] virtual std::string fieldsToString();
-    [[nodiscard]] virtual std::string fullFieldsWithTableToString();
     [[nodiscard]] virtual std::string fieldsJsonObject();
     [[nodiscard]] virtual std::string sqlDelete(int id);
     [[nodiscard]] virtual std::string sqlDeleteMultiple(const std::vector<int> &ids);
@@ -122,11 +93,8 @@ public:
             }
         }
     }
-
-    [[nodiscard]] inline bool fieldExists(const std::string &fieldName) const
-    {
-        return Field().allFields.find(fieldName) != Field().allFields.end();
-    }
+    [[nodiscard]] inline bool fieldExists(const std::string &fieldName) const;
+    [[nodiscard]] std::vector<BaseField> allSetFields() const;
 };
 }
 
