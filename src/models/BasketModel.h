@@ -10,34 +10,44 @@
 #include <drogon/drogon.h>
 #include "BaseModel.h"
 
-namespace api::v1 {
-    class BasketModel : public BaseModel<BasketModel> {
-    public:
-        static inline const std::string tableName = "basket";
+namespace api::v1
+{
+class BasketModel: public BaseModel<BasketModel>
+{
+public:
+    static inline const std::string tableName = "basket";
 
-        struct Field : public BaseModel::Field {
-            static inline BaseField<BasketModel> userId = BaseField<BasketModel>("user_id");
-        };
+    struct Field: public BaseModel::Field
+    {
+        static inline BaseField userId = BaseField("user_id", tableName);
 
-        int userId{};
-        BasketModel() = default;
-        BasketModel(const BasketModel &) = delete;  // Copy constructor
-        BasketModel &operator=(const BasketModel &) = delete;  // Copy assignment operator
-        BasketModel(BasketModel &&) noexcept = default;  // Move constructor
-        BasketModel &operator=(BasketModel &&) noexcept = default;  // Move assignment operator
-
-        explicit BasketModel(const Json::Value &json) : BaseModel(json) {
-            userId = json[Field::userId.getFieldName()].asInt();
-            validateField(Field::userId.getFieldName(), userId, missingFields);
+        Field()
+            : BaseModel::Field()
+        {
+            allFields[userId.getFieldName()] = userId;
         }
-
-        [[nodiscard]] static std::vector<BaseField<BasketModel>> fields();
-        [[nodiscard]] static std::vector<BaseField<BasketModel>> fullFields();
-        [[nodiscard]] std::vector<
-            std::pair<BaseField<BasketModel>,
-                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        getObjectValues() const;
     };
+
+    int userId{};
+    BasketModel() = default;
+    BasketModel(const BasketModel &) = delete;  // Copy constructor
+    BasketModel &operator=(const BasketModel &) = delete;  // Copy assignment operator
+    BasketModel(BasketModel &&) noexcept = default;  // Move constructor
+    BasketModel &operator=(BasketModel &&) noexcept = default;  // Move assignment operator
+
+    explicit BasketModel(const Json::Value &json)
+        : BaseModel(json)
+    {
+        userId = json[Field::userId.getFieldName()].asInt();
+        validateField(Field::userId.getFieldName(), userId, missingFields);
+    }
+
+    [[nodiscard]] static std::vector<BaseField> fields();
+    [[nodiscard]] std::vector<
+        std::pair<BaseField,
+                  std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+    getObjectValues() const;
+};
 }
 
 #endif  //BASKETMODEL_H

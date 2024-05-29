@@ -6,7 +6,8 @@
 
 using namespace api::v1;
 
-std::vector<BaseField<PageModel>> PageModel::fields() {
+std::vector<BaseField> PageModel::fields()
+{
     return {
         Field::title,
         Field::description,
@@ -14,28 +15,15 @@ std::vector<BaseField<PageModel>> PageModel::fields() {
         Field::canonicalUrl,
         Field::slug,
         Field::enabled,
-    };
-}
-
-std::vector<BaseField<PageModel>> PageModel::fullFields() {
-    return {
-        BaseModel::Field::id,
-        Field::title,
-        Field::enabled,
-        Field::description,
-        Field::metaDescription,
-        Field::canonicalUrl,
-        Field::slug,
-        BaseModel::Field::createdAt,
-        BaseModel::Field::updatedAt,
     };
 }
 
 std::vector<
-    std::pair<BaseField<PageModel>, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-PageModel::getObjectValues() const {
+    std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+PageModel::getObjectValues() const
+{
     std::vector<
-        std::pair<BaseField<PageModel>, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+        std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         baseValues = {};
     baseValues.emplace_back(Field::title, title);
     baseValues.emplace_back(Field::description, description);

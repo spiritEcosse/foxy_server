@@ -10,50 +10,74 @@
 #include <drogon/drogon.h>
 #include "BaseModel.h"
 
-namespace api::v1 {
-    class UserModel : public BaseModel<UserModel> {
-    public:
-        static inline const std::string tableName = "user";
+namespace api::v1
+{
+class UserModel: public BaseModel<UserModel>
+{
+public:
+    static inline const std::string tableName = "user";
 
-        struct Field : public BaseModel::Field {
-            static inline BaseField<UserModel> email = BaseField<UserModel>("email");
-            static inline BaseField<UserModel> password = BaseField<UserModel>("password");
-        };
+    struct Field: public BaseModel::Field
+    {
+        static inline BaseField email = BaseField("email", tableName);
+        static inline BaseField password = BaseField("password", tableName);
+        static inline BaseField firstName = BaseField("first_name", tableName);
+        static inline BaseField lastName = BaseField("last_name", tableName);
+        static inline BaseField birthday = BaseField("birthday", tableName);
+        static inline BaseField hasNewsletter = BaseField("has_newsletter", tableName);
 
-        std::string email;
-        std::string password;
-        UserModel() = default;
-        UserModel(const UserModel &) = delete;  // Copy constructor
-        UserModel &operator=(const UserModel &) = delete;  // Copy assignment operator
-        UserModel(UserModel &&) noexcept = default;  // Move constructor
-        UserModel &operator=(UserModel &&) noexcept = default;  // Move assignment operator
-
-        explicit UserModel(const Json::Value &json) : BaseModel(json) {
-            password = json[Field::password.getFieldName()].asString();
-            email = json[Field::email.getFieldName()].asString();
-
-            Json::Value missingFields;
-            if(email.empty()) {
-                missingFields[Field::email.getFieldName()] = fmt::format("{} is required", Field::email.getFieldName());
-            }
-            if(password.empty()) {
-                missingFields[Field::password.getFieldName()] =
-                    fmt::format("{} is required", Field::password.getFieldName());
-            }
-            hashPassword();
+        Field()
+            : BaseModel<UserModel>::Field()
+        {
+            allFields[email.getFieldName()] = email;
+            allFields[password.getFieldName()] = password;
+            allFields[firstName.getFieldName()] = firstName;
+            allFields[lastName.getFieldName()] = lastName;
+            allFields[birthday.getFieldName()] = birthday;
+            allFields[hasNewsletter.getFieldName()] = hasNewsletter;
         }
-
-        [[nodiscard]] static std::vector<BaseField<UserModel>> fields();
-        [[nodiscard]] static std::vector<BaseField<UserModel>> fullFields();
-        [[nodiscard]] std::vector<
-            std::pair<BaseField<UserModel>,
-                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        getObjectValues() const;
-        void hashPassword();
-        [[nodiscard]] bool checkPassword(const std::string &passwordIn) const;
-        [[nodiscard]] static std::string sqlAuth(const std::string &email);
-        [[nodiscard]] static std::string sqlGetOrCreateUser(const std::string &email);
     };
+
+    std::string email;
+    std::string password;
+    std::string firstName;
+    std::string lastName;
+    std::string birthday;
+    bool hasNewsletter{};
+    UserModel() = default;
+    UserModel(const UserModel &) = delete;  // Copy constructor
+    UserModel &operator=(const UserModel &) = delete;  // Copy assignment operator
+    UserModel(UserModel &&) noexcept = default;  // Move constructor
+    UserModel &operator=(UserModel &&) noexcept = default;  // Move assignment operator
+
+    explicit UserModel(const Json::Value &json)
+        : BaseModel(json)
+    {
+        password = json[Field::password.getFieldName()].asString();
+        email = json[Field::email.getFieldName()].asString();
+        firstName = json[Field::firstName.getFieldName()].asString();
+        lastName = json[Field::lastName.getFieldName()].asString();
+        birthday = json[Field::birthday.getFieldName()].asString();
+
+        Json::Value missingFields;
+        validateField(Field::email.getFieldName(), email, missingFields);
+        validateField(Field::password.getFieldName(), password, missingFields);
+        validateField(Field::firstName.getFieldName(), firstName, missingFields);
+        validateField(Field::lastName.getFieldName(), lastName, missingFields);
+        validateField(Field::birthday.getFieldName(), birthday, missingFields);
+        hashPassword();
+    }
+
+    [[nodiscard]] static std::vector<BaseField> fields();
+    [[nodiscard]] std::vector<
+        std::pair<BaseField,
+                  std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+    getObjectValues() const;
+    void hashPassword();
+    [[nodiscard]] bool checkPassword(const std::string &passwordIn) const;
+    [[nodiscard]] static std::string sqlAuth(const std::string &email);
+    [[nodiscard]] std::string sqlGetOrCreateUser(const std::string &email);
+};
 }
 
 #endif  //USERMODEL_H

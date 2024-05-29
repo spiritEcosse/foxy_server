@@ -13,13 +13,13 @@ using namespace api::v1;
 
 template<>
 std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseModel<ItemModel>::joinMap = {
-    {MediaModel::tableName, {BaseModel::Field::id.getFullFieldName(), MediaModel::Field::itemId.getFullFieldName()}},
+    {MediaModel::tableName, {BaseModel<ItemModel>::Field::id.getFullFieldName(), MediaModel::Field::itemId.getFullFieldName()}},
     {ShippingRateModel::tableName,
      {ItemModel::Field::shippingProfileId.getFullFieldName(),
       ShippingRateModel::Field::shippingProfileId.getFullFieldName()}},
 };
 
-std::vector<BaseField<ItemModel>> ItemModel::fields() {
+std::vector<BaseField> ItemModel::fields() {
     return {
         Field::title,
         Field::description,
@@ -31,25 +31,11 @@ std::vector<BaseField<ItemModel>> ItemModel::fields() {
     };
 }
 
-std::vector<BaseField<ItemModel>> ItemModel::fullFields() {
-    return {
-        BaseModel::Field::id,
-        Field::title,
-        Field::enabled,
-        Field::description,
-        Field::metaDescription,
-        Field::slug,
-        Field::shippingProfileId,
-        Field::price,
-        BaseModel::Field::createdAt,
-        BaseModel::Field::updatedAt,
-    };
-}
 
-std::vector<std::pair<BaseField<ItemModel>,
+std::vector<std::pair<BaseField,
                       std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
 ItemModel::getObjectValues() const {
-    std::vector<std::pair<BaseField<ItemModel>,
+    std::vector<std::pair<BaseField,
                           std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
         baseValues = {};
     baseValues.emplace_back(Field::title, title);
@@ -65,21 +51,21 @@ ItemModel::getObjectValues() const {
 QuerySet ItemModel::qsCount() {
     QuerySet qsCount(ItemModel::tableName, "total", false, true);
     return std::move(
-        qsCount.filter(ItemModel::Field::enabled.getFullFieldName(), std::string("true"), false, std::string("="))
+        qsCount.filter(Field::enabled.getFullFieldName(), std::string("true"), false, std::string("="))
             .only({fmt::format("count(*)::integer")}));
 }
 
-std::string ItemModel::sqlSelectList(int page, int limit) {
+std::string ItemModel::sqlSelectList(int page, int limit, [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
     std::string app_cloud_name;
     getenv("APP_CLOUD_NAME", app_cloud_name);
 
-    auto orderByItem = ItemModel::getOrderByFullName();
+    auto orderByItem = BaseModel<ItemModel>::Field::updatedAt.getFullFieldName();
     auto mediaSort = MediaModel::Field::sort.getFullFieldName();
-    auto itemID = ItemModel::getPrimaryKeyFullName();
+    auto itemID = BaseModel<ItemModel>::Field::id.getFullFieldName();
     auto mediaItemID = MediaModel::Field::itemId.getFullFieldName();
 
-    QuerySet qsCount = ItemModel::qsCount();
-    QuerySet qsPage = ItemModel::qsPage(page, limit);
+    QuerySet qsCount = ItemModel().qsCount();
+    QuerySet qsPage = ItemModel().qsPage(page, limit);
 
     QuerySet qs(ItemModel::tableName, limit, "data");
     qs.distinct(orderByItem, itemID)
@@ -110,7 +96,7 @@ std::string ItemModel::sqlSelectOne(const std::string &field,
     getenv("APP_CLOUD_NAME", app_cloud_name);
 
     QuerySet qsItem(tableName, "_item", true, true);
-    qsItem.filter(field, std::string(value)).jsonFields(addExtraQuotes(ItemModel::fieldsJsonObject()));
+    qsItem.filter(field, std::string(value)).jsonFields(addExtraQuotes(fieldsJsonObject()));
 
     QuerySet qsMedia(MediaModel::tableName, 0, std::string("_media"));
     std::string itemField = field;
@@ -119,7 +105,7 @@ std::string ItemModel::sqlSelectOne(const std::string &field,
     qsMedia.join(ItemModel())
         .filter(itemField, std::string(value))
         .order_by(std::make_pair(MediaModel::Field::sort.getFullFieldName(), true))
-        .only({MediaModel::fullFieldsWithTableToString(),
+        .only({MediaModel().fullFieldsWithTableToString(),
                fmt::format("format_src(media.src, '{}') as src", app_cloud_name)});
     return QuerySet::buildQuery(std::move(qsMedia), std::move(qsItem));
 }

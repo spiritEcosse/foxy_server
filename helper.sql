@@ -107,12 +107,52 @@ CREATE TABLE IF NOT EXISTS shipping_rate
 
 create table IF NOT EXISTS "user"
 (
-    id         serial primary key,
-    email      varchar(255) NOT NULL unique,
-    password   varchar(255)          DEFAULT '',
-    created_at timestamp    NOT NULL DEFAULT NOW(),
-    updated_at timestamp    NOT NULL DEFAULT NOW()
+    id             serial primary key,
+    email          varchar(255) NOT NULL unique,
+    password       varchar(255)          DEFAULT '',
+    first_name     VARCHAR(255) NOT NULL,
+    last_name      VARCHAR(255) NOT NULL,
+    birthday       DATE         NOT NULL,
+    has_newsletter BOOLEAN      NOT NULL DEFAULT false,
+    created_at     timestamp    NOT NULL DEFAULT NOW(),
+    updated_at     timestamp    NOT NULL DEFAULT NOW(),
 );
+
+CREATE TABLE IF NOT EXISTS "address"
+(
+    id         SERIAL PRIMARY KEY,
+    address    VARCHAR(255) NOT NULL,
+    state_abbr VARCHAR(255) NOT NULL,
+    city       VARCHAR(255) NOT NULL,
+    zipcode    VARCHAR(255) NOT NULL,
+    avatar     VARCHAR(255) NOT NULL,
+    user_id    INT          NOT NULL,
+    created_at timestamp    NOT NULL DEFAULT NOW(),
+    updated_at timestamp    NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE
+);
+
+
+commit ;
+ALTER table "user"
+    add column first_name varchar(255);
+ALTER table "user"
+    add column last_name varchar(255);
+ALTER table "user"
+    add column birthday DATE;
+
+UPDATE "user"
+SET first_name = 'John',
+    last_name  = 'Doe',
+    birthday   = '1990-01-01';
+
+ALTER table "user"
+    alter column first_name set not null;
+ALTER table "user"
+    alter column last_name set not null;
+ALTER table "user"
+    alter column birthday set not null;
+commit;
 
 create table IF NOT EXISTS media
 (
@@ -176,8 +216,10 @@ CREATE TABLE IF NOT EXISTS "order"
     reference      VARCHAR(255)   NOT NULL,
     created_at     timestamp      NOT NULL DEFAULT NOW(),
     updated_at     timestamp      NOT NULL DEFAULT NOW(),
+    address_id     INT NOT NULL,
     FOREIGN KEY (basket_id) REFERENCES "basket" (id),
-    FOREIGN KEY (user_id) REFERENCES "user" (id)
+    FOREIGN KEY (user_id) REFERENCES "user" (id),
+    FOREIGN KEY (address_id) REFERENCES address (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS countries_ips

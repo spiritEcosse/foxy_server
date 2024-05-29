@@ -10,33 +10,45 @@
 #include <drogon/drogon.h>
 #include "BaseModel.h"
 
-namespace api::v1 {
-    class CountriesIpsModel : public BaseModel<CountriesIpsModel> {
-    public:
-        static inline const std::string tableName = "countries_ips";
+namespace api::v1
+{
+class CountriesIpsModel: public BaseModel<CountriesIpsModel>
+{
+public:
+    static inline const std::string tableName = "countries_ips";
 
-        struct Field : public BaseModel::Field {
-            static inline BaseField<CountriesIpsModel> startRange = BaseField<CountriesIpsModel>("start_range");
-            static inline BaseField<CountriesIpsModel> endRange = BaseField<CountriesIpsModel>("end_range");
-            static inline BaseField<CountriesIpsModel> countryCode = BaseField<CountriesIpsModel>("country_code");
-            static inline BaseField<CountriesIpsModel> countryName = BaseField<CountriesIpsModel>("country_name");
-            static inline BaseField<CountriesIpsModel> countryId = BaseField<CountriesIpsModel>("country_id");
-        };
+    struct Field: public BaseModel::Field
+    {
+        static inline BaseField startRange = BaseField("start_range", tableName);
+        static inline BaseField endRange = BaseField("end_range", tableName);
+        static inline BaseField countryCode = BaseField("country_code", tableName);
+        static inline BaseField countryName = BaseField("country_name", tableName);
+        static inline BaseField countryId = BaseField("country_id", tableName);
 
-        CountriesIpsModel() = default;
-        CountriesIpsModel(const CountriesIpsModel &) = delete;  // Copy constructor
-        CountriesIpsModel &operator=(const CountriesIpsModel &) = delete;  // Copy assignment operator
-        CountriesIpsModel(CountriesIpsModel &&) noexcept = default;  // Move constructor
-        CountriesIpsModel &operator=(CountriesIpsModel &&) noexcept = default;  // Move assignment operator
-
-        using BaseModel::BaseModel;
-        [[nodiscard]] static std::vector<BaseField<CountriesIpsModel>> fields();
-        [[nodiscard]] static std::vector<BaseField<CountriesIpsModel>> fullFields();
-        [[nodiscard]] std::vector<
-            std::pair<BaseField<CountriesIpsModel>,
-                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        getObjectValues() const;
+        Field()
+            : BaseModel<CountriesIpsModel>::Field()
+        {
+            allFields[startRange.getFieldName()] = startRange;
+            allFields[endRange.getFieldName()] = endRange;
+            allFields[countryCode.getFieldName()] = countryCode;
+            allFields[countryName.getFieldName()] = countryName;
+            allFields[countryId.getFieldName()] = countryId;
+        }
     };
+
+    CountriesIpsModel() = default;
+    CountriesIpsModel(const CountriesIpsModel &) = delete;  // Copy constructor
+    CountriesIpsModel &operator=(const CountriesIpsModel &) = delete;  // Copy assignment operator
+    CountriesIpsModel(CountriesIpsModel &&) noexcept = default;  // Move constructor
+    CountriesIpsModel &operator=(CountriesIpsModel &&) noexcept = default;  // Move assignment operator
+
+    using BaseModel::BaseModel;
+    [[nodiscard]] static std::vector<BaseField> fields();
+    [[nodiscard]] std::vector<
+        std::pair<BaseField,
+                  std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+    getObjectValues() const;
+};
 }
 
 #endif  //COUNTRIESIPSMODEL_H
