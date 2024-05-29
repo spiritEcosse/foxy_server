@@ -245,6 +245,7 @@ BaseModel<T>::sqlSelectList(int page, int limit, const std::map<std::string, std
 
     QuerySet qs(T::tableName, limit, "data");
     qs.offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
+        .only(allSetFields())
         .order_by(std::make_pair(T::Field::updatedAt, false),
                   std::make_pair(T::Field::id, false));
     typename T::Field field;
