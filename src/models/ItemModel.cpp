@@ -52,7 +52,7 @@ QuerySet ItemModel::qsCount() {
     QuerySet qsCount(ItemModel::tableName, "total", false, true);
     return std::move(
         qsCount.filter(Field::enabled.getFullFieldName(), std::string("true"), false, std::string("="))
-            .functions(Function(fmt::format("count(*)::integer"))));
+            .functions(Function("count(*)::integer")));
 }
 
 std::string ItemModel::sqlSelectList(int page, int limit, [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {

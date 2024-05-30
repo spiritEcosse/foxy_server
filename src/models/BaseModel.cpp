@@ -262,7 +262,7 @@ template<class T>
 QuerySet BaseModel<T>::qsCount()
 {
     QuerySet qsCount(T::tableName, "total", false, true);
-    return std::move(qsCount.functions(Function(fmt::format("count(*)::integer"))));
+    return std::move(qsCount.functions(Function("count(*)::integer")));
 }
 
 template<class T>
