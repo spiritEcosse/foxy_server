@@ -15,8 +15,7 @@ std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseMode
      {MediaModel::Field::itemId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName()}},
 };
 
-std::vector<BaseField> MediaModel::fields()
-{
+std::vector<BaseField> MediaModel::fields() {
     return {
         Field::src,
         Field::itemId,
@@ -24,12 +23,9 @@ std::vector<BaseField> MediaModel::fields()
     };
 }
 
-std::vector<
-    std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-MediaModel::getObjectValues() const
-{
-    std::vector<
-        std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+MediaModel::getObjectValues() const {
+    std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         baseValues = {};
     baseValues.emplace_back(Field::src, src);
     baseValues.emplace_back(Field::itemId, itemId);
@@ -37,24 +33,22 @@ MediaModel::getObjectValues() const
     return baseValues;
 }
 
-std::string MediaModel::fieldsJsonObject()
-{
+std::string MediaModel::fieldsJsonObject() {
     std::string app_cloud_name;
     getenv("APP_CLOUD_NAME", app_cloud_name);
 
     std::stringstream ss;
     const Field field;
-    for (const auto &fieldNames = field.allFields; const auto &pair: fieldNames) {
-        if (pair.first == "src") {
+    for(const auto &fieldNames = field.allFields; const auto &pair: fieldNames) {
+        if(pair.first == "src") {
             ss << fmt::format("'{}', format_src({}, '{}') ",
                               pair.first,
                               pair.second.getFullFieldName(),
                               app_cloud_name);
-        }
-        else {
+        } else {
             ss << fmt::format("'{}', {} ", pair.first, pair.second.getFullFieldName());
         }
-        if (&pair != std::to_address(fieldNames.end())) {
+        if(&pair != std::to_address(fieldNames.end())) {
             ss << ", ";
         }
     }

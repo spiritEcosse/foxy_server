@@ -1,20 +1,15 @@
-namespace api::v1
-{
+namespace api::v1 {
 
-class Function
-{
-public:
-    explicit Function() = default;
-    explicit Function(std::string function)
-        : function(std::move(function))
-    {
-    }
+    class Function {
+    public:
+        explicit Function() = default;
 
-    [[nodiscard]] std::string toStr() const
-    {
-        return function;
-    }
+        explicit Function(std::string function) : function(std::move(function)) {}
 
-    std::string function;
-};
+        [[nodiscard]] std::string toStr() const {
+            return function;
+        }
+
+        std::string function;
+    };
 }

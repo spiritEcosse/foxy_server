@@ -18,11 +18,9 @@ std::vector<BaseField> ShippingRateModel::fields() {
     };
 }
 
-std::vector<std::pair<BaseField,
-                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 ShippingRateModel::getObjectValues() const {
-    std::vector<std::pair<BaseField,
-                          std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+    std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         baseValues = {};
     if(countryId) {
         baseValues.emplace_back(Field::countryId, countryId);

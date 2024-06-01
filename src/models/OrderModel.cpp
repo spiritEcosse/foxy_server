@@ -10,25 +10,23 @@
 using namespace api::v1;
 
 std::vector<BaseField> OrderModel::fields() {
-    return {
-        Field::status,
-        Field::basketId,
-        Field::total,
-        Field::totalExTaxes,
-        Field::deliveryFees,
-        Field::taxRate,
-        Field::taxes,
-        Field::userId,
-        Field::reference,
-        Field::addressId
-    };
+    return {Field::status,
+            Field::basketId,
+            Field::total,
+            Field::totalExTaxes,
+            Field::deliveryFees,
+            Field::taxRate,
+            Field::taxes,
+            Field::userId,
+            Field::reference,
+            Field::addressId};
 }
 
 std::vector<
     std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
 OrderModel::getObjectValues() const {
-    std::vector<
-        std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
+    std::vector<std::pair<BaseField,
+                          std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
         baseValues = {};
     baseValues.emplace_back(Field::status, status);
     baseValues.emplace_back(Field::basketId, basketId);
@@ -43,7 +41,8 @@ OrderModel::getObjectValues() const {
     return baseValues;
 }
 
-std::string OrderModel::sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params) {
+std::string
+OrderModel::sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params) {
     QuerySet qsCount = OrderModel().qsCount();
     QuerySet qsPage = OrderModel().qsPage(page, limit);
 
@@ -51,13 +50,12 @@ std::string OrderModel::sqlSelectList(int page, int limit, const std::map<std::s
     qs.left_join(BasketItemModel())
         .only(OrderModel().allSetFields())
         .functions(Function(fmt::format(R"(COUNT({}) as count_items)", BaseModel::Field::id.getFullFieldName())))
-        .order_by(std::make_pair(BaseModel::Field::updatedAt, false),
-                  std::make_pair(BaseModel::Field::id, false))
+        .order_by(std::make_pair(BaseModel::Field::updatedAt, false), std::make_pair(BaseModel::Field::id, false))
         .group_by(BaseModel::Field::id, BaseModel::Field::updatedAt);
 
     Field field;
-    for (const auto &[key, value]: params) {
-        if (fieldExists(key)) {
+    for(const auto &[key, value]: params) {
+        if(fieldExists(key)) {
             qs.filter(field.allFields[key].getFullFieldName(), value);
             qsCount.filter(field.allFields[key].getFullFieldName(), value);
         }

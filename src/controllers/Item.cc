@@ -2,6 +2,7 @@
 #include "src/utils/request/Request.h"
 #include "src/orm/QuerySet.h"
 #include "src/models/MediaModel.h"
+#include "src/models/BasketItemModel.h"
 #include "src/utils/env.h"
 #include <fmt/core.h>
 
@@ -9,8 +10,7 @@ using namespace api::v1;
 using namespace drogon::orm;
 
 void Item::getListAdmin(const drogon::HttpRequestPtr &req,
-                        std::function<void(const drogon::HttpResponsePtr &)> &&callback) const
-{
+                        std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
     int page = getInt(req->getParameter("page"), 1);
     int limit = getInt(req->getParameter("limit"), 25);
@@ -43,14 +43,43 @@ void Item::getListAdmin(const drogon::HttpRequestPtr &req,
     executeSqlQuery(callbackPtr, QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs)));
 }
 
+void Item::getListBasketItemAdmin(const drogon::HttpRequestPtr &req,
+                                  std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
+    auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
+    int page = getInt(req->getParameter("page"), 1);
+    int limit = getInt(req->getParameter("limit"), 25);
+
+    QuerySet qsCount = BaseModel<ItemModel>().qsCount();
+    QuerySet qsPage = ItemModel().qsPage(page, limit);
+    qsCount.join(BasketItemModel());
+
+    QuerySet qs(ItemModel::tableName, limit, "data");
+    auto orderByItemField = BaseModel<BasketItemModel>::Field::updatedAt;
+    auto itemID = BaseModel<BasketItemModel>::Field::id;
+    auto mediaItemID = MediaModel::Field::itemId.getFullFieldName();
+    qs.join(BasketItemModel())
+        .order_by(std::make_pair(orderByItemField, false), std::make_pair(itemID, false))
+        .only(ItemModel().allSetFields())
+        .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit));
+
+    BasketItemModel::Field field;
+    BasketItemModel basketItemModel;
+    for(const auto &[key, value]: req->getParameters()) {
+        if(basketItemModel.fieldExists(key)) {
+            qs.filter(field.allFields[key].getFullFieldName(), value);
+            qsCount.filter(field.allFields[key].getFullFieldName(), value);
+        }
+    }
+    executeSqlQuery(callbackPtr, QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs)));
+}
+
 void Item::getOne(const drogon::HttpRequestPtr &req,
                   std::function<void(const drogon::HttpResponsePtr &)> &&callback,
-                  const std::string &stringId) const
-{
+                  const std::string &stringId) const {
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
 
     bool isInt = canBeInt(stringId);
-    if (auto resp = check404(req, !isInt && ItemModel::Field::slug.empty())) {
+    if(auto resp = check404(req, !isInt && ItemModel::Field::slug.empty())) {
         (*callbackPtr)(resp);
         return;
     }

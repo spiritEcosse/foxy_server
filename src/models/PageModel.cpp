@@ -6,8 +6,7 @@
 
 using namespace api::v1;
 
-std::vector<BaseField> PageModel::fields()
-{
+std::vector<BaseField> PageModel::fields() {
     return {
         Field::title,
         Field::description,
@@ -18,12 +17,9 @@ std::vector<BaseField> PageModel::fields()
     };
 }
 
-std::vector<
-    std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-PageModel::getObjectValues() const
-{
-    std::vector<
-        std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+PageModel::getObjectValues() const {
+    std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         baseValues = {};
     baseValues.emplace_back(Field::title, title);
     baseValues.emplace_back(Field::description, description);

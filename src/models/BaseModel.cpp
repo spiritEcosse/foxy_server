@@ -7,6 +7,7 @@
 #include <fmt/core.h>
 #include <fmt/chrono.h>
 #include "BaseModel.h"
+#include "src/models/ReviewModel.h"
 #include "src/models/ItemModel.h"
 #include "src/models/PageModel.h"
 #include "src/models/UserModel.h"
@@ -25,11 +26,10 @@
 
 using namespace api::v1;
 
-std::string timePointToString(std::chrono::system_clock::time_point tp)
-{
+std::string timePointToString(std::chrono::system_clock::time_point tp) {
     auto time_t = std::chrono::system_clock::to_time_t(tp);
 
-    struct tm local_time{};
+    struct tm local_time {};
 
     localtime_r(&time_t, &local_time);
 
@@ -44,18 +44,15 @@ std::string timePointToString(std::chrono::system_clock::time_point tp)
 }
 
 template<class T>
-std::string BaseModel<T>::sqlDelete(int id)
-{
-    return "DELETE FROM \"" + T::tableName + "\" WHERE " + T::Field::id.getFullFieldName() + " = " + std::to_string(id)
-        +
-            ";";
+std::string BaseModel<T>::sqlDelete(int id) {
+    return "DELETE FROM \"" + T::tableName + "\" WHERE " + T::Field::id.getFullFieldName() + " = " +
+           std::to_string(id) + ";";
 }
 
 template<class T>
-std::string BaseModel<T>::sqlDeleteMultiple(const std::vector<int> &ids)
-{
+std::string BaseModel<T>::sqlDeleteMultiple(const std::vector<int> &ids) {
     std::string sql = "DELETE FROM \"" + T::tableName + "\" WHERE " + T::Field::id.getFullFieldName() + " IN (";
-    for (const auto &_id: ids) {
+    for(const auto &_id: ids) {
         sql.append(std::to_string(_id)).append(",");
     }
     sql.pop_back();
@@ -64,40 +61,32 @@ std::string BaseModel<T>::sqlDeleteMultiple(const std::vector<int> &ids)
 }
 
 template<class T>
-std::string BaseModel<T>::sqlInsertSingle(const T &item)
-{
+std::string BaseModel<T>::sqlInsertSingle(const T &item) {
     std::string sql = " (";
-    for (const auto &[key, value]: item.getObjectValues()) {
+    for(const auto &[key, value]: item.getObjectValues()) {
         std::visit(
-            [&sql](const auto &arg)
-            {
+            [&sql](const auto &arg) {
                 std::string data;
                 using Type = std::decay_t<decltype(arg)>;
-                if constexpr (std::is_same_v<Type, std::chrono::system_clock::time_point>) {
+                if constexpr(std::is_same_v<Type, std::chrono::system_clock::time_point>) {
                     data = timePointToString(arg);
-                }
-                else if constexpr (std::is_same_v<Type, std::string>) {
+                } else if constexpr(std::is_same_v<Type, std::string>) {
                     data = addExtraQuotes(arg);
-                }
-                else if constexpr (std::is_same_v<Type, int>) {
+                } else if constexpr(std::is_same_v<Type, int>) {
                     data = std::to_string(arg);
-                }
-                else if constexpr (std::is_same_v<Type, bool>) {
+                } else if constexpr(std::is_same_v<Type, bool>) {
                     data = arg ? "true" : "false";
-                }
-                else if constexpr (std::is_same_v<Type, dec::decimal<2>>) {
+                } else if constexpr(std::is_same_v<Type, dec::decimal<2>>) {
                     std::stringstream ss;
                     ss << arg;
                     data = ss.str();
-                }
-                else {
+                } else {
                     data = arg;
                 }
-                if (data != "Null") {
+                if(data != "Null") {
                     data = addExtraQuotes(data);
                     sql.append("'").append(data).append("',");
-                }
-                else {
+                } else {
                     sql.append(data).append(",");
                 }
             },
@@ -109,18 +98,18 @@ std::string BaseModel<T>::sqlInsertSingle(const T &item)
 }
 
 template<class T>
-std::string BaseModel<T>::sqlInsert(const T &item)
-{
-    return fmt::format(
-        R"(INSERT INTO "{}" ({}) VALUES {} RETURNING json_build_object({}))",
-        T::tableName, T::fieldsToString(), sqlInsertSingle(item), fieldsJsonObject());
+std::string BaseModel<T>::sqlInsert(const T &item) {
+    return fmt::format(R"(INSERT INTO "{}" ({}) VALUES {} RETURNING json_build_object({}))",
+                       T::tableName,
+                       T::fieldsToString(),
+                       sqlInsertSingle(item),
+                       fieldsJsonObject());
 }
 
 template<class T>
-std::string BaseModel<T>::sqlInsertMultiple(const std::vector<T> &items)
-{
+std::string BaseModel<T>::sqlInsertMultiple(const std::vector<T> &items) {
     std::string sql = "INSERT INTO \"" + T::tableName + "\" (" + fieldsToString() + ") VALUES ";
-    for (const auto &item: items) {
+    for(const auto &item: items) {
         sql.append(sqlInsertSingle(item)).append(",");
     }
     sql.pop_back();
@@ -129,42 +118,34 @@ std::string BaseModel<T>::sqlInsertMultiple(const std::vector<T> &items)
 }
 
 template<class T>
-void BaseModel<T>::sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColumns)
-{
+void BaseModel<T>::sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColumns) {
     std::string sql;
 
-    for (const auto &[key, value]: item.getObjectValues()) {
+    for(const auto &[key, value]: item.getObjectValues()) {
         std::visit(
-            [&item, &uniqueColumns, key](const auto &arg)
-            {
+            [&item, &uniqueColumns, key](const auto &arg) {
                 std::string data;
                 using Type = std::decay_t<decltype(arg)>;
-                if constexpr (std::is_same_v<Type, std::chrono::system_clock::time_point>) {
+                if constexpr(std::is_same_v<Type, std::chrono::system_clock::time_point>) {
                     data = timePointToString(arg);
-                }
-                else if constexpr (std::is_same_v<Type, std::string>) {
+                } else if constexpr(std::is_same_v<Type, std::string>) {
                     data = addExtraQuotes(arg);
-                }
-                else if constexpr (std::is_same_v<Type, int>) {
+                } else if constexpr(std::is_same_v<Type, int>) {
                     data = std::to_string(arg);
-                }
-                else if constexpr (std::is_same_v<Type, bool>) {
+                } else if constexpr(std::is_same_v<Type, bool>) {
                     data = arg ? "true" : "false";
-                }
-                else if constexpr (std::is_same_v<Type, dec::decimal<2>>) {
+                } else if constexpr(std::is_same_v<Type, dec::decimal<2>>) {
                     std::stringstream ss;
                     ss << arg;
                     data = ss.str();
-                }
-                else {
+                } else {
                     data = arg;
                 }
-                if (data != "Null") {
+                if(data != "Null") {
                     data = addExtraQuotes(data);
                     uniqueColumns[key.getFieldName()].append(
                         fmt::format(R"( WHEN {} = {} THEN '{}' )", T::Field::id.getFullFieldName(), item.id, data));
-                }
-                else {
+                } else {
                     uniqueColumns[key.getFieldName()].append(
                         fmt::format(R"( WHEN {} = {} THEN {} )", T::Field::id.getFullFieldName(), item.id, data));
                 }
@@ -174,26 +155,24 @@ void BaseModel<T>::sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColum
 }
 
 template<class T>
-std::string BaseModel<T>::sqlUpdate(T &&item)
-{
+std::string BaseModel<T>::sqlUpdate(T &&item) {
     std::vector<T> items;
     items.push_back(std::move(item));
     return sqlUpdateMultiple(items);
 }
 
 template<class T>
-std::string BaseModel<T>::sqlUpdateMultiple(const std::vector<T> &items)
-{
+std::string BaseModel<T>::sqlUpdateMultiple(const std::vector<T> &items) {
     std::string sql = fmt::format(R"(UPDATE "{}" SET )", T::tableName);
     std::string ids;
     ModelFieldKeyHash uniqueColumns;
 
-    for (const auto &item: items) {
+    for(const auto &item: items) {
         sqlUpdateSingle(item, uniqueColumns);
         ids.append(fmt::format("{},", item.id));
     }
     ids.pop_back();
-    for (const auto &[key, value]: uniqueColumns) {
+    for(const auto &[key, value]: uniqueColumns) {
         sql.append(fmt::format("{} = CASE {} ELSE {} END,", key, value, key));
     }
     sql.pop_back();
@@ -204,12 +183,11 @@ std::string BaseModel<T>::sqlUpdateMultiple(const std::vector<T> &items)
 }
 
 template<class T>
-std::string BaseModel<T>::fieldsToString()
-{
+std::string BaseModel<T>::fieldsToString() {
     std::stringstream ss;
-    for (auto fieldNames = T::fields(); const auto &fieldName: fieldNames) {
+    for(auto fieldNames = T::fields(); const auto &fieldName: fieldNames) {
         ss << fieldName.getFieldName();
-        if (&fieldName != &fieldNames.back()) {
+        if(&fieldName != &fieldNames.back()) {
             ss << ", ";
         }
     }
@@ -217,40 +195,36 @@ std::string BaseModel<T>::fieldsToString()
 }
 
 template<class T>
-std::vector<BaseField> BaseModel<T>::allSetFields() const
-{
+std::vector<BaseField> BaseModel<T>::allSetFields() const {
     std::string str;
     const typename T::Field field;
     std::vector<BaseField> fields;
     fields.reserve(field.allFields.size());
-    for (const auto &fieldNames = field.allFields; const auto &[fieldName, baseField]: fieldNames) {
+    for(const auto &fieldNames = field.allFields; const auto &[fieldName, baseField]: fieldNames) {
         fields.emplace_back(baseField);
     }
     return fields;
 }
 
 template<class T>
-bool BaseModel<T>::fieldExists(const std::string &fieldName) const
-{
+bool BaseModel<T>::fieldExists(const std::string &fieldName) const {
     const typename T::Field field;
     return field.allFields.find(fieldName) != field.allFields.end();
 }
 
 template<class T>
 std::string
-BaseModel<T>::sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params)
-{
+BaseModel<T>::sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params) {
     QuerySet qsCount = T().qsCount();
     QuerySet qsPage = T().qsPage(page, limit);
 
     QuerySet qs(T::tableName, limit, "data");
     qs.offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
         .only(allSetFields())
-        .order_by(std::make_pair(T::Field::updatedAt, false),
-                  std::make_pair(T::Field::id, false));
+        .order_by(std::make_pair(T::Field::updatedAt, false), std::make_pair(T::Field::id, false));
     typename T::Field field;
-    for (const auto &[key, value]: params) {
-        if (fieldExists(key)) {
+    for(const auto &[key, value]: params) {
+        if(fieldExists(key)) {
             qs.filter(field.allFields[key].getFullFieldName(), value);
             qsCount.filter(field.allFields[key].getFullFieldName(), value);
         }
@@ -259,28 +233,24 @@ BaseModel<T>::sqlSelectList(int page, int limit, const std::map<std::string, std
 }
 
 template<class T>
-QuerySet BaseModel<T>::qsCount()
-{
+QuerySet BaseModel<T>::qsCount() {
     QuerySet qsCount(T::tableName, "total", false, true);
     return std::move(qsCount.functions(Function("count(*)::integer")));
 }
 
 template<class T>
-QuerySet BaseModel<T>::qsPage(int page, int limit)
-{
+QuerySet BaseModel<T>::qsPage(int page, int limit) {
     QuerySet qsCount = T().qsCount();
     QuerySet qsPage(ItemModel::tableName, "_page", false, true);
-    return std::move(
-        qsPage.functions(Function(
-            fmt::format("GetValidPage({}, {}, (SELECT * FROM {}))", page, limit, qsCount.alias()))));
+    return std::move(qsPage.functions(
+        Function(fmt::format("GetValidPage({}, {}, (SELECT * FROM {}))", page, limit, qsCount.alias()))));
 }
 
 template<class T>
-std::string BaseModel<T>::fieldsJsonObject()
-{
+std::string BaseModel<T>::fieldsJsonObject() {
     std::string str;
     const typename T::Field field;
-    for (const auto &fieldNames = field.allFields; const auto &[fieldName, baseField]: fieldNames) {
+    for(const auto &fieldNames = field.allFields; const auto &[fieldName, baseField]: fieldNames) {
         str += fmt::format("'{}', {}, ", fieldName, baseField.getFullFieldName());
     }
     return str.substr(0, str.size() - 2);
@@ -289,34 +259,22 @@ std::string BaseModel<T>::fieldsJsonObject()
 template<class T>
 std::string BaseModel<T>::sqlSelectOne(const std::string &field,
                                        const std::string &value,
-                                       [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params)
-{
+                                       [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
     QuerySet qs(T::tableName, T::tableName, true);
     qs.jsonFields(addExtraQuotes(fieldsJsonObject())).filter(field, std::string(value));
     return qs.buildSelect();
 }
 
-template
-class api::v1::BaseModel<PageModel>;
-template
-class api::v1::BaseModel<ItemModel>;
-template
-class api::v1::BaseModel<UserModel>;
-template
-class api::v1::BaseModel<MediaModel>;
-template
-class api::v1::BaseModel<ShippingProfileModel>;
-template
-class api::v1::BaseModel<ShippingRateModel>;
-template
-class api::v1::BaseModel<CountryModel>;
-template
-class api::v1::BaseModel<CountriesIpsModel>;
-template
-class api::v1::BaseModel<OrderModel>;
-template
-class api::v1::BaseModel<BasketItemModel>;
-template
-class api::v1::BaseModel<BasketModel>;
-template
-class api::v1::BaseModel<AddressModel>;
+template class api::v1::BaseModel<PageModel>;
+template class api::v1::BaseModel<ItemModel>;
+template class api::v1::BaseModel<UserModel>;
+template class api::v1::BaseModel<MediaModel>;
+template class api::v1::BaseModel<ShippingProfileModel>;
+template class api::v1::BaseModel<ShippingRateModel>;
+template class api::v1::BaseModel<CountryModel>;
+template class api::v1::BaseModel<CountriesIpsModel>;
+template class api::v1::BaseModel<OrderModel>;
+template class api::v1::BaseModel<BasketItemModel>;
+template class api::v1::BaseModel<BasketModel>;
+template class api::v1::BaseModel<AddressModel>;
+template class api::v1::BaseModel<ReviewModel>;

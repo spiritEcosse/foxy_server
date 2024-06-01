@@ -13,7 +13,8 @@ using namespace api::v1;
 
 template<>
 std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseModel<ItemModel>::joinMap = {
-    {MediaModel::tableName, {BaseModel<ItemModel>::Field::id.getFullFieldName(), MediaModel::Field::itemId.getFullFieldName()}},
+    {MediaModel::tableName,
+     {BaseModel<ItemModel>::Field::id.getFullFieldName(), MediaModel::Field::itemId.getFullFieldName()}},
     {ShippingRateModel::tableName,
      {ItemModel::Field::shippingProfileId.getFullFieldName(),
       ShippingRateModel::Field::shippingProfileId.getFullFieldName()}},
@@ -31,9 +32,8 @@ std::vector<BaseField> ItemModel::fields() {
     };
 }
 
-
-std::vector<std::pair<BaseField,
-                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
+std::vector<
+    std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
 ItemModel::getObjectValues() const {
     std::vector<std::pair<BaseField,
                           std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
@@ -50,12 +50,13 @@ ItemModel::getObjectValues() const {
 
 QuerySet ItemModel::qsCount() {
     QuerySet qsCount(ItemModel::tableName, "total", false, true);
-    return std::move(
-        qsCount.filter(Field::enabled.getFullFieldName(), std::string("true"), false, std::string("="))
-            .functions(Function("count(*)::integer")));
+    return std::move(qsCount.filter(Field::enabled.getFullFieldName(), std::string("true"), false, std::string("="))
+                         .functions(Function("count(*)::integer")));
 }
 
-std::string ItemModel::sqlSelectList(int page, int limit, [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
+std::string ItemModel::sqlSelectList(int page,
+                                     int limit,
+                                     [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
     std::string app_cloud_name;
     getenv("APP_CLOUD_NAME", app_cloud_name);
 

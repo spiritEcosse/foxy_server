@@ -154,6 +154,19 @@ ALTER table "user"
     alter column birthday set not null;
 Alter table "user"
     add column has_newsletter BOOLEAN NOT NULL DEFAULT false;
+
+CREATE TABLE IF NOT EXISTS review
+(
+    id         SERIAL PRIMARY KEY,
+    status     VARCHAR(255) NOT NULL,
+    user_id    INT          NOT NULL,
+    item_id    INT          NOT NULL,
+    comment    TEXT         NOT NULL,
+    created_at TIMESTAMP    NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP    NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (user_id) REFERENCES "user" (id),
+    FOREIGN KEY (item_id) REFERENCES item (id)
+);
 commit;
 
 create table IF NOT EXISTS media
