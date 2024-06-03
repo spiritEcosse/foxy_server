@@ -101,7 +101,7 @@ template<class T>
 std::string BaseModel<T>::sqlInsert(const T &item) {
     return fmt::format(R"(INSERT INTO "{}" ({}) VALUES {} RETURNING json_build_object({}))",
                        T::tableName,
-                       T::fieldsToString(),
+                       fieldsToString(),
                        sqlInsertSingle(item),
                        fieldsJsonObject());
 }
