@@ -45,10 +45,6 @@ namespace api::v1 {
             }
         };
 
-        static inline std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap = {
-            {BasketModel::tableName, {Field::basketId.getFullFieldName(), Field::id.getFullFieldName()}},
-        };
-
         OrderModel() = default;
         OrderModel(const OrderModel &) = delete;  // Copy constructor
         OrderModel &operator=(const OrderModel &) = delete;  // Copy assignment operator
@@ -97,6 +93,9 @@ namespace api::v1 {
         getObjectValues() const;
         [[nodiscard]] std::string
         sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params) override;
+        [[nodiscard]] std::string sqlSelectOne(const std::string &field,
+                                               const std::string &value,
+                                               const std::map<std::string, std::string, std::less<>> &params) override;
     };
 }
 

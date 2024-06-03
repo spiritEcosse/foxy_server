@@ -3,11 +3,21 @@
 //
 
 #include "OrderModel.h"
+#include "ItemModel.h"
 #include "BasketModel.h"
 #include "BasketItemModel.h"
 #include <fmt/core.h>
 
 using namespace api::v1;
+
+template<>
+std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseModel<OrderModel>::joinMap = {
+    {BasketModel::tableName,
+     {OrderModel::Field::basketId.getFullFieldName(), BaseModel<BasketModel>::Field::id.getFullFieldName()}},
+    {ItemModel::tableName,
+     {OrderModel::Field::basketId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName()}},
+    {BasketItemModel::tableName,
+     {OrderModel::Field::basketId.getFullFieldName(), BasketItemModel::Field::basketId.getFullFieldName()}}};
 
 std::vector<BaseField> OrderModel::fields() {
     return {Field::status,
@@ -61,4 +71,17 @@ OrderModel::sqlSelectList(int page, int limit, const std::map<std::string, std::
         }
     }
     return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
+}
+
+std::string OrderModel::sqlSelectOne(const std::string &field,
+                                     const std::string &value,
+                                     [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
+    QuerySet qsBasketItem(ItemModel::tableName, 0, std::string("_items"));
+    qsBasketItem.join(BasketItemModel()).join(OrderModel()).filter(field, value).only(ItemModel().allSetFields());
+
+    QuerySet qsOrder(OrderModel::tableName, "_order", true);
+    qsOrder.filter(field, value)
+        .jsonFields(addExtraQuotes(OrderModel().fieldsJsonObject()))
+        .order_by(std::make_pair(BaseModel<OrderModel>::Field::id, false));
+    return QuerySet::buildQuery(std::move(qsOrder), std::move(qsBasketItem));
 }

@@ -4,6 +4,7 @@
 #include "ItemModel.h"
 #include "MediaModel.h"
 #include "ShippingRateModel.h"
+#include "ShippingProfileModel.h"
 #include "src/orm/QuerySet.h"
 #include "src/utils/db/String.h"
 #include "src/utils/env.h"
@@ -18,7 +19,9 @@ std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseMode
     {ShippingRateModel::tableName,
      {ItemModel::Field::shippingProfileId.getFullFieldName(),
       ShippingRateModel::Field::shippingProfileId.getFullFieldName()}},
-};
+    {ShippingProfileModel::tableName,
+     {ItemModel::Field::shippingProfileId.getFullFieldName(),
+      BaseModel<ShippingProfileModel>::Field::id.getFullFieldName()}}};
 
 std::vector<BaseField> ItemModel::fields() {
     return {
