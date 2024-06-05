@@ -20,17 +20,20 @@ namespace api::v1 {
             static inline BaseField basketId = BaseField("basket_id", tableName);
             static inline BaseField itemId = BaseField("item_id", tableName);
             static inline BaseField quantity = BaseField("quantity", tableName);
+            static inline BaseField price = BaseField("price", tableName);
 
             Field() : BaseModel<BasketItemModel>::Field() {
                 allFields[basketId.getFieldName()] = basketId;
                 allFields[itemId.getFieldName()] = itemId;
                 allFields[quantity.getFieldName()] = quantity;
+                allFields[price.getFieldName()] = price;
             }
         };
 
         int basketId{};
         int itemId{};
         int quantity{};
+        dec::decimal<2> price;
         BasketItemModel() = default;
         BasketItemModel(const BasketItemModel &) = delete;  // Copy constructor
         BasketItemModel &operator=(const BasketItemModel &) = delete;  // Copy assignment operator
@@ -41,10 +44,12 @@ namespace api::v1 {
             basketId = json[Field::basketId.getFieldName()].asInt();
             itemId = json[Field::itemId.getFieldName()].asInt();
             quantity = json[Field::quantity.getFieldName()].asInt();
+            price = json[Field::price.getFieldName()].asDouble();
 
             validateField(Field::basketId.getFieldName(), basketId, missingFields);
             validateField(Field::itemId.getFieldName(), itemId, missingFields);
             validateField(Field::quantity.getFieldName(), quantity, missingFields);
+            validateField(Field::price.getFieldName(), price, missingFields);
         }
 
         [[nodiscard]] static std::vector<BaseField> fields();

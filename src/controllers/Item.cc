@@ -2,7 +2,6 @@
 #include "src/utils/request/Request.h"
 #include "src/orm/QuerySet.h"
 #include "src/models/MediaModel.h"
-#include "src/models/BasketItemModel.h"
 #include "src/utils/env.h"
 #include <fmt/core.h>
 

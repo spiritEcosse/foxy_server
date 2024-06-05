@@ -59,17 +59,14 @@ namespace api::v1 {
             slug = json[Field::slug.getFieldName()].asString();
             shippingProfileId = json[Field::shippingProfileId.getFieldName()].asInt();
             enabled = json[Field::enabled.getFieldName()].asBool();
-            auto priceString = json[Field::price.getFieldName()].asString();
+            price = json[Field::price.getFieldName()].asDouble();
 
             validateField(Field::title.getFieldName(), title, missingFields);
             validateField(Field::description.getFieldName(), description, missingFields);
             validateField(Field::shippingProfileId.getFieldName(), shippingProfileId, missingFields);
             validateField(Field::metaDescription.getFieldName(), metaDescription, missingFields);
             validateField(Field::slug.getFieldName(), slug, missingFields);
-            validateField(Field::price.getFieldName(), priceString, missingFields);
-            if(missingFields.empty()) {
-                price = std::stod(priceString);
-            }
+            validateField(Field::price.getFieldName(), price, missingFields);
         }
 
         [[nodiscard]] QuerySet qsCount() override;

@@ -3,7 +3,9 @@
 //
 
 #include "OrderModel.h"
+#include "AddressModel.h"
 #include "ItemModel.h"
+#include "UserModel.h"
 #include "BasketModel.h"
 #include "BasketItemModel.h"
 #include <fmt/core.h>
@@ -17,7 +19,11 @@ std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseMode
     {ItemModel::tableName,
      {OrderModel::Field::basketId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName()}},
     {BasketItemModel::tableName,
-     {OrderModel::Field::basketId.getFullFieldName(), BasketItemModel::Field::basketId.getFullFieldName()}}};
+     {OrderModel::Field::basketId.getFullFieldName(), BasketItemModel::Field::basketId.getFullFieldName()}},
+    {AddressModel::tableName,
+     {OrderModel::Field::addressId.getFullFieldName(), BaseModel<AddressModel>::Field::id.getFullFieldName()}},
+    {UserModel::tableName,
+     {OrderModel::Field::userId.getFullFieldName(), BaseModel<UserModel>::Field::id.getFullFieldName()}}};
 
 std::vector<BaseField> OrderModel::fields() {
     return {Field::status,
@@ -59,7 +65,8 @@ OrderModel::sqlSelectList(int page, int limit, const std::map<std::string, std::
     QuerySet qs(OrderModel::tableName, limit, "data");
     qs.left_join(BasketItemModel())
         .only(OrderModel().allSetFields())
-        .functions(Function(fmt::format(R"(COUNT({}) as count_items)", BaseModel::Field::id.getFullFieldName())))
+        .functions(Function(
+            fmt::format(R"(COUNT({}) as count_items)", BaseModel<BasketItemModel>::Field::id.getFullFieldName())))
         .order_by(std::make_pair(BaseModel::Field::updatedAt, false), std::make_pair(BaseModel::Field::id, false))
         .group_by(BaseModel::Field::id, BaseModel::Field::updatedAt);
 
@@ -77,7 +84,13 @@ std::string OrderModel::sqlSelectOne(const std::string &field,
                                      const std::string &value,
                                      [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
     QuerySet qsBasketItem(ItemModel::tableName, 0, std::string("_items"));
-    qsBasketItem.join(BasketItemModel()).join(OrderModel()).filter(field, value).only(ItemModel().allSetFields());
+    qsBasketItem.join(BasketItemModel())
+        .join(OrderModel())
+        .filter(field, value)
+        .only(ItemModel::Field::title,
+              BaseModel<ItemModel>::Field::id,
+              BasketItemModel::Field::quantity,
+              BasketItemModel::Field::price);
 
     QuerySet qsOrder(OrderModel::tableName, "_order", true);
     qsOrder.filter(field, value)

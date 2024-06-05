@@ -208,11 +208,12 @@ CREATE TABLE IF NOT EXISTS "basket"
 CREATE TABLE IF NOT EXISTS "basket_item"
 (
     id         SERIAL PRIMARY KEY,
-    item_id    INT       NOT NULL,
-    quantity   INT       NOT NULL,
-    basket_id  INT       NOT NULL,
-    created_at timestamp NOT NULL DEFAULT NOW(),
-    updated_at timestamp NOT NULL DEFAULT NOW(),
+    item_id    INT            NOT NULL,
+    quantity   INT            NOT NULL,
+    basket_id  INT            NOT NULL,
+    price      decimal(10, 2) NOT NULL,
+    created_at timestamp      NOT NULL DEFAULT NOW(),
+    updated_at timestamp      NOT NULL DEFAULT NOW(),
     FOREIGN KEY (item_id) REFERENCES item (id),
     FOREIGN KEY (basket_id) REFERENCES basket (id)
 );
