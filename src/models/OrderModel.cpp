@@ -35,6 +35,7 @@ std::vector<BaseField> OrderModel::fields() {
             Field::taxes,
             Field::userId,
             Field::reference,
+            Field::returned,
             Field::addressId};
 }
 
@@ -53,6 +54,7 @@ OrderModel::getObjectValues() const {
     baseValues.emplace_back(Field::taxes, taxes);
     baseValues.emplace_back(Field::userId, userId);
     baseValues.emplace_back(Field::reference, reference);
+    baseValues.emplace_back(Field::returned, returned);
     baseValues.emplace_back(Field::addressId, addressId);
     return baseValues;
 }

@@ -167,6 +167,8 @@ CREATE TABLE IF NOT EXISTS review
     FOREIGN KEY (user_id) REFERENCES "user" (id),
     FOREIGN KEY (item_id) REFERENCES item (id)
 );
+Alter table "order"
+    add column returned BOOLEAN NOT NULL DEFAULT false;
 commit;
 
 create table IF NOT EXISTS media
@@ -233,6 +235,7 @@ CREATE TABLE IF NOT EXISTS "order"
     created_at     timestamp      NOT NULL DEFAULT NOW(),
     updated_at     timestamp      NOT NULL DEFAULT NOW(),
     address_id     INT            NOT NULL,
+    returned       BOOLEAN        NOT NULL DEFAULT false,
     FOREIGN KEY (basket_id) REFERENCES "basket" (id),
     FOREIGN KEY (user_id) REFERENCES "user" (id),
     FOREIGN KEY (address_id) REFERENCES address (id) ON DELETE CASCADE

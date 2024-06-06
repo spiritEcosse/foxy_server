@@ -30,6 +30,7 @@ namespace api::v1 {
             static inline BaseField userId = BaseField("user_id", tableName);
             static inline BaseField reference = BaseField("reference", tableName);
             static inline BaseField addressId = BaseField("address_id", tableName);
+            static inline BaseField returned = BaseField("returned", tableName);
 
             Field() : BaseModel::Field() {
                 allFields[status.getFieldName()] = status;
@@ -42,6 +43,7 @@ namespace api::v1 {
                 allFields[userId.getFieldName()] = userId;
                 allFields[reference.getFieldName()] = reference;
                 allFields[addressId.getFieldName()] = addressId;
+                allFields[returned.getFieldName()] = returned;
             }
         };
 
@@ -58,6 +60,7 @@ namespace api::v1 {
         dec::decimal<2> deliveryFees{};
         dec::decimal<2> taxRate{};
         dec::decimal<2> taxes{};
+        bool returned = false;
         int userId{};
         int addressId{};
         std::string reference;
@@ -73,6 +76,7 @@ namespace api::v1 {
             userId = json[Field::userId.getFieldName()].asInt();
             reference = json[Field::reference.getFieldName()].asString();
             addressId = json[Field::addressId.getFieldName()].asInt();
+            returned = json[Field::returned.getFieldName()].asBool();
 
             validateField(Field::status.getFieldName(), status, missingFields);
             validateField(Field::basketId.getFieldName(), basketId, missingFields);
@@ -84,6 +88,7 @@ namespace api::v1 {
             validateField(Field::userId.getFieldName(), userId, missingFields);
             validateField(Field::reference.getFieldName(), reference, missingFields);
             validateField(Field::addressId.getFieldName(), addressId, missingFields);
+            validateField(Field::returned.getFieldName(), returned, missingFields);
         }
 
         [[nodiscard]] static std::vector<BaseField> fields();
