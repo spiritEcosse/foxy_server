@@ -7,12 +7,22 @@
 using namespace api::v1;
 
 std::vector<BaseField> CountriesIpsModel::fields() {
-    return {};
+    return {
+        {Field::startRange},
+        {Field::endRange},
+        {Field::countryCode},
+        {Field::countryName},
+        {Field::countryId},
+    };
 }
 
 std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 CountriesIpsModel::getObjectValues() const {
-    std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        baseValues = {};
-    return baseValues;
+    return {
+        {Field::startRange, startRange},
+        {Field::endRange, endRange},
+        {Field::countryCode, countryCode},
+        {Field::countryName, countryName},
+        {Field::countryId, countryId},
+    };
 }

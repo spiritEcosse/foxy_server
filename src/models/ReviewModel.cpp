@@ -17,11 +17,10 @@ std::vector<BaseField> ReviewModel::fields() {
 
 std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 ReviewModel::getObjectValues() const {
-    std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        baseValues = {};
-    baseValues.emplace_back(Field::status, status);
-    baseValues.emplace_back(Field::userId, userId);
-    baseValues.emplace_back(Field::itemId, itemId);
-    baseValues.emplace_back(Field::comment, comment);
-    return baseValues;
+    return {
+        {Field::status, status},
+        {Field::userId, userId},
+        {Field::itemId, itemId},
+        {Field::comment, comment},
+    };
 }

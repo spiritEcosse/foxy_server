@@ -7,12 +7,10 @@
 using namespace api::v1;
 
 std::vector<BaseField> BasketModel::fields() {
-    return {};
+    return {Field::userId};
 }
 
 std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 BasketModel::getObjectValues() const {
-    std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        baseValues = {};
-    return baseValues;
+    return {{Field::userId, userId}};
 }

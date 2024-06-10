@@ -15,12 +15,11 @@ std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseMode
      {BasketItemModel::Field::basketId.getFullFieldName(), OrderModel::Field::basketId.getFullFieldName()}}};
 
 std::vector<BaseField> BasketItemModel::fields() {
-    return {};
+    return {Field::basketId, Field::itemId, Field::quantity, Field::price};
 }
 
-std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+std::vector<
+    std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
 BasketItemModel::getObjectValues() const {
-    std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        baseValues = {};
-    return baseValues;
-}
+    return {{Field::basketId, basketId}, {Field::itemId, itemId}, {Field::quantity, quantity}, {Field::price, price}};
+};

@@ -15,9 +15,8 @@ std::vector<BaseField> CountryModel::fields() {
 
 std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 CountryModel::getObjectValues() const {
-    std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        baseValues = {};
-    baseValues.emplace_back(Field::title, title);
-    baseValues.emplace_back(Field::code, code);
-    return baseValues;
+    return {
+        {Field::title, title},
+        {Field::code, code},
+    };
 }

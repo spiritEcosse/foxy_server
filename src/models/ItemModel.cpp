@@ -38,17 +38,15 @@ std::vector<BaseField> ItemModel::fields() {
 std::vector<
     std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
 ItemModel::getObjectValues() const {
-    std::vector<std::pair<BaseField,
-                          std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
-        baseValues = {};
-    baseValues.emplace_back(Field::title, title);
-    baseValues.emplace_back(Field::description, description);
-    baseValues.emplace_back(Field::metaDescription, metaDescription);
-    baseValues.emplace_back(Field::slug, slug);
-    baseValues.emplace_back(Field::shippingProfileId, shippingProfileId);
-    baseValues.emplace_back(Field::enabled, enabled);
-    baseValues.emplace_back(Field::price, price);
-    return baseValues;
+    return {
+        {Field::title, title},
+        {Field::description, description},
+        {Field::metaDescription, metaDescription},
+        {Field::slug, slug},
+        {Field::shippingProfileId, shippingProfileId},
+        {Field::enabled, enabled},
+        {Field::price, price},
+    };
 }
 
 QuerySet ItemModel::qsCount() {

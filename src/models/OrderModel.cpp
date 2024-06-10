@@ -42,21 +42,19 @@ std::vector<BaseField> OrderModel::fields() {
 std::vector<
     std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
 OrderModel::getObjectValues() const {
-    std::vector<std::pair<BaseField,
-                          std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
-        baseValues = {};
-    baseValues.emplace_back(Field::status, status);
-    baseValues.emplace_back(Field::basketId, basketId);
-    baseValues.emplace_back(Field::total, total);
-    baseValues.emplace_back(Field::totalExTaxes, totalExTaxes);
-    baseValues.emplace_back(Field::deliveryFees, deliveryFees);
-    baseValues.emplace_back(Field::taxRate, taxRate);
-    baseValues.emplace_back(Field::taxes, taxes);
-    baseValues.emplace_back(Field::userId, userId);
-    baseValues.emplace_back(Field::reference, reference);
-    baseValues.emplace_back(Field::returned, returned);
-    baseValues.emplace_back(Field::addressId, addressId);
-    return baseValues;
+    return {
+        {Field::status, status},
+        {Field::basketId, basketId},
+        {Field::total, total},
+        {Field::totalExTaxes, totalExTaxes},
+        {Field::deliveryFees, deliveryFees},
+        {Field::taxRate, taxRate},
+        {Field::taxes, taxes},
+        {Field::userId, userId},
+        {Field::reference, reference},
+        {Field::returned, returned},
+        {Field::addressId, addressId},
+    };
 }
 
 std::string

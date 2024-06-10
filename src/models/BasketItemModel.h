@@ -53,8 +53,9 @@ namespace api::v1 {
         }
 
         [[nodiscard]] static std::vector<BaseField> fields();
-        [[nodiscard]] std::vector<
-            std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+        std::vector<
+            std::pair<BaseField,
+                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
         getObjectValues() const;
     };
 }

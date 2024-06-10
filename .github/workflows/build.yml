@@ -50,7 +50,7 @@ jobs:
 
             -   name: Execute shell script based on branch
                 run: |
-                    CONTENT="cmake_build"
+                    CONTENT="cmake_build;rsync_share_to_src"
                     if [ "$BRANCH_NAME" = "main" ]; then
                         CONTENT+=";rsync_from_host_to_sever;server_run_commands=(create_config_file;supervisorctl)"
                     fi

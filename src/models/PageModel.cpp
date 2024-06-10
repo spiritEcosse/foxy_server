@@ -19,13 +19,12 @@ std::vector<BaseField> PageModel::fields() {
 
 std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 PageModel::getObjectValues() const {
-    std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        baseValues = {};
-    baseValues.emplace_back(Field::title, title);
-    baseValues.emplace_back(Field::description, description);
-    baseValues.emplace_back(Field::metaDescription, metaDescription);
-    baseValues.emplace_back(Field::canonicalUrl, canonicalUrl);
-    baseValues.emplace_back(Field::slug, slug);
-    baseValues.emplace_back(Field::enabled, enabled);
-    return baseValues;
+    return {
+        {Field::title, title},
+        {Field::description, description},
+        {Field::metaDescription, metaDescription},
+        {Field::canonicalUrl, canonicalUrl},
+        {Field::slug, slug},
+        {Field::enabled, enabled},
+    };
 }

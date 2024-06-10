@@ -27,13 +27,11 @@ std::vector<BaseField> ShippingProfileModel::fields() {
 std::vector<
     std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
 ShippingProfileModel::getObjectValues() const {
-    std::vector<std::pair<BaseField,
-                          std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
-        baseValues = {};
-    baseValues.emplace_back(Field::title, title);
-    baseValues.emplace_back(Field::processingTime, processingTime);
-    baseValues.emplace_back(Field::countryId, countryId);
-    baseValues.emplace_back(Field::postalCode, postalCode);
-    baseValues.emplace_back(Field::shippingUpgradeCost, shippingUpgradeCost);
-    return baseValues;
+    return {
+        {Field::title, title},
+        {Field::processingTime, processingTime},
+        {Field::countryId, countryId},
+        {Field::postalCode, postalCode},
+        {Field::shippingUpgradeCost, shippingUpgradeCost},
+    };
 }

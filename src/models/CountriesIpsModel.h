@@ -31,13 +31,31 @@ namespace api::v1 {
             }
         };
 
+        std::string startRange;
+        std::string endRange;
+        std::string countryCode;
+        std::string countryName;
+        int countryId{};
         CountriesIpsModel() = default;
         CountriesIpsModel(const CountriesIpsModel &) = delete;  // Copy constructor
         CountriesIpsModel &operator=(const CountriesIpsModel &) = delete;  // Copy assignment operator
         CountriesIpsModel(CountriesIpsModel &&) noexcept = default;  // Move constructor
         CountriesIpsModel &operator=(CountriesIpsModel &&) noexcept = default;  // Move assignment operator
 
-        using BaseModel::BaseModel;
+        CountriesIpsModel(const Json::Value &json) : BaseModel(json) {
+            startRange = json[Field::startRange.getFieldName()].asString();
+            endRange = json[Field::endRange.getFieldName()].asString();
+            countryCode = json[Field::countryCode.getFieldName()].asString();
+            countryName = json[Field::countryName.getFieldName()].asString();
+            countryId = json[Field::countryId.getFieldName()].asInt();
+
+            validateField(Field::startRange.getFieldName(), startRange, missingFields);
+            validateField(Field::endRange.getFieldName(), endRange, missingFields);
+            validateField(Field::countryCode.getFieldName(), countryCode, missingFields);
+            validateField(Field::countryName.getFieldName(), countryName, missingFields);
+            validateField(Field::countryId.getFieldName(), countryId, missingFields);
+        }
+
         [[nodiscard]] static std::vector<BaseField> fields();
         [[nodiscard]] std::vector<
             std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>

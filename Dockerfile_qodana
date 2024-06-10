@@ -1,32 +1,11 @@
-# Use Ubuntu 22.04 as the base image
-FROM ubuntu:22.04 as build
+FROM jetbrains/qodana-clang:2024.1-eap
 
 # Update the package lists and install necessary packages
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl sudo ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-# Run the install script
-RUN curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='add_user=ubuntu'
-
-# Change the active user to ubuntu
-USER ubuntu
-
-# Set the working directory
-WORKDIR /home/ubuntu
-
-# Run the install scripts
 RUN curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func=foxy_sever_libs
-RUN curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='cmake_build'
-
-# Start a new build stage
-FROM jetbrains/qodana-clang:2024.1-eap
-
-# Remove the /data/project/build directory
-RUN rm -fr /data/project/build
-
-# Create the /data/project/build directory
-RUN mkdir -p /data/project/build
-
-# Copy the files
-COPY --from=build /home/ubuntu/ubuntu_aarch64/* /data/project/build
+COPY . /data/project/
+RUN export BUILD_FOLDER=/data/project/build; export SRC=/data/project/; \
+    curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='cmake_build'

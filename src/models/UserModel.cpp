@@ -21,15 +21,14 @@ std::vector<BaseField> UserModel::fields() {
 
 std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 UserModel::getObjectValues() const {
-    std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        baseValues = {};
-    baseValues.emplace_back(Field::email, email);
-    baseValues.emplace_back(Field::password, password);
-    baseValues.emplace_back(Field::firstName, firstName);
-    baseValues.emplace_back(Field::lastName, lastName);
-    baseValues.emplace_back(Field::birthday, birthday);
-    baseValues.emplace_back(Field::hasNewsletter, hasNewsletter);
-    return baseValues;
+    return {
+        {Field::email, email},
+        {Field::password, password},
+        {Field::firstName, firstName},
+        {Field::lastName, lastName},
+        {Field::birthday, birthday},
+        {Field::hasNewsletter, hasNewsletter},
+    };
 }
 
 void UserModel::hashPassword() {
