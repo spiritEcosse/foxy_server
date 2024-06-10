@@ -71,8 +71,9 @@ OrderModel::sqlSelectList(int page, int limit, const std::map<std::string, std::
         .group_by(BaseModel::Field::id, BaseModel::Field::updatedAt);
 
     Field field;
+    BaseModel<OrderModel> model;
     for(const auto &[key, value]: params) {
-        if(fieldExists(key)) {
+        if(model.fieldExists(key)) {
             qs.filter(field.allFields[key].getFullFieldName(), value);
             qsCount.filter(field.allFields[key].getFullFieldName(), value);
         }

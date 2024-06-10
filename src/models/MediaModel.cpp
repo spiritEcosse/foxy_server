@@ -26,8 +26,10 @@ std::vector<BaseField> MediaModel::fields() {
 std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 MediaModel::getObjectValues() const {
     return {
-        {Field::src, src}, {Field::itemId, itemId}, {Field::sort, sort},
-    }
+        {Field::src, src},
+        {Field::itemId, itemId},
+        {Field::sort, sort},
+    };
 }
 
 std::string MediaModel::fieldsJsonObject() {
