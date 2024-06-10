@@ -1,13 +1,11 @@
 name: Qodana
 on:
-    workflow_dispatch:
     push:
         branches:
             - "*"
 
 jobs:
     qodana:
-        needs: build
         runs-on: ubuntu-latest
         permissions:
             contents: write
