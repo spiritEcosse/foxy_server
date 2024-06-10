@@ -45,6 +45,5 @@ jobs:
                     path: ~/work/foxy_server/foxy_server/build
 
             -   name: 'Qodana Scan'
-                uses: JetBrains/qodana-action@v2024.1
-                env:
-                    QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
+                run: |
+                    docker run --rm -e QODANA_TOKEN=${{ secrets.QODANA_TOKEN }} -v ~/work/foxy_server/foxy_server:/data/project jetbrains/qodana-clang:2024.1-eap
