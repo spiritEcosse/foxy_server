@@ -86,7 +86,7 @@ namespace api::v1 {
             }
         }
 
-        [[nodiscard]] inline bool fieldExists(const std::string &fieldName) const;
+        [[nodiscard]] bool fieldExists(const std::string &fieldName) const;
         [[nodiscard]] std::vector<BaseField> allSetFields() const;
     };
 }
