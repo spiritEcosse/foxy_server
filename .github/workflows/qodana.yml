@@ -6,27 +6,6 @@ on:
             - "*"
 
 jobs:
-    build:
-        uses: ./.github/workflows/build.yml
-        with:
-            BUILD_FOLDER: /data/project/build
-            SRC: /data/project
-        secrets:
-            CR_PAT: ${{ secrets.CR_PAT }}
-            APP_CLOUD_NAME: ${{ secrets.APP_CLOUD_NAME }}
-            CMAKE_BUILD_TYPE: ${{ secrets.CMAKE_BUILD_TYPE }}
-            FOXY_ADMIN: ${{ secrets.FOXY_ADMIN }}
-            FOXY_CLIENT: ${{ secrets.FOXY_CLIENT }}
-            SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-            SERVER_HOST: ${{ secrets.SERVER_HOST }}
-            SERVER_USER: ${{ secrets.SERVER_USER }}
-            SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
-            SERVER_PSQL_DBNAME: ${{ secrets.SERVER_PSQL_DBNAME }}
-            SERVER_PSQL_USER: ${{ secrets.SERVER_PSQL_USER }}
-            SERVER_PSQL_PASSWORD: ${{ secrets.SERVER_PSQL_PASSWORD }}
-            CERT_PATH: ${{ secrets.CERT_PATH }}
-            KEY_PATH: ${{ secrets.KEY_PATH }}
-
     qodana:
         needs: build
         runs-on: ubuntu-latest
@@ -38,18 +17,6 @@ jobs:
             -   name: Checkout repository
                 uses: actions/checkout@v4
 
-            -   name: Download build directory
-                uses: actions/download-artifact@v4
-                with:
-                    name: build
-                    path: ~/work/foxy_server/foxy_server/build
-
-            -   name: "ls work/foxy_server/foxy_server/"
-                run: ls ~/work/foxy_server/foxy_server/
-
-            -   name: "ls work/foxy_server/foxy_server/build"
-                run: ls ~/work/foxy_server/foxy_server/build
-
             -   name: 'Qodana Scan'
                 uses: JetBrains/qodana-action@v2024.1
                 env:
@@ -58,4 +25,3 @@ jobs:
                     pr-mode: false
                     args: --apply-fixes
                     push-fixes: pull-request
-                    options: -v ~/work/foxy_server/foxy_server:/data/project
