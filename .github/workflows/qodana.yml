@@ -1,7 +1,5 @@
 name: Qodana
 on:
-    workflow_dispatch:
-    pull_request:
     push:
         branches:
             - "*"
@@ -23,6 +21,4 @@ jobs:
                     docker build -t qodana_image -f Dockerfile_qodana .
 
             -   name: 'Qodana Scan'
-                uses: docker://qodana_image
-                env:
-                    QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
+                run: docker run --rm -e QODANA_TOKEN=${{ secrets.QODANA_TOKEN }} qodana_image
