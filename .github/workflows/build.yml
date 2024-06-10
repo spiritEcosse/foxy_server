@@ -8,6 +8,13 @@ on:
         branches:
             - '*'
     workflow_call:
+        inputs:
+            BUILD_FOLDER:
+                required: true
+                type: string
+            SRC:
+                required: true
+                type: string
         secrets:
             CR_PAT:
                 required: true
@@ -37,9 +44,6 @@ on:
                 required: true
             KEY_PATH:
                 required: true
-        env:
-            BUILD_FOLDER: /data/project/build
-            SRC: /data/project
 
 jobs:
     build:

@@ -8,6 +8,9 @@ on:
 jobs:
     build:
         uses: ./.github/workflows/build.yml
+        with:
+            BUILD_FOLDER: /data/project/build
+            SRC: /data/project
         secrets:
             CR_PAT: ${{ secrets.CR_PAT }}
             APP_CLOUD_NAME: ${{ secrets.APP_CLOUD_NAME }}
