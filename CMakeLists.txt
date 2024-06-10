@@ -15,6 +15,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 endif ()
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 get_cmake_property(_variableNames VARIABLES)
 list(SORT _variableNames)
