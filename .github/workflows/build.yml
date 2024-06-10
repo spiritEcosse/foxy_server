@@ -1,4 +1,6 @@
 env:
+    BUILD_FOLDER: "/home/ubuntu/ubuntu_x86_64"
+    SRC: "/home/ubuntu/ubuntu_x86_64_src"
     FORCE_REBUILD_IMAGE: ${{ secrets.FORCE_REBUILD_IMAGE }}
 
 on:
@@ -35,6 +37,9 @@ on:
                 required: true
             KEY_PATH:
                 required: true
+        env:
+            BUILD_FOLDER: /data/project/build
+            SRC: /data/project
 
 jobs:
     build:
@@ -50,7 +55,7 @@ jobs:
 
             -   name: Execute shell script based on branch
                 run: |
-                    CONTENT="rsync_share_to_src;cmake_build"
+                    CONTENT="cmake_build"
                     if [ "$BRANCH_NAME" = "main" ]; then
                         CONTENT+=";rsync_from_host_to_sever;server_run_commands=(create_config_file;supervisorctl)"
                     fi
@@ -94,8 +99,10 @@ jobs:
                     -e SERVER_PSQL_PASSWORD="${{ secrets.SERVER_PSQL_PASSWORD }}"
                     -e CERT_PATH="${{ secrets.CERT_PATH }}"
                     -e KEY_PATH="${{ secrets.KEY_PATH }}"
-                    -v $PWD:/share
-                    -v ~/build:/home/ubuntu/ubuntu_x86_64 ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} /bin/bash -c "
+                    -e BUILD_FOLDER="${{ env.BUILD_FOLDER }}"
+                    -e SRC="${{ env.SRC }}"
+                    -v $PWD:"${{ env.SRC }}"
+                    -v ~/build:"${{ env.BUILD_FOLDER }}" ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} /bin/bash -c "
                       curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='$CONTENT'
                     "
 
