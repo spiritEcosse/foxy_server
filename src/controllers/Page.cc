@@ -18,7 +18,8 @@ void Page::getOne(const drogon::HttpRequestPtr &req,
         return;
     }
 
-    std::string filterKey = isInt ? PageModel::Field::id.getFullFieldName() : PageModel::Field::slug.getFullFieldName();
+    std::string filterKey =
+        isInt ? BaseModel<PageModel>::Field::id.getFullFieldName() : PageModel::Field::slug.getFullFieldName();
     std::string query = PageModel().sqlSelectOne(filterKey, stringId, {});
 
     executeSqlQuery(callbackPtr, query);

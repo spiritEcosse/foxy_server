@@ -42,7 +42,7 @@ namespace api::v1 {
         CountriesIpsModel(CountriesIpsModel &&) noexcept = default;  // Move constructor
         CountriesIpsModel &operator=(CountriesIpsModel &&) noexcept = default;  // Move assignment operator
 
-        CountriesIpsModel(const Json::Value &json) : BaseModel(json) {
+        explicit CountriesIpsModel(const Json::Value &json) : BaseModel(json) {
             startRange = json[Field::startRange.getFieldName()].asString();
             endRange = json[Field::endRange.getFieldName()].asString();
             countryCode = json[Field::countryCode.getFieldName()].asString();
