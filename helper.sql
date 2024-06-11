@@ -141,10 +141,10 @@ ALTER table "user"
 ALTER table "user"
     add column birthday DATE;
 
-UPDATE "user"
-SET first_name = 'John',
-    last_name  = 'Doe',
-    birthday   = '1990-01-01';
+-- UPDATE "user"
+-- SET first_name = 'John',
+--     last_name  = 'Doe',
+--     birthday   = '1990-01-01';
 
 ALTER table "user"
     alter column first_name set not null;

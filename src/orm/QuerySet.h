@@ -109,7 +109,6 @@ namespace api::v1 {
             tableName(std::move(tableName)), _alias(std::move(alias)), _one(true), _doAndCheck(doAndCheck),
             _returnInMain(returnInMain) {}
 
-    protected:
         std::string tableName;
         FilterInfo filterInfo;
         JoinInfo joinInfo;
