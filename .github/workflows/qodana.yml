@@ -15,11 +15,15 @@ jobs:
             -   name: Checkout repository
                 uses: actions/checkout@v4
 
+            -   name: Build Docker image
+                run: docker build -t qodana -f Dockerfile_qodana .
+
             -   name: 'Qodana Scan'
                 uses: JetBrains/qodana-action@v2024.1
                 env:
                     QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
                 with:
+                    image: qodana
                     pr-mode: false
                     args: --apply-fixes
                     push-fixes: pull-request

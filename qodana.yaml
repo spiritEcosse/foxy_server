@@ -1,8 +1,1 @@
 linter: jetbrains/qodana-clang:latest
-exclude:
-    -   name: All
-        paths:
-            - build
-            - cmake-build-debug
-            - 3rdparty
-bootstrap: sudo apt-get update; sudo apt-get install -y --no-install-recommends curl sudo ca-certificates; which curl; curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func=foxy_sever_libs; rm -rf /data/project/build; export BUILD_FOLDER=/data/project/build; export SRC=/data/project/; curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='cmake_build'; true
