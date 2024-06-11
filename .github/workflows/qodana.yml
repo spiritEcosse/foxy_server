@@ -43,11 +43,23 @@ jobs:
                     name: build
                     path: ~/work/foxy_server/foxy_server/build
 
+            -   name: ls -la ~/work/foxy_server/foxy_server/
+                run: ls -la ~/work/foxy_server/foxy_server/
+
+            -   name: ls -la ~/work/foxy_server/foxy_server/build
+                run: ls -la ~/work/foxy_server/foxy_server/build
+
+            -   name: ls -la ${{ github.workspace }}
+                run: ls -la ${{ github.workspace }}
+
+            -   name: pwd
+                run: pwd
+
             -   name: 'Qodana Scan'
                 run: |
                     docker run --rm \
                         -e QODANA_TOKEN=$QODANA_TOKEN \
-                        -v ${{ github.workspace }}:/data/project/ \
+                        -v ~/work/foxy_server/foxy_server/:/data/project/ \
                         jetbrains/qodana-clang:latest --apply-fixes
                 env:
                     QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
