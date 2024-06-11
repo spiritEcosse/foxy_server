@@ -24,20 +24,12 @@ jobs:
             -   name: Build docker qodana clang image
                 run: |
                     docker build -t qodana_clang -f Dockerfile_qodana .
-                    
+
             -   name: 'Qodana Scan'
                 run: |
                     docker run --rm \
                         -e QODANA_TOKEN=$QODANA_TOKEN \
-                        -v ${{ github.workspace }}:/data/project/ \
                         qodana_clang --apply-fixes
                 env:
                     QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
 
-            -   name: Commit and push changes
-                run: |
-                    git config --global user.name 'GitHub Actions Qodana'
-                    git config --global user.email 'github-actions-qodana@github.com'
-                    git add -A
-                    git commit -m "Apply Qodana fixes" || echo "No changes to commit"
-                    git push
