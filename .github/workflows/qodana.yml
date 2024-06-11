@@ -1,33 +1,11 @@
 name: Qodana
 on:
-    workflow_dispatch:
     push:
         branches:
             - "*"
 
 jobs:
-    build:
-        uses: ./.github/workflows/build.yml
-        with:
-            BUILD_FOLDER: /data/project/build
-            SRC: /data/project
-        secrets:
-            CR_PAT: ${{ secrets.CR_PAT }}
-            APP_CLOUD_NAME: ${{ secrets.APP_CLOUD_NAME }}
-            CMAKE_BUILD_TYPE: ${{ secrets.CMAKE_BUILD_TYPE }}
-            FOXY_ADMIN: ${{ secrets.FOXY_ADMIN }}
-            FOXY_CLIENT: ${{ secrets.FOXY_CLIENT }}
-            SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-            SERVER_HOST: ${{ secrets.SERVER_HOST }}
-            SERVER_USER: ${{ secrets.SERVER_USER }}
-            SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
-            SERVER_PSQL_DBNAME: ${{ secrets.SERVER_PSQL_DBNAME }}
-            SERVER_PSQL_USER: ${{ secrets.SERVER_PSQL_USER }}
-            SERVER_PSQL_PASSWORD: ${{ secrets.SERVER_PSQL_PASSWORD }}
-            CERT_PATH: ${{ secrets.CERT_PATH }}
-            KEY_PATH: ${{ secrets.KEY_PATH }}
     qodana:
-        needs: build
         runs-on: ubuntu-latest
         permissions:
             contents: write
@@ -36,18 +14,6 @@ jobs:
         steps:
             -   name: Checkout repository
                 uses: actions/checkout@v4
-
-            -   name: Download build directory
-                uses: actions/download-artifact@v4
-                with:
-                    name: build
-                    path: ~/work/foxy_server/foxy_server/build
-
-            -   name: ls -la ~/work/foxy_server/foxy_server/
-                run: ls -la ~/work/foxy_server/foxy_server/
-
-            -   name: ls -la ~/work/foxy_server/foxy_server/build
-                run: ls -la ~/work/foxy_server/foxy_server/build
 
             -   name: ls -la ${{ github.workspace }}
                 run: ls -la ${{ github.workspace }}
@@ -59,7 +25,7 @@ jobs:
                 run: |
                     docker run --rm \
                         -e QODANA_TOKEN=$QODANA_TOKEN \
-                        -v ~/work/foxy_server/foxy_server/:/data/project/ \
+                        -v ${{ github.workspace }}:/data/project/ \
                         jetbrains/qodana-clang:latest --apply-fixes
                 env:
                     QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
