@@ -7,12 +7,12 @@
 
 using namespace api::v1;
 
-template<>
-std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseModel<BasketItemModel>::joinMap = {
-    {ItemModel::tableName,
-     {BasketItemModel::Field::itemId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName()}},
-    {OrderModel::tableName,
-     {BasketItemModel::Field::basketId.getFullFieldName(), OrderModel::Field::basketId.getFullFieldName()}}};
+std::map<std::string, std::pair<std::string, std::string>, std::less<>> BasketItemModel::joinMap() const {
+    return {{ItemModel::tableName,
+             {BasketItemModel::Field::itemId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName()}},
+            {OrderModel::tableName,
+             {BasketItemModel::Field::basketId.getFullFieldName(), OrderModel::Field::basketId.getFullFieldName()}}};
+}
 
 std::vector<BaseField> BasketItemModel::fields() {
     return {Field::basketId, Field::itemId, Field::quantity, Field::price};

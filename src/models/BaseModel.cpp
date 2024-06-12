@@ -265,6 +265,11 @@ std::string BaseModel<T>::sqlSelectOne(const std::string &field,
     return qs.buildSelect();
 }
 
+template<class T>
+std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseModel<T>::joinMap() const {
+    return {};
+}
+
 template class api::v1::BaseModel<PageModel>;
 template class api::v1::BaseModel<ItemModel>;
 template class api::v1::BaseModel<UserModel>;

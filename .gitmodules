@@ -1,7 +1,7 @@
 [submodule "3rdparty/cpm_cmake"]
 	path = 3rdparty/cpm_cmake
 	url = https://github.com/cpm-cmake/CPM.cmake
-	tag = v0.38.6
+	tag = v0.40.0
 
 [submodule "3rdparty/decimal_for_cpp"]
 	path = 3rdparty/decimal_for_cpp

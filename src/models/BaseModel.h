@@ -19,7 +19,6 @@ namespace api::v1 {
     class BaseModel {
     public:
         static inline const std::string tableName;
-        static std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap;
 
         struct Field {
             static inline BaseField id = BaseField("id", T::tableName);
@@ -88,6 +87,7 @@ namespace api::v1 {
 
         [[nodiscard]] bool fieldExists(const std::string &fieldName) const;
         [[nodiscard]] std::vector<BaseField> allSetFields() const;
+        [[nodiscard]] virtual std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const;
     };
 }
 

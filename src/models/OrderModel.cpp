@@ -12,18 +12,18 @@
 
 using namespace api::v1;
 
-template<>
-std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseModel<OrderModel>::joinMap = {
-    {BasketModel::tableName,
-     {OrderModel::Field::basketId.getFullFieldName(), BaseModel<BasketModel>::Field::id.getFullFieldName()}},
-    {ItemModel::tableName,
-     {OrderModel::Field::basketId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName()}},
-    {BasketItemModel::tableName,
-     {OrderModel::Field::basketId.getFullFieldName(), BasketItemModel::Field::basketId.getFullFieldName()}},
-    {AddressModel::tableName,
-     {OrderModel::Field::addressId.getFullFieldName(), BaseModel<AddressModel>::Field::id.getFullFieldName()}},
-    {UserModel::tableName,
-     {OrderModel::Field::userId.getFullFieldName(), BaseModel<UserModel>::Field::id.getFullFieldName()}}};
+std::map<std::string, std::pair<std::string, std::string>, std::less<>> OrderModel::joinMap() const {
+    return {{BasketModel::tableName,
+             {OrderModel::Field::basketId.getFullFieldName(), BaseModel<BasketModel>::Field::id.getFullFieldName()}},
+            {ItemModel::tableName,
+             {OrderModel::Field::basketId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName()}},
+            {BasketItemModel::tableName,
+             {OrderModel::Field::basketId.getFullFieldName(), BasketItemModel::Field::basketId.getFullFieldName()}},
+            {AddressModel::tableName,
+             {OrderModel::Field::addressId.getFullFieldName(), BaseModel<AddressModel>::Field::id.getFullFieldName()}},
+            {UserModel::tableName,
+             {OrderModel::Field::userId.getFullFieldName(), BaseModel<UserModel>::Field::id.getFullFieldName()}}};
+}
 
 std::vector<BaseField> OrderModel::fields() {
     return {Field::status,

@@ -12,16 +12,16 @@
 
 using namespace api::v1;
 
-template<>
-std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseModel<ItemModel>::joinMap = {
-    {MediaModel::tableName,
-     {BaseModel<ItemModel>::Field::id.getFullFieldName(), MediaModel::Field::itemId.getFullFieldName()}},
-    {ShippingRateModel::tableName,
-     {ItemModel::Field::shippingProfileId.getFullFieldName(),
-      ShippingRateModel::Field::shippingProfileId.getFullFieldName()}},
-    {ShippingProfileModel::tableName,
-     {ItemModel::Field::shippingProfileId.getFullFieldName(),
-      BaseModel<ShippingProfileModel>::Field::id.getFullFieldName()}}};
+std::map<std::string, std::pair<std::string, std::string>, std::less<>> ItemModel::joinMap() const {
+    return {{MediaModel::tableName,
+             {BaseModel<ItemModel>::Field::id.getFullFieldName(), MediaModel::Field::itemId.getFullFieldName()}},
+            {ShippingRateModel::tableName,
+             {ItemModel::Field::shippingProfileId.getFullFieldName(),
+              ShippingRateModel::Field::shippingProfileId.getFullFieldName()}},
+            {ShippingProfileModel::tableName,
+             {ItemModel::Field::shippingProfileId.getFullFieldName(),
+              BaseModel<ShippingProfileModel>::Field::id.getFullFieldName()}}};
+}
 
 std::vector<BaseField> ItemModel::fields() {
     return {

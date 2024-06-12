@@ -9,11 +9,12 @@
 
 using namespace api::v1;
 
-template<>
-std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseModel<MediaModel>::joinMap = {
-    {ItemModel::tableName,
-     {MediaModel::Field::itemId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName()}},
-};
+std::map<std::string, std::pair<std::string, std::string>, std::less<>> MediaModel::joinMap() const {
+    return {
+        {ItemModel::tableName,
+         {MediaModel::Field::itemId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName()}},
+    };
+}
 
 std::vector<BaseField> MediaModel::fields() {
     return {

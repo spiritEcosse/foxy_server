@@ -101,6 +101,7 @@ namespace api::v1 {
         [[nodiscard]] std::string sqlSelectOne(const std::string &field,
                                                const std::string &value,
                                                const std::map<std::string, std::string, std::less<>> &params) override;
+        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
     };
 }
 

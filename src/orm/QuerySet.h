@@ -404,8 +404,9 @@ namespace api::v1 {
             // Get the last element from joinTable
             std::string lastJoinTable = joinInfo.joinTable.empty() ? tableName : joinInfo.joinTable.back();
 
+            auto mapFields = model.joinMap();
             // Use lastJoinTable to find in model's joinMap
-            if(auto it = model.joinMap.find(lastJoinTable); it != model.joinMap.end()) {
+            if(auto it = mapFields.find(lastJoinTable); it != mapFields.end()) {
                 const auto &[joinField, joinModelField] = it->second;
                 joinInfo.joinTable.emplace_back(model.tableName);
                 joinInfo.joinCondition.emplace_back(std::move(fmt::format(R"({} = {})", joinField, joinModelField)));
@@ -422,8 +423,9 @@ namespace api::v1 {
             // Get the last element from joinTable
             std::string lastJoinTable = joinInfo.joinTable.empty() ? tableName : joinInfo.joinTable.back();
 
+            auto mapFields = model.joinMap();
             // Use lastJoinTable to find in model's joinMap
-            if(auto it = model.joinMap.find(lastJoinTable); it != model.joinMap.end()) {
+            if(auto it = mapFields.find(lastJoinTable); it != mapFields.end()) {
                 const auto &[joinField, joinModelField] = it->second;
                 joinInfo.leftJoinTable.emplace_back(std::move(model.tableName));
                 joinInfo.leftJoinCondition.emplace_back(
