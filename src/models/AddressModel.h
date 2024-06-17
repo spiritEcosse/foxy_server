@@ -44,7 +44,6 @@ namespace api::v1 {
             avatar = json[Field::avatar.getFieldName()].asString();
             userId = json[Field::userId.getFieldName()].asInt();
 
-            Json::Value missingFields;
             validateField(Field::address.getFieldName(), address, missingFields);
             validateField(Field::stateAbbr.getFieldName(), stateAbbr, missingFields);
             validateField(Field::city.getFieldName(), city, missingFields);

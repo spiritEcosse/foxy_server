@@ -36,15 +36,12 @@ namespace api::v1 {
 
         explicit MediaModel(const Json::Value &json) : BaseModel(json) {
             src = json[Field::src.getFieldName()].asString();
-            id = json[BaseModel::Field::id.getFieldName()].asInt();
             itemId = json[Field::itemId.getFieldName()].asInt();
             sort = json[Field::sort.getFieldName()].asInt();
 
-            Json::Value missingFields;
             validateField(Field::src.getFieldName(), src, missingFields);
             validateField(Field::itemId.getFieldName(), itemId, missingFields);
             validateField(Field::sort.getFieldName(), sort, missingFields);
-            validateField(BaseModel::Field::id.getFieldName(), id, missingFields);
         }
 
         [[nodiscard]] std::string fieldsJsonObject() override;

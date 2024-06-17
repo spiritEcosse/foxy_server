@@ -1,7 +1,7 @@
 #include "Auth.h"
 #include <drogon/drogon.h>
-#include "src/models/UserModel.h"
-#include <src/utils/jwt/JWT.h>
+#include "UserModel.h"
+#include <JWT.h>
 #include <json/json.h>
 #include <string>
 

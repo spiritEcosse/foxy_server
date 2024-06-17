@@ -52,7 +52,6 @@ namespace api::v1 {
             lastName = json[Field::lastName.getFieldName()].asString();
             birthday = json[Field::birthday.getFieldName()].asString();
 
-            Json::Value missingFields;
             validateField(Field::email.getFieldName(), email, missingFields);
             validateField(Field::password.getFieldName(), password, missingFields);
             validateField(Field::firstName.getFieldName(), firstName, missingFields);

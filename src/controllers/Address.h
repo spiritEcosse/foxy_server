@@ -2,7 +2,7 @@
 
 #include "drogon/HttpController.h"
 #include "BaseCRUD.h"
-#include "src/models/AddressModel.h"
+#include "AddressModel.h"
 
 namespace api::v1 {
     class Address : public drogon::HttpController<Address>, public BaseCRUD<AddressModel, Address> {

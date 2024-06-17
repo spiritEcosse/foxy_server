@@ -6,7 +6,7 @@
 #define MEDIA_H
 
 #include "drogon/HttpController.h"
-#include "src/models/MediaModel.h"
+#include "MediaModel.h"
 
 namespace api::v1 {
     class Media : public drogon::HttpController<Media>, public BaseCRUD<MediaModel, Media> {

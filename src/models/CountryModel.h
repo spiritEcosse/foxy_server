@@ -37,7 +37,6 @@ namespace api::v1 {
             title = json[Field::title.getFieldName()].asString();
             code = json[Field::code.getFieldName()].asString();
 
-            Json::Value missingFields;
             validateField(Field::title.getFieldName(), title, missingFields);
             validateField(Field::code.getFieldName(), code, missingFields);
         }

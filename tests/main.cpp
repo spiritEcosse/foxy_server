@@ -1,88 +1,617 @@
-// Tell DrogonTest to generate `test::run()`. Only defined this in the main file
-#define DROGON_TEST_MAIN
-#include <drogon/drogon_test.h>
-#include "drogon/drogon.h"
-#include "json/json.h"
-#include "../src/utils/time.h"
+#include <drogon/drogon.h>
+#include <future>
+#include <thread>
+#include "drogon/drogon_test.h"
+#include <fstream>
+#include <sstream>
+#include <JWT.h>
+#include "fmt/format.h"
+#include "bcrypt.h"
+#include <iomanip>
+#include <utility>
 
 using namespace drogon;
+using namespace api::utils::jwt;
 
+const std::string host = "http://127.0.0.1:8850";
+const std::string userEmail = "user1@example.com";
 
-DROGON_TEST(ListItems)
-{
-    auto client = HttpClient::newHttpClient("http://localhost:8848");
-    auto req = HttpRequest::newHttpRequest();
-    req->setPath("/api/v1/item/");
-    client->sendRequest(req, [TEST_CTX](ReqResult res, const HttpResponsePtr& resp) {
-        // There's nothing we can do if the request didn't reach the server
-        // or the server generated garbage.
-        REQUIRE(res == ReqResult::Ok);
-        REQUIRE(resp != nullptr);
+std::string convertDateTimeFormat(const std::string &input) {
+    std::tm tm = {};
+    std::stringstream ss(input);
+    ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
 
-        CHECK(resp->getStatusCode() == k200OK);
-        CHECK(resp->contentType() == CT_APPLICATION_JSON);
-        auto respJson = *resp->jsonObject();
-        CHECK(respJson["count"].asInt() == 12);
-        CHECK(respJson["page"].asInt() == 1);
+    std::stringstream output;
+    output << std::put_time(&tm, "%Y-%m-%dT%H:%M:%S");
 
-        // Check the first item as an example
-        auto firstItem = respJson["data"][0];
-        CHECK(firstItem["created_at"].asString() == "2024-01-21T22:02:21.197599");
-        CHECK(firstItem["description"].asString() == "description description");
-        CHECK(firstItem["item_id"].asInt() == 1);
-        CHECK(firstItem["meta_description"].asString() == "meta_description");
-        CHECK(firstItem["slug"].asString() == "breakfast");
-        CHECK(firstItem["src"].asString() == "items/friend/tp-friend.jpg");
-        CHECK(firstItem["title"].asString() == "Breakfast");
-        CHECK(firstItem["updated_at"].asString() == "2024-01-21T22:02:21.197599");
-    });
+    // Handle fractional seconds separately
+    if(input.size() > 19) {  // If fractional seconds are present
+        size_t pos = input.find('.');
+        if(pos != std::string::npos) {
+            output << input.substr(pos);
+        }
+    }
+
+    return output.str();
 }
 
-DROGON_TEST(CreateItem) {
-    auto client = HttpClient::newHttpClient("http://localhost:8848");
-    auto req = HttpRequest::newHttpRequest();
-    req->setPath("/api/v1/item/admin");
-    req->setMethod(drogon::Post);
-    req->setContentTypeCode(CT_APPLICATION_JSON);
-    std::string slug = "test" + std::to_string(getCurrentTimeSinceEpochInMilliseconds());
-    req->setBody("{\"title\":\"Test\",\"description\":\"Test\",\"meta_description\":\"Test\",\"slug\":\"" + slug + "\"}");
-    std::string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIiLCJlbWFpbCI6IjByYW5nZUZveEBkb21haW4ucHQiLCJleHAiOjE3MDczNTE0NDcsImlhdCI6MTcwNDc1OTQ0NywiaXNzIjoiIiwibmJmIjoxNzA0NzU5NDQ3fQ.FOwWkRQd4Q0-Kv7OOXTlJvmdIGDvvnf6854zrPEU7Z8";
-    req->addHeader("Authorization", "Bearer " + token);
-    client->sendRequest(req, [TEST_CTX, slug](ReqResult res, const HttpResponsePtr& resp) {
-        // There's nothing we can do if the request didn't reach the server
-        // or the server generated garbage.
-        REQUIRE(res == ReqResult::Ok);
-        REQUIRE(resp != nullptr);
-        std::cout << slug<< std::endl;
+void executeCommandsFromSqlFile(const std::shared_ptr<orm::DbClient> &dbClient, const std::string &sqlFilePath) {
+    try {
+        // Open the SQL file
+        std::ifstream sqlFile(sqlFilePath);
 
-        CHECK(resp->getStatusCode() == drogon::k201Created);
-        CHECK(resp->contentType() == CT_APPLICATION_JSON);
-        auto respJson = *resp->jsonObject();
-        CHECK(respJson["title"].asString() == "Test");
-        CHECK(respJson["description"].asString() == "Test");
-        CHECK(respJson["meta_description"].asString() == "Test");
-        CHECK(respJson["slug"].asString() == slug);
-    });
+        // Check if the file was opened successfully
+        if(!sqlFile) {
+            throw std::invalid_argument("Couldn't open SQL file");
+        }
+
+        // Read the entire file into a string
+        std::stringstream sqlCommands;
+        sqlCommands << sqlFile.rdbuf();
+
+        // Close the file
+        sqlFile.close();
+        dbClient->execSqlSync(sqlCommands.str());
+    } catch(const std::system_error &e) {
+        LOG_ERROR << e.what();
+    } catch(const std::invalid_argument &e) {
+        LOG_ERROR << e.what();
+    }
 }
 
-int main(int argc, char** argv)
-{
-    std::promise<void> p1;
-    std::future<void> f1 = p1.get_future();
+void setUpBeforeEachTest(const std::shared_ptr<orm::DbClient> &dbClient) {
+    executeCommandsFromSqlFile(dbClient, "./helper.sql");
+    executeCommandsFromSqlFile(dbClient, "./fixtures.sql");
+}
+
+DROGON_TEST(Create) {
+    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
+        auto dbClient = drogon::app().getDbClient("tests");
+        setUpBeforeEachTest(dbClient);
+        using fieldsValMap = std::map<std::string, std::variant<int, bool, std::string, double>>;
+
+        auto checkFields = [TEST_CTX,
+                            dbClient](const HttpResponsePtr &resp, fieldsValMap &expectedValues, std::string entity) {
+            REQUIRE(resp->getStatusCode() == k201Created);
+            REQUIRE(resp->contentType() == CT_APPLICATION_JSON);
+            auto respJson = *resp->getJsonObject();
+
+            auto result = dbClient->execSqlSync(
+                fmt::format(R"(SELECT created_at, updated_at FROM "{}" ORDER BY id desc LIMIT 1)", entity));
+            expectedValues["created_at"] = convertDateTimeFormat(result[0]["created_at"].as<std::string>());
+            expectedValues["updated_at"] = convertDateTimeFormat(result[0]["updated_at"].as<std::string>());
+
+            for(const auto &[key, value]: expectedValues) {
+                std::visit(
+                    [&](const auto &arg) {
+                        using Type = std::decay_t<decltype(arg)>;
+                        if constexpr(std::is_same_v<Type, int>) {
+                            CHECK(respJson[key].asInt() == std::get<int>(value));
+                        } else if constexpr(std::is_same_v<Type, bool>) {
+                            CHECK(respJson[key].asBool() == std::get<bool>(value));
+                        } else if constexpr(std::is_same_v<Type, std::string>) {
+                            if(key == "src") {
+                                CHECK(respJson[key].asString() ==
+                                      fmt::format("https://.twic.pics/{}", std::get<std::string>(value)));
+                            } else if(key != "password") {
+                                CHECK(respJson[key].asString() == std::get<std::string>(value));
+                            }
+                        } else if constexpr(std::is_same_v<Type, double>) {
+                            CHECK(respJson[key].asDouble() == std::get<double>(value));
+                        }
+                    },
+                    value);
+            }
+        };
+
+        auto sendHttpRequest = [TEST_CTX, checkFields, dbClient](std::string path,
+                                                                 fieldsValMap &expectedValues,
+                                                                 const std::string &entity) {
+            auto client = HttpClient::newHttpClient(host);
+            auto req = HttpRequest::newHttpRequest();
+            req->setPath(std::move(path));
+            req->setMethod(drogon::Post);
+            JWT jwtGenerated = JWT::generateToken({
+                {"email", picojson::value(userEmail)},
+            });
+            // Set the Authorization header
+            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+            Json::Value jsonValue;
+            for(const auto &[key, value]: expectedValues) {
+                std::visit(
+                    [&](const auto &arg) {
+                        jsonValue[key] = arg;
+                    },
+                    value);
+            }
+
+            Json::StreamWriterBuilder writer;
+            std::string jsonString = Json::writeString(writer, jsonValue);
+            req->setBody(std::move(jsonString));
+            client->sendRequest(
+                req,
+                [TEST_CTX, checkFields, expectedValues, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
+                    REQUIRE(res == ReqResult::Ok);
+                    REQUIRE(resp != nullptr);
+                    checkFields(resp, expectedValues, entity);
+                });
+        };
+
+        Json::StreamWriterBuilder writer;
+        std::string path = "/api/v1/item/admin";
+        std::string entity = "item";
+        fieldsValMap expectedValues = {
+            {std::string("description"), "mock description"},
+            {std::string("meta_description"), "mock meta description"},
+            {std::string("price"), 100.0},
+            {std::string("shipping_profile_id"), 1},
+            {std::string("slug"), "mock-slug"},
+            {std::string("title"), "mock title"},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/page/admin";
+        entity = "page";
+        expectedValues = {
+            {std::string("description"), "mock description"},
+            {std::string("meta_description"), "mock meta description"},
+            {std::string("canonical_url"), "mock canonical url"},
+            {std::string("slug"), "mock-slug"},
+            {std::string("title"), "mock title"},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/user/admin";
+        entity = "user";
+        expectedValues = {
+            {std::string("email"), "mock email"},
+            {std::string("password"), "mock password"},
+            {std::string("first_name"), "mock first name"},
+            {std::string("last_name"), "mock last name"},
+            {std::string("birthday"), "2024-01-14"},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/shippingprofile/admin";
+        entity = "shipping_profile";
+        expectedValues = {
+            {std::string("title"), "mock title"},
+            {std::string("processing_time"), 1},
+            {std::string("country_id"), 1},
+            {std::string("postal_code"), "mock postal code"},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/shippingrate/admin";
+        entity = "shipping_rate";
+        expectedValues = {
+            {std::string("shipping_profile_id"), 1},
+            {std::string("delivery_days_min"), 1},
+            {std::string("delivery_days_max"), 1},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/review/admin";
+        entity = "review";
+        expectedValues = {
+            {std::string("status"), "failed"},
+            {std::string("user_id"), 1},
+            {std::string("comment"), "mock comment"},
+            {std::string("item_id"), 1},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        // create basket 3
+        dbClient->execSqlSync("INSERT INTO basket (user_id) VALUES (2)");
+        entity = "order";
+        path = "/api/v1/order/admin";
+        expectedValues = {
+            {std::string("status"), "completed"},
+            {std::string("basket_id"), 3},
+            {std::string("total"), 1.0},
+            {std::string("total_ex_taxes"), 1.0},
+            {std::string("delivery_fees"), 1.0},
+            {std::string("tax_rate"), 1.0},
+            {std::string("taxes"), 1.0},
+            {std::string("user_id"), 1},
+            {std::string("reference"), "mock reference"},
+            {std::string("address_id"), 1},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/media/admin";
+        entity = "media";
+        expectedValues = {
+            {std::string("src"), "mock_src"},
+            {std::string("item_id"), 1},
+            {std::string("sort"), 1},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/country/admin";
+        entity = "country";
+        expectedValues = {
+            {std::string("title"), "mock title"},
+            {std::string("code"), "mock code"},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/basket/admin";
+        entity = "basket";
+        expectedValues = {
+            {std::string("user_id"), 1},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/basketitem/admin";
+        entity = "basket_item";
+        expectedValues = {
+            {std::string("basket_id"), 1},
+            {std::string("item_id"), 1},
+            {std::string("quantity"), 1},
+            {std::string("price"), 1.0},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/address/admin";
+        entity = "address";
+        expectedValues = {
+            {std::string("address"), "mock address"},
+            {std::string("state_abbr"), "mock state abbr"},
+            {std::string("city"), "mock city"},
+            {std::string("zipcode"), "mock zipcode"},
+            {std::string("avatar"), "mock avatar"},
+            {std::string("user_id"), 1},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+    });
+};
+
+DROGON_TEST(CheckMissingFields) {
+    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
+        auto dbClient = drogon::app().getDbClient("tests");
+        setUpBeforeEachTest(dbClient);
+    });
+
+    auto checkFields = [TEST_CTX](const HttpResponsePtr &resp, const std::vector<std::string> &missingFields) {
+        REQUIRE(resp->getStatusCode() == k400BadRequest);
+        REQUIRE(resp->contentType() == CT_APPLICATION_JSON);
+        auto respJson = *resp->jsonObject();
+
+        for(const auto &key: missingFields) {
+            CHECK(respJson[key] == key + " is required");
+        }
+    };
+
+    auto sendHttpRequest = [TEST_CTX, checkFields](std::string path, const std::vector<std::string> &missingFields) {
+        auto client = HttpClient::newHttpClient(host);
+        auto req = HttpRequest::newHttpRequest();
+        req->setPath(std::move(path));
+        req->setMethod(drogon::Post);
+        JWT jwtGenerated = JWT::generateToken({
+            {"email", picojson::value(userEmail)},
+        });
+
+        // Set the Authorization header
+        req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+        req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+        req->setBody("{}");
+        client->sendRequest(req,
+                            [TEST_CTX, checkFields, missingFields](ReqResult res, const HttpResponsePtr &resp) mutable {
+                                REQUIRE(res == ReqResult::Ok);
+                                REQUIRE(resp != nullptr);
+                                checkFields(resp, missingFields);
+                            });
+    };
+
+    std::vector<std::string> missingFields =
+        {"description", "meta_description", "price", "shipping_profile_id", "slug", "title"};
+    std::string path = "/api/v1/item/admin";
+    sendHttpRequest(path, missingFields);
+
+    missingFields = {"title", "description", "meta_description", "canonical_url", "slug"};
+    path = "/api/v1/page/admin";
+    sendHttpRequest(path, missingFields);
+
+    missingFields = {"email", "password", "first_name", "last_name", "birthday"};
+    path = "/api/v1/user/admin";
+    sendHttpRequest(path, missingFields);
+
+    missingFields = {"title", "processing_time", "country_id", "postal_code"};
+    path = "/api/v1/shippingprofile/admin";
+    sendHttpRequest(path, missingFields);
+
+    missingFields = {"shipping_profile_id", "delivery_days_min", "delivery_days_max"};
+    path = "/api/v1/shippingrate/admin";
+    sendHttpRequest(path, missingFields);
+
+    missingFields = {"status", "user_id", "comment", "item_id"};
+    path = "/api/v1/review/admin";
+    sendHttpRequest(path, missingFields);
+
+    missingFields = {"status",
+                     "basket_id",
+                     "total",
+                     "total_ex_taxes",
+                     "delivery_fees",
+                     "tax_rate",
+                     "taxes",
+                     "user_id",
+                     "reference",
+                     "address_id"};
+    path = "/api/v1/order/admin";
+    sendHttpRequest(path, missingFields);
+
+    missingFields = {"src", "item_id", "sort"};
+    path = "/api/v1/media/admin";
+    sendHttpRequest(path, missingFields);
+
+    missingFields = {"title", "code"};
+    path = "/api/v1/country/admin";
+    sendHttpRequest(path, missingFields);
+
+    missingFields = {"user_id"};
+    path = "/api/v1/basket/admin";
+    sendHttpRequest(path, missingFields);
+
+    missingFields = {"basket_id", "item_id", "quantity", "price"};
+    path = "/api/v1/basketitem/admin";
+    sendHttpRequest(path, missingFields);
+
+    missingFields = {"address", "state_abbr", "city", "zipcode", "avatar", "user_id"};
+    path = "/api/v1/address/admin";
+    sendHttpRequest(path, missingFields);
+}
+
+DROGON_TEST(Update) {
+    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
+        auto dbClient = drogon::app().getDbClient("tests");
+        setUpBeforeEachTest(dbClient);
+        using fieldsValMap = std::map<std::string, std::variant<int, bool, std::string, double>>;
+
+        auto checkFields = [TEST_CTX,
+                            dbClient](const HttpResponsePtr &resp, fieldsValMap &expectedValues, std::string entity) {
+            REQUIRE(resp->getStatusCode() == k200OK);
+            REQUIRE(resp->contentType() == CT_APPLICATION_JSON);
+            auto respJson = *resp->getJsonObject();
+
+            auto result =
+                dbClient->execSqlSync(fmt::format(R"(SELECT created_at, updated_at FROM "{}" WHERE id = 1)", entity));
+            expectedValues["created_at"] = convertDateTimeFormat(result[0]["created_at"].as<std::string>());
+            expectedValues["updated_at"] = convertDateTimeFormat(result[0]["updated_at"].as<std::string>());
+
+            for(const auto &[key, value]: expectedValues) {
+                std::visit(
+                    [&](const auto &arg) {
+                        using Type = std::decay_t<decltype(arg)>;
+                        if constexpr(std::is_same_v<Type, int>) {
+                            CHECK(respJson[key].asInt() == std::get<int>(value));
+                        } else if constexpr(std::is_same_v<Type, bool>) {
+                            CHECK(respJson[key].asBool() == std::get<bool>(value));
+                        } else if constexpr(std::is_same_v<Type, std::string>) {
+                            if(key == "src") {
+                                CHECK(respJson[key].asString() ==
+                                      fmt::format("https://.twic.pics/{}", std::get<std::string>(value)));
+                            } else if(key != "password") {
+                                CHECK(respJson[key].asString() == std::get<std::string>(value));
+                            }
+                        } else if constexpr(std::is_same_v<Type, double>) {
+                            CHECK(respJson[key].asDouble() == std::get<double>(value));
+                        }
+                    },
+                    value);
+            }
+        };
+
+        auto sendHttpRequest = [TEST_CTX, checkFields, dbClient](std::string path,
+                                                                 fieldsValMap &expectedValues,
+                                                                 const std::string &entity) {
+            auto client = HttpClient::newHttpClient(host);
+            auto req = HttpRequest::newHttpRequest();
+            req->setPath(std::move(path));
+            req->setMethod(drogon::Put);
+            JWT jwtGenerated = JWT::generateToken({
+                {"email", picojson::value(userEmail)},
+            });
+            // Set the Authorization header
+            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+            Json::Value jsonValue;
+            for(const auto &[key, value]: expectedValues) {
+                std::visit(
+                    [&](const auto &arg) {
+                        jsonValue[key] = arg;
+                    },
+                    value);
+            }
+
+            Json::StreamWriterBuilder writer;
+            std::string jsonString = Json::writeString(writer, jsonValue);
+            req->setBody(std::move(jsonString));
+            client->sendRequest(
+                req,
+                [TEST_CTX, checkFields, expectedValues, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
+                    REQUIRE(res == ReqResult::Ok);
+                    REQUIRE(resp != nullptr);
+                    checkFields(resp, expectedValues, entity);
+                });
+        };
+
+        Json::StreamWriterBuilder writer;
+        std::string path = "/api/v1/item/admin/1";
+        std::string entity = "item";
+        fieldsValMap expectedValues = {
+            {std::string("description"), "mock description"},
+            {std::string("meta_description"), "mock meta description"},
+            {std::string("price"), 100.0},
+            {std::string("shipping_profile_id"), 1},
+            {std::string("slug"), "mock-slug"},
+            {std::string("title"), "mock title"},
+            {std::string("enabled"), true},
+            {std::string("id"), 1},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/page/admin/1";
+        entity = "page";
+        expectedValues = {
+            {std::string("description"), "mock description"},
+            {std::string("meta_description"), "mock meta description"},
+            {std::string("canonical_url"), "mock canonical url"},
+            {std::string("slug"), "mock-slug"},
+            {std::string("title"), "mock title"},
+            {std::string("id"), 1},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/user/admin/1";
+        entity = "user";
+        expectedValues = {
+            {std::string("email"), "mock email"},
+            {std::string("password"), "mock password"},
+            {std::string("first_name"), "mock first name"},
+            {std::string("last_name"), "mock last name"},
+            {std::string("birthday"), "2024-01-14"},
+            {std::string("id"), 1},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/shippingprofile/admin/1";
+        entity = "shipping_profile";
+        expectedValues = {
+            {std::string("title"), "mock title"},
+            {std::string("processing_time"), 1},
+            {std::string("country_id"), 1},
+            {std::string("postal_code"), "mock postal code"},
+            {std::string("id"), 1},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/shippingrate/admin/1";
+        entity = "shipping_rate";
+        expectedValues = {
+            {std::string("shipping_profile_id"), 1},
+            {std::string("delivery_days_min"), 1},
+            {std::string("delivery_days_max"), 1},
+            {std::string("id"), 1},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/review/admin/1";
+        entity = "review";
+        expectedValues = {
+            {std::string("status"), "failed"},
+            {std::string("user_id"), 1},
+            {std::string("comment"), "mock comment"},
+            {std::string("item_id"), 1},
+            {std::string("id"), 1},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        // create basket 3
+        dbClient->execSqlSync("INSERT INTO basket (user_id) VALUES (2)");
+        path = "/api/v1/order/admin/1";
+        entity = "order";
+        expectedValues = {
+            {std::string("status"), "completed"},
+            {std::string("basket_id"), 3},
+            {std::string("total"), 1.0},
+            {std::string("total_ex_taxes"), 1.0},
+            {std::string("delivery_fees"), 1.0},
+            {std::string("tax_rate"), 1.0},
+            {std::string("taxes"), 1.0},
+            {std::string("user_id"), 1},
+            {std::string("reference"), "mock reference"},
+            {std::string("address_id"), 1},
+            {std::string("id"), 1},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/media/admin/1";
+        entity = "media";
+        expectedValues = {
+            {std::string("src"), "mock_src"},
+            {std::string("item_id"), 1},
+            {std::string("sort"), 1},
+            {std::string("id"), 1},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/country/admin/1";
+        entity = "country";
+        expectedValues = {
+            {std::string("title"), "mock title"},
+            {std::string("code"), "mock code"},
+            {std::string("id"), 1},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/basket/admin/1";
+        entity = "basket";
+        expectedValues = {
+            {std::string("user_id"), 1},
+            {std::string("id"), 1},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/basketitem/admin/1";
+        entity = "basket_item";
+        expectedValues = {
+            {std::string("basket_id"), 1},
+            {std::string("item_id"), 1},
+            {std::string("quantity"), 1},
+            {std::string("price"), 1.0},
+            {std::string("id"), 1},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+
+        path = "/api/v1/address/admin/1";
+        entity = "address";
+        expectedValues = {
+            {std::string("address"), "mock address"},
+            {std::string("state_abbr"), "mock state abbr"},
+            {std::string("city"), "mock city"},
+            {std::string("zipcode"), "mock zipcode"},
+            {std::string("avatar"), "mock avatar"},
+            {std::string("user_id"), 1},
+            {std::string("id"), 1},
+        };
+        sendHttpRequest(path, expectedValues, entity);
+    });
+};
+
+int main(int argc, char **argv) {
+    // Initialize the Drogon application
+    app().loadConfigFile("./config.json");
+
+    std::promise<void> appStartedPromise;
+    std::future<void> appStartedFuture = appStartedPromise.get_future();
 
     // Start the main loop on another thread
-    std::thread thr([&]() {
+    std::thread appThread([&appStartedPromise]() {
         // Queues the promise to be fulfilled after starting the loop
-        app().getLoop()->queueInLoop([&p1]() { p1.set_value(); });
+        app().getLoop()->queueInLoop([&appStartedPromise]() {
+            appStartedPromise.set_value();
+        });
+
+        // Run the event loop
         app().run();
     });
 
-    // The future is only satisfied after the event loop started
-    f1.get();
+    // Wait until the event loop has started
+    appStartedFuture.get();
+
+    // Run the tests
     int status = test::run(argc, argv);
 
-    // Ask the event loop to shutdown and wait
-    app().getLoop()->queueInLoop([]() { app().quit(); });
-    thr.join();
+    // Ask the event loop to shut down and wait
+    app().getLoop()->queueInLoop([]() {
+        app().quit();
+    });
+
+    // Wait for the application thread to finish
+    appThread.join();
+
     return status;
 }

@@ -45,7 +45,6 @@ namespace api::v1 {
             deliveryDaysMin = json[Field::deliveryDaysMin.getFieldName()].asInt();
             deliveryDaysMax = json[Field::deliveryDaysMax.getFieldName()].asInt();
 
-            Json::Value missingFields;
             validateField(Field::shippingProfileId.getFieldName(), shippingProfileId, missingFields);
             validateField(Field::deliveryDaysMin.getFieldName(), deliveryDaysMin, missingFields);
             validateField(Field::deliveryDaysMax.getFieldName(), deliveryDaysMax, missingFields);

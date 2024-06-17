@@ -88,7 +88,6 @@ namespace api::v1 {
             validateField(Field::userId.getFieldName(), userId, missingFields);
             validateField(Field::reference.getFieldName(), reference, missingFields);
             validateField(Field::addressId.getFieldName(), addressId, missingFields);
-            validateField(Field::returned.getFieldName(), returned, missingFields);
         }
 
         [[nodiscard]] static std::vector<BaseField> fields();

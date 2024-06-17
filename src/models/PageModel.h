@@ -53,7 +53,6 @@ namespace api::v1 {
             slug = json[Field::slug.getFieldName()].asString();
             enabled = json[Field::enabled.getFieldName()].asBool();
 
-            Json::Value missingFields;
             validateField(Field::title.getFieldName(), title, missingFields);
             validateField(Field::description.getFieldName(), description, missingFields);
             validateField(Field::metaDescription.getFieldName(), metaDescription, missingFields);

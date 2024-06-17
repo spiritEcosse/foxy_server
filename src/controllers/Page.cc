@@ -1,7 +1,7 @@
 #include "Page.h"
-#include "src/utils/request/Request.h"
-#include "src/models/MediaModel.h"
-#include "src/utils/env.h"
+#include "Request.h"
+#include "MediaModel.h"
+#include "env.h"
 #include <fmt/core.h>
 
 using namespace api::v1;

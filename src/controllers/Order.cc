@@ -1,10 +1,10 @@
 #include "Order.h"
-#include "src/utils/request/Request.h"
-#include "src/orm/QuerySet.h"
-#include "src/models/BasketItemModel.h"
-#include "src/models/ItemModel.h"
-#include "src/models/AddressModel.h"
-#include "src/models/UserModel.h"
+#include "Request.h"
+#include "QuerySet.h"
+#include "BasketItemModel.h"
+#include "ItemModel.h"
+#include "AddressModel.h"
+#include "UserModel.h"
 #include <fmt/core.h>
 
 using namespace api::v1;

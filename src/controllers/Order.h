@@ -2,7 +2,7 @@
 
 #include "drogon/HttpController.h"
 #include "BaseCRUD.h"
-#include "src/models/OrderModel.h"
+#include "OrderModel.h"
 
 namespace api::v1 {
     class Order : public drogon::HttpController<Order>, public BaseCRUD<OrderModel, Order> {

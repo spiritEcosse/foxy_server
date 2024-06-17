@@ -50,7 +50,6 @@ namespace api::v1 {
             postalCode = json[Field::postalCode.getFieldName()].asString();
             shippingUpgradeCost = json[Field::shippingUpgradeCost.getFieldName()].asDouble();
 
-            Json::Value missingFields;
             validateField(Field::title.getFieldName(), title, missingFields);
             validateField(Field::processingTime.getFieldName(), processingTime, missingFields);
             validateField(Field::postalCode.getFieldName(), postalCode, missingFields);

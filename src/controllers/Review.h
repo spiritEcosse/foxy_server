@@ -2,7 +2,7 @@
 
 #include "drogon/HttpController.h"
 #include "BaseCRUD.h"
-#include "src/models/ReviewModel.h"
+#include "ReviewModel.h"
 
 namespace api::v1 {
     class Review : public drogon::HttpController<Review>, public BaseCRUD<ReviewModel, Review> {

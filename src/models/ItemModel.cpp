@@ -5,9 +5,9 @@
 #include "MediaModel.h"
 #include "ShippingRateModel.h"
 #include "ShippingProfileModel.h"
-#include "src/orm/QuerySet.h"
-#include "src/utils/db/String.h"
-#include "src/utils/env.h"
+#include "QuerySet.h"
+#include "StringUtils.h"
+#include "env.h"
 #include <fmt/core.h>
 
 using namespace api::v1;

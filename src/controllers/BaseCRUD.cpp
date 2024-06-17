@@ -1,19 +1,20 @@
 #include "BaseCRUD.h"
-#include "src/utils/request/Request.h"
-#include "src/controllers/Item.h"
-#include "src/controllers/Page.h"
-#include "src/controllers/User.h"
-#include "src/controllers/Media.h"
-#include "src/controllers/Order.h"
-#include "src/controllers/Review.h"
-#include "src/controllers/Address.h"
-#include "src/controllers/BasketItem.h"
-#include "src/controllers/ShippingProfile.h"
-#include "src/controllers/ShippingRate.h"
-#include "src/controllers/Country.h"
-#include "src/auth/Auth.h"
+#include "Request.h"
+#include "Item.h"
+#include "Page.h"
+#include "User.h"
+#include "Media.h"
+#include "Order.h"
+#include "Basket.h"
+#include "Review.h"
+#include "Address.h"
+#include "BasketItem.h"
+#include "ShippingProfile.h"
+#include "ShippingRate.h"
+#include "Country.h"
+#include "Auth.h"
 #include <sentry.h>
-#include "src/utils/exceptions/RequiredFieldsException.h"
+#include "RequiredFieldsException.h"
 
 using namespace api::v1;
 using namespace drogon::orm;
@@ -379,3 +380,4 @@ template class api::v1::BaseCRUD<OrderModel, Order>;
 template class api::v1::BaseCRUD<BasketItemModel, BasketItem>;
 template class api::v1::BaseCRUD<AddressModel, Address>;
 template class api::v1::BaseCRUD<ReviewModel, Review>;
+template class api::v1::BaseCRUD<BasketModel, Basket>;

@@ -1,0 +1,35 @@
+{
+  "db_clients": [
+    {
+      "name": "default",
+      "rdbms": "postgresql",
+      "host": "127.0.0.1",
+      "port": 5432,
+      "dbname": "foxy_tests",
+      "user": "foxy",
+      "passwd": "foxy",
+      "is_fast": true,
+      "connection_number": 1,
+      "filename": ""
+    },
+    {
+      "name": "tests",
+      "rdbms": "postgresql",
+      "host": "127.0.0.1",
+      "port": 5432,
+      "dbname": "foxy_tests",
+      "user": "foxy",
+      "passwd": "foxy",
+      "is_fast": false,
+      "connection_number": 1,
+      "filename": ""
+    }
+  ],
+  "listeners": [
+    {
+      "address": "127.0.0.1",
+      "port": 8850,
+      "https": false
+    }
+  ]
+}

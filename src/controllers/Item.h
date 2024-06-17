@@ -1,10 +1,10 @@
 #pragma once
 
 #include <drogon/drogon.h>
-#include <src/utils/jwt/JWT.h>
+#include <JWT.h>
 #include "drogon/HttpController.h"
 #include "BaseCRUD.h"
-#include "src/models/ItemModel.h"
+#include "ItemModel.h"
 
 namespace api::v1 {
 

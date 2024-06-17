@@ -1,8 +1,8 @@
 #include "Item.h"
-#include "src/utils/request/Request.h"
-#include "src/orm/QuerySet.h"
-#include "src/models/MediaModel.h"
-#include "src/utils/env.h"
+#include "Request.h"
+#include "QuerySet.h"
+#include "MediaModel.h"
+#include "env.h"
 #include <fmt/core.h>
 
 using namespace api::v1;

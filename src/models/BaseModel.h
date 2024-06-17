@@ -11,7 +11,8 @@
 #include <variant>
 #include <chrono>
 #include <unordered_map>
-#include "src/orm/QuerySet.h"
+#include "QuerySet.h"
+#include "decimal.h"
 
 namespace api::v1 {
 
@@ -73,13 +74,22 @@ namespace api::v1 {
 
         template<class V>
         void validateField(const std::string &fieldName, const V &value, Json::Value &fields) const {
-            // Check if V is int or std::string_view and apply appropriate validation
-            if constexpr(std::is_same_v<T, int>) {
+            using VDecayed = std::decay_t<V>;
+            // Check if V is int, std::string_view, std::string or dec::decimal<2> and apply appropriate validation
+            if constexpr(std::is_same_v<VDecayed, int>) {
                 if(!value) {
                     fields[fieldName] = fieldName + " is required";
                 }
-            } else if constexpr(std::is_same_v<T, std::string_view>) {
+            } else if constexpr(std::is_same_v<VDecayed, std::string_view> || std::is_same_v<VDecayed, std::string>) {
                 if(value.empty()) {
+                    fields[fieldName] = fieldName + " is required";
+                }
+            } else if constexpr(std::is_same_v<VDecayed, dec::decimal<2>>) {
+                if(value == dec::decimal<2>(0)) {
+                    fields[fieldName] = fieldName + " is required";
+                }
+            } else if constexpr(std::is_same_v<VDecayed, double>) {
+                if(value == 0) {
                     fields[fieldName] = fieldName + " is required";
                 }
             }

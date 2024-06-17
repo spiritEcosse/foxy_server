@@ -46,6 +46,16 @@ add_executable(foxy_server ${RESOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 # end src
 
+include_directories(${CMAKE_SOURCE_DIR}/src/orm)
+include_directories(${CMAKE_SOURCE_DIR}/src/utils/db)
+include_directories(${CMAKE_SOURCE_DIR}/src/utils)
+include_directories(${CMAKE_SOURCE_DIR}/src/models)
+include_directories(${CMAKE_SOURCE_DIR}/src/utils/jwt)
+include_directories(${CMAKE_SOURCE_DIR}/src/utils/exceptions)
+include_directories(${CMAKE_SOURCE_DIR}/src/utils/request)
+include_directories(${CMAKE_SOURCE_DIR}/src/controllers)
+include_directories(${CMAKE_SOURCE_DIR}/src/auth)
+
 set(CMAKE_SYSTEM_PROCESSOR arm) # why this?
 
 # start drogon
@@ -54,6 +64,7 @@ CPMAddPackage(
         VERSION v1.9.4
         GITHUB_REPOSITORY drogonframework/drogon
         GIT_TAG v1.9.4
+        OPTIONS "BUILD_TESTING OFF"
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
 # end drogon

@@ -2,7 +2,7 @@
 
 #include "drogon/HttpController.h"
 #include "BaseCRUD.h"
-#include "src/models/PageModel.h"
+#include "PageModel.h"
 
 namespace api::v1 {
     class Page : public drogon::HttpController<Page>, public BaseCRUD<PageModel, Page> {
