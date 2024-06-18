@@ -9,6 +9,7 @@
 #include "bcrypt.h"
 #include <iomanip>
 #include <utility>
+#include <variant>
 
 using namespace drogon;
 using namespace api::utils::jwt;

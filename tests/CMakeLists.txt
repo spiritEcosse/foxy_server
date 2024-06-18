@@ -1,6 +1,10 @@
 project(foxy_tests LANGUAGES CXX)
 file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS ../src/**/*.cc ../src/**/*.cpp ../src/**/*.h)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+
 add_executable(${PROJECT_NAME} ${RESOURCES} main.cpp)
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon jwt-cpp bcrypt fmt::fmt sentry)
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
