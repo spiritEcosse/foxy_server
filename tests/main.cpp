@@ -16,6 +16,7 @@ using namespace api::utils::jwt;
 
 const std::string host = "http://127.0.0.1:8850";
 const std::string userEmail = "user1@example.com";
+using fieldsValMap = std::map<std::string, std::variant<int, bool, std::string, double>>;
 
 std::string convertDateTimeFormat(const std::string &input) {
     std::tm tm = {};
@@ -69,7 +70,6 @@ DROGON_TEST(Create) {
     drogon::app().getLoop()->runInLoop([TEST_CTX]() {
         const auto dbClient = drogon::app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
-        using fieldsValMap = std::map<std::string, std::variant<int, bool, std::string, double>>;
 
         auto checkFields = [TEST_CTX,
                             &dbClient](const HttpResponsePtr &resp, fieldsValMap &expectedValues, std::string entity) {
@@ -369,7 +369,6 @@ DROGON_TEST(Update) {
     drogon::app().getLoop()->runInLoop([TEST_CTX]() {
         const auto dbClient = drogon::app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
-        using fieldsValMap = std::map<std::string, std::variant<int, bool, std::string, double>>;
 
         auto checkFields = [TEST_CTX,
                             &dbClient](const HttpResponsePtr &resp, fieldsValMap &expectedValues, std::string entity) {
