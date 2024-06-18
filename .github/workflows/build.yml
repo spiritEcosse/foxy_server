@@ -80,7 +80,7 @@ jobs:
             -   name: Build Docker image
                 id: build_image
                 run: |
-                    docker build -t ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} . && echo "::set-output name=exists::true" || echo "::set-output name=exists::false"
+                    docker build -t ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} . && echo "::set-output name=exists::true" || (echo "::set-output name=exists::false" && exit 1)
                 if: steps.check_image.outputs.exists == 'false' || env.FORCE_REBUILD_IMAGE == 'true'
 
             -   name: Push Docker image
