@@ -70,6 +70,7 @@ jobs:
 
             -   name: Check Docker image
                 id: check_image
+                if: env.FORCE_REBUILD_IMAGE == 'false'
                 run: |
                     docker pull ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} && echo "::set-output name=exists::true" || echo "::set-output name=exists::false"
                 continue-on-error: true
