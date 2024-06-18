@@ -44,6 +44,8 @@ on:
                 required: true
             KEY_PATH:
                 required: true
+            LLVM_TAG:
+                required: true
 
 jobs:
     build:
@@ -103,6 +105,7 @@ jobs:
                     -e SERVER_PSQL_USER="${{ secrets.SERVER_PSQL_USER }}"
                     -e SERVER_PSQL_PASSWORD="${{ secrets.SERVER_PSQL_PASSWORD }}"
                     -e CERT_PATH="${{ secrets.CERT_PATH }}"
+                    -e LLVM_TAG="${{ secrets.LLVM_TAG }}"
                     -e KEY_PATH="${{ secrets.KEY_PATH }}"
                     -e BUILD_FOLDER="${{ env.BUILD_FOLDER }}"
                     -e SRC="${{ env.SRC }}"
