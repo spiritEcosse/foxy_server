@@ -66,12 +66,12 @@ void setUpBeforeEachTest(const std::shared_ptr<orm::DbClient> &dbClient) {
 
 DROGON_TEST(Create) {
     drogon::app().getLoop()->runInLoop([TEST_CTX]() {
-        auto dbClient = drogon::app().getDbClient("tests");
+        const auto dbClient = drogon::app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
         using fieldsValMap = std::map<std::string, std::variant<int, bool, std::string, double>>;
 
         auto checkFields = [TEST_CTX,
-                            dbClient](const HttpResponsePtr &resp, fieldsValMap &expectedValues, std::string entity) {
+                            &dbClient](const HttpResponsePtr &resp, fieldsValMap &expectedValues, std::string entity) {
             REQUIRE(resp->getStatusCode() == k201Created);
             REQUIRE(resp->contentType() == CT_APPLICATION_JSON);
             auto respJson = *resp->getJsonObject();
@@ -104,9 +104,9 @@ DROGON_TEST(Create) {
             }
         };
 
-        auto sendHttpRequest = [TEST_CTX, checkFields, dbClient](std::string path,
-                                                                 fieldsValMap &expectedValues,
-                                                                 const std::string &entity) {
+        auto sendHttpRequest = [TEST_CTX, checkFields](std::string path,
+                                                       fieldsValMap &expectedValues,
+                                                       const std::string &entity) {
             auto client = HttpClient::newHttpClient(host);
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
@@ -270,7 +270,7 @@ DROGON_TEST(Create) {
 
 DROGON_TEST(CheckMissingFields) {
     drogon::app().getLoop()->runInLoop([TEST_CTX]() {
-        auto dbClient = drogon::app().getDbClient("tests");
+        const auto dbClient = drogon::app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
     });
 
@@ -366,12 +366,12 @@ DROGON_TEST(CheckMissingFields) {
 
 DROGON_TEST(Update) {
     drogon::app().getLoop()->runInLoop([TEST_CTX]() {
-        auto dbClient = drogon::app().getDbClient("tests");
+        const auto dbClient = drogon::app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
         using fieldsValMap = std::map<std::string, std::variant<int, bool, std::string, double>>;
 
         auto checkFields = [TEST_CTX,
-                            dbClient](const HttpResponsePtr &resp, fieldsValMap &expectedValues, std::string entity) {
+                            &dbClient](const HttpResponsePtr &resp, fieldsValMap &expectedValues, std::string entity) {
             REQUIRE(resp->getStatusCode() == k200OK);
             REQUIRE(resp->contentType() == CT_APPLICATION_JSON);
             auto respJson = *resp->getJsonObject();
@@ -404,9 +404,9 @@ DROGON_TEST(Update) {
             }
         };
 
-        auto sendHttpRequest = [TEST_CTX, checkFields, dbClient](std::string path,
-                                                                 fieldsValMap &expectedValues,
-                                                                 const std::string &entity) {
+        auto sendHttpRequest = [TEST_CTX, checkFields](std::string path,
+                                                       fieldsValMap &expectedValues,
+                                                       const std::string &entity) {
             auto client = HttpClient::newHttpClient(host);
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
