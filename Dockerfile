@@ -9,4 +9,4 @@ ARG LLVM_TAG
 RUN curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='add_user=ubuntu'
 USER ubuntu
 WORKDIR /home/ubuntu
-RUN curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func=foxy_sever_libs
+RUN export LLVM_TAG=$LLVM_TAG && curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func=foxy_sever_libs
