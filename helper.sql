@@ -149,8 +149,8 @@ $$
             comment    TEXT         NOT NULL,
             created_at TIMESTAMP    NOT NULL DEFAULT NOW(),
             updated_at TIMESTAMP    NOT NULL DEFAULT NOW(),
-            FOREIGN KEY (user_id) REFERENCES "user" (id),
-            FOREIGN KEY (item_id) REFERENCES item (id)
+            FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE,
+            FOREIGN KEY (item_id) REFERENCES item (id) ON DELETE CASCADE
         );
 
         create table IF NOT EXISTS media
@@ -186,7 +186,7 @@ $$
             user_id    INT       NOT NULL,
             created_at timestamp NOT NULL DEFAULT NOW(),
             updated_at timestamp NOT NULL DEFAULT NOW(),
-            FOREIGN KEY (user_id) REFERENCES "user" (id)
+            FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE
         );
 
         CREATE TABLE IF NOT EXISTS "basket_item"
@@ -198,8 +198,8 @@ $$
             price      decimal(10, 2) NOT NULL,
             created_at timestamp      NOT NULL DEFAULT NOW(),
             updated_at timestamp      NOT NULL DEFAULT NOW(),
-            FOREIGN KEY (item_id) REFERENCES item (id),
-            FOREIGN KEY (basket_id) REFERENCES basket (id)
+            FOREIGN KEY (item_id) REFERENCES item (id) ON DELETE CASCADE,
+            FOREIGN KEY (basket_id) REFERENCES basket (id) ON DELETE CASCADE
         );
 
         CREATE TABLE IF NOT EXISTS "order"
@@ -218,8 +218,8 @@ $$
             updated_at     timestamp      NOT NULL DEFAULT NOW(),
             address_id     INT            NOT NULL,
             returned       BOOLEAN        NOT NULL DEFAULT false,
-            FOREIGN KEY (basket_id) REFERENCES "basket" (id),
-            FOREIGN KEY (user_id) REFERENCES "user" (id),
+            FOREIGN KEY (basket_id) REFERENCES "basket" (id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE,
             FOREIGN KEY (address_id) REFERENCES address (id) ON DELETE CASCADE
         );
 

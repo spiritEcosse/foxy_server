@@ -72,13 +72,15 @@ DROGON_TEST(Create) {
         setUpBeforeEachTest(dbClient);
 
         auto checkFields = [TEST_CTX,
-                            &dbClient](const HttpResponsePtr &resp, fieldsValMap &expectedValues, std::string entity) {
+                            dbClient](const HttpResponsePtr &resp, fieldsValMap &expectedValues, std::string entity) {
+            std::cout << entity << std::endl;
             REQUIRE(resp->getStatusCode() == k201Created);
             REQUIRE(resp->contentType() == CT_APPLICATION_JSON);
+            REQUIRE(dbClient != nullptr);
             auto respJson = *resp->getJsonObject();
 
             auto result = dbClient->execSqlSync(
-                fmt::format(R"(SELECT created_at, updated_at FROM "{}" ORDER BY id desc LIMIT 1)", entity));
+                fmt::format(R"(SELECT created_at, updated_at FROM "{}" ORDER BY id desc LIMIT 1)", std::move(entity)));
             expectedValues["created_at"] = convertDateTimeFormat(result[0]["created_at"].as<std::string>());
             expectedValues["updated_at"] = convertDateTimeFormat(result[0]["updated_at"].as<std::string>());
 
@@ -105,9 +107,8 @@ DROGON_TEST(Create) {
             }
         };
 
-        auto sendHttpRequest = [TEST_CTX, checkFields](std::string path,
-                                                       fieldsValMap &expectedValues,
-                                                       const std::string &entity) {
+        auto sendHttpRequest = [TEST_CTX,
+                                checkFields](std::string path, fieldsValMap &expectedValues, std::string entity) {
             auto client = HttpClient::newHttpClient(host);
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
@@ -135,7 +136,7 @@ DROGON_TEST(Create) {
                 [TEST_CTX, checkFields, expectedValues, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
                     REQUIRE(res == ReqResult::Ok);
                     REQUIRE(resp != nullptr);
-                    checkFields(resp, expectedValues, entity);
+                    checkFields(resp, expectedValues, std::move(entity));
                 });
         };
 
@@ -371,13 +372,15 @@ DROGON_TEST(Update) {
         setUpBeforeEachTest(dbClient);
 
         auto checkFields = [TEST_CTX,
-                            &dbClient](const HttpResponsePtr &resp, fieldsValMap &expectedValues, std::string entity) {
+                            dbClient](const HttpResponsePtr &resp, fieldsValMap &expectedValues, std::string entity) {
+            std::cout << entity << std::endl;
             REQUIRE(resp->getStatusCode() == k200OK);
             REQUIRE(resp->contentType() == CT_APPLICATION_JSON);
             auto respJson = *resp->getJsonObject();
+            REQUIRE(dbClient != nullptr);
 
-            auto result =
-                dbClient->execSqlSync(fmt::format(R"(SELECT created_at, updated_at FROM "{}" WHERE id = 1)", entity));
+            auto result = dbClient->execSqlSync(
+                fmt::format(R"(SELECT created_at, updated_at FROM "{}" WHERE id = 1)", std::move(entity)));
             expectedValues["created_at"] = convertDateTimeFormat(result[0]["created_at"].as<std::string>());
             expectedValues["updated_at"] = convertDateTimeFormat(result[0]["updated_at"].as<std::string>());
 
@@ -404,9 +407,8 @@ DROGON_TEST(Update) {
             }
         };
 
-        auto sendHttpRequest = [TEST_CTX, checkFields](std::string path,
-                                                       fieldsValMap &expectedValues,
-                                                       const std::string &entity) {
+        auto sendHttpRequest = [TEST_CTX,
+                                checkFields](std::string path, fieldsValMap &expectedValues, std::string entity) {
             auto client = HttpClient::newHttpClient(host);
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
@@ -434,11 +436,10 @@ DROGON_TEST(Update) {
                 [TEST_CTX, checkFields, expectedValues, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
                     REQUIRE(res == ReqResult::Ok);
                     REQUIRE(resp != nullptr);
-                    checkFields(resp, expectedValues, entity);
+                    checkFields(resp, expectedValues, std::move(entity));
                 });
         };
 
-        Json::StreamWriterBuilder writer;
         std::string path = "/api/v1/item/admin/1";
         std::string entity = "item";
         fieldsValMap expectedValues = {
@@ -578,6 +579,450 @@ DROGON_TEST(Update) {
             {std::string("id"), 1},
         };
         sendHttpRequest(path, expectedValues, entity);
+    });
+};
+
+DROGON_TEST(DeleteItem) {
+    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = drogon::app().getDbClient("tests");
+        setUpBeforeEachTest(dbClient);
+
+        auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
+            std::cout << entity << std::endl;
+            REQUIRE(resp->getStatusCode() == k204NoContent);
+            REQUIRE(dbClient != nullptr);
+            auto result = dbClient->execSqlSync(fmt::format(R"(SELECT id FROM "{}" WHERE id = 1)", std::move(entity)));
+            REQUIRE(result.empty());
+        };
+
+        auto sendHttpRequest = [TEST_CTX, checkDbObject](std::string path, std::string entity) {
+            auto client = HttpClient::newHttpClient(host);
+            auto req = HttpRequest::newHttpRequest();
+            req->setPath(std::move(path));
+            req->setMethod(drogon::Delete);
+            JWT jwtGenerated = JWT::generateToken({
+                {"email", picojson::value(userEmail)},
+            });
+            // Set the Authorization header
+            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+
+            client->sendRequest(req,
+                                [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
+                                    REQUIRE(res == ReqResult::Ok);
+                                    REQUIRE(resp != nullptr);
+                                    checkDbObject(resp, std::move(entity));
+                                });
+        };
+
+        sendHttpRequest("/api/v1/item/admin/1", "item");
+    });
+};
+
+DROGON_TEST(DeletePage) {
+    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = drogon::app().getDbClient("tests");
+        setUpBeforeEachTest(dbClient);
+
+        auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
+            std::cout << entity << std::endl;
+            REQUIRE(resp->getStatusCode() == k204NoContent);
+            REQUIRE(dbClient != nullptr);
+            auto result = dbClient->execSqlSync(fmt::format(R"(SELECT id FROM "{}" WHERE id = 1)", std::move(entity)));
+            REQUIRE(result.empty());
+        };
+
+        auto sendHttpRequest = [TEST_CTX, checkDbObject](std::string path, std::string entity) {
+            auto client = HttpClient::newHttpClient(host);
+            auto req = HttpRequest::newHttpRequest();
+            req->setPath(std::move(path));
+            req->setMethod(drogon::Delete);
+            JWT jwtGenerated = JWT::generateToken({
+                {"email", picojson::value(userEmail)},
+            });
+            // Set the Authorization header
+            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+
+            client->sendRequest(req,
+                                [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
+                                    REQUIRE(res == ReqResult::Ok);
+                                    REQUIRE(resp != nullptr);
+                                    checkDbObject(resp, std::move(entity));
+                                });
+        };
+
+        sendHttpRequest("/api/v1/page/admin/1", "page");
+    });
+};
+
+DROGON_TEST(DeleteUser) {
+    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = drogon::app().getDbClient("tests");
+        setUpBeforeEachTest(dbClient);
+
+        auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
+            std::cout << entity << std::endl;
+            REQUIRE(resp->getStatusCode() == k204NoContent);
+            REQUIRE(dbClient != nullptr);
+            auto result = dbClient->execSqlSync(fmt::format(R"(SELECT id FROM "{}" WHERE id = 1)", std::move(entity)));
+            REQUIRE(result.empty());
+        };
+
+        auto sendHttpRequest = [TEST_CTX, checkDbObject](std::string path, std::string entity) {
+            auto client = HttpClient::newHttpClient(host);
+            auto req = HttpRequest::newHttpRequest();
+            req->setPath(std::move(path));
+            req->setMethod(drogon::Delete);
+            JWT jwtGenerated = JWT::generateToken({
+                {"email", picojson::value(userEmail)},
+            });
+            // Set the Authorization header
+            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+
+            client->sendRequest(req,
+                                [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
+                                    REQUIRE(res == ReqResult::Ok);
+                                    REQUIRE(resp != nullptr);
+                                    checkDbObject(resp, std::move(entity));
+                                });
+        };
+
+        sendHttpRequest("/api/v1/user/admin/1", "user");
+    });
+};
+
+DROGON_TEST(DeleteShippingProfile) {
+    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = drogon::app().getDbClient("tests");
+        setUpBeforeEachTest(dbClient);
+
+        auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
+            std::cout << entity << std::endl;
+            REQUIRE(resp->getStatusCode() == k204NoContent);
+            REQUIRE(dbClient != nullptr);
+            auto result = dbClient->execSqlSync(fmt::format(R"(SELECT id FROM "{}" WHERE id = 1)", std::move(entity)));
+            REQUIRE(result.empty());
+        };
+
+        auto sendHttpRequest = [TEST_CTX, checkDbObject](std::string path, std::string entity) {
+            auto client = HttpClient::newHttpClient(host);
+            auto req = HttpRequest::newHttpRequest();
+            req->setPath(std::move(path));
+            req->setMethod(drogon::Delete);
+            JWT jwtGenerated = JWT::generateToken({
+                {"email", picojson::value(userEmail)},
+            });
+            // Set the Authorization header
+            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+
+            client->sendRequest(req,
+                                [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
+                                    REQUIRE(res == ReqResult::Ok);
+                                    REQUIRE(resp != nullptr);
+                                    checkDbObject(resp, std::move(entity));
+                                });
+        };
+
+        sendHttpRequest("/api/v1/shippingprofile/admin/1", "shipping_profile");
+    });
+};
+
+DROGON_TEST(DeleteShippingRate) {
+    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = drogon::app().getDbClient("tests");
+        setUpBeforeEachTest(dbClient);
+
+        auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
+            std::cout << entity << std::endl;
+            REQUIRE(resp->getStatusCode() == k204NoContent);
+            REQUIRE(dbClient != nullptr);
+            auto result = dbClient->execSqlSync(fmt::format(R"(SELECT id FROM "{}" WHERE id = 1)", std::move(entity)));
+            REQUIRE(result.empty());
+        };
+
+        auto sendHttpRequest = [TEST_CTX, checkDbObject](std::string path, std::string entity) {
+            auto client = HttpClient::newHttpClient(host);
+            auto req = HttpRequest::newHttpRequest();
+            req->setPath(std::move(path));
+            req->setMethod(drogon::Delete);
+            JWT jwtGenerated = JWT::generateToken({
+                {"email", picojson::value(userEmail)},
+            });
+            // Set the Authorization header
+            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+
+            client->sendRequest(req,
+                                [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
+                                    REQUIRE(res == ReqResult::Ok);
+                                    REQUIRE(resp != nullptr);
+                                    checkDbObject(resp, std::move(entity));
+                                });
+        };
+
+        sendHttpRequest("/api/v1/shippingrate/admin/1", "shipping_rate");
+    });
+};
+
+DROGON_TEST(DeleteReview) {
+    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = drogon::app().getDbClient("tests");
+        setUpBeforeEachTest(dbClient);
+
+        auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
+            std::cout << entity << std::endl;
+            REQUIRE(resp->getStatusCode() == k204NoContent);
+            REQUIRE(dbClient != nullptr);
+            auto result = dbClient->execSqlSync(fmt::format(R"(SELECT id FROM "{}" WHERE id = 1)", std::move(entity)));
+            REQUIRE(result.empty());
+        };
+
+        auto sendHttpRequest = [TEST_CTX, checkDbObject](std::string path, std::string entity) {
+            auto client = HttpClient::newHttpClient(host);
+            auto req = HttpRequest::newHttpRequest();
+            req->setPath(std::move(path));
+            req->setMethod(drogon::Delete);
+            JWT jwtGenerated = JWT::generateToken({
+                {"email", picojson::value(userEmail)},
+            });
+            // Set the Authorization header
+            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+
+            client->sendRequest(req,
+                                [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
+                                    REQUIRE(res == ReqResult::Ok);
+                                    REQUIRE(resp != nullptr);
+                                    checkDbObject(resp, std::move(entity));
+                                });
+        };
+
+        sendHttpRequest("/api/v1/review/admin/1", "review");
+    });
+};
+
+DROGON_TEST(DeleteOrder) {
+    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = drogon::app().getDbClient("tests");
+        setUpBeforeEachTest(dbClient);
+
+        auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
+            std::cout << entity << std::endl;
+            REQUIRE(resp->getStatusCode() == k204NoContent);
+            REQUIRE(dbClient != nullptr);
+            auto result = dbClient->execSqlSync(fmt::format(R"(SELECT id FROM "{}" WHERE id = 1)", std::move(entity)));
+            REQUIRE(result.empty());
+        };
+
+        auto sendHttpRequest = [TEST_CTX, checkDbObject](std::string path, std::string entity) {
+            auto client = HttpClient::newHttpClient(host);
+            auto req = HttpRequest::newHttpRequest();
+            req->setPath(std::move(path));
+            req->setMethod(drogon::Delete);
+            JWT jwtGenerated = JWT::generateToken({
+                {"email", picojson::value(userEmail)},
+            });
+            // Set the Authorization header
+            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+
+            client->sendRequest(req,
+                                [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
+                                    REQUIRE(res == ReqResult::Ok);
+                                    REQUIRE(resp != nullptr);
+                                    checkDbObject(resp, std::move(entity));
+                                });
+        };
+
+        sendHttpRequest("/api/v1/order/admin/1", "order");
+    });
+};
+
+DROGON_TEST(DeleteMedia) {
+    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = drogon::app().getDbClient("tests");
+        setUpBeforeEachTest(dbClient);
+
+        auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
+            std::cout << entity << std::endl;
+            REQUIRE(resp->getStatusCode() == k204NoContent);
+            REQUIRE(dbClient != nullptr);
+            auto result = dbClient->execSqlSync(fmt::format(R"(SELECT id FROM "{}" WHERE id = 1)", std::move(entity)));
+            REQUIRE(result.empty());
+        };
+
+        auto sendHttpRequest = [TEST_CTX, checkDbObject](std::string path, std::string entity) {
+            auto client = HttpClient::newHttpClient(host);
+            auto req = HttpRequest::newHttpRequest();
+            req->setPath(std::move(path));
+            req->setMethod(drogon::Delete);
+            JWT jwtGenerated = JWT::generateToken({
+                {"email", picojson::value(userEmail)},
+            });
+            // Set the Authorization header
+            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+
+            client->sendRequest(req,
+                                [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
+                                    REQUIRE(res == ReqResult::Ok);
+                                    REQUIRE(resp != nullptr);
+                                    checkDbObject(resp, std::move(entity));
+                                });
+        };
+
+        sendHttpRequest("/api/v1/media/admin/1", "media");
+    });
+};
+
+DROGON_TEST(DeleteCountry) {
+    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = drogon::app().getDbClient("tests");
+        setUpBeforeEachTest(dbClient);
+
+        auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
+            std::cout << entity << std::endl;
+            REQUIRE(resp->getStatusCode() == k204NoContent);
+            REQUIRE(dbClient != nullptr);
+            auto result = dbClient->execSqlSync(fmt::format(R"(SELECT id FROM "{}" WHERE id = 1)", std::move(entity)));
+            REQUIRE(result.empty());
+        };
+
+        auto sendHttpRequest = [TEST_CTX, checkDbObject](std::string path, std::string entity) {
+            auto client = HttpClient::newHttpClient(host);
+            auto req = HttpRequest::newHttpRequest();
+            req->setPath(std::move(path));
+            req->setMethod(drogon::Delete);
+            JWT jwtGenerated = JWT::generateToken({
+                {"email", picojson::value(userEmail)},
+            });
+            // Set the Authorization header
+            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+
+            client->sendRequest(req,
+                                [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
+                                    REQUIRE(res == ReqResult::Ok);
+                                    REQUIRE(resp != nullptr);
+                                    checkDbObject(resp, std::move(entity));
+                                });
+        };
+
+        sendHttpRequest("/api/v1/country/admin/1", "country");
+    });
+};
+
+DROGON_TEST(DeleteBasket) {
+    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = drogon::app().getDbClient("tests");
+        setUpBeforeEachTest(dbClient);
+
+        auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
+            std::cout << entity << std::endl;
+            REQUIRE(resp->getStatusCode() == k204NoContent);
+            REQUIRE(dbClient != nullptr);
+            auto result = dbClient->execSqlSync(fmt::format(R"(SELECT id FROM "{}" WHERE id = 1)", std::move(entity)));
+            REQUIRE(result.empty());
+        };
+
+        auto sendHttpRequest = [TEST_CTX, checkDbObject](std::string path, std::string entity) {
+            auto client = HttpClient::newHttpClient(host);
+            auto req = HttpRequest::newHttpRequest();
+            req->setPath(std::move(path));
+            req->setMethod(drogon::Delete);
+            JWT jwtGenerated = JWT::generateToken({
+                {"email", picojson::value(userEmail)},
+            });
+            // Set the Authorization header
+            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+
+            client->sendRequest(req,
+                                [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
+                                    REQUIRE(res == ReqResult::Ok);
+                                    REQUIRE(resp != nullptr);
+                                    checkDbObject(resp, std::move(entity));
+                                });
+        };
+
+        sendHttpRequest("/api/v1/basket/admin/1", "basket");
+    });
+};
+
+DROGON_TEST(DeleteBasketItem) {
+    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = drogon::app().getDbClient("tests");
+        setUpBeforeEachTest(dbClient);
+
+        auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
+            std::cout << entity << std::endl;
+            REQUIRE(resp->getStatusCode() == k204NoContent);
+            REQUIRE(dbClient != nullptr);
+            auto result = dbClient->execSqlSync(fmt::format(R"(SELECT id FROM "{}" WHERE id = 1)", std::move(entity)));
+            REQUIRE(result.empty());
+        };
+
+        auto sendHttpRequest = [TEST_CTX, checkDbObject](std::string path, std::string entity) {
+            auto client = HttpClient::newHttpClient(host);
+            auto req = HttpRequest::newHttpRequest();
+            req->setPath(std::move(path));
+            req->setMethod(drogon::Delete);
+            JWT jwtGenerated = JWT::generateToken({
+                {"email", picojson::value(userEmail)},
+            });
+            // Set the Authorization header
+            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+
+            client->sendRequest(req,
+                                [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
+                                    REQUIRE(res == ReqResult::Ok);
+                                    REQUIRE(resp != nullptr);
+                                    checkDbObject(resp, std::move(entity));
+                                });
+        };
+
+        sendHttpRequest("/api/v1/basketitem/admin/1", "basket_item");
+    });
+};
+
+DROGON_TEST(DeleteAddress) {
+    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = drogon::app().getDbClient("tests");
+        setUpBeforeEachTest(dbClient);
+
+        auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
+            std::cout << entity << std::endl;
+            REQUIRE(resp->getStatusCode() == k204NoContent);
+            REQUIRE(dbClient != nullptr);
+            auto result = dbClient->execSqlSync(fmt::format(R"(SELECT id FROM "{}" WHERE id = 1)", std::move(entity)));
+            REQUIRE(result.empty());
+        };
+
+        auto sendHttpRequest = [TEST_CTX, checkDbObject](std::string path, std::string entity) {
+            auto client = HttpClient::newHttpClient(host);
+            auto req = HttpRequest::newHttpRequest();
+            req->setPath(std::move(path));
+            req->setMethod(drogon::Delete);
+            JWT jwtGenerated = JWT::generateToken({
+                {"email", picojson::value(userEmail)},
+            });
+            // Set the Authorization header
+            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+
+            client->sendRequest(req,
+                                [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
+                                    REQUIRE(res == ReqResult::Ok);
+                                    REQUIRE(resp != nullptr);
+                                    checkDbObject(resp, std::move(entity));
+                                });
+        };
+
+        sendHttpRequest("/api/v1/address/admin/1", "address");
     });
 };
 
