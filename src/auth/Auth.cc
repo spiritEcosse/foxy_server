@@ -118,6 +118,11 @@ void Auth::googleLogin(const drogon::HttpRequestPtr &request,
         res->setStatusCode(statusCode);
         return (*callbackPtr)(res);
     }
-    std::string email = jsonResponse["email"].asString();
-    executeSqlQuery(callbackPtr, UserModel().sqlGetOrCreateUser(email));
+    UserModel item(jsonResponse, true);
+    if(!item.missingFields.empty()) {
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(item.missingFields));
+        resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
+        return (*callbackPtr)(resp);
+    }
+    executeSqlQuery(callbackPtr, item.sqlGetOrCreateUser());
 }

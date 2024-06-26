@@ -43,10 +43,11 @@ std::string UserModel::sqlAuth(const std::string &email) {
     return "SELECT * FROM \"" + tableName + "\" WHERE email = '" + email + "'";
 }
 
-std::string UserModel::sqlGetOrCreateUser(const std::string &email) {
+std::string UserModel::sqlGetOrCreateUser() {
     return fmt::format(
-        R"(INSERT INTO "{}" (email) VALUES ('{}') ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email RETURNING json_build_object({}))",
+        R"(INSERT INTO "{}" ({}) VALUES {} ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email, first_name = EXCLUDED.first_name, last_name = EXCLUDED.last_name RETURNING json_build_object({}))",
         tableName,
-        email,
+        fieldsToString(),
+        sqlInsertSingle(*this),
         fieldsJsonObject());
 }

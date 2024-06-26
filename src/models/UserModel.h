@@ -37,7 +37,7 @@ namespace api::v1 {
         std::string password;
         std::string firstName;
         std::string lastName;
-        std::string birthday;
+        std::string birthday = "Null";
         bool hasNewsletter{};
         UserModel() = default;
         UserModel(const UserModel &) = delete;  // Copy constructor
@@ -60,6 +60,16 @@ namespace api::v1 {
             hashPassword();
         }
 
+        explicit UserModel(const Json::Value &json, bool google) : BaseModel(json) {
+            email = json[Field::email.getFieldName()].asString();
+            firstName = json["given_name"].asString();
+            lastName = json["family_name"].asString();
+
+            validateField(Field::email.getFieldName(), email, missingFields);
+            validateField(Field::firstName.getFieldName(), firstName, missingFields);
+            validateField(Field::lastName.getFieldName(), lastName, missingFields);
+        }
+
         [[nodiscard]] static std::vector<BaseField> fields();
         [[nodiscard]] std::vector<
             std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
@@ -67,7 +77,7 @@ namespace api::v1 {
         void hashPassword();
         [[nodiscard]] bool checkPassword(const std::string &passwordIn) const;
         [[nodiscard]] static std::string sqlAuth(const std::string &email);
-        [[nodiscard]] std::string sqlGetOrCreateUser(const std::string &email);
+        [[nodiscard]] std::string sqlGetOrCreateUser();
     };
 }
 

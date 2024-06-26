@@ -112,6 +112,10 @@ bool JWT::verifyToken(const ::jwt::decoded_jwt<::jwt::traits::kazuho_picojson>& 
         jwtVerifier.verify(jwt);
         return true;
     } catch(const ::jwt::error::token_verification_exception& e) {
+        LOG_ERROR << e.what();
+        return false;
+    } catch(const std::exception& e) {
+        LOG_ERROR << e.what();
         return false;
     }
 }
