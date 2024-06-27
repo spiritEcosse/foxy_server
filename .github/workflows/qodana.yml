@@ -21,6 +21,9 @@ jobs:
             -   name: pwd
                 run: pwd
 
+            -   name: Pull docker pull jetbrains/qodana
+                run: docker pull jetbrains/qodana-clang:latest
+
             -   name: Build docker qodana clang image
                 run: |
                     docker build -t qodana_clang -f Dockerfile_qodana --build-arg LLVM_TAG="${{ secrets.LLVM_TAG }}" .
