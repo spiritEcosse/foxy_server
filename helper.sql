@@ -199,7 +199,8 @@ $$
             created_at timestamp      NOT NULL DEFAULT NOW(),
             updated_at timestamp      NOT NULL DEFAULT NOW(),
             FOREIGN KEY (item_id) REFERENCES item (id) ON DELETE CASCADE,
-            FOREIGN KEY (basket_id) REFERENCES basket (id) ON DELETE CASCADE
+            FOREIGN KEY (basket_id) REFERENCES basket (id) ON DELETE CASCADE,
+            UNIQUE (item_id, basket_id)
         );
 
         CREATE TABLE IF NOT EXISTS "order"

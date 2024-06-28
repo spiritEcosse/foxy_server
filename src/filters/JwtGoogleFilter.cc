@@ -27,10 +27,11 @@ void JwtGoogleFilter::doFilter(const HttpRequestPtr &request, FilterCallback &&f
     // Remove the string "Bearer " on token and decode it
     auto [statusCode, jsonResponse] = JWT::verifyGoogleToken(token.substr(7));
     if(statusCode != drogon::k200OK) {
-        Json::Value resultJson;
-        resultJson["error"] = jsonResponse["error"];
-        auto res = drogon::HttpResponse::newHttpJsonResponse(std::move(resultJson));
-        res->setStatusCode(k401Unauthorized);
+        auto res = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
+        if(statusCode >= 500) {
+            statusCode = drogon::k424FailedDependency;
+        }
+        res->setStatusCode(statusCode);
         return fcb(res);
     }
     return fccb();

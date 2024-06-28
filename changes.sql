@@ -11,6 +11,9 @@ ALTER table "user"
 --     last_name  = 'Doe',
 --     birthday   = '1990-01-01';
 
+CREATE UNIQUE INDEX idx_basket_item_unique
+    ON "basket_item" (item_id, basket_id);
+
 ALTER table "user"
     alter column password set default '';
 

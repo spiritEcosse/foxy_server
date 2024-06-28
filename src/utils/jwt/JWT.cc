@@ -40,14 +40,11 @@ std::tuple<drogon::HttpStatusCode, Json::Value> JWT::verifyGoogleToken(const std
             std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
             jsonData["error"] = curl_easy_strerror(res);
             httpCode = drogon::k500InternalServerError;
-        } else {
-            if(Json::Reader jsonReader; jsonReader.parse(readBuffer, jsonData)) {
-                std::string aud = jsonData["aud"].asString();
-            } else {
-                std::cerr << "Failed to parse the JSON response" << std::endl;
-                jsonData["error"] = "Failed to parse the JSON response";
-                httpCode = drogon::k400BadRequest;
-            }
+        }
+        Json::Reader jsonReader;
+        jsonReader.parse(readBuffer, jsonData);
+        if(jsonData.empty()) {
+            jsonData["error"] = "Failed to parse the JSON response";
         }
         curl_easy_cleanup(curl);
     }

@@ -32,7 +32,7 @@ namespace api::v1 {
 
         int basketId{};
         int itemId{};
-        int quantity{};
+        int quantity = 1;
         dec::decimal<2> price;
         BasketItemModel() = default;
         BasketItemModel(const BasketItemModel &) = delete;  // Copy constructor
@@ -43,13 +43,9 @@ namespace api::v1 {
         explicit BasketItemModel(const Json::Value &json) : BaseModel(json) {
             basketId = json[Field::basketId.getFieldName()].asInt();
             itemId = json[Field::itemId.getFieldName()].asInt();
-            quantity = json[Field::quantity.getFieldName()].asInt();
-            price = json[Field::price.getFieldName()].asDouble();
 
             validateField(Field::basketId.getFieldName(), basketId, missingFields);
             validateField(Field::itemId.getFieldName(), itemId, missingFields);
-            validateField(Field::quantity.getFieldName(), quantity, missingFields);
-            validateField(Field::price.getFieldName(), price, missingFields);
         }
 
         [[nodiscard]] static std::vector<BaseField> fields();
