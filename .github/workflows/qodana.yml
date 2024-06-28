@@ -21,8 +21,8 @@ jobs:
             -   name: pwd
                 run: pwd
 
-            -   name: Pull docker pull jetbrains/qodana
-                run: docker pull jetbrains/qodana
+            -   name: Pull docker pull jetbrains/qodana-clang
+                run: docker pull jetbrains/qodana-clang
 
             -   name: Build docker qodana clang image
                 run: |
