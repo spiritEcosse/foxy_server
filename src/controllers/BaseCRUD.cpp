@@ -297,6 +297,7 @@ void BaseCRUD<T, R>::handleSqlResultDeleting(
     std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const {
     auto resp = drogon::HttpResponse::newHttpResponse();
     resp->setStatusCode(drogon::HttpStatusCode::k204NoContent);
+    resp->setContentTypeCode(drogon::ContentType::CT_APPLICATION_JSON);
     (*callbackPtr)(resp);
 }
 
