@@ -23,3 +23,17 @@ std::vector<
 BasketItemModel::getObjectValues() const {
     return {{Field::basketId, basketId}, {Field::itemId, itemId}, {Field::quantity, quantity}, {Field::price, price}};
 };
+
+std::string BasketItemModel::fieldsJsonObject() {
+    std::string str;
+    const Field field;
+    for(const auto &fieldNames = field.allFields; const auto &[fieldName, baseField]: fieldNames) {
+        str += fmt::format("'{}', {}, ", fieldName, baseField.getFullFieldName());
+    }
+    QuerySet qs(ItemModel::tableName, "item", false, false);
+    qs.jsonFields(ItemModel().fieldsJsonObject())
+        .filter(ItemModel::Field::id.getFullFieldName(), Field::itemId.getFullFieldName(), false, std::string("="));
+    std::string sql = qs.buildSelect();
+    str += fmt::format("'item', ({})", sql);
+    return str;
+}

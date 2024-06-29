@@ -54,6 +54,7 @@ namespace api::v1 {
                       std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
         getObjectValues() const;
         [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
+        [[nodiscard]] std::string fieldsJsonObject() override;
     };
 }
 
