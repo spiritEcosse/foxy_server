@@ -50,7 +50,7 @@ std::tuple<drogon::HttpStatusCode, Json::Value> JWT::verifyGoogleToken(const std
     }
 
     curl_global_cleanup();
-    return {static_cast<drogon::HttpStatusCode>(httpCode), jsonData};
+    return {static_cast<drogon::HttpStatusCode>(httpCode), std::move(jsonData)};
 }
 
 JWT JWT::generateToken(const std::map<std::string, ::jwt::traits::kazuho_picojson::value_type, std::less<>>& claims,

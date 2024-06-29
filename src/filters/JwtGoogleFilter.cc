@@ -28,10 +28,8 @@ void JwtGoogleFilter::doFilter(const HttpRequestPtr &request, FilterCallback &&f
     auto [statusCode, jsonResponse] = JWT::verifyGoogleToken(token.substr(7));
     if(statusCode != drogon::k200OK) {
         auto res = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
-        if(statusCode >= 500) {
-            statusCode = drogon::k424FailedDependency;
-        }
-        res->setStatusCode(statusCode);
+        res->setStatusCode(drogon::k401Unauthorized);
+        res->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         return fcb(res);
     }
     return fccb();
