@@ -63,3 +63,16 @@ CREATE TABLE IF NOT EXISTS review
 Alter table "order"
     add column returned BOOLEAN NOT NULL DEFAULT false;
 commit;
+
+do
+$$
+    BEGIN
+        CREATE OR REPLACE FUNCTION format_src(src TEXT, cloud_name TEXT)
+            RETURNS TEXT AS
+        $body$
+        BEGIN
+            RETURN 'https://' || cloud_name || '/' || src;
+        END;
+        $body$ LANGUAGE plpgsql;
+    END
+$$;

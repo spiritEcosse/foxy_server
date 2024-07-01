@@ -329,7 +329,7 @@ $$
             RETURNS TEXT AS
         $body$
         BEGIN
-            RETURN 'https://' || cloud_name || '.twic.pics/' || src;
+            RETURN 'https://' || cloud_name || '/' || src;
         END;
         $body$ LANGUAGE plpgsql;
     END
