@@ -1,10 +1,51 @@
 env:
+    BUILD_FOLDER: "/home/ubuntu/ubuntu_x86_64"
+    SRC: "/home/ubuntu/ubuntu_x86_64_src"
     FORCE_REBUILD_IMAGE: ${{ secrets.FORCE_REBUILD_IMAGE }}
 
 on:
     push:
         branches:
             - '*'
+    workflow_call:
+        inputs:
+            BUILD_FOLDER:
+                required: true
+                type: string
+            SRC:
+                required: true
+                type: string
+        secrets:
+            CR_PAT:
+                required: true
+            APP_CLOUD_NAME:
+                required: true
+            CMAKE_BUILD_TYPE:
+                required: true
+            FOXY_ADMIN:
+                required: true
+            FOXY_CLIENT:
+                required: true
+            SENTRY_DSN:
+                required: true
+            SERVER_HOST:
+                required: true
+            SERVER_USER:
+                required: true
+            SERVER_PASSWORD:
+                required: true
+            SERVER_PSQL_DBNAME:
+                required: true
+            SERVER_PSQL_USER:
+                required: true
+            SERVER_PSQL_PASSWORD:
+                required: true
+            CERT_PATH:
+                required: true
+            KEY_PATH:
+                required: true
+            LLVM_TAG:
+                required: true
 
 jobs:
     build:
@@ -12,7 +53,7 @@ jobs:
 
         steps:
             -   name: Checkout repository
-                uses: actions/checkout@v2
+                uses: actions/checkout@v4
 
             -   name: Extract branch name
                 shell: bash
@@ -31,6 +72,7 @@ jobs:
 
             -   name: Check Docker image
                 id: check_image
+                if: env.FORCE_REBUILD_IMAGE == 'false'
                 run: |
                     docker pull ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} && echo "::set-output name=exists::true" || echo "::set-output name=exists::false"
                 continue-on-error: true
@@ -38,12 +80,15 @@ jobs:
             -   name: Build Docker image
                 id: build_image
                 run: |
-                    docker build -t ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} . && echo "::set-output name=exists::true" || echo "::set-output name=exists::false"
+                    docker build -t ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} --build-arg LLVM_TAG="${{ secrets.LLVM_TAG }}" . && echo "::set-output name=exists::true" || (echo "::set-output name=exists::false" && exit 1)
                 if: steps.check_image.outputs.exists == 'false' || env.FORCE_REBUILD_IMAGE == 'true'
 
             -   name: Push Docker image
                 run: docker push ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME}
                 if: steps.build_image.outputs.exists == 'true'
+
+            -   name: Create build folder in home directory
+                run: mkdir -p ~/build && chmod 777 ~/build
 
             -   name: CMake Build
                 run: >
@@ -60,7 +105,17 @@ jobs:
                     -e SERVER_PSQL_USER="${{ secrets.SERVER_PSQL_USER }}"
                     -e SERVER_PSQL_PASSWORD="${{ secrets.SERVER_PSQL_PASSWORD }}"
                     -e CERT_PATH="${{ secrets.CERT_PATH }}"
+                    -e LLVM_TAG="${{ secrets.LLVM_TAG }}"
                     -e KEY_PATH="${{ secrets.KEY_PATH }}"
-                    -v $PWD:/share ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} /bin/bash -c "
+                    -e BUILD_FOLDER="${{ env.BUILD_FOLDER }}"
+                    -e SRC="${{ env.SRC }}"
+                    -v $PWD:"${{ env.SRC }}"
+                    -v ~/build:"${{ env.BUILD_FOLDER }}" ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} /bin/bash -c "
                       curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='$CONTENT'
                     "
+
+            -   name: Archive build directory
+                uses: actions/upload-artifact@v4
+                with:
+                    name: build
+                    path: ~/build

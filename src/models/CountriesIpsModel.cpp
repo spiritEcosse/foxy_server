@@ -6,10 +6,23 @@
 
 using namespace api::v1;
 
-std::vector<std::string> CountriesIpsModel::fields() {
-    return {};
+std::vector<BaseField> CountriesIpsModel::fields() {
+    return {
+        {Field::startRange},
+        {Field::endRange},
+        {Field::countryCode},
+        {Field::countryName},
+        {Field::countryId},
+    };
 }
 
-std::vector<std::string> CountriesIpsModel::fullFields() {
-    return {};
+std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+CountriesIpsModel::getObjectValues() const {
+    return {
+        {Field::startRange, startRange},
+        {Field::endRange, endRange},
+        {Field::countryCode, countryCode},
+        {Field::countryName, countryName},
+        {Field::countryId, countryId},
+    };
 }

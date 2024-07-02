@@ -2,8 +2,8 @@
 
 #include <drogon/drogon.h>
 #include <drogon/HttpController.h>
-#include "src/controllers/BaseCRUD.h"
-#include <src/models/UserModel.h>
+#include "BaseCRUD.h"
+#include <UserModel.h>
 
 namespace api::v1 {
     class Auth : public drogon::HttpController<Auth>, public BaseCRUD<UserModel, Auth> {

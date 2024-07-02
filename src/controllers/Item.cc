@@ -1,8 +1,8 @@
 #include "Item.h"
-#include "src/utils/request/Request.h"
-#include "src/orm/QuerySet.h"
-#include "src/models/MediaModel.h"
-#include "src/utils/env.h"
+#include "Request.h"
+#include "QuerySet.h"
+#include "MediaModel.h"
+#include "env.h"
 #include <fmt/core.h>
 
 using namespace api::v1;
@@ -17,29 +17,27 @@ void Item::getListAdmin(const drogon::HttpRequestPtr &req,
     std::string app_cloud_name;
     getenv("APP_CLOUD_NAME", app_cloud_name);
 
-    QuerySet qsCount = ItemModel::qsCount();
-    QuerySet qsPage = ItemModel::qsPage(page, limit);
+    QuerySet qsCount = ItemModel().qsCount();
+    QuerySet qsPage = ItemModel().qsPage(page, limit);
 
     QuerySet qs(ItemModel::tableName, limit, "data");
-    auto mediaSort = fmt::format("{}.{}", MediaModel::tableName, MediaModel::Field::sort);
-    auto orderByItemField = fmt::format("{}.{}", ItemModel::tableName, ItemModel::orderBy);
-    auto itemID = fmt::format("{}.{}", ItemModel::tableName, ItemModel::Field::id);
-    auto mediaItemID = fmt::format("{}.{}", MediaModel::tableName, MediaModel::Field::itemId);
+    auto mediaSort = MediaModel::Field::sort.getFullFieldName();
+    auto orderByItemField = BaseModel<ItemModel>::Field::updatedAt;
+    auto itemID = BaseModel<ItemModel>::Field::id;
+    auto mediaItemID = MediaModel::Field::itemId.getFullFieldName();
     qs.distinct(orderByItemField, itemID)
-        .left_join(MediaModel::tableName,
-                   ItemModel::tableName + "." + ItemModel::Field::id + " = " + MediaModel::tableName + "." +
-                       MediaModel::Field::itemId)
+        .left_join(MediaModel())
         .filter(mediaSort, std::string("NULL"), false, std::string("IS"), std::string("OR"))
         .filter(mediaSort,
                 std::string(fmt::format("(SELECT MIN({}) FROM {} WHERE {} = {})",
                                         mediaSort,
                                         MediaModel::tableName,
-                                        itemID,
+                                        BaseModel<ItemModel>::Field::id.getFullFieldName(),
                                         mediaItemID)),
                 false)
         .order_by(std::make_pair(orderByItemField, false), std::make_pair(itemID, false))
-        .only({ItemModel::fullFieldsWithTableToString(),
-               fmt::format("format_src(media.src, '{}') as src", app_cloud_name)})
+        .only(ItemModel().allSetFields())
+        .functions(Function(fmt::format("format_src(media.src, '{}') as src", app_cloud_name)))
         .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit));
     executeSqlQuery(callbackPtr, QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs)));
 }
@@ -55,8 +53,9 @@ void Item::getOne(const drogon::HttpRequestPtr &req,
         return;
     }
 
-    std::string filterKey = isInt ? ItemModel::primaryKey : ItemModel::Field::slug;
-    std::string query = ItemModel::sqlSelectOne(filterKey, stringId);
+    std::string filterKey =
+        isInt ? BaseModel<ItemModel>::Field::id.getFullFieldName() : ItemModel::Field::slug.getFullFieldName();
+    std::string query = ItemModel().sqlSelectOne(filterKey, stringId, {});
 
     executeSqlQuery(callbackPtr, query);
 }

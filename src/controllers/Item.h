@@ -1,10 +1,10 @@
 #pragma once
 
 #include <drogon/drogon.h>
-#include <src/utils/jwt/JWT.h>
+#include <JWT.h>
 #include "drogon/HttpController.h"
 #include "BaseCRUD.h"
-#include "src/models/ItemModel.h"
+#include "ItemModel.h"
 
 namespace api::v1 {
 
@@ -23,6 +23,6 @@ namespace api::v1 {
                           std::function<void(const drogon::HttpResponsePtr &)> &&callback) const;
         void getOne(const drogon::HttpRequestPtr &req,
                     std::function<void(const drogon::HttpResponsePtr &)> &&callback,
-                    const std::string &) const;
+                    const std::string &) const override;
     };
 }

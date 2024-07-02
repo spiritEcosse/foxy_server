@@ -1,7 +1,7 @@
 #include "Auth.h"
 #include <drogon/drogon.h>
-#include "src/models/UserModel.h"
-#include <src/utils/jwt/JWT.h>
+#include "UserModel.h"
+#include <JWT.h>
 #include <json/json.h>
 #include <string>
 
@@ -14,8 +14,8 @@ void Auth::getToken(const drogon::HttpRequestPtr &request,
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
     Json::Value responseJson = *request->getJsonObject();
 
-    std::string email = responseJson[UserModel::Field::email].asString();
-    std::string password = responseJson[UserModel::Field::password].asString();
+    std::string email = responseJson[UserModel::Field::email.getFieldName()].asString();
+    std::string password = responseJson[UserModel::Field::password.getFieldName()].asString();
 
     if(email.empty() || password.empty()) {
         Json::Value jsonResponse;
@@ -43,7 +43,7 @@ void Auth::getToken(const drogon::HttpRequestPtr &request,
         }
 
         UserModel userModel;
-        userModel.password = r[0][UserModel::Field::password].as<std::string>();
+        userModel.password = r[0][UserModel::Field::password.getFieldName()].as<std::string>();
 
         if(!userModel.checkPassword(password)) {
             Json::Value jsonResponse;
@@ -118,6 +118,11 @@ void Auth::googleLogin(const drogon::HttpRequestPtr &request,
         res->setStatusCode(statusCode);
         return (*callbackPtr)(res);
     }
-    std::string email = jsonResponse["email"].asString();
-    executeSqlQuery(callbackPtr, UserModel::sqlGetOrCreateUser(email));
+    UserModel item(jsonResponse, true);
+    if(!item.missingFields.empty()) {
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(item.missingFields));
+        resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
+        return (*callbackPtr)(resp);
+    }
+    executeSqlQuery(callbackPtr, item.sqlGetOrCreateUser());
 }

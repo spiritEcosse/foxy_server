@@ -5,20 +5,23 @@ set(BUILD_EXAMPLES OFF)
 set(BUILD_CTL OFF)
 #set(BUILD_TESTING OFF)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # start https://github.com/an-tao/trantor/issues/296
 set(EMPTY_STRING "")
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(EMPTY_STRING "''")
     set(CMAKE_BUILD_RPATH "${CMAKE_LLVM_LIB_DIR}")
-endif()
+endif ()
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 get_cmake_property(_variableNames VARIABLES)
 list(SORT _variableNames)
-foreach(_variableName ${_variableNames})
+foreach (_variableName ${_variableNames})
     message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()
+endforeach ()
 
 add_definitions(-DCMAKE_BINARY_DIR="${CMAKE_BINARY_DIR}")
 
@@ -28,11 +31,11 @@ execute_process(COMMAND bash -c "cp -f config.json ${PROJECT_BINARY_DIR}"
 
 if (NOT COPY_CONFIG EQUAL "0")
     message(FATAL_ERROR "cp config.json failed with : ${COPY_CONFIG}, please check")
-endif()
+endif ()
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     link_directories(/usr/lib/x86_64-linux-gnu/)
-endif()
+endif ()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty" "${CMAKE_BINARY_DIR}/_deps/cmake-scripts-src/")
 include(3rdparty)
@@ -43,13 +46,25 @@ add_executable(foxy_server ${RESOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 # end src
 
+include_directories(${CMAKE_SOURCE_DIR}/src/orm)
+include_directories(${CMAKE_SOURCE_DIR}/src/utils/db)
+include_directories(${CMAKE_SOURCE_DIR}/src/utils)
+include_directories(${CMAKE_SOURCE_DIR}/src/models)
+include_directories(${CMAKE_SOURCE_DIR}/src/utils/jwt)
+include_directories(${CMAKE_SOURCE_DIR}/src/utils/exceptions)
+include_directories(${CMAKE_SOURCE_DIR}/src/utils/request)
+include_directories(${CMAKE_SOURCE_DIR}/src/controllers)
+include_directories(${CMAKE_SOURCE_DIR}/src/auth)
+
 set(CMAKE_SYSTEM_PROCESSOR arm) # why this?
 
 # start drogon
 CPMAddPackage(
         NAME drogon
+        VERSION v1.9.4
         GITHUB_REPOSITORY drogonframework/drogon
-        GIT_TAG master
+        GIT_TAG v1.9.4
+        OPTIONS "BUILD_TESTING OFF"
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
 # end drogon
@@ -88,15 +103,15 @@ CPMAddPackage(
 execute_process(COMMAND bash -c "sed -n '191p' ${PROJECT_BINARY_DIR}/_deps/sentry-src/external/crashpad/snapshot/CMakeLists.txt | tr -d '\n'"
         OUTPUT_VARIABLE LINE_191_CONTENT)
 
-if("${LINE_191_CONTENT}" STREQUAL "")
+if ("${LINE_191_CONTENT}" STREQUAL "")
     execute_process(COMMAND bash -c "sed -i ${EMPTY_STRING} '191i\\
 target_sources(crashpad_snapshot PRIVATE x86/cpuid_reader.cc x86/cpuid_reader.h)' ${PROJECT_BINARY_DIR}/_deps/sentry-src/external/crashpad/snapshot/CMakeLists.txt"
             RESULT_VARIABLE FIX_MATCHING_ARCHITECTURE_SENTRY)
     message(STATUS "FIX_MATCHING_ARCHITECTURE_SENTRY : ${FIX_MATCHING_ARCHITECTURE_SENTRY}")
-    if(NOT FIX_MATCHING_ARCHITECTURE_SENTRY EQUAL "0")
+    if (NOT FIX_MATCHING_ARCHITECTURE_SENTRY EQUAL "0")
         message(FATAL_ERROR "sed, changing architecture matching in sentry failed with : ${FIX_MATCHING_ARCHITECTURE_SENTRY}, please check")
-    endif()
-endif()
+    endif ()
+endif ()
 target_link_libraries(${PROJECT_NAME} PRIVATE sentry)
 # end sentry
 
@@ -137,5 +152,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
 if (BUILD_TESTING)
     enable_testing()
     add_subdirectory(tests)
-endif()
+endif ()
 # End Tests

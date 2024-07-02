@@ -2,7 +2,7 @@
 
 #include "drogon/HttpController.h"
 #include "BaseCRUD.h"
-#include "src/models/ShippingProfileModel.h"
+#include "ShippingProfileModel.h"
 
 namespace api::v1 {
     class ShippingProfile : public drogon::HttpController<ShippingProfile>,

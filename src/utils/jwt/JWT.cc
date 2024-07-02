@@ -1,7 +1,7 @@
 #include "JWT.h"
 #include <curl/curl.h>
 #include <fmt/core.h>
-#include "src/utils/env.h"
+#include "env.h"
 
 using namespace api::utils::jwt;
 using namespace drogon;
@@ -40,20 +40,17 @@ std::tuple<drogon::HttpStatusCode, Json::Value> JWT::verifyGoogleToken(const std
             std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
             jsonData["error"] = curl_easy_strerror(res);
             httpCode = drogon::k500InternalServerError;
-        } else {
-            if(Json::Reader jsonReader; jsonReader.parse(readBuffer, jsonData)) {
-                std::string aud = jsonData["aud"].asString();
-            } else {
-                std::cerr << "Failed to parse the JSON response" << std::endl;
-                jsonData["error"] = "Failed to parse the JSON response";
-                httpCode = drogon::k400BadRequest;
-            }
+        }
+        Json::Reader jsonReader;
+        jsonReader.parse(readBuffer, jsonData);
+        if(jsonData.empty()) {
+            jsonData["error"] = "Failed to parse the JSON response";
         }
         curl_easy_cleanup(curl);
     }
 
     curl_global_cleanup();
-    return {static_cast<drogon::HttpStatusCode>(httpCode), jsonData};
+    return {static_cast<drogon::HttpStatusCode>(httpCode), std::move(jsonData)};
 }
 
 JWT JWT::generateToken(const std::map<std::string, ::jwt::traits::kazuho_picojson::value_type, std::less<>>& claims,
@@ -112,6 +109,10 @@ bool JWT::verifyToken(const ::jwt::decoded_jwt<::jwt::traits::kazuho_picojson>& 
         jwtVerifier.verify(jwt);
         return true;
     } catch(const ::jwt::error::token_verification_exception& e) {
+        LOG_ERROR << e.what();
+        return false;
+    } catch(const std::exception& e) {
+        LOG_ERROR << e.what();
         return false;
     }
 }
