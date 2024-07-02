@@ -64,6 +64,7 @@ Alter table "order"
     add column returned BOOLEAN NOT NULL DEFAULT false;
 commit;
 
+truncate table "country";
 INSERT INTO country (title, code)
 VALUES ('Zimbabwe', 'ZW'),
        ('Zambia', 'ZM'),
@@ -262,6 +263,10 @@ VALUES ('Zimbabwe', 'ZW'),
        ('Afghanistan', 'AF'),
        ('Spain', 'ES'),
        ('United States', 'US');
+UPDATE countries_ips
+SET country_id = country.id
+FROM country
+WHERE countries_ips.country_code = country.code;
 
 ALTER table "address"
     drop column avatar;

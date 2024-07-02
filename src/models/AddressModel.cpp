@@ -24,7 +24,7 @@ namespace api::v1 {
         qs.join(CountryModel())
             .only(allSetFields())
             .functions(
-                Function(std::format(R"(, json_build_object({}) AS country)", CountryModel().fieldsJsonObject())));
+                Function(fmt::format(R"(, json_build_object({}) AS country)", CountryModel().fieldsJsonObject())));
         return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
     }
 
