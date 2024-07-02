@@ -28,7 +28,7 @@ namespace api::v1 {
         std::string address;
         std::string city;
         std::string zipcode;
-        int countryId;
+        int countryId{};
         int userId{};
 
         AddressModel() = default;
@@ -53,6 +53,8 @@ namespace api::v1 {
         getObjectValues() const;
         [[nodiscard]] std::string
         sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params) override;
+        [[nodiscard]] std::string fieldsJsonObject() override;
+        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
     };
 }
 

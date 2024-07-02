@@ -3,6 +3,14 @@
 
 namespace api::v1 {
 
+    std::map<std::string, std::pair<std::string, std::string>, std::less<>> AddressModel::joinMap() const {
+        return {
+            {CountryModel::tableName,
+             {AddressModel::Field::countryId.getFullFieldName(),
+              BaseModel<CountryModel>::Field::id.getFullFieldName()}},
+        };
+    }
+
     std::vector<BaseField> AddressModel::fields() {
         return {Field::address, Field::countryId, Field::city, Field::zipcode, Field::userId};
     }
@@ -28,4 +36,17 @@ namespace api::v1 {
         return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
     }
 
-}  // namespace api::v1
+    std::string AddressModel::fieldsJsonObject() {
+        std::string str = BaseModel::fieldsJsonObject();
+        QuerySet qs(CountryModel::tableName, "country", false, false);
+        qs.jsonFields(CountryModel().fieldsJsonObject())
+            .filter(CountryModel::Field::id.getFullFieldName(),
+                    Field::countryId.getFullFieldName(),
+                    false,
+                    std::string("="));
+        std::string sql = qs.buildSelect();
+        str += fmt::format(", 'country', ({})", sql);
+        return str;
+    }
+
+}

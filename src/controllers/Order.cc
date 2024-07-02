@@ -28,11 +28,8 @@ void Order::getOneAdmin(const drogon::HttpRequestPtr &req,
 
     QuerySet qsAddress(AddressModel::tableName, "_address");
     qsAddress.join(OrderModel())
-        .join(CountryModel())
         .filter(BaseModel<OrderModel>::Field::id.getFullFieldName(), stringId)
-        .jsonFields(fmt::format(R"({}, 'country', json_build_object({}))",
-                                AddressModel().fieldsJsonObject(),
-                                CountryModel().fieldsJsonObject()));
+        .jsonFields(AddressModel().fieldsJsonObject());
 
     QuerySet qsBasketItem(ItemModel::tableName, 0, std::string("_items"));
     qsBasketItem.join(BasketItemModel())

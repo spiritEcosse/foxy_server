@@ -12,7 +12,15 @@
 #include "BasketModel.h"
 #include "decimal.h"
 
-enum class OrderStatus { ordered, delivered, cancelled };
+enum class OrderStatus {
+    Ordered,  // The item has been ordered by the customer.
+    Processing,  // The order is being processed.
+    Shipped,  // The item has been shipped to the customer.
+    Delivered,  // The item has been delivered to the customer.
+    Returned,  // The item has been returned by the customer.
+    Refunded,  // The customer has been refunded for the item.
+    Cancelled  // The order has been cancelled.
+};
 
 namespace api::v1 {
     class OrderModel : public BaseModel<OrderModel> {
@@ -53,7 +61,7 @@ namespace api::v1 {
         OrderModel(OrderModel &&) noexcept = default;  // Move constructor
         OrderModel &operator=(OrderModel &&) noexcept = default;  // Move assignment operator
 
-        std::string status;
+        std::string status = "ordered";
         int basketId{};
         dec::decimal<2> total{};
         dec::decimal<2> totalExTaxes{};
@@ -66,7 +74,6 @@ namespace api::v1 {
         std::string reference;
 
         explicit OrderModel(const Json::Value &json) : BaseModel(json) {
-            status = json[Field::status.getFieldName()].asString();
             basketId = json[Field::basketId.getFieldName()].asInt();
             total = json[Field::total.getFieldName()].asDouble();
             totalExTaxes = json[Field::totalExTaxes.getFieldName()].asDouble();

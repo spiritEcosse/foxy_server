@@ -30,11 +30,7 @@ std::string BasketItemModel::fieldsJsonObject() {
     std::string app_cloud_name;
     getenv("APP_CLOUD_NAME", app_cloud_name);
 
-    std::string str;
-    const Field field;
-    for(const auto &fieldNames = field.allFields; const auto &[fieldName, baseField]: fieldNames) {
-        str += fmt::format("'{}', {}, ", fieldName, baseField.getFullFieldName());
-    }
+    std::string str = BaseModel::fieldsJsonObject();
     QuerySet qs(ItemModel::tableName, "item", false, false);
     std::string jsonFields = ItemModel().fieldsJsonObject();
     jsonFields += fmt::format(", 'src', format_src(media.src, '{}')", app_cloud_name);
@@ -44,6 +40,6 @@ std::string BasketItemModel::fieldsJsonObject() {
         .order_by(std::make_pair(MediaModel::Field::sort, true))
         .functions(Function(fmt::format("format_src(media.src, '{}') as src", app_cloud_name)));
     std::string sql = qs.buildSelect();
-    str += fmt::format("'item', ({})", sql);
+    str += fmt::format(", 'item', ({})", sql);
     return str;
 }
