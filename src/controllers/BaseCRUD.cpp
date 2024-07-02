@@ -181,7 +181,7 @@ void BaseCRUD<T, R>::getList(const drogon::HttpRequestPtr &req,
 
     std::map<std::string, std::string, std::less<>> params;
     for(const auto &[key, value]: req->getParameters()) {
-        if(key != "page" && key != "limit" && key != "sort" && key != "order") {
+        if(key != "page" && key != "limit" && key != "sort") {
             params[key] = value;
         }
     }

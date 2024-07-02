@@ -218,11 +218,18 @@ BaseModel<T>::sqlSelectList(int page, int limit, const std::map<std::string, std
     QuerySet qsCount = T().qsCount();
     QuerySet qsPage = T().qsPage(page, limit);
 
+    typename T::Field field;
+    auto orderIt = params.find("order");
+    auto orderField = orderIt != params.end() && fieldExists(orderIt->second) ? field.allFields[orderIt->second]
+                                                                              : T::Field::updatedAt;
+
+    auto directionIt = params.find("direction");
+    bool isAsc = directionIt != params.end() && directionIt->second == "asc";
+
     QuerySet qs(T::tableName, limit, "data");
     qs.offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
         .only(allSetFields())
-        .order_by(std::make_pair(T::Field::updatedAt, false), std::make_pair(T::Field::id, false));
-    typename T::Field field;
+        .order_by(std::make_pair(orderField, isAsc), std::make_pair(T::Field::id, false));
     for(const auto &[key, value]: params) {
         if(fieldExists(key)) {
             qs.filter(field.allFields[key].getFullFieldName(), value);

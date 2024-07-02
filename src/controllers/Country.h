@@ -8,6 +8,7 @@ namespace api::v1 {
     class Country : public drogon::HttpController<Country>, public BaseCRUD<CountryModel, Country> {
     public:
         METHOD_LIST_BEGIN
+        METHOD_ADD(Country::getList, "", drogon::Get, drogon::Options);
         METHOD_ADD(Country::getOne, "admin/{1}", drogon::Get, drogon::Options, "api::v1::filters::JwtFilter");
         METHOD_ADD(Country::updateItem, "admin/{1}", drogon::Put, drogon::Options, "api::v1::filters::JwtFilter");
         METHOD_ADD(Country::createItem, "admin", drogon::Post, drogon::Options, "api::v1::filters::JwtFilter");

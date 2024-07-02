@@ -406,7 +406,11 @@ namespace api::v1 {
 
             auto mapFields = model.joinMap();
             // Use lastJoinTable to find in model's joinMap
-            if(auto it = mapFields.find(lastJoinTable); it != mapFields.end()) {
+            auto it = mapFields.find(lastJoinTable);
+            if(it == mapFields.end()) {
+                it = mapFields.find(tableName);
+            }
+            if(it != mapFields.end()) {
                 const auto &[joinField, joinModelField] = it->second;
                 joinInfo.joinTable.emplace_back(model.tableName);
                 joinInfo.joinCondition.emplace_back(std::move(fmt::format(R"({} = {})", joinField, joinModelField)));
@@ -420,6 +424,7 @@ namespace api::v1 {
 
         template<class T>
         QuerySet &left_join(const T &model) {
+
             // Get the last element from joinTable
             std::string lastJoinTable = joinInfo.joinTable.empty() ? tableName : joinInfo.joinTable.back();
 

@@ -22,9 +22,9 @@ $$
                ('user2@example.com', 'password2', 'User', 'Two', '2000-02-02', false);
 
 -- Mock data for address
-        INSERT INTO "address" (address, state_abbr, city, zipcode, avatar, user_id)
-        VALUES ('Address1', 'State1', 'City1', '12345', 'avatar1', 1),
-               ('Address2', 'State2', 'City2', '67890', 'avatar2', 2);
+        INSERT INTO "address" (address, country_id, city, zipcode, user_id)
+        VALUES ('Address1', 1, 'City1', '12345', 1),
+               ('Address2', 2, 'City2', '67890', 2);
 
 -- Mock data for review
         INSERT INTO review (status, user_id, item_id, comment)

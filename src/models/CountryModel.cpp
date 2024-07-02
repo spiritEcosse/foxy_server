@@ -3,8 +3,16 @@
 //
 
 #include "CountryModel.h"
+#include "AddressModel.h"
 
 using namespace api::v1;
+
+std::map<std::string, std::pair<std::string, std::string>, std::less<>> CountryModel::joinMap() const {
+    return {
+        {AddressModel::tableName,
+         {BaseModel<CountryModel>::Field::id.getFullFieldName(), AddressModel::Field::countryId.getFullFieldName()}},
+    };
+}
 
 std::vector<BaseField> CountryModel::fields() {
     return {

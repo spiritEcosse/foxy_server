@@ -5,6 +5,7 @@
 #include "ItemModel.h"
 #include "AddressModel.h"
 #include "UserModel.h"
+#include "CountryModel.h"
 #include <fmt/core.h>
 
 using namespace api::v1;
@@ -27,8 +28,11 @@ void Order::getOneAdmin(const drogon::HttpRequestPtr &req,
 
     QuerySet qsAddress(AddressModel::tableName, "_address");
     qsAddress.join(OrderModel())
+        .join(CountryModel())
         .filter(BaseModel<OrderModel>::Field::id.getFullFieldName(), stringId)
-        .jsonFields(AddressModel().fieldsJsonObject());
+        .jsonFields(fmt::format(R"({}, 'country', json_build_object({}))",
+                                AddressModel().fieldsJsonObject(),
+                                CountryModel().fieldsJsonObject()));
 
     QuerySet qsBasketItem(ItemModel::tableName, 0, std::string("_items"));
     qsBasketItem.join(BasketItemModel())

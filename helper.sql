@@ -129,14 +129,14 @@ $$
         (
             id         SERIAL PRIMARY KEY,
             address    VARCHAR(255) NOT NULL,
-            state_abbr VARCHAR(255) NOT NULL,
             city       VARCHAR(255) NOT NULL,
             zipcode    VARCHAR(255) NOT NULL,
-            avatar     VARCHAR(255) NOT NULL,
             user_id    INT          NOT NULL,
+            country_id INT          NOT NULL,
             created_at timestamp    NOT NULL DEFAULT NOW(),
             updated_at timestamp    NOT NULL DEFAULT NOW(),
-            FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE
+            FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE,
+            FOREIGN KEY (country_id) REFERENCES "country" (id) ON DELETE CASCADE
         );
 
 

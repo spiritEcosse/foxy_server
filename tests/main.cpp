@@ -263,7 +263,6 @@ DROGON_TEST(Create) {
             {std::string("state_abbr"), "mock state abbr"},
             {std::string("city"), "mock city"},
             {std::string("zipcode"), "mock zipcode"},
-            {std::string("avatar"), "mock avatar"},
             {std::string("user_id"), 1},
         };
         sendHttpRequest(path, expectedValues, entity);
@@ -361,7 +360,7 @@ DROGON_TEST(CheckMissingFields) {
     path = "/api/v1/basketitem/admin";
     sendHttpRequest(path, missingFields);
 
-    missingFields = {"address", "state_abbr", "city", "zipcode", "avatar", "user_id"};
+    missingFields = {"address", "state_abbr", "city", "zipcode", "user_id"};
     path = "/api/v1/address/admin";
     sendHttpRequest(path, missingFields);
 }
@@ -574,7 +573,6 @@ DROGON_TEST(Update) {
             {std::string("state_abbr"), "mock state abbr"},
             {std::string("city"), "mock city"},
             {std::string("zipcode"), "mock zipcode"},
-            {std::string("avatar"), "mock avatar"},
             {std::string("user_id"), 1},
             {std::string("id"), 1},
         };
