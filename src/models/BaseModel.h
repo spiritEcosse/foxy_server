@@ -43,7 +43,11 @@ namespace api::v1 {
         std::chrono::system_clock::time_point createdAt;
         int id = 0;
 
-        explicit BaseModel([[maybe_unused]] const Json::Value &json) {}
+        explicit BaseModel([[maybe_unused]] const Json::Value &json) {
+            if(json.isMember(Field::id.getFieldName())) {
+                id = json[Field::id.getFieldName()].asInt();
+            }
+        }
 
         struct ModelFieldHasher {
             std::size_t operator()(std::string_view sv) const {

@@ -9,7 +9,7 @@ namespace api::v1 {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(BasketItem::getOne, "{1}", drogon::Get, drogon::Options, "api::v1::filters::JwtGoogleFilter");
-        METHOD_ADD(BasketItem::updateItem, "{1}", drogon::Put, drogon::Options, "api::v1::filters::JwtGoogleFilter");
+        METHOD_ADD(BasketItem::updateItems, "items", drogon::Put, drogon::Options, "api::v1::filters::JwtGoogleFilter");
         METHOD_ADD(BasketItem::createItem, "", drogon::Post, drogon::Options, "api::v1::filters::JwtGoogleFilter");
         METHOD_ADD(BasketItem::getList, "", drogon::Get, drogon::Options, "api::v1::filters::JwtGoogleFilter");
         METHOD_ADD(BasketItem::deleteItem, "{1}", drogon::Delete, drogon::Options, "api::v1::filters::JwtGoogleFilter");

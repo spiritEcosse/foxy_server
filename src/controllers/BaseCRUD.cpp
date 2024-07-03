@@ -107,21 +107,22 @@ void BaseCRUD<T, R>::getItems(const drogon::HttpRequestPtr &req,
     std::vector<T> items;
     int index = 1;
     Json::Value jsonResponseError;
-    try {
-        std::ranges::for_each(itemsJson.begin(), itemsJson.end(), [&items, &index, &req](const auto &item) {
-            if(item[T::Field::id.getFieldName()].asInt() == 0 && req->method() == drogon::Put) {
-                throw RequiredFieldsException("id is required");
-            }
-            items.emplace_back(std::move(item));
-            ++index;
-        });
-    } catch(const RequiredFieldsException &e) {
-        jsonResponseError[std::to_string(index)] = e.getRequiredFields();
+    std::ranges::for_each(itemsJson.begin(),
+                          itemsJson.end(),
+                          [&items, &index, &jsonResponseError, &req](const auto &item) {
+                              if(item[T::Field::id.getFieldName()].asInt() == 0 && req->method() == drogon::Put) {
+                                  jsonResponseError[std::to_string(index)] = "id is required";
+                              }
+                              items.emplace_back(std::move(item));
+                              ++index;
+                          });
+    if(!jsonResponseError.empty()) {
         auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponseError));
         resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
         (*callbackPtr)(resp);
         return;
     }
+
     successCallback(std::move(items));
 }
 

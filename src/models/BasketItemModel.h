@@ -41,6 +41,9 @@ namespace api::v1 {
         BasketItemModel &operator=(BasketItemModel &&) noexcept = default;  // Move assignment operator
 
         explicit BasketItemModel(const Json::Value &json) : BaseModel(json) {
+            if(json.isMember(Field::price.getFieldName())) {
+                price = json[Field::price.getFieldName()].asDouble();
+            }
             basketId = json[Field::basketId.getFieldName()].asInt();
             itemId = json[Field::itemId.getFieldName()].asInt();
 
