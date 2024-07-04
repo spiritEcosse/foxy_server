@@ -429,7 +429,12 @@ namespace api::v1 {
 
             auto mapFields = model.joinMap();
             // Use lastJoinTable to find in model's joinMap
-            if(auto it = mapFields.find(lastJoinTable); it != mapFields.end()) {
+            // Use lastJoinTable to find in model's joinMap
+            auto it = mapFields.find(lastJoinTable);
+            if(it == mapFields.end()) {
+                it = mapFields.find(tableName);
+            }
+            if(it != mapFields.end()) {
                 const auto &[joinField, joinModelField] = it->second;
                 joinInfo.leftJoinTable.emplace_back(std::move(model.tableName));
                 joinInfo.leftJoinCondition.emplace_back(
