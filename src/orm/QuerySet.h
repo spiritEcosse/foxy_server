@@ -424,7 +424,6 @@ namespace api::v1 {
 
         template<class T>
         QuerySet &left_join(const T &model) {
-
             // Get the last element from joinTable
             std::string lastJoinTable = joinInfo.joinTable.empty() ? tableName : joinInfo.joinTable.back();
 
