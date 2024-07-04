@@ -17,13 +17,16 @@ namespace api::v1 {
 
         struct Field : public BaseModel::Field {
             static inline BaseField userId = BaseField("user_id", tableName);
+            static inline BaseField inUse = BaseField("in_use", tableName);
 
             Field() : BaseModel::Field() {
                 allFields[userId.getFieldName()] = userId;
+                allFields[inUse.getFieldName()] = inUse;
             }
         };
 
         int userId{};
+        bool inUse{};
         BasketModel() = default;
         BasketModel(const BasketModel &) = delete;  // Copy constructor
         BasketModel &operator=(const BasketModel &) = delete;  // Copy assignment operator
@@ -32,6 +35,11 @@ namespace api::v1 {
 
         explicit BasketModel(const Json::Value &json) : BaseModel(json) {
             userId = json[Field::userId.getFieldName()].asInt();
+            if(json.isMember(Field::inUse.getFieldName())) {
+                inUse = json[Field::inUse.getFieldName()].asBool();
+            } else {
+                inUse = true;
+            }
             validateField(Field::userId.getFieldName(), userId, missingFields);
         }
 

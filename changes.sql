@@ -126,6 +126,9 @@ SET country_id = country.id
 FROM country
 WHERE countries_ips.country_code = country.code;
 
+alter table basket
+    add column in_use BOOLEAN NOT NULL DEFAULT true;
+
 ALTER table "address"
     drop column avatar;
 ALTER table "address"
