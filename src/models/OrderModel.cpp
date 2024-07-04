@@ -70,14 +70,7 @@ OrderModel::sqlSelectList(int page, int limit, const std::map<std::string, std::
         .order_by(std::make_pair(BaseModel::Field::updatedAt, false), std::make_pair(BaseModel::Field::id, false))
         .group_by(BaseModel::Field::id, BaseModel::Field::updatedAt);
 
-    Field field;
-    BaseModel<OrderModel> model;
-    for(const auto &[key, value]: params) {
-        if(model.fieldExists(key)) {
-            qs.filter(field.allFields[key].getFullFieldName(), value);
-            qsCount.filter(field.allFields[key].getFullFieldName(), value);
-        }
-    }
+    applyFilters(qs, qsCount, params);
     return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
 }
 

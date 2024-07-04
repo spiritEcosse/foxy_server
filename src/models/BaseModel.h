@@ -102,6 +102,9 @@ namespace api::v1 {
         [[nodiscard]] bool fieldExists(const std::string &fieldName) const;
         [[nodiscard]] std::vector<BaseField> allSetFields() const;
         [[nodiscard]] virtual std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const;
+        virtual void applyFilters(QuerySet &qs,
+                                  QuerySet &qsCount,
+                                  const std::map<std::string, std::string, std::less<>> &params) const;
     };
 }
 

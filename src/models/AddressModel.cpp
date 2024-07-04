@@ -33,6 +33,7 @@ namespace api::v1 {
             .only(allSetFields())
             .functions(
                 Function(fmt::format(R"(, json_build_object({}) AS country)", CountryModel().fieldsJsonObject())));
+        applyFilters(qs, qsCount, params);
         return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
     }
 

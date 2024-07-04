@@ -230,12 +230,7 @@ BaseModel<T>::sqlSelectList(int page, int limit, const std::map<std::string, std
     qs.offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
         .only(allSetFields())
         .order_by(std::make_pair(orderField, isAsc), std::make_pair(T::Field::id, false));
-    for(const auto &[key, value]: params) {
-        if(fieldExists(key)) {
-            qs.filter(field.allFields[key].getFullFieldName(), value);
-            qsCount.filter(field.allFields[key].getFullFieldName(), value);
-        }
-    }
+    applyFilters(qs, qsCount, params);
     return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
 }
 
@@ -275,6 +270,19 @@ std::string BaseModel<T>::sqlSelectOne(const std::string &field,
 template<class T>
 std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseModel<T>::joinMap() const {
     return {};
+}
+
+template<class T>
+void BaseModel<T>::applyFilters(QuerySet &qs,
+                                QuerySet &qsCount,
+                                const std::map<std::string, std::string, std::less<>> &params) const {
+    typename T::Field field;
+    for(const auto &[key, value]: params) {
+        if(fieldExists(key)) {
+            qs.filter(field.allFields[key].getFullFieldName(), value);
+            qsCount.filter(field.allFields[key].getFullFieldName(), value);
+        }
+    }
 }
 
 template class api::v1::BaseModel<PageModel>;
