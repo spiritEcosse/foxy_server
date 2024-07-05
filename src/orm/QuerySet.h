@@ -330,6 +330,7 @@ namespace api::v1 {
                     query += fmt::format(" {} {} {} {} ", field, op, value, conjunction);
                 }
             }
+            query = std::string(query.substr(0, query.size() - 4));
 
             if(_doAndCheck) {
                 query = addExtraQuotes(query);
@@ -373,7 +374,7 @@ namespace api::v1 {
                          std::string value,
                          bool escape = true,
                          std::string op = "=",
-                         std::string conjunction = "") {
+                         std::string conjunction = "AND") {
             filterInfo.filters.emplace_back(field, op, value, conjunction, escape);
             return *this;
         }
