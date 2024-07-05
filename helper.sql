@@ -184,7 +184,7 @@ $$
         (
             id         SERIAL PRIMARY KEY,
             user_id    INT       NOT NULL,
-            is_use     BOOLEAN   NOT NULL DEFAULT true,
+            in_use     BOOLEAN   NOT NULL DEFAULT true,
             created_at timestamp NOT NULL DEFAULT NOW(),
             updated_at timestamp NOT NULL DEFAULT NOW(),
             FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE

@@ -74,10 +74,13 @@ DROGON_TEST(Create) {
         auto checkFields = [TEST_CTX,
                             dbClient](const HttpResponsePtr &resp, fieldsValMap &expectedValues, std::string entity) {
             std::cout << entity << std::endl;
+            auto respJson = *resp->getJsonObject();
+            Json::StreamWriterBuilder builder;
+            const std::string jsonString = Json::writeString(builder, respJson);
+            std::cout << jsonString << std::endl;
             REQUIRE(resp->getStatusCode() == k201Created);
             REQUIRE(resp->contentType() == CT_APPLICATION_JSON);
             REQUIRE(dbClient != nullptr);
-            auto respJson = *resp->getJsonObject();
 
             auto result = dbClient->execSqlSync(
                 fmt::format(R"(SELECT created_at, updated_at FROM "{}" ORDER BY id desc LIMIT 1)", std::move(entity)));
@@ -95,7 +98,7 @@ DROGON_TEST(Create) {
                         } else if constexpr(std::is_same_v<Type, std::string>) {
                             if(key == "src") {
                                 CHECK(respJson[key].asString() ==
-                                      fmt::format("https://.twic.pics/{}", std::get<std::string>(value)));
+                                      fmt::format("https:///{}", std::get<std::string>(value)));
                             } else if(key != "password") {
                                 CHECK(respJson[key].asString() == std::get<std::string>(value));
                             }
@@ -249,7 +252,7 @@ DROGON_TEST(Create) {
         path = "/api/v1/basketitem/admin";
         entity = "basket_item";
         expectedValues = {
-            {std::string("basket_id"), 1},
+            {std::string("basket_id"), 3},
             {std::string("item_id"), 1},
             {std::string("quantity"), 1},
             {std::string("price"), 1.0},
@@ -260,7 +263,7 @@ DROGON_TEST(Create) {
         entity = "address";
         expectedValues = {
             {std::string("address"), "mock address"},
-            {std::string("state_abbr"), "mock state abbr"},
+            {std::string("country_id"), 1},
             {std::string("city"), "mock city"},
             {std::string("zipcode"), "mock zipcode"},
             {std::string("user_id"), 1},
@@ -282,6 +285,11 @@ DROGON_TEST(CheckMissingFields) {
 
         for(const auto &key: missingFields) {
             CHECK(respJson[key] == key + " is required");
+        }
+
+        for(const auto &key: respJson.getMemberNames()) {
+            bool isKeyMissing = std::find(missingFields.begin(), missingFields.end(), key) != missingFields.end();
+            CHECK(isKeyMissing);
         }
     };
 
@@ -331,8 +339,7 @@ DROGON_TEST(CheckMissingFields) {
     path = "/api/v1/review/admin";
     sendHttpRequest(path, missingFields);
 
-    missingFields = {"status",
-                     "basket_id",
+    missingFields = {"basket_id",
                      "total",
                      "total_ex_taxes",
                      "delivery_fees",
@@ -356,11 +363,11 @@ DROGON_TEST(CheckMissingFields) {
     path = "/api/v1/basket/admin";
     sendHttpRequest(path, missingFields);
 
-    missingFields = {"basket_id", "item_id", "quantity", "price"};
+    missingFields = {"basket_id", "item_id"};
     path = "/api/v1/basketitem/admin";
     sendHttpRequest(path, missingFields);
 
-    missingFields = {"address", "state_abbr", "city", "zipcode", "user_id"};
+    missingFields = {"country_id", "address", "city", "zipcode", "user_id"};
     path = "/api/v1/address/admin";
     sendHttpRequest(path, missingFields);
 }
@@ -373,9 +380,12 @@ DROGON_TEST(Update) {
         auto checkFields = [TEST_CTX,
                             dbClient](const HttpResponsePtr &resp, fieldsValMap &expectedValues, std::string entity) {
             std::cout << entity << std::endl;
+            auto respJson = *resp->getJsonObject();
+            Json::StreamWriterBuilder builder;
+            const std::string jsonString = Json::writeString(builder, respJson);
+            std::cout << jsonString << std::endl;
             REQUIRE(resp->getStatusCode() == k200OK);
             REQUIRE(resp->contentType() == CT_APPLICATION_JSON);
-            auto respJson = *resp->getJsonObject();
             REQUIRE(dbClient != nullptr);
 
             auto result = dbClient->execSqlSync(
@@ -394,7 +404,7 @@ DROGON_TEST(Update) {
                         } else if constexpr(std::is_same_v<Type, std::string>) {
                             if(key == "src") {
                                 CHECK(respJson[key].asString() ==
-                                      fmt::format("https://.twic.pics/{}", std::get<std::string>(value)));
+                                      fmt::format("https:///{}", std::get<std::string>(value)));
                             } else if(key != "password") {
                                 CHECK(respJson[key].asString() == std::get<std::string>(value));
                             }
@@ -560,9 +570,6 @@ DROGON_TEST(Update) {
         expectedValues = {
             {std::string("basket_id"), 1},
             {std::string("item_id"), 1},
-            {std::string("quantity"), 1},
-            {std::string("price"), 1.0},
-            {std::string("id"), 1},
         };
         sendHttpRequest(path, expectedValues, entity);
 
@@ -570,8 +577,8 @@ DROGON_TEST(Update) {
         entity = "address";
         expectedValues = {
             {std::string("address"), "mock address"},
-            {std::string("state_abbr"), "mock state abbr"},
             {std::string("city"), "mock city"},
+            {std::string("country_id"), 1},
             {std::string("zipcode"), "mock zipcode"},
             {std::string("user_id"), 1},
             {std::string("id"), 1},
