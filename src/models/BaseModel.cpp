@@ -23,6 +23,7 @@
 #include "QuerySet.h"
 #include "StringUtils.h"
 #include "decimal.h"
+#include "FinancialDetailsModel.h"
 
 using namespace api::v1;
 
@@ -298,3 +299,4 @@ template class api::v1::BaseModel<BasketItemModel>;
 template class api::v1::BaseModel<BasketModel>;
 template class api::v1::BaseModel<AddressModel>;
 template class api::v1::BaseModel<ReviewModel>;
+template class api::v1::BaseModel<FinancialDetailsModel>;

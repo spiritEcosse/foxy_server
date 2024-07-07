@@ -15,6 +15,7 @@
 #include "Auth.h"
 #include <sentry.h>
 #include "RequiredFieldsException.h"
+#include "FinancialDetails.h"
 
 using namespace api::v1;
 using namespace drogon::orm;
@@ -383,3 +384,4 @@ template class api::v1::BaseCRUD<BasketItemModel, BasketItem>;
 template class api::v1::BaseCRUD<AddressModel, Address>;
 template class api::v1::BaseCRUD<ReviewModel, Review>;
 template class api::v1::BaseCRUD<BasketModel, Basket>;
+template class api::v1::BaseCRUD<FinancialDetailsModel, FinancialDetails>;

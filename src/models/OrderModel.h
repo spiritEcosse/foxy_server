@@ -32,7 +32,6 @@ namespace api::v1 {
             static inline BaseField basketId = BaseField("basket_id", tableName);
             static inline BaseField total = BaseField("total", tableName);
             static inline BaseField totalExTaxes = BaseField("total_ex_taxes", tableName);
-            static inline BaseField deliveryFees = BaseField("delivery_fees", tableName);
             static inline BaseField taxRate = BaseField("tax_rate", tableName);
             static inline BaseField taxes = BaseField("taxes", tableName);
             static inline BaseField userId = BaseField("user_id", tableName);
@@ -45,7 +44,6 @@ namespace api::v1 {
                 allFields[basketId.getFieldName()] = basketId;
                 allFields[total.getFieldName()] = total;
                 allFields[totalExTaxes.getFieldName()] = totalExTaxes;
-                allFields[deliveryFees.getFieldName()] = deliveryFees;
                 allFields[taxRate.getFieldName()] = taxRate;
                 allFields[taxes.getFieldName()] = taxes;
                 allFields[userId.getFieldName()] = userId;
@@ -65,7 +63,6 @@ namespace api::v1 {
         int basketId{};
         dec::decimal<2> total{};
         dec::decimal<2> totalExTaxes{};
-        dec::decimal<2> deliveryFees{};
         dec::decimal<2> taxRate{};
         dec::decimal<2> taxes{};
         bool returned = false;
@@ -77,7 +74,6 @@ namespace api::v1 {
             basketId = json[Field::basketId.getFieldName()].asInt();
             total = json[Field::total.getFieldName()].asDouble();
             totalExTaxes = json[Field::totalExTaxes.getFieldName()].asDouble();
-            deliveryFees = json[Field::deliveryFees.getFieldName()].asDouble();
             taxRate = json[Field::taxRate.getFieldName()].asDouble();
             taxes = json[Field::taxes.getFieldName()].asDouble();
             userId = json[Field::userId.getFieldName()].asInt();
@@ -93,7 +89,6 @@ namespace api::v1 {
             validateField(Field::basketId.getFieldName(), basketId, missingFields);
             validateField(Field::total.getFieldName(), total, missingFields);
             validateField(Field::totalExTaxes.getFieldName(), totalExTaxes, missingFields);
-            validateField(Field::deliveryFees.getFieldName(), deliveryFees, missingFields);
             validateField(Field::taxRate.getFieldName(), taxRate, missingFields);
             validateField(Field::taxes.getFieldName(), taxes, missingFields);
             validateField(Field::userId.getFieldName(), userId, missingFields);

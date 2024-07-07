@@ -211,7 +211,6 @@ $$
             basket_id      INT            NOT NULL UNIQUE,
             total          DECIMAL(10, 2) NOT NULL,
             total_ex_taxes DECIMAL(10, 2) NOT NULL,
-            delivery_fees  DECIMAL(10, 2) NOT NULL,
             tax_rate       DECIMAL(10, 2) NOT NULL,
             taxes          DECIMAL(10, 2) NOT NULL,
             user_id        INT            NOT NULL,
@@ -234,6 +233,14 @@ $$
             country_id   INT,
             PRIMARY KEY (start_range, end_range),
             FOREIGN KEY (country_id) REFERENCES country (id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS "financial_details"
+        (
+            id         SERIAL PRIMARY KEY,
+            tax_rate   DECIMAL(10, 2) NOT NULL,
+            created_at timestamp      NOT NULL DEFAULT NOW(),
+            updated_at timestamp      NOT NULL DEFAULT NOW()
         );
 
         CREATE INDEX idx_media_item_id_sort ON media (item_id, sort ASC);
@@ -323,6 +330,12 @@ $$
         CREATE TRIGGER set_timestamp
             BEFORE UPDATE
             ON "countries_ips"
+            FOR EACH ROW
+        EXECUTE PROCEDURE trigger_set_timestamp();
+
+        CREATE TRIGGER set_timestamp
+            BEFORE UPDATE
+            ON "financial_details"
             FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
 

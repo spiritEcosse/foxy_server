@@ -216,7 +216,6 @@ DROGON_TEST(Create) {
             {std::string("basket_id"), 3},
             {std::string("total"), 1.0},
             {std::string("total_ex_taxes"), 1.0},
-            {std::string("delivery_fees"), 1.0},
             {std::string("tax_rate"), 1.0},
             {std::string("taxes"), 1.0},
             {std::string("user_id"), 1},
@@ -339,15 +338,7 @@ DROGON_TEST(CheckMissingFields) {
     path = "/api/v1/review/admin";
     sendHttpRequest(path, missingFields);
 
-    missingFields = {"basket_id",
-                     "total",
-                     "total_ex_taxes",
-                     "delivery_fees",
-                     "tax_rate",
-                     "taxes",
-                     "user_id",
-                     "reference",
-                     "address_id"};
+    missingFields = {"basket_id", "total", "total_ex_taxes", "tax_rate", "taxes", "user_id", "reference", "address_id"};
     path = "/api/v1/order/admin";
     sendHttpRequest(path, missingFields);
 
@@ -528,7 +519,6 @@ DROGON_TEST(Update) {
             {std::string("basket_id"), 3},
             {std::string("total"), 1.0},
             {std::string("total_ex_taxes"), 1.0},
-            {std::string("delivery_fees"), 1.0},
             {std::string("tax_rate"), 1.0},
             {std::string("taxes"), 1.0},
             {std::string("user_id"), 1},

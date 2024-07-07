@@ -58,11 +58,10 @@ $$
                (2, 2, 2, 200.00);
 
 -- Mock data for order
-        INSERT INTO "order" (status, basket_id, total, total_ex_taxes, delivery_fees, tax_rate, taxes, user_id,
-                             reference,
-                             address_id, returned)
-        VALUES ('Completed', 1, 100.00, 90.00, 10.00, 0.10, 10.00, 1, 'REF1', 1, false),
-               ('Pending', 2, 200.00, 180.00, 20.00, 0.10, 20.00, 2, 'REF2', 2, false);
+        INSERT INTO "order" (status, basket_id, total, total_ex_taxes, tax_rate, taxes, user_id, reference, address_id,
+                             returned)
+        VALUES ('Completed', 1, 100.00, 90.00, 0.10, 10.00, 1, 'REF1', 1, false),
+               ('Pending', 2, 200.00, 180.00, 0.10, 20.00, 2, 'REF2', 2, false);
 
 -- Mock data for countries_ips
         INSERT INTO countries_ips (start_range, end_range, country_code, country_name, country_id)

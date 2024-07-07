@@ -143,6 +143,21 @@ SET country_id = 1;
 ALTER table "address"
     alter column country_id set not null;
 
+CREATE TABLE IF NOT EXISTS "financial_details"
+(
+    id         SERIAL PRIMARY KEY,
+    tax_rate   DECIMAL(10, 2) NOT NULL,
+    created_at timestamp      NOT NULL DEFAULT NOW(),
+    updated_at timestamp      NOT NULL DEFAULT NOW()
+);
+
+CREATE TRIGGER set_timestamp
+    BEFORE UPDATE
+    ON "financial_details"
+    FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_timestamp();
+
+
 do
 $$
     BEGIN
