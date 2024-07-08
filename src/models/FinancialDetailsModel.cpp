@@ -8,7 +8,7 @@
 using namespace api::v1;
 
 std::vector<BaseField> FinancialDetailsModel::fields() {
-    return {Field::taxRate};
+    return {Field::taxRate, Field::gateway, Field::gatewayMerchantId, Field::merchantId, Field::merchantName};
 }
 
 std::vector<
@@ -16,5 +16,9 @@ std::vector<
 FinancialDetailsModel::getObjectValues() const {
     return {
         {Field::taxRate, taxRate},
+        {Field::gateway, gateway},
+        {Field::gatewayMerchantId, gatewayMerchantId},
+        {Field::merchantId, merchantId},
+        {Field::merchantName, merchantName},
     };
 }

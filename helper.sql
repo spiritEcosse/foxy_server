@@ -237,10 +237,14 @@ $$
 
         CREATE TABLE IF NOT EXISTS "financial_details"
         (
-            id         SERIAL PRIMARY KEY,
-            tax_rate   DECIMAL(10, 2) NOT NULL,
-            created_at timestamp      NOT NULL DEFAULT NOW(),
-            updated_at timestamp      NOT NULL DEFAULT NOW()
+            id                  SERIAL PRIMARY KEY,
+            tax_rate            DECIMAL(10, 2) NOT NULL,
+            gateway             VARCHAR(255)   NOT NULL,
+            gateway_merchant_id VARCHAR(255)   NOT NULL,
+            merchant_id         VARCHAR(255)   NOT NULL,
+            merchant_name       VARCHAR(255)   NOT NULL,
+            created_at          timestamp      NOT NULL DEFAULT NOW(),
+            updated_at          timestamp      NOT NULL DEFAULT NOW()
         );
 
         CREATE INDEX idx_media_item_id_sort ON media (item_id, sort ASC);
