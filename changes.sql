@@ -143,6 +143,19 @@ SET country_id = 1;
 ALTER table "address"
     alter column country_id set not null;
 
+drop table social_media;
+CREATE TABLE IF NOT EXISTS social_media
+(
+    id          SERIAL PRIMARY KEY,
+    title       VARCHAR(255) NOT NULL,
+    item_id     INT          NOT NULL,
+    created_at  timestamp    NOT NULL DEFAULT NOW(),
+    updated_at  timestamp    NOT NULL DEFAULT NOW(),
+    external_id VARCHAR(255) NOT NULL,
+    FOREIGN KEY (item_id) REFERENCES item (id) ON DELETE CASCADE
+);
+
+
 CREATE TABLE IF NOT EXISTS "financial_details"
 (
     id                  SERIAL PRIMARY KEY,

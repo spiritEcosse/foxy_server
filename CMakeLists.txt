@@ -79,6 +79,17 @@ CPMAddPackage(
 target_link_libraries(${PROJECT_NAME} PRIVATE jwt-cpp)
 # End adding jwt-cpp
 
+# Start adding libcurl
+CPMAddPackage(
+        NAME libcurl
+        VERSION 8.8.0
+        GITHUB_REPOSITORY curl/curl
+        GIT_TAG curl-8_8_0
+)
+target_link_libraries(${PROJECT_NAME} PRIVATE libcurl)
+# End adding libcurl
+
+
 # Start adding hilch/Bcrypt.cpp
 
 CPMAddPackage(

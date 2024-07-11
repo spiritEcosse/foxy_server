@@ -12,6 +12,7 @@
 #include "ShippingProfile.h"
 #include "ShippingRate.h"
 #include "Country.h"
+#include "SocialMedia.h"
 #include "Auth.h"
 #include <sentry.h>
 #include "RequiredFieldsException.h"
@@ -385,3 +386,4 @@ template class api::v1::BaseCRUD<AddressModel, Address>;
 template class api::v1::BaseCRUD<ReviewModel, Review>;
 template class api::v1::BaseCRUD<BasketModel, Basket>;
 template class api::v1::BaseCRUD<FinancialDetailsModel, FinancialDetails>;
+template class api::v1::BaseCRUD<SocialMediaModel, SocialMedia>;
