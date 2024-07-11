@@ -283,7 +283,10 @@ void TwitterClient::postTweet(Tweet& tweet) {
         getenv("APP_DOMAIN", domain);
         std::string url = fmt::format("https://{}/item/{}", domain, tweet.itemSlug);
         Json::Value jsonObj;
-        jsonObj["text"] = fmt::format("{}\n{}", tweet.title, url);
+        jsonObj["text"] =
+            fmt::format("{}\nExplore #FaithFishArt: Discover and buy inspiring art. Follow for updates! {}",
+                        tweet.title,
+                        url);
         std::for_each(tweet.downloads.begin(), tweet.downloads.end(), [&jsonObj](const auto& info) {
             Json::Value root;
             std::istringstream responseStream(info.response);
