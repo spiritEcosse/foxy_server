@@ -7,6 +7,7 @@
 #include <future>
 #include <vector>
 #include <sentry.h>
+#include "fmt/format.h"
 
 using namespace api::v1;
 
@@ -81,7 +82,7 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
                            const std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> &_callbackPtr) {
                         Json::Value jsonResponse;
                         jsonResponse["result"] =
-                            std::format("You are going to publish the count of {} items.", r.size());
+                            fmt::format("You are going to publish the count of {} items.", r.size());
                         auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
                         resp->setStatusCode(drogon::HttpStatusCode::k200OK);
                         (*_callbackPtr)(resp);
