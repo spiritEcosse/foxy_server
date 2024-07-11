@@ -2,7 +2,7 @@
 #include "ItemModel.h"
 #include "MediaModel.h"
 #include "QuerySet.h"
-#include "src/clients/TwitterClient.h"
+#include "TwitterClient.h"
 #include <memory>
 #include <future>
 #include <vector>
