@@ -13,6 +13,7 @@
 #include <map>
 #include <drogon/drogon.h>
 #include <fstream>
+#include <sentry.h>
 
 std::unique_ptr<TwitterClient> TwitterClient::instance = nullptr;
 
@@ -313,12 +314,30 @@ void TwitterClient::postTweet(Tweet& tweet) {
         // Check for errors
         if(res != CURLE_OK) {
             std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+            LOG_ERROR << curl_easy_strerror(res);
+            sentry_capture_event(sentry_value_new_message_event(
+                /*   level */ SENTRY_LEVEL_ERROR,
+                /*  logger */ "postTweet",
+                /* message */ curl_easy_strerror(res)));
         } else {
+            long response_code;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+            std::cout << "Response code: " << response_code << std::endl;
+            std::cout << "Response: " << responseString << std::endl;
+
             Json::Value root;
             std::istringstream responseStream(responseString);
             responseStream >> root;
-            tweet.tweetId = root["data"]["id"].asString();
-            std::cout << "Response: " << responseString << std::endl;
+
+            if(response_code == 201) {
+                tweet.tweetId = root["data"]["id"].asString();
+            } else {
+                LOG_ERROR << root.asString();
+                sentry_capture_event(sentry_value_new_message_event(
+                    /*   level */ SENTRY_LEVEL_ERROR,
+                    /*  logger */ "postTweet",
+                    /* message */ root.asCString()));
+            }
         }
 
         curl_slist_free_all(headers);
