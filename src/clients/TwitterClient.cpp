@@ -233,6 +233,10 @@ void TwitterClient::postTweet(Tweet& tweet) {
     multiHandle(multi_handle);
     cleanupHandles(multi_handle, tweet.downloads);
 
+    for(auto& info: tweet.downloads) {
+        info.ofs->close();
+    }
+
     uploadMediaFiles(tweet.downloads);
 
     CURL* curl;

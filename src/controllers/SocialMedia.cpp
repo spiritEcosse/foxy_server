@@ -20,27 +20,31 @@ void SocialMedia::handleRow(const auto &row) {
     auto mediaList = row[3].template as<Json::Value>();
     std::cout << title << mediaList << std::endl;
     std::vector<FileTransferInfo> mediaUrls = {};
-    std::for_each(mediaList.begin(), mediaList.end(), [&mediaUrls](const auto &media) {
-        mediaUrls.emplace_back(media.asString(), media.asString().substr(media.asString().find_last_of('/') + 1));
+    std::for_each(mediaList.begin(), mediaList.end(), [&mediaUrls](const Json::Value &media) {
+        std::string mediaUrl = media.asString();
+        std::string fileName = mediaUrl.substr(mediaUrl.find_last_of('/') + 1);
+        mediaUrls.emplace_back(fmt::format("{}?twic=v1/cover=4000", mediaUrl), fileName);
     });
     Tweet tweet(title, std::move(mediaUrls), std::move(slug));
     twitterClient.postTweet(tweet);
 
-    SocialMediaModel item(std::string("twitter"), tweet.tweetId, itemId);
-    std::string query = SocialMediaModel().sqlInsert(item);
-    auto dbClient = drogon::app().getDbClient("default_not_fast");
-    dbClient->execSqlAsync(
-        query,
-        [](const drogon::orm::Result &r) {
-            std::cout << "Inserted " << r.affectedRows() << " rows." << std::endl;
-        },
-        [](const drogon::orm::DrogonDbException &e) {
-            LOG_ERROR << e.base().what();
-            sentry_capture_event(sentry_value_new_message_event(
-                /*   level */ SENTRY_LEVEL_ERROR,
-                /*  logger */ "handleRow",
-                /* message */ e.base().what()));
-        });
+    if(!tweet.tweetId.empty()) {
+        SocialMediaModel item(std::string("twitter"), tweet.tweetId, itemId);
+        std::string query = SocialMediaModel().sqlInsert(item);
+        auto dbClient = drogon::app().getDbClient("default_not_fast");
+        dbClient->execSqlAsync(
+            query,
+            [](const drogon::orm::Result &r) {
+                std::cout << "Inserted " << r.affectedRows() << " rows." << std::endl;
+            },
+            [](const drogon::orm::DrogonDbException &e) {
+                LOG_ERROR << e.base().what();
+                sentry_capture_event(sentry_value_new_message_event(
+                    /*   level */ SENTRY_LEVEL_ERROR,
+                    /*  logger */ "handleRow",
+                    /* message */ e.base().what()));
+            });
+    }
 }
 
 void SocialMedia::handleSqlResultPublish(const drogon::orm::Result &r) {
