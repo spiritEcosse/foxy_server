@@ -79,9 +79,10 @@ struct Tweet {
     std::string title;
     std::vector<FileTransferInfo> downloads;
     std::string tweetId;
+    std::string itemSlug;
 
-    Tweet(std::string title, std::vector<FileTransferInfo> downloads) :
-        title(std::move(title)), downloads(std::move(downloads)) {}
+    Tweet(std::string title, std::vector<FileTransferInfo> downloads, std::string itemSlug) :
+        title(std::move(title)), downloads(std::move(downloads)), itemSlug(std::move(itemSlug)) {}
 };
 
 class TwitterClient {

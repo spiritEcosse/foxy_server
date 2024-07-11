@@ -15,13 +15,14 @@ void SocialMedia::handleRow(const auto &row) {
 
     std::string title = row[0].template as<std::string>();
     auto itemId = row[1].template as<int>();
-    auto mediaList = row[2].template as<Json::Value>();
+    auto slug = row[2].template as<std::string>();
+    auto mediaList = row[3].template as<Json::Value>();
     std::cout << title << mediaList << std::endl;
     std::vector<FileTransferInfo> mediaUrls = {};
     std::for_each(mediaList.begin(), mediaList.end(), [&mediaUrls](const auto &media) {
         mediaUrls.emplace_back(media.asString(), media.asString().substr(media.asString().find_last_of('/') + 1));
     });
-    Tweet tweet(title, std::move(mediaUrls));
+    Tweet tweet(title, std::move(mediaUrls), std::move(slug));
     twitterClient.postTweet(tweet);
 
     SocialMediaModel item(std::string("twitter"), tweet.tweetId, itemId);
@@ -66,7 +67,7 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
     auto dbClient = drogon::app().getFastDbClient("default");
     QuerySet qs(ItemModel::tableName, 1, "items", false, true);  // remove 1 and set all
-    qs.only(ItemModel::Field::title, ItemModel::Field::id)
+    qs.only(ItemModel::Field::title, ItemModel::Field::id, ItemModel::Field::slug)
         .join(MediaModel())
         .left_join(SocialMediaModel())
         .filter(ItemModel::Field::id.getFullFieldName(), std::string("93"))  // remove

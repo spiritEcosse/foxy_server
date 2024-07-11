@@ -3,6 +3,7 @@
 //
 
 #include "TwitterClient.h"
+#include "fmt/format.h"
 #include <string>
 #include <random>
 #include <openssl/buffer.h>
@@ -274,8 +275,11 @@ void TwitterClient::postTweet(Tweet& tweet) {
         headers = curl_slist_append(headers, authHeader.c_str());
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
         // Create a Json::Value object and set "text" field
+        std::string domain;
+        getenv("APP_DOMAIN", domain);
+        std::string url = fmt::format("https://{}/item/{}", domain, tweet.itemSlug);
         Json::Value jsonObj;
-        jsonObj["text"] = tweet.title;
+        jsonObj["text"] = fmt::format("{}\n{}", tweet.title, url);
         std::for_each(tweet.downloads.begin(), tweet.downloads.end(), [&jsonObj](const auto& info) {
             Json::Value root;
             std::istringstream responseStream(info.response);
