@@ -113,6 +113,7 @@ private:
     }
 
     void uploadMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos);
+    void downloadMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos);
     void addEasyHandleUpload(CURLM* multi_handle, FileTransferInfo& info);
 
 public:

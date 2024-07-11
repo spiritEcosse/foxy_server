@@ -145,6 +145,10 @@ void cleanupHandles(CURLM* multi_handle, std::vector<FileTransferInfo>& fileTran
             curl_formfree(info.post);
             info.post = nullptr;
         }
+
+        if(info.ofs) {
+            info.ofs->close();
+        }
     }
     curl_multi_cleanup(multi_handle);
 }
@@ -224,19 +228,19 @@ void TwitterClient::uploadMediaFiles(std::vector<FileTransferInfo>& fileTransfer
     cleanupHandles(multi_handle, fileTransferInfos);
 }
 
-void TwitterClient::postTweet(Tweet& tweet) {
+void TwitterClient::downloadMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos) {
     CURLM* multi_handle = curl_multi_init();
 
-    for(auto& info: tweet.downloads) {
+    for(auto& info: fileTransferInfos) {
         addEasyHandleDownload(multi_handle, info);
     }
+
     multiHandle(multi_handle);
-    cleanupHandles(multi_handle, tweet.downloads);
+    cleanupHandles(multi_handle, fileTransferInfos);
+}
 
-    for(auto& info: tweet.downloads) {
-        info.ofs->close();
-    }
-
+void TwitterClient::postTweet(Tweet& tweet) {
+    downloadMediaFiles(tweet.downloads);
     uploadMediaFiles(tweet.downloads);
 
     CURL* curl;
@@ -274,7 +278,7 @@ void TwitterClient::postTweet(Tweet& tweet) {
         authHeader.pop_back();
 
         // Set up CURL request with the Authorization header
-        struct curl_slist* headers = NULL;
+        struct curl_slist* headers = nullptr;
         headers = curl_slist_append(headers, "Content-Type: application/json");
         headers = curl_slist_append(headers, authHeader.c_str());
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
