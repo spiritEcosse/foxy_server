@@ -112,9 +112,12 @@ private:
         getenv("TWITTER_BEREAR_TOKEN", bearerToken);
     }
 
-    void uploadMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos);
-    void downloadMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos);
+    typedef void (TwitterClient::*TransferFunc)(CURLM* multi_handle, FileTransferInfo& info);
+
+    void transMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos, TransferFunc transferFunc);
     void addEasyHandleUpload(CURLM* multi_handle, FileTransferInfo& info);
+    void addEasyHandleDownload(CURLM* multi_handle, FileTransferInfo& info);
+    void performPost(Tweet& tweet);
 
 public:
     // Deleted copy constructor and assignment operator

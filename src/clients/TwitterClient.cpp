@@ -14,6 +14,7 @@
 #include <drogon/drogon.h>
 #include <fstream>
 #include <sentry.h>
+#include "sentryHelper.h"
 
 std::unique_ptr<TwitterClient> TwitterClient::instance = nullptr;
 
@@ -117,8 +118,7 @@ std::string generateNonce(size_t length = 32) {
     return nonce;
 }
 
-// Add easy handle for each download
-void addEasyHandleDownload(CURLM* multi_handle, FileTransferInfo& info) {
+void TwitterClient::addEasyHandleDownload(CURLM* multi_handle, FileTransferInfo& info) {
     info.easy_handle = curl_easy_init();
     if(info.easy_handle) {
         curl_easy_setopt(info.easy_handle, CURLOPT_URL, info.url.c_str());
@@ -218,34 +218,19 @@ void TwitterClient::addEasyHandleUpload(CURLM* multi_handle, FileTransferInfo& i
     }
 }
 
-void TwitterClient::uploadMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos) {
+void TwitterClient::transMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos, TransferFunc transferFunc) {
     CURLM* multi_handle = curl_multi_init();
 
     for(auto& info: fileTransferInfos) {
-        addEasyHandleUpload(multi_handle, info);
+        (this->*transferFunc)(multi_handle, info);
     }
 
     multiHandle(multi_handle);
     cleanupHandles(multi_handle, fileTransferInfos);
 }
 
-void TwitterClient::downloadMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos) {
-    CURLM* multi_handle = curl_multi_init();
-
-    for(auto& info: fileTransferInfos) {
-        addEasyHandleDownload(multi_handle, info);
-    }
-
-    multiHandle(multi_handle);
-    cleanupHandles(multi_handle, fileTransferInfos);
-}
-
-void TwitterClient::postTweet(Tweet& tweet) {
-    downloadMediaFiles(tweet.downloads);
-    uploadMediaFiles(tweet.downloads);
-
+void TwitterClient::performPost(Tweet& tweet) {
     CURL* curl;
-    CURLcode res;
     curl = curl_easy_init();
     if(curl) {
         std::string httpMethod = "POST";
@@ -267,23 +252,21 @@ void TwitterClient::postTweet(Tweet& tweet) {
         std::string signature = calculateOAuthSignature(httpMethod, baseUrl, params, apiSecretKey, accessTokenSecret);
 
         // Add the signature to the params map
-        params["oauth_signature"] = urlEncode(signature);  // Ensure the signature is URL encoded
+        params["oauth_signature"] = urlEncode(signature);
 
         // Construct the Authorization header
         std::string authHeader = "Authorization: OAuth ";
         for(const auto& param: params) {
             authHeader += param.first + "=\"" + param.second + "\", ";
         }
-        // Remove the last comma and space
         authHeader.pop_back();
         authHeader.pop_back();
 
-        // Set up CURL request with the Authorization header
         struct curl_slist* headers = nullptr;
         headers = curl_slist_append(headers, "Content-Type: application/json");
         headers = curl_slist_append(headers, authHeader.c_str());
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-        // Create a Json::Value object and set "text" field
+
         std::string domain;
         getenv("APP_DOMAIN", domain);
         std::string url = fmt::format("https://{}/item/{}", domain, tweet.itemSlug);
@@ -310,37 +293,32 @@ void TwitterClient::postTweet(Tweet& tweet) {
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseString);
 
-        res = curl_easy_perform(curl);
-        // Check for errors
-        if(res != CURLE_OK) {
-            std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
-            LOG_ERROR << curl_easy_strerror(res);
-            sentry_capture_event(sentry_value_new_message_event(
-                /*   level */ SENTRY_LEVEL_ERROR,
-                /*  logger */ "postTweet",
-                /* message */ curl_easy_strerror(res)));
-        } else {
-            long response_code;
-            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-            std::cout << "Response code: " << response_code << std::endl;
-            std::cout << "Response: " << responseString << std::endl;
+        CURLcode res = curl_easy_perform(curl);
+        long response_code = 0;
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
 
+        if(res == CURLE_OK && (response_code >= 200 && response_code < 300)) {
+            // Success: handle successful response
             Json::Value root;
             std::istringstream responseStream(responseString);
             responseStream >> root;
-
-            if(response_code == 201) {
-                tweet.tweetId = root["data"]["id"].asString();
-            } else {
-                LOG_ERROR << root.asString();
-                sentry_capture_event(sentry_value_new_message_event(
-                    /*   level */ SENTRY_LEVEL_ERROR,
-                    /*  logger */ "postTweet",
-                    /* message */ root.asCString()));
-            }
+            tweet.tweetId = root["data"]["id"].asString();
+        } else if(res == CURLE_OK) {
+            // add here response
+            std::string error = fmt::format("response_code: {}, response: {}", response_code, responseString);
+            sentryHelper(error, "performPost");
+        } else {
+            // A transport level error occurred
+            sentryHelper(curl_easy_strerror(res), "performPost");
         }
 
         curl_slist_free_all(headers);
     }
     curl_easy_cleanup(curl);
+}
+
+void TwitterClient::postTweet(Tweet& tweet) {
+    transMediaFiles(tweet.downloads, &TwitterClient::addEasyHandleDownload);
+    transMediaFiles(tweet.downloads, &TwitterClient::addEasyHandleUpload);
+    performPost(tweet);
 };
