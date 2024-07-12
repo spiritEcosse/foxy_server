@@ -56,6 +56,7 @@ include_directories(${CMAKE_SOURCE_DIR}/src/utils/request)
 include_directories(${CMAKE_SOURCE_DIR}/src/controllers)
 include_directories(${CMAKE_SOURCE_DIR}/src/clients)
 include_directories(${CMAKE_SOURCE_DIR}/src/auth)
+include_directories(${CMAKE_SOURCE_DIR}/src/sentry_catcher)
 
 set(CMAKE_SYSTEM_PROCESSOR arm) # why this?
 
