@@ -2,6 +2,7 @@
 #include "env.h"
 #include <sentry.h>
 #include <fmt/format.h>
+#include "sentryHelper.h"
 
 using namespace drogon;
 
@@ -62,10 +63,7 @@ int main() {
     });
     app().registerHandler("/sentry",
                           [](const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
-                              sentry_capture_event(sentry_value_new_message_event(
-                                  /*   level */ SENTRY_LEVEL_INFO,
-                                  /*  logger */ "custom",
-                                  /* message */ "It works!"));
+                              sentryHelper("It works!", "custom");
                               Json::Value json;
                               json["result"] = "ok";
                               json["message"] = "sentry, checked! (SENTRY_LEVEL_INFO, custom, It works!)";

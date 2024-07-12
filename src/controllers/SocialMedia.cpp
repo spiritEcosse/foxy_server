@@ -6,8 +6,8 @@
 #include <memory>
 #include <future>
 #include <vector>
-#include <sentry.h>
 #include "fmt/format.h"
+#include "sentryHelper.h"
 
 using namespace api::v1;
 
@@ -38,11 +38,8 @@ void SocialMedia::handleRow(const auto &row) {
                 std::cout << "Inserted " << r.affectedRows() << " rows." << std::endl;
             },
             [](const drogon::orm::DrogonDbException &e) {
-                LOG_ERROR << e.base().what();
-                sentry_capture_event(sentry_value_new_message_event(
-                    /*   level */ SENTRY_LEVEL_ERROR,
-                    /*  logger */ "handleRow",
-                    /* message */ e.base().what()));
+                std::string error = e.base().what();
+                sentryHelper(error, "handleRow");
             });
     }
 }

@@ -14,9 +14,9 @@
 #include "Country.h"
 #include "SocialMedia.h"
 #include "Auth.h"
-#include <sentry.h>
 #include "RequiredFieldsException.h"
 #include "FinancialDetails.h"
+#include "sentryHelper.h"
 
 using namespace api::v1;
 using namespace drogon::orm;
@@ -319,11 +319,8 @@ void BaseCRUD<T, R>::handleSqlError(
         resp->setStatusCode(drogon::HttpStatusCode::k404NotFound);
         (*callbackPtr)(resp);
     } else {
-        LOG_ERROR << e.base().what();
-        sentry_capture_event(sentry_value_new_message_event(
-            /*   level */ SENTRY_LEVEL_ERROR,
-            /*  logger */ "handleSqlError",
-            /* message */ e.base().what()));
+        std::string error = e.base().what();
+        sentryHelper(error, "handleSqlError");
         auto resp = drogon::HttpResponse::newHttpResponse();
         resp->setStatusCode(drogon::HttpStatusCode::k500InternalServerError);
         (*callbackPtr)(resp);
