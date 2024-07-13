@@ -16,6 +16,7 @@ std::vector<BaseField> UserModel::fields() {
         Field::lastName,
         Field::birthday,
         Field::hasNewsletter,
+        Field::isAdmin,
     };
 }
 
@@ -28,6 +29,7 @@ UserModel::getObjectValues() const {
         {Field::lastName, lastName},
         {Field::birthday, birthday},
         {Field::hasNewsletter, hasNewsletter},
+        {Field::isAdmin, isAdmin},
     };
 }
 

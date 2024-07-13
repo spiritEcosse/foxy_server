@@ -13,11 +13,19 @@ namespace api::v1 {
         METHOD_ADD(BasketItem::createItem, "", drogon::Post, drogon::Options, "api::v1::filters::JwtGoogleFilter");
         METHOD_ADD(BasketItem::getList, "", drogon::Get, drogon::Options, "api::v1::filters::JwtGoogleFilter");
         METHOD_ADD(BasketItem::deleteItem, "{1}", drogon::Delete, drogon::Options, "api::v1::filters::JwtGoogleFilter");
-        METHOD_ADD(BasketItem::getOne, "admin/{1}", drogon::Get, drogon::Options, "api::v1::filters::JwtFilter");
-        METHOD_ADD(BasketItem::updateItem, "admin/{1}", drogon::Put, drogon::Options, "api::v1::filters::JwtFilter");
-        METHOD_ADD(BasketItem::createItem, "admin", drogon::Post, drogon::Options, "api::v1::filters::JwtFilter");
-        METHOD_ADD(BasketItem::getList, "admin", drogon::Get, drogon::Options, "api::v1::filters::JwtFilter");
-        METHOD_ADD(BasketItem::deleteItem, "admin/{1}", drogon::Delete, drogon::Options, "api::v1::filters::JwtFilter");
+        METHOD_ADD(BasketItem::getOne, "admin/{1}", drogon::Get, drogon::Options, "api::v1::filters::JwtGoogleFilter");
+        METHOD_ADD(BasketItem::updateItem,
+                   "admin/{1}",
+                   drogon::Put,
+                   drogon::Options,
+                   "api::v1::filters::JwtGoogleFilter");
+        METHOD_ADD(BasketItem::createItem, "admin", drogon::Post, drogon::Options, "api::v1::filters::JwtGoogleFilter");
+        METHOD_ADD(BasketItem::getList, "admin", drogon::Get, drogon::Options, "api::v1::filters::JwtGoogleFilter");
+        METHOD_ADD(BasketItem::deleteItem,
+                   "admin/{1}",
+                   drogon::Delete,
+                   drogon::Options,
+                   "api::v1::filters::JwtGoogleFilter");
         METHOD_LIST_END
     };
 }

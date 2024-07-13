@@ -34,3 +34,17 @@ void JwtGoogleFilter::doFilter(const HttpRequestPtr &request, FilterCallback &&f
     }
     return fccb();
 }
+
+std::tuple<bool, Json::Value>
+JwtGoogleFilter::verifyTokenAndRespond(const std::string &credentialsStr,
+                                       std::shared_ptr<std::function<void(const HttpResponsePtr &)>> callbackPtr) {
+    auto [statusCode, jsonResponse] = JWT::verifyGoogleToken(credentialsStr);
+    if(statusCode != drogon::k200OK) {
+        auto res = HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
+        res->setStatusCode(drogon::k401Unauthorized);
+        res->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
+        (*callbackPtr)(res);
+        return {false, jsonResponse};
+    }
+    return {true, jsonResponse};  // Token is valid
+}

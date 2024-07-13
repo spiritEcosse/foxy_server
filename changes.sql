@@ -143,6 +143,9 @@ SET country_id = 1;
 ALTER table "address"
     alter column country_id set not null;
 
+ALTER TABLE "user"
+    ADD column is_admin BOOLEAN NOT NULL DEFAULT false;
+
 drop table social_media;
 CREATE TABLE IF NOT EXISTS social_media
 (

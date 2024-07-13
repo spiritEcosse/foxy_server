@@ -9,15 +9,23 @@ namespace api::v1 {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(SocialMedia::publish, "admin/publish", drogon::Post, drogon::Options);
-        METHOD_ADD(SocialMedia::getOne, "admin/{1}", drogon::Get, drogon::Options, "api::v1::filters::JwtFilter");
-        METHOD_ADD(SocialMedia::updateItem, "admin/{1}", drogon::Put, drogon::Options, "api::v1::filters::JwtFilter");
-        METHOD_ADD(SocialMedia::createItem, "admin", drogon::Post, drogon::Options, "api::v1::filters::JwtFilter");
-        METHOD_ADD(SocialMedia::getList, "admin", drogon::Get, drogon::Options, "api::v1::filters::JwtFilter");
+        METHOD_ADD(SocialMedia::getOne, "admin/{1}", drogon::Get, drogon::Options, "api::v1::filters::JwtGoogleFilter");
+        METHOD_ADD(SocialMedia::updateItem,
+                   "admin/{1}",
+                   drogon::Put,
+                   drogon::Options,
+                   "api::v1::filters::JwtGoogleFilter");
+        METHOD_ADD(SocialMedia::createItem,
+                   "admin",
+                   drogon::Post,
+                   drogon::Options,
+                   "api::v1::filters::JwtGoogleFilter");
+        METHOD_ADD(SocialMedia::getList, "admin", drogon::Get, drogon::Options, "api::v1::filters::JwtGoogleFilter");
         METHOD_ADD(SocialMedia::deleteItem,
                    "admin/{1}",
                    drogon::Delete,
                    drogon::Options,
-                   "api::v1::filters::JwtFilter");
+                   "api::v1::filters::JwtGoogleFilter");
         METHOD_LIST_END
 
         void publish(const drogon::HttpRequestPtr &req,
