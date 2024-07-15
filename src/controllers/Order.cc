@@ -49,3 +49,27 @@ void Order::getOneAdmin(const drogon::HttpRequestPtr &req,
         callbackPtr,
         QuerySet::buildQuery(std::move(qsOrder), std::move(qsBasketItem), std::move(qsAddress), std::move(qsUser)));
 }
+
+void Order::getListAdmin(const drogon::HttpRequestPtr &req,
+                         std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
+    auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
+
+    int page = getInt(req->getParameter("page"), 1);
+    int limit = getInt(req->getParameter("limit"), 25);
+
+    QuerySet qsCount = OrderModel().qsCount();
+    QuerySet qsPage = OrderModel().qsPage(page, limit);
+
+    QuerySet qs(OrderModel::tableName, limit, "data");
+    qs.left_join(BasketItemModel())
+        .only(OrderModel().allSetFields())
+        .functions(Function(
+            fmt::format(R"(COUNT({}) as count_items)", BaseModel<BasketItemModel>::Field::id.getFullFieldName())))
+        .order_by(std::make_pair(BaseModel<OrderModel>::Field::updatedAt, false),
+                  std::make_pair(BaseModel<OrderModel>::Field::id, false))
+        .group_by(BaseModel<OrderModel>::Field::id, BaseModel<OrderModel>::Field::updatedAt);
+    const auto params = BaseCRUD<OrderModel, Order>().convertSafeStringMapToStdMap(req->getParameters());
+    OrderModel().applyFilters(qs, qsCount, params);
+
+    executeSqlQuery(callbackPtr, QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs)));
+}

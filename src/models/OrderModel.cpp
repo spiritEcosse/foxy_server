@@ -61,12 +61,12 @@ OrderModel::sqlSelectList(int page, int limit, const std::map<std::string, std::
     QuerySet qsPage = OrderModel().qsPage(page, limit);
 
     QuerySet qs(OrderModel::tableName, limit, "data");
-    qs.left_join(BasketItemModel())
+    qs.join(BasketItemModel())
         .only(OrderModel().allSetFields())
-        .functions(Function(
-            fmt::format(R"(COUNT({}) as count_items)", BaseModel<BasketItemModel>::Field::id.getFullFieldName())))
         .order_by(std::make_pair(BaseModel::Field::updatedAt, false), std::make_pair(BaseModel::Field::id, false))
-        .group_by(BaseModel::Field::id, BaseModel::Field::updatedAt);
+        .group_by(BaseModel::Field::id, BaseModel::Field::updatedAt)
+        .functions(Function(
+            std::format(R"( json_agg(json_build_object({})) AS basket_items)", BasketItemModel().fieldsJsonObject())));
 
     applyFilters(qs, qsCount, params);
     return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));

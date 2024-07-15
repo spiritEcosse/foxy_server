@@ -17,9 +17,22 @@
 #include "RequiredFieldsException.h"
 #include "FinancialDetails.h"
 #include "sentryHelper.h"
+#include <drogon/utils/Utilities.h>
 
 using namespace api::v1;
 using namespace drogon::orm;
+
+template<class T, class R>
+std::map<std::string, std::string, std::less<>>
+BaseCRUD<T, R>::convertSafeStringMapToStdMap(const drogon::SafeStringMap<std::string> &safeMap) const {
+    std::map<std::string, std::string, std::less<>> params;
+    for(const auto &[key, value]: safeMap) {
+        if(key != "page" && key != "limit" && key != "sort") {
+            params[key] = value;
+        }
+    }
+    return params;
+}
 
 template<class T, class R>
 void BaseCRUD<T, R>::deleteItem(const drogon::HttpRequestPtr &req,
@@ -182,14 +195,8 @@ void BaseCRUD<T, R>::getList(const drogon::HttpRequestPtr &req,
     int page = getInt(req->getParameter("page"), 1);
     int limit = getInt(req->getParameter("limit"), 25);
 
-    std::map<std::string, std::string, std::less<>> params;
-    for(const auto &[key, value]: req->getParameters()) {
-        if(key != "page" && key != "limit" && key != "sort") {
-            params[key] = value;
-        }
-    }
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
-    executeSqlQuery(callbackPtr, T().sqlSelectList(page, limit, params));
+    executeSqlQuery(callbackPtr, T().sqlSelectList(page, limit, convertSafeStringMapToStdMap(req->getParameters())));
 }
 
 template<class T, class R>

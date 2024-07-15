@@ -14,7 +14,7 @@ namespace api::v1 {
         METHOD_ADD(Order::getOneAdmin, "admin/{1}", drogon::Get, drogon::Options, "api::v1::filters::JwtGoogleFilter");
         METHOD_ADD(Order::updateItem, "admin/{1}", drogon::Put, drogon::Options, "api::v1::filters::JwtGoogleFilter");
         METHOD_ADD(Order::createItem, "admin", drogon::Post, drogon::Options, "api::v1::filters::JwtGoogleFilter");
-        METHOD_ADD(Order::getList, "admin", drogon::Get, drogon::Options, "api::v1::filters::JwtGoogleFilter");
+        METHOD_ADD(Order::getListAdmin, "admin", drogon::Get, drogon::Options, "api::v1::filters::JwtGoogleFilter");
         METHOD_ADD(Order::deleteItem,
                    "admin/{1}",
                    drogon::Delete,
@@ -25,5 +25,7 @@ namespace api::v1 {
         void getOneAdmin(const drogon::HttpRequestPtr &req,
                          std::function<void(const drogon::HttpResponsePtr &)> &&callback,
                          const std::string &) const;
+        void getListAdmin(const drogon::HttpRequestPtr &req,
+                          std::function<void(const drogon::HttpResponsePtr &)> &&callback) const;
     };
 }
