@@ -63,6 +63,7 @@ OrderModel::sqlSelectList(int page, int limit, const std::map<std::string, std::
     QuerySet qs(OrderModel::tableName, limit, "data");
     qs.join(BasketItemModel())
         .only(OrderModel().allSetFields())
+        .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
         .order_by(std::make_pair(BaseModel::Field::updatedAt, false), std::make_pair(BaseModel::Field::id, false))
         .group_by(BaseModel::Field::id, BaseModel::Field::updatedAt)
         .functions(Function(

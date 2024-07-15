@@ -30,6 +30,7 @@ namespace api::v1 {
         QuerySet qsPage = AddressModel().qsPage(page, limit);
         QuerySet qs(tableName, limit, "data");
         qs.join(CountryModel())
+            .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
             .only(allSetFields())
             .functions(
                 Function(fmt::format(R"(, json_build_object({}) AS country)", CountryModel().fieldsJsonObject())));

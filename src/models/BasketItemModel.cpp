@@ -45,6 +45,7 @@ BasketItemModel::sqlSelectList(int page, int limit, const std::map<std::string, 
     QuerySet qs(BasketItemModel::tableName, limit, "data");
     qs.only(BasketItemModel().allSetFields())
         .join(ItemModel())
+        .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
         .functions(Function(fmt::format(R"(, ({}) AS item)", qsItem.buildSelect())));
     applyFilters(qs, qsCount, params);
     return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));

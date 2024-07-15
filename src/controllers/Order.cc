@@ -62,6 +62,7 @@ void Order::getListAdmin(const drogon::HttpRequestPtr &req,
 
     QuerySet qs(OrderModel::tableName, limit, "data");
     qs.left_join(BasketItemModel())
+        .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
         .only(OrderModel().allSetFields())
         .functions(Function(
             fmt::format(R"(COUNT({}) as count_items)", BaseModel<BasketItemModel>::Field::id.getFullFieldName())))
