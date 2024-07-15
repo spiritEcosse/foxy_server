@@ -14,7 +14,7 @@ RUN export BUILD_FOLDER=/data/project/build; export SRC=/data/project/; \
     export LLVM_TAG=$LLVM_TAG; curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='cmake_build'; \
     curl -H 'Cache-Control: no-cache' curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='remove_folders_from_compile_commands'
 
-FROM jetbrains/qodana-clang:latest
+FROM jetbrains/qodana-clang:2024.2-eap-clang17
 
 # Copy the files
 COPY --from=build /data/project/ /data/project/

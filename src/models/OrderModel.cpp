@@ -67,7 +67,7 @@ OrderModel::sqlSelectList(int page, int limit, const std::map<std::string, std::
         .order_by(std::make_pair(BaseModel::Field::updatedAt, false), std::make_pair(BaseModel::Field::id, false))
         .group_by(BaseModel::Field::id, BaseModel::Field::updatedAt)
         .functions(Function(
-            std::format(R"( json_agg(json_build_object({})) AS basket_items)", BasketItemModel().fieldsJsonObject())));
+            fmt::format(R"( json_agg(json_build_object({})) AS basket_items)", BasketItemModel().fieldsJsonObject())));
 
     applyFilters(qs, qsCount, params);
     return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
