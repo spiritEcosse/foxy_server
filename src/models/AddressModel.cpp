@@ -1,5 +1,6 @@
 #include "AddressModel.h"
 #include "CountryModel.h"
+#include "OrderModel.h"
 
 namespace api::v1 {
 
@@ -8,7 +9,8 @@ namespace api::v1 {
             {CountryModel::tableName,
              {AddressModel::Field::countryId.getFullFieldName(),
               BaseModel<CountryModel>::Field::id.getFullFieldName()}},
-        };
+            {OrderModel::tableName,
+             {BaseModel<AddressModel>::Field::id.getFullFieldName(), OrderModel::Field::addressId.getFullFieldName()}}};
     }
 
     std::vector<BaseField> AddressModel::fields() {

@@ -65,9 +65,43 @@ OrderModel::sqlSelectList(int page, int limit, const std::map<std::string, std::
         .only(OrderModel().allSetFields())
         .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
         .order_by(std::make_pair(BaseModel::Field::updatedAt, false), std::make_pair(BaseModel::Field::id, false))
-        .group_by(BaseModel::Field::id, BaseModel::Field::updatedAt)
-        .functions(Function(
-            fmt::format(R"( json_agg(json_build_object({})) AS basket_items)", BasketItemModel().fieldsJsonObject())));
+        .group_by(BaseModel::Field::id,
+                  BaseModel::Field::updatedAt,
+                  OrderModel::Field::addressId,
+                  UserModel::Field::firstName,
+                  UserModel::Field::lastName,
+                  UserModel::Field::id,
+                  AddressModel::Field::id,
+                  AddressModel::Field::userId,
+                  AddressModel::Field::address,
+                  AddressModel::Field::city,
+                  AddressModel::Field::zipcode,
+                  AddressModel::Field::countryId)
+        .join(AddressModel())
+        .join(UserModel())
+        .functions(Function(fmt::format(R"(json_build_object('{}', {}, '{}', {}, '{}', {}) AS user)",
+                                        UserModel::Field::firstName.getFieldName(),
+                                        UserModel::Field::firstName.getFullFieldName(),
+                                        UserModel::Field::lastName.getFieldName(),
+                                        UserModel::Field::lastName.getFullFieldName(),
+                                        BaseModel<UserModel>::Field::id.getFieldName(),
+                                        BaseModel<UserModel>::Field::id.getFullFieldName())),
+                   Function(fmt::format(
+                       R"(json_build_object('{}', {}, '{}', {}, '{}', {}, '{}', {}, '{}', {}, '{}', {}) AS address)",
+                       AddressModel::Field::userId.getFieldName(),
+                       AddressModel::Field::userId.getFullFieldName(),
+                       AddressModel::Field::address.getFieldName(),
+                       AddressModel::Field::address.getFullFieldName(),
+                       AddressModel::Field::city.getFieldName(),
+                       AddressModel::Field::city.getFullFieldName(),
+                       AddressModel::Field::zipcode.getFieldName(),
+                       AddressModel::Field::zipcode.getFullFieldName(),
+                       AddressModel::Field::countryId.getFieldName(),
+                       AddressModel::Field::countryId.getFullFieldName(),
+                       BaseModel<AddressModel>::Field::id.getFieldName(),
+                       BaseModel<AddressModel>::Field::id.getFullFieldName())),
+                   Function(fmt::format(R"(json_agg(json_build_object({})) AS basket_items)",
+                                        BasketItemModel().fieldsJsonObject())));
 
     applyFilters(qs, qsCount, params);
     return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));

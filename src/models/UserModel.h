@@ -89,6 +89,7 @@ namespace api::v1 {
         [[nodiscard]] bool checkPassword(const std::string &passwordIn) const;
         [[nodiscard]] static std::string sqlAuth(const std::string &email);
         [[nodiscard]] std::string sqlGetOrCreateUser();
+        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
     };
 }
 

@@ -4,9 +4,17 @@
 
 #include "bcrypt.h"
 #include "UserModel.h"
+#include "OrderModel.h"
 #include <fmt/core.h>
 
 using namespace api::v1;
+
+std::map<std::string, std::pair<std::string, std::string>, std::less<>> UserModel::joinMap() const {
+    return {
+        {OrderModel::tableName,
+         {BaseModel<UserModel>::Field::id.getFullFieldName(), OrderModel::Field::userId.getFullFieldName()}},
+    };
+}
 
 std::vector<BaseField> UserModel::fields() {
     return {
