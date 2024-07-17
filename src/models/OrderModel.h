@@ -77,7 +77,6 @@ namespace api::v1 {
             taxRate = json[Field::taxRate.getFieldName()].asDouble();
             taxes = json[Field::taxes.getFieldName()].asDouble();
             userId = json[Field::userId.getFieldName()].asInt();
-            reference = json[Field::reference.getFieldName()].asString();
             addressId = json[Field::addressId.getFieldName()].asInt();
             returned = json[Field::returned.getFieldName()].asBool();
             auto _status = json[Field::status.getFieldName()].asString();
@@ -92,7 +91,6 @@ namespace api::v1 {
             validateField(Field::taxRate.getFieldName(), taxRate, missingFields);
             validateField(Field::taxes.getFieldName(), taxes, missingFields);
             validateField(Field::userId.getFieldName(), userId, missingFields);
-            validateField(Field::reference.getFieldName(), reference, missingFields);
             validateField(Field::addressId.getFieldName(), addressId, missingFields);
         }
 

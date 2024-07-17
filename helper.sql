@@ -15,6 +15,8 @@ $$
         DROP TAble if exists "countries_ips";
         DROP TAble if exists "country";
 
+        CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
         CREATE OR REPLACE FUNCTION GetValidPage(RequestedPage INT, PageSize INT, TotalCount INT, OUT ValidPage INT)
         AS
         $body$
@@ -215,7 +217,7 @@ $$
             tax_rate       DECIMAL(10, 2) NOT NULL,
             taxes          DECIMAL(10, 2) NOT NULL,
             user_id        INT            NOT NULL,
-            reference      VARCHAR(255)   NOT NULL,
+            reference      UUID           NOT NULL DEFAULT uuid_generate_v4() UNIQUE,
             created_at     timestamp      NOT NULL DEFAULT NOW(),
             updated_at     timestamp      NOT NULL DEFAULT NOW(),
             address_id     INT            NOT NULL,

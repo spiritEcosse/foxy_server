@@ -146,6 +146,10 @@ ALTER table "address"
 ALTER TABLE "user"
     ADD column is_admin BOOLEAN NOT NULL DEFAULT false;
 
+-- Step 1: Enable the UUID extension if it's not already enabled
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+
 drop table social_media;
 CREATE TABLE IF NOT EXISTS social_media
 (

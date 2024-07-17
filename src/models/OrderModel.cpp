@@ -49,7 +49,6 @@ OrderModel::getObjectValues() const {
         {Field::taxRate, taxRate},
         {Field::taxes, taxes},
         {Field::userId, userId},
-        {Field::reference, reference},
         {Field::returned, returned},
         {Field::addressId, addressId},
     };
@@ -86,20 +85,7 @@ OrderModel::sqlSelectList(int page, int limit, const std::map<std::string, std::
                                         UserModel::Field::lastName.getFullFieldName(),
                                         BaseModel<UserModel>::Field::id.getFieldName(),
                                         BaseModel<UserModel>::Field::id.getFullFieldName())),
-                   Function(fmt::format(
-                       R"(json_build_object('{}', {}, '{}', {}, '{}', {}, '{}', {}, '{}', {}, '{}', {}) AS address)",
-                       AddressModel::Field::userId.getFieldName(),
-                       AddressModel::Field::userId.getFullFieldName(),
-                       AddressModel::Field::address.getFieldName(),
-                       AddressModel::Field::address.getFullFieldName(),
-                       AddressModel::Field::city.getFieldName(),
-                       AddressModel::Field::city.getFullFieldName(),
-                       AddressModel::Field::zipcode.getFieldName(),
-                       AddressModel::Field::zipcode.getFullFieldName(),
-                       AddressModel::Field::countryId.getFieldName(),
-                       AddressModel::Field::countryId.getFullFieldName(),
-                       BaseModel<AddressModel>::Field::id.getFieldName(),
-                       BaseModel<AddressModel>::Field::id.getFullFieldName())),
+                   Function(fmt::format(R"(json_build_object({}) AS address)", AddressModel().fieldsJsonObject())),
                    Function(fmt::format(R"(json_agg(json_build_object({})) AS basket_items)",
                                         BasketItemModel().fieldsJsonObject())));
 
