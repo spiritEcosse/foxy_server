@@ -1,4 +1,5 @@
 #include "JwtGoogleFilter.h"
+#include "env.h"
 
 using namespace drogon;
 using namespace api::v1::filters;
@@ -18,6 +19,16 @@ void JwtGoogleFilter::doFilter(const HttpRequestPtr &request, FilterCallback &&f
         resultJson["status"] = 0;
 
         auto res = HttpResponse::newHttpJsonResponse(resultJson);
+        auto origin = request->getHeader("Origin");
+
+        std::string foxy_admin;
+        getenv("FOXY_ADMIN", foxy_admin);
+        std::string foxy_client;
+        getenv("FOXY_CLIENT", foxy_client);
+
+        if(origin == foxy_client || origin == foxy_admin) {
+            res->addHeader("Access-Control-Allow-Origin", origin);
+        }
         res->setStatusCode(k401Unauthorized);
 
         // Return the response and let's tell this endpoint request was cancelled
@@ -30,6 +41,15 @@ void JwtGoogleFilter::doFilter(const HttpRequestPtr &request, FilterCallback &&f
         auto res = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
         res->setStatusCode(drogon::k401Unauthorized);
         res->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
+        auto origin = request->getHeader("Origin");
+        std::string foxy_admin;
+        getenv("FOXY_ADMIN", foxy_admin);
+        std::string foxy_client;
+        getenv("FOXY_CLIENT", foxy_client);
+        if(origin == foxy_client || origin == foxy_admin) {
+            res->addHeader("Access-Control-Allow-Origin", origin);
+        }
+
         return fcb(res);
     }
     return fccb();
