@@ -86,7 +86,6 @@ std::string BaseModel<T>::sqlInsertSingle(const T &item) {
                     data = arg;
                 }
                 if(data != "Null") {
-                    data = addExtraQuotes(data);
                     sql.append("'").append(data).append("',");
                 } else {
                     sql.append(data).append(",");
@@ -144,7 +143,6 @@ void BaseModel<T>::sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColum
                     data = arg;
                 }
                 if(data != "Null") {
-                    data = addExtraQuotes(data);
                     uniqueColumns[key.getFieldName()].append(
                         fmt::format(R"( WHEN {} = {} THEN '{}' )", T::Field::id.getFullFieldName(), item.id, data));
                 } else {
@@ -187,13 +185,10 @@ std::string BaseModel<T>::sqlUpdateMultiple(const std::vector<T> &items) {
 template<class T>
 std::string BaseModel<T>::fieldsToString() {
     std::stringstream ss;
-    for(auto fieldNames = T::fields(); const auto &fieldName: fieldNames) {
-        ss << fieldName.getFieldName();
-        if(&fieldName != &fieldNames.back()) {
-            ss << ", ";
-        }
+    for(const auto &[key, value]: T().getObjectValues()) {
+        ss << key.getFieldName() << ", ";
     }
-    return ss.str();
+    return ss.str().substr(0, ss.str().size() - 2);
 }
 
 template<class T>
