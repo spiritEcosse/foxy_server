@@ -29,7 +29,7 @@ void SocialMedia::handleRow(const auto &row) {
     twitterClient.postTweet(tweet);
 
     if(!tweet.tweetId.empty()) {
-        SocialMediaModel item(std::string("twitter"), tweet.tweetId, itemId);
+        SocialMediaModel item(std::string("Twitter"), tweet.tweetId, itemId);
         std::string query = SocialMediaModel().sqlInsert(item);
         auto dbClient = drogon::app().getDbClient("default_not_fast");
         dbClient->execSqlAsync(

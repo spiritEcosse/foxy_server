@@ -238,14 +238,16 @@ $$
             FOREIGN KEY (country_id) REFERENCES country (id) ON DELETE CASCADE
         );
 
+        CREATE TYPE social_media_type AS ENUM ('Facebook', 'Twitter', 'Instagram', 'Pinterest', 'Quora', 'YouTube');
+
         CREATE TABLE IF NOT EXISTS social_media
         (
             id          SERIAL PRIMARY KEY,
-            title       VARCHAR(255) NOT NULL,
-            item_id     INT          NOT NULL,
-            external_id VARCHAR(255) NOT NULL,
-            created_at  timestamp    NOT NULL DEFAULT NOW(),
-            updated_at  timestamp    NOT NULL DEFAULT NOW(),
+            title       social_media_type NOT NULL,
+            item_id     INT               NOT NULL,
+            external_id VARCHAR(255)      NOT NULL,
+            created_at  timestamp         NOT NULL DEFAULT NOW(),
+            updated_at  timestamp         NOT NULL DEFAULT NOW(),
             FOREIGN KEY (item_id) REFERENCES item (id) ON DELETE CASCADE
         );
 
@@ -364,5 +366,20 @@ $$
             RETURN 'https://' || cloud_name || '/' || src;
         END;
         $body$ LANGUAGE plpgsql;
+
+        CREATE OR REPLACE FUNCTION format_social_url(external_id TEXT, social_media_title TEXT)
+            RETURNS TEXT AS
+        $body$
+        DECLARE
+            base_url TEXT;
+        BEGIN
+            CASE social_media_title
+                WHEN 'Twitter' THEN base_url := 'https://twitter.com/faithfishart/status/';
+                ELSE base_url := ''; -- Default or error case
+                END CASE;
+            RETURN base_url || external_id;
+        END;
+        $body$ LANGUAGE plpgsql;
+
     END
 $$;
