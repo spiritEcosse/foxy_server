@@ -186,11 +186,11 @@ $$
         CREATE TABLE IF NOT EXISTS "basket"
         (
             id         SERIAL PRIMARY KEY,
-            user_id    INT       NOT NULL,
+            user_id    INT,
             in_use     BOOLEAN   NOT NULL DEFAULT true,
             created_at timestamp NOT NULL DEFAULT NOW(),
             updated_at timestamp NOT NULL DEFAULT NOW(),
-            FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE
+            FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE SET NULL
         );
 
         CREATE TABLE IF NOT EXISTS "basket_item"
@@ -216,15 +216,15 @@ $$
             total_ex_taxes DECIMAL(10, 2) NOT NULL,
             tax_rate       DECIMAL(10, 2) NOT NULL,
             taxes          DECIMAL(10, 2) NOT NULL,
-            user_id        INT            NOT NULL,
+            user_id        INT,
             reference      UUID           NOT NULL DEFAULT uuid_generate_v4() UNIQUE,
             created_at     timestamp      NOT NULL DEFAULT NOW(),
             updated_at     timestamp      NOT NULL DEFAULT NOW(),
-            address_id     INT            NOT NULL,
+            address_id     INT,
             returned       BOOLEAN        NOT NULL DEFAULT false,
             FOREIGN KEY (basket_id) REFERENCES "basket" (id) ON DELETE CASCADE,
-            FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE CASCADE,
-            FOREIGN KEY (address_id) REFERENCES address (id) ON DELETE CASCADE
+            FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE SET NULL,
+            FOREIGN KEY (address_id) REFERENCES address (id) ON DELETE SET NULL
         );
 
         CREATE TABLE IF NOT EXISTS countries_ips

@@ -9,6 +9,7 @@ namespace api::v1 {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(User::getOne, "{1}", drogon::Get, drogon::Options, "api::v1::filters::JwtGoogleFilter");
+        METHOD_ADD(User::deleteItem, "{1}", drogon::Delete, drogon::Options, "api::v1::filters::JwtGoogleFilter");
         METHOD_ADD(User::getOne, "admin/{1}", drogon::Get, drogon::Options, "api::v1::filters::JwtGoogleFilter");
         METHOD_ADD(User::updateItem, "admin/{1}", drogon::Put, drogon::Options, "api::v1::filters::JwtGoogleFilter");
         METHOD_ADD(User::createItem, "admin", drogon::Post, drogon::Options, "api::v1::filters::JwtGoogleFilter");
