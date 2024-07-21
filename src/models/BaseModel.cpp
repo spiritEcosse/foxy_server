@@ -228,7 +228,6 @@ BaseModel<T>::sqlSelectList(int page, int limit, const std::map<std::string, std
         .only(allSetFields())
         .order_by(std::make_pair(orderField, isAsc), std::make_pair(T::Field::id, false));
     applyFilters(qs, qsCount, params);
-    std::cout << qs.buildSelect() << std::endl;
     return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
 }
 

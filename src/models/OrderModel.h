@@ -12,14 +12,14 @@
 #include "BasketModel.h"
 #include "decimal.h"
 
-enum class OrderStatus {
-    Ordered,  // The item has been ordered by the customer.
-    Processing,  // The order is being processed.
-    Shipped,  // The item has been shipped to the customer.
-    Delivered,  // The item has been delivered to the customer.
-    Returned,  // The item has been returned by the customer.
-    Refunded,  // The customer has been refunded for the item.
-    Cancelled  // The order has been cancelled.
+struct OrderStatus {
+    static inline std::string ordered = "Ordered";  // The item has been ordered by the customer.
+    static inline std::string processing = "Processing";  // The order is being processed.
+    static inline std::string shipped = "Shipped";  // The item has been shipped to the customer.
+    static inline std::string delivered = "Delivered";  // The item has been delivered to the customer.
+    static inline std::string returned = "Returned";  // The item has been returned by the customer.
+    static inline std::string refunded = "Refunded";  // The customer has been refunded for the item.
+    static inline std::string cancelled = "Cancelled";  // The order has been cancelled.
 };
 
 namespace api::v1 {
@@ -59,7 +59,7 @@ namespace api::v1 {
         OrderModel(OrderModel &&) noexcept = default;  // Move constructor
         OrderModel &operator=(OrderModel &&) noexcept = default;  // Move assignment operator
 
-        std::string status = "ordered";
+        std::string status = OrderStatus::ordered;
         int basketId{};
         dec::decimal<2> total{};
         dec::decimal<2> totalExTaxes{};

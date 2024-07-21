@@ -207,21 +207,23 @@ $$
             UNIQUE (item_id, basket_id)
         );
 
+        CREATE TYPE order_status_type AS ENUM ('Ordered', 'Processing', 'Shipped', 'Delivered', 'Returned', 'Cancelled', 'Refunded');
+
         CREATE TABLE IF NOT EXISTS "order"
         (
             id             SERIAL PRIMARY KEY,
-            status         VARCHAR(255)   NOT NULL,
-            basket_id      INT            NOT NULL UNIQUE,
-            total          DECIMAL(10, 2) NOT NULL,
-            total_ex_taxes DECIMAL(10, 2) NOT NULL,
-            tax_rate       DECIMAL(10, 2) NOT NULL,
-            taxes          DECIMAL(10, 2) NOT NULL,
+            status         order_status_type NOT NULL,
+            basket_id      INT               NOT NULL UNIQUE,
+            total          DECIMAL(10, 2)    NOT NULL,
+            total_ex_taxes DECIMAL(10, 2)    NOT NULL,
+            tax_rate       DECIMAL(10, 2)    NOT NULL,
+            taxes          DECIMAL(10, 2)    NOT NULL,
             user_id        INT,
-            reference      UUID           NOT NULL DEFAULT uuid_generate_v4() UNIQUE,
-            created_at     timestamp      NOT NULL DEFAULT NOW(),
-            updated_at     timestamp      NOT NULL DEFAULT NOW(),
+            reference      UUID              NOT NULL DEFAULT uuid_generate_v4() UNIQUE,
+            created_at     timestamp         NOT NULL DEFAULT NOW(),
+            updated_at     timestamp         NOT NULL DEFAULT NOW(),
             address_id     INT,
-            returned       BOOLEAN        NOT NULL DEFAULT false,
+            returned       BOOLEAN           NOT NULL DEFAULT false,
             FOREIGN KEY (basket_id) REFERENCES "basket" (id) ON DELETE CASCADE,
             FOREIGN KEY (user_id) REFERENCES "user" (id) ON DELETE SET NULL,
             FOREIGN KEY (address_id) REFERENCES address (id) ON DELETE SET NULL
@@ -382,4 +384,5 @@ $$
         $body$ LANGUAGE plpgsql;
 
     END
+
 $$;

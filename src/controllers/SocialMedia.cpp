@@ -18,7 +18,6 @@ void SocialMedia::handleRow(const auto &row) {
     auto itemId = row[1].template as<int>();
     auto slug = row[2].template as<std::string>();
     auto mediaList = row[3].template as<Json::Value>();
-    std::cout << title << mediaList << std::endl;
     std::vector<FileTransferInfo> mediaUrls = {};
     std::for_each(mediaList.begin(), mediaList.end(), [&mediaUrls](const Json::Value &media) {
         std::string mediaUrl = media.asString();
