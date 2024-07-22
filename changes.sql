@@ -31,35 +31,38 @@ Alter table "user"
 CREATE TABLE IF NOT EXISTS review
 (
     id
-               SERIAL
-        PRIMARY
-            KEY,
+    SERIAL
+    PRIMARY
+    KEY,
     status
-               VARCHAR(255) NOT NULL,
-    user_id    INT          NOT NULL,
-    item_id    INT          NOT NULL,
-    comment    TEXT         NOT NULL,
-    created_at TIMESTAMP    NOT NULL DEFAULT NOW
-                                             (
-                                             ),
-    updated_at TIMESTAMP    NOT NULL DEFAULT NOW
-                                             (
-                                             ),
+    VARCHAR
+(
+    255
+) NOT NULL,
+    user_id INT NOT NULL,
+    item_id INT NOT NULL,
+    comment TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW
+(
+),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW
+(
+),
     FOREIGN KEY
-        (
-         user_id
-            ) REFERENCES "user"
-        (
-         id
-            ),
+(
+    user_id
+) REFERENCES "user"
+(
+    id
+),
     FOREIGN KEY
-        (
-         item_id
-            ) REFERENCES item
-        (
-         id
-            )
-);
+(
+    item_id
+) REFERENCES item
+(
+    id
+)
+    );
 Alter table "order"
     add column returned BOOLEAN NOT NULL DEFAULT false;
 commit;
@@ -122,76 +125,105 @@ VALUES ('Vietnam', 'VN'),
        ('United States', 'US');
 
 UPDATE countries_ips
-SET country_id = country.id
-FROM country
+SET country_id = country.id FROM country
 WHERE countries_ips.country_code = country.code;
-
-alter table basket
-    add column in_use BOOLEAN NOT NULL DEFAULT true;
-
-ALTER table "address"
-    drop column avatar;
-ALTER table "address"
-    drop column state_abbr;
-
-ALTER TABLE "address"
-    ADD COLUMN country_id INT NULL,
-    ADD FOREIGN KEY (country_id) REFERENCES "country" (id) ON DELETE CASCADE;
-
-UPDATE "address"
-SET country_id = 1;
-ALTER table "address"
-    alter column country_id set not null;
 
 ALTER TABLE "user"
     ADD column is_admin BOOLEAN NOT NULL DEFAULT false;
 
 -- Step 1: Enable the UUID extension if it's not already enabled
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE
+EXTENSION IF NOT EXISTS "uuid-ossp";
 
 
 drop table social_media;
 CREATE TABLE IF NOT EXISTS social_media
 (
-    id          SERIAL PRIMARY KEY,
-    title       VARCHAR(255) NOT NULL,
-    item_id     INT          NOT NULL,
-    created_at  timestamp    NOT NULL DEFAULT NOW(),
-    updated_at  timestamp    NOT NULL DEFAULT NOW(),
-    external_id VARCHAR(255) NOT NULL,
-    FOREIGN KEY (item_id) REFERENCES item (id) ON DELETE CASCADE
-);
+    id
+    SERIAL
+    PRIMARY
+    KEY,
+    title
+    VARCHAR
+(
+    255
+) NOT NULL,
+    item_id INT NOT NULL,
+    created_at timestamp NOT NULL DEFAULT NOW
+(
+),
+    updated_at timestamp NOT NULL DEFAULT NOW
+(
+),
+    external_id VARCHAR
+(
+    255
+) NOT NULL,
+    FOREIGN KEY
+(
+    item_id
+) REFERENCES item
+(
+    id
+) ON DELETE CASCADE
+    );
 
 
 CREATE TABLE IF NOT EXISTS "financial_details"
 (
-    id                  SERIAL PRIMARY KEY,
-    tax_rate            DECIMAL(10, 2) NOT NULL,
-    gateway             VARCHAR(255)   NOT NULL,
-    gateway_merchant_id VARCHAR(255)   NOT NULL,
-    merchant_id         VARCHAR(255)   NOT NULL,
-    merchant_name       VARCHAR(255)   NOT NULL,
-    created_at          timestamp      NOT NULL DEFAULT NOW(),
-    updated_at          timestamp      NOT NULL DEFAULT NOW()
-);
+    id
+    SERIAL
+    PRIMARY
+    KEY,
+    tax_rate
+    DECIMAL
+(
+    10,
+    2
+) NOT NULL,
+    gateway VARCHAR
+(
+    255
+) NOT NULL,
+    gateway_merchant_id VARCHAR
+(
+    255
+) NOT NULL,
+    merchant_id VARCHAR
+(
+    255
+) NOT NULL,
+    merchant_name VARCHAR
+(
+    255
+) NOT NULL,
+    created_at timestamp NOT NULL DEFAULT NOW
+(
+),
+    updated_at timestamp NOT NULL DEFAULT NOW
+(
+)
+    );
 
 
 CREATE TRIGGER set_timestamp
     BEFORE UPDATE
     ON "financial_details"
     FOR EACH ROW
-EXECUTE PROCEDURE trigger_set_timestamp();
+    EXECUTE PROCEDURE trigger_set_timestamp();
 
 
 do
 $$
-    BEGIN
-        CREATE OR REPLACE FUNCTION format_src(src TEXT, cloud_name TEXT)
+BEGIN
+        CREATE
+OR REPLACE FUNCTION format_src(src TEXT, cloud_name TEXT)
             RETURNS TEXT AS
         $body$
-        BEGIN
-            RETURN 'https://' || cloud_name || '/' || src;
-        END;
-        $body$ LANGUAGE plpgsql;
-    END
+BEGIN
+RETURN 'https://' || cloud_name || '/' || src;
+END;
+        $body$
+LANGUAGE plpgsql;
+END
 $$;
