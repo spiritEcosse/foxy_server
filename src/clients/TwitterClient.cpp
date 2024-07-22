@@ -103,7 +103,7 @@ std::string generateNonce(size_t length = 32) {
 
     // Seed with a real random value, if available
     std::random_device rd;
-    std::default_random_engine rng(rd());
+    std::mt19937 rng(rd());
     std::uniform_int_distribution<> dist(0, charsetSize - 1);
 
     // Start with the current timestamp
