@@ -2,6 +2,7 @@
 #include <curl/curl.h>
 #include <fmt/core.h>
 #include "env.h"
+#include "sentryHelper.h"
 
 using namespace api::utils::jwt;
 using namespace drogon;
@@ -37,7 +38,8 @@ std::tuple<drogon::HttpStatusCode, Json::Value> JWT::verifyGoogleToken(const std
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
 
         if(res != CURLE_OK) {
-            std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+            std::string error = fmt::format("curl_easy_perform() failed: ", curl_easy_strerror(res));
+            sentryHelper(error, "verifyGoogleToken");
             jsonData["error"] = curl_easy_strerror(res);
             httpCode = drogon::k500InternalServerError;
         }

@@ -118,15 +118,17 @@ std::string generateNonce(size_t length = 32) {
     return nonce;
 }
 
-void TwitterClient::addEasyHandleDownload(CURLM* multi_handle, FileTransferInfo& info) {
+bool TwitterClient::addEasyHandleDownload(CURLM* multi_handle, FileTransferInfo& info) {
     info.easy_handle = curl_easy_init();
-    if(info.easy_handle) {
-        curl_easy_setopt(info.easy_handle, CURLOPT_URL, info.url.c_str());
-        curl_easy_setopt(info.easy_handle, CURLOPT_WRITEFUNCTION, WriteCallbackToFile);
-        curl_easy_setopt(info.easy_handle, CURLOPT_WRITEDATA, info.ofs.get());
-        curl_easy_setopt(info.easy_handle, CURLOPT_PRIVATE, info.easy_handle);
-        curl_multi_add_handle(multi_handle, info.easy_handle);
+    if(!info.easy_handle) {
+        return false;
     }
+    curl_easy_setopt(info.easy_handle, CURLOPT_URL, info.url.c_str());
+    curl_easy_setopt(info.easy_handle, CURLOPT_WRITEFUNCTION, WriteCallbackToFile);
+    curl_easy_setopt(info.easy_handle, CURLOPT_WRITEDATA, info.ofs.get());
+    curl_easy_setopt(info.easy_handle, CURLOPT_PRIVATE, info.easy_handle);
+    curl_multi_add_handle(multi_handle, info.easy_handle);
+    return true;
 }
 
 void cleanupHandles(CURLM* multi_handle, std::vector<FileTransferInfo>& fileTransferInfos) {
@@ -186,69 +188,76 @@ void multiHandle(CURLM* multi_handle) {
     }
 }
 
-void TwitterClient::addEasyHandleUpload(CURLM* multi_handle, FileTransferInfo& info) {
+bool TwitterClient::addEasyHandleUpload(CURLM* multi_handle, FileTransferInfo& info) {
     std::string url = "https://upload.twitter.com/1.1/media/upload.json";
     info.easy_handle = curl_easy_init();
 
-    if(info.easy_handle) {
-        // Check if info.fileName is not empty and the file exists
-        if(!info.outputFileName.empty() && std::filesystem::exists(info.outputFileName)) {
-            curl_formadd(&info.post,
-                         &info.post,
-                         CURLFORM_COPYNAME,
-                         "media",
-                         CURLFORM_FILE,
-                         info.outputFileName.c_str(),
-                         CURLFORM_END);
-        } else {
-            std::string error =
-                fmt::format("Error: fileName is empty or file does not exist. Filename: {}", info.outputFileName);
-            sentryHelper(error, "performPost");
-        }
-        struct curl_slist* headers = nullptr;
-        std::ostringstream authHeader;
-        auto now = std::chrono::system_clock::now().time_since_epoch();
-        auto now_in_seconds = std::chrono::duration_cast<std::chrono::seconds>(now).count();
-        std::string oauth_timestamp = std::to_string(now_in_seconds);
-        std::map<std::string, std::string> params = {{"oauth_consumer_key", apiKey},
-                                                     {"oauth_nonce", generateNonce()},
-                                                     {"oauth_signature_method", "HMAC-SHA1"},
-                                                     {"oauth_timestamp", oauth_timestamp},
-                                                     {"oauth_token", accessToken},
-                                                     {"oauth_version", "1.0"}};
-
-        std::string signature = calculateOAuthSignature("POST", url, params, apiSecretKey, accessTokenSecret);
-        params["oauth_signature"] = signature;
-
-        authHeader << "OAuth ";
-        for(auto it = params.begin(); it != params.end(); ++it) {
-            if(it != params.begin()) {
-                authHeader << ", ";
-            }
-            authHeader << it->first << "=\"" << urlEncode(it->second) << "\"";
-        }
-
-        headers = curl_slist_append(headers, ("Authorization: " + authHeader.str()).c_str());
-        info.headers = headers;
-
-        curl_easy_setopt(info.easy_handle, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(info.easy_handle, CURLOPT_HTTPPOST, info.post);
-        curl_easy_setopt(info.easy_handle, CURLOPT_HTTPHEADER, info.headers);
-        curl_easy_setopt(info.easy_handle, CURLOPT_WRITEFUNCTION, WriteCallback);
-        curl_easy_setopt(info.easy_handle, CURLOPT_WRITEDATA, &info.response);
-        curl_multi_add_handle(multi_handle, info.easy_handle);
+    if(!info.easy_handle) {
+        return false;
     }
+    // Check if info.fileName is not empty and the file exists
+    if(!info.outputFileName.empty() && std::filesystem::exists(info.outputFileName)) {
+        curl_formadd(&info.post,
+                     &info.post,
+                     CURLFORM_COPYNAME,
+                     "media",
+                     CURLFORM_FILE,
+                     info.outputFileName.c_str(),
+                     CURLFORM_END);
+    } else {
+        std::string error =
+            fmt::format("Error: fileName is empty or file does not exist. Filename: {}", info.outputFileName);
+        sentryHelper(error, "performPost");
+    }
+    struct curl_slist* headers = nullptr;
+    std::ostringstream authHeader;
+    auto now = std::chrono::system_clock::now().time_since_epoch();
+    auto now_in_seconds = std::chrono::duration_cast<std::chrono::seconds>(now).count();
+    std::string oauth_timestamp = std::to_string(now_in_seconds);
+    std::map<std::string, std::string> params = {{"oauth_consumer_key", apiKey},
+                                                 {"oauth_nonce", generateNonce()},
+                                                 {"oauth_signature_method", "HMAC-SHA1"},
+                                                 {"oauth_timestamp", oauth_timestamp},
+                                                 {"oauth_token", accessToken},
+                                                 {"oauth_version", "1.0"}};
+
+    std::string signature = calculateOAuthSignature("POST", url, params, apiSecretKey, accessTokenSecret);
+    params["oauth_signature"] = signature;
+
+    authHeader << "OAuth ";
+    for(auto it = params.begin(); it != params.end(); ++it) {
+        if(it != params.begin()) {
+            authHeader << ", ";
+        }
+        authHeader << it->first << "=\"" << urlEncode(it->second) << "\"";
+    }
+
+    headers = curl_slist_append(headers, ("Authorization: " + authHeader.str()).c_str());
+    info.headers = headers;
+
+    curl_easy_setopt(info.easy_handle, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(info.easy_handle, CURLOPT_HTTPPOST, info.post);
+    curl_easy_setopt(info.easy_handle, CURLOPT_HTTPHEADER, info.headers);
+    curl_easy_setopt(info.easy_handle, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(info.easy_handle, CURLOPT_WRITEDATA, &info.response);
+    curl_multi_add_handle(multi_handle, info.easy_handle);
+    return true;
 }
 
-void TwitterClient::transMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos, TransferFunc transferFunc) {
+bool TwitterClient::transMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos, TransferFunc transferFunc) {
     CURLM* multi_handle = curl_multi_init();
+    bool success = true;
 
     for(auto& info: fileTransferInfos) {
-        (this->*transferFunc)(multi_handle, info);
+        if(!(this->*transferFunc)(multi_handle, info)) {
+            success = false;
+            break;
+        }
     }
 
     multiHandle(multi_handle);
     cleanupHandles(multi_handle, fileTransferInfos);
+    return success;
 }
 
 void TwitterClient::performPost(Tweet& tweet) {
@@ -340,7 +349,19 @@ void TwitterClient::performPost(Tweet& tweet) {
 }
 
 void TwitterClient::postTweet(Tweet& tweet) {
-    transMediaFiles(tweet.downloads, &TwitterClient::addEasyHandleDownload);
-    transMediaFiles(tweet.downloads, &TwitterClient::addEasyHandleUpload);
+    bool downloadSuccess = transMediaFiles(tweet.downloads, &TwitterClient::addEasyHandleDownload);
+    if(!downloadSuccess) {
+        std::string error = "Failed to download media files.";
+        sentryHelper(error, "download, postTweet");
+        return;
+    }
+
+    bool uploadSuccess = transMediaFiles(tweet.downloads, &TwitterClient::addEasyHandleUpload);
+    if(!uploadSuccess) {
+        std::string error = "Failed to upload media files.";
+        sentryHelper(error, "upload, postTweet");
+        return;  // Exit if uploading media files failed
+    }
+
     performPost(tweet);
-};
+}
