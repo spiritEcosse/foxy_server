@@ -112,7 +112,7 @@ private:
         getenv("TWITTER_BEREAR_TOKEN", bearerToken);
     }
 
-    typedef bool (TwitterClient::*TransferFunc)(CURLM* multi_handle, FileTransferInfo& info);
+    using TransferFunc = bool (TwitterClient::*)(CURLM* multi_handle, FileTransferInfo& info);
 
     bool transMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos, TransferFunc transferFunc);
     bool addEasyHandleUpload(CURLM* multi_handle, FileTransferInfo& info);
