@@ -8,6 +8,7 @@
 #include <vector>
 #include "fmt/format.h"
 #include "sentryHelper.h"
+#include "Request.h"
 
 using namespace api::v1;
 
@@ -64,10 +65,11 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
                           std::function<void(const drogon::HttpResponsePtr &)> &&callback) {
     std::string app_cloud_name;
     getenv("APP_CLOUD_NAME", app_cloud_name);
+    int limit = getInt(req->getParameter("limit"), 1);
 
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
     auto dbClient = drogon::app().getFastDbClient("default");
-    QuerySet qs(ItemModel::tableName, 1, "items", false, true);  // remove 1 and set all
+    QuerySet qs(ItemModel::tableName, limit, "items", false, true);
     qs.only(ItemModel::Field::title, ItemModel::Field::id, ItemModel::Field::slug)
         .join(MediaModel())
         .left_join(SocialMediaModel())

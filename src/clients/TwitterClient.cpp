@@ -163,6 +163,27 @@ void multiHandle(CURLM* multi_handle) {
         curl_multi_wait(multi_handle, nullptr, 0, 1000, &numfds);
         curl_multi_perform(multi_handle, &still_running);
     }
+
+    int msgs_left;
+    CURLMsg* msg;
+    while((msg = curl_multi_info_read(multi_handle, &msgs_left))) {
+        if(msg->msg == CURLMSG_DONE) {
+            CURL* easy_handle = msg->easy_handle;
+            char* url;
+            curl_easy_getinfo(easy_handle, CURLINFO_EFFECTIVE_URL, &url);
+            long response_code;
+            curl_easy_getinfo(easy_handle, CURLINFO_RESPONSE_CODE, &response_code);
+            std::string* responseString = nullptr;
+            curl_easy_getinfo(easy_handle, CURLINFO_PRIVATE, &responseString);
+
+            if(response_code < 200 || response_code >= 300) {
+                std::string error = fmt::format("response_code: {}, response: {}",
+                                                response_code,
+                                                responseString ? *responseString : "No response string");
+                sentryHelper(error, "multiHandle");
+            }
+        }
+    }
 }
 
 void TwitterClient::addEasyHandleUpload(CURLM* multi_handle, FileTransferInfo& info) {
@@ -180,8 +201,9 @@ void TwitterClient::addEasyHandleUpload(CURLM* multi_handle, FileTransferInfo& i
                          info.outputFileName.c_str(),
                          CURLFORM_END);
         } else {
-            std::cerr << "Error: fileName is empty or file does not exist." << "filename:" << info.outputFileName
-                      << std::endl;
+            std::string error =
+                fmt::format("Error: fileName is empty or file does not exist. Filename: {}", info.outputFileName);
+            sentryHelper(error, "performPost");
         }
         struct curl_slist* headers = nullptr;
         std::ostringstream authHeader;

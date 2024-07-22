@@ -8,7 +8,7 @@ namespace api::v1 {
     class SocialMedia : public drogon::HttpController<SocialMedia>, public BaseCRUD<SocialMediaModel, SocialMedia> {
     public:
         METHOD_LIST_BEGIN
-        METHOD_ADD(SocialMedia::publish, "admin/publish", drogon::Post, drogon::Options);
+        METHOD_ADD(SocialMedia::publish, "admin/publish", drogon::Post, drogon::Options, "api::v1::filters::LocalRun");
         METHOD_ADD(SocialMedia::getOne, "admin/{1}", drogon::Get, drogon::Options, "api::v1::filters::JwtGoogleFilter");
         METHOD_ADD(SocialMedia::updateItem,
                    "admin/{1}",
