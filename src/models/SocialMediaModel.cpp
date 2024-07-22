@@ -11,14 +11,6 @@ std::map<std::string, std::pair<std::string, std::string>, std::less<>> SocialMe
     return {{ItemModel::tableName, {Field::itemId.getFullFieldName(), ItemModel::Field::id.getFullFieldName()}}};
 }
 
-std::vector<BaseField> SocialMediaModel::fields() {
-    return {
-        Field::title,
-        Field::externalId,
-        Field::itemId,
-    };
-}
-
 std::vector<
     std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
 SocialMediaModel::getObjectValues() const {

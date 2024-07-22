@@ -9,15 +9,6 @@
 
 using namespace api::v1;
 
-std::vector<BaseField> ShippingRateModel::fields() {
-    return {
-        Field::countryId,
-        Field::shippingProfileId,
-        Field::deliveryDaysMin,
-        Field::deliveryDaysMax,
-    };
-}
-
 std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 ShippingRateModel::getObjectValues() const {
     std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>

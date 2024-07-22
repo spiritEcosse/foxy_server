@@ -6,15 +6,6 @@
 
 using namespace api::v1;
 
-std::vector<BaseField> ReviewModel::fields() {
-    return {
-        Field::status,
-        Field::userId,
-        Field::itemId,
-        Field::comment,
-    };
-}
-
 std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 ReviewModel::getObjectValues() const {
     return {

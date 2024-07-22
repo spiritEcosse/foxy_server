@@ -16,10 +16,6 @@ std::map<std::string, std::pair<std::string, std::string>, std::less<>> BasketIt
              {BasketItemModel::Field::basketId.getFullFieldName(), OrderModel::Field::basketId.getFullFieldName()}}};
 }
 
-std::vector<BaseField> BasketItemModel::fields() {
-    return {Field::basketId, Field::itemId, Field::quantity, Field::price};
-}
-
 std::vector<
     std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
 BasketItemModel::getObjectValues() const {

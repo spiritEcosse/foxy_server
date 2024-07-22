@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
 add_executable(${PROJECT_NAME} ${RESOURCES} main.cpp)
-target_link_libraries(${PROJECT_NAME} PRIVATE drogon jwt-cpp bcrypt fmt::fmt sentry)
+target_link_libraries(${PROJECT_NAME} PRIVATE drogon fmt::fmt sentry)
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 
 ParseAndAddDrogonTests(${PROJECT_NAME})

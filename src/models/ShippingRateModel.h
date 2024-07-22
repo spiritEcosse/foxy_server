@@ -50,7 +50,6 @@ namespace api::v1 {
             validateField(Field::deliveryDaysMax.getFieldName(), deliveryDaysMax, missingFields);
         }
 
-        [[nodiscard]] static std::vector<BaseField> fields();
         [[nodiscard]] std::vector<
             std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         getObjectValues() const;

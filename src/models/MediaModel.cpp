@@ -16,14 +16,6 @@ std::map<std::string, std::pair<std::string, std::string>, std::less<>> MediaMod
     };
 }
 
-std::vector<BaseField> MediaModel::fields() {
-    return {
-        Field::src,
-        Field::itemId,
-        Field::sort,
-    };
-}
-
 std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 MediaModel::getObjectValues() const {
     return {

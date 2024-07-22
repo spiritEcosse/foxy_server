@@ -6,7 +6,6 @@
 #include <sstream>
 #include <JWT.h>
 #include "fmt/format.h"
-#include "bcrypt.h"
 #include <iomanip>
 #include <utility>
 #include <variant>
@@ -116,11 +115,11 @@ DROGON_TEST(Create) {
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
             req->setMethod(drogon::Post);
-            JWT jwtGenerated = JWT::generateToken({
-                {"email", picojson::value(userEmail)},
-            });
+            //            JWT jwtGenerated = JWT::generateToken({
+            //                {"email", picojson::value(userEmail)},
+            //            });
             // Set the Authorization header
-            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            //            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
             req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
             Json::Value jsonValue;
             for(const auto &[key, value]: expectedValues) {
@@ -297,12 +296,12 @@ DROGON_TEST(CheckMissingFields) {
         auto req = HttpRequest::newHttpRequest();
         req->setPath(std::move(path));
         req->setMethod(drogon::Post);
-        JWT jwtGenerated = JWT::generateToken({
-            {"email", picojson::value(userEmail)},
-        });
-
-        // Set the Authorization header
-        req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+        //        JWT jwtGenerated = JWT::generateToken({
+        //            {"email", picojson::value(userEmail)},
+        //        });
+        //
+        //        // Set the Authorization header
+        //        req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
         req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
         req->setBody("{}");
         client->sendRequest(req,
@@ -413,11 +412,11 @@ DROGON_TEST(Update) {
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
             req->setMethod(drogon::Put);
-            JWT jwtGenerated = JWT::generateToken({
-                {"email", picojson::value(userEmail)},
-            });
-            // Set the Authorization header
-            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            //            JWT jwtGenerated = JWT::generateToken({
+            //                {"email", picojson::value(userEmail)},
+            //            });
+            //            // Set the Authorization header
+            //            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
             req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
             Json::Value jsonValue;
             for(const auto &[key, value]: expectedValues) {
@@ -595,11 +594,11 @@ DROGON_TEST(DeleteItem) {
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
             req->setMethod(drogon::Delete);
-            JWT jwtGenerated = JWT::generateToken({
-                {"email", picojson::value(userEmail)},
-            });
-            // Set the Authorization header
-            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            //            JWT jwtGenerated = JWT::generateToken({
+            //                {"email", picojson::value(userEmail)},
+            //            });
+            //            // Set the Authorization header
+            //            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
             req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
 
             client->sendRequest(req,
@@ -632,11 +631,11 @@ DROGON_TEST(DeletePage) {
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
             req->setMethod(drogon::Delete);
-            JWT jwtGenerated = JWT::generateToken({
-                {"email", picojson::value(userEmail)},
-            });
-            // Set the Authorization header
-            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            //            JWT jwtGenerated = JWT::generateToken({
+            //                {"email", picojson::value(userEmail)},
+            //            });
+            //            // Set the Authorization header
+            //            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
             req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
 
             client->sendRequest(req,
@@ -669,11 +668,11 @@ DROGON_TEST(DeleteUser) {
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
             req->setMethod(drogon::Delete);
-            JWT jwtGenerated = JWT::generateToken({
-                {"email", picojson::value(userEmail)},
-            });
-            // Set the Authorization header
-            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            //            JWT jwtGenerated = JWT::generateToken({
+            //                {"email", picojson::value(userEmail)},
+            //            });
+            //            // Set the Authorization header
+            //            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
             req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
 
             client->sendRequest(req,
@@ -706,11 +705,11 @@ DROGON_TEST(DeleteShippingProfile) {
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
             req->setMethod(drogon::Delete);
-            JWT jwtGenerated = JWT::generateToken({
-                {"email", picojson::value(userEmail)},
-            });
-            // Set the Authorization header
-            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            //            JWT jwtGenerated = JWT::generateToken({
+            //                {"email", picojson::value(userEmail)},
+            //            });
+            //            // Set the Authorization header
+            //            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
             req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
 
             client->sendRequest(req,
@@ -743,11 +742,11 @@ DROGON_TEST(DeleteShippingRate) {
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
             req->setMethod(drogon::Delete);
-            JWT jwtGenerated = JWT::generateToken({
-                {"email", picojson::value(userEmail)},
-            });
-            // Set the Authorization header
-            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            //            JWT jwtGenerated = JWT::generateToken({
+            //                {"email", picojson::value(userEmail)},
+            //            });
+            //            // Set the Authorization header
+            //            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
             req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
 
             client->sendRequest(req,
@@ -780,11 +779,11 @@ DROGON_TEST(DeleteReview) {
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
             req->setMethod(drogon::Delete);
-            JWT jwtGenerated = JWT::generateToken({
-                {"email", picojson::value(userEmail)},
-            });
-            // Set the Authorization header
-            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            //            JWT jwtGenerated = JWT::generateToken({
+            //                {"email", picojson::value(userEmail)},
+            //            });
+            //            // Set the Authorization header
+            //            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
             req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
 
             client->sendRequest(req,
@@ -817,11 +816,11 @@ DROGON_TEST(DeleteOrder) {
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
             req->setMethod(drogon::Delete);
-            JWT jwtGenerated = JWT::generateToken({
-                {"email", picojson::value(userEmail)},
-            });
-            // Set the Authorization header
-            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            //            JWT jwtGenerated = JWT::generateToken({
+            //                {"email", picojson::value(userEmail)},
+            //            });
+            //            // Set the Authorization header
+            //            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
             req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
 
             client->sendRequest(req,
@@ -854,11 +853,11 @@ DROGON_TEST(DeleteMedia) {
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
             req->setMethod(drogon::Delete);
-            JWT jwtGenerated = JWT::generateToken({
-                {"email", picojson::value(userEmail)},
-            });
-            // Set the Authorization header
-            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            //            JWT jwtGenerated = JWT::generateToken({
+            //                {"email", picojson::value(userEmail)},
+            //            });
+            //            // Set the Authorization header
+            //            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
             req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
 
             client->sendRequest(req,
@@ -891,11 +890,11 @@ DROGON_TEST(DeleteCountry) {
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
             req->setMethod(drogon::Delete);
-            JWT jwtGenerated = JWT::generateToken({
-                {"email", picojson::value(userEmail)},
-            });
-            // Set the Authorization header
-            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            //            JWT jwtGenerated = JWT::generateToken({
+            //                {"email", picojson::value(userEmail)},
+            //            });
+            //            // Set the Authorization header
+            //            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
             req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
 
             client->sendRequest(req,
@@ -928,11 +927,11 @@ DROGON_TEST(DeleteBasket) {
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
             req->setMethod(drogon::Delete);
-            JWT jwtGenerated = JWT::generateToken({
-                {"email", picojson::value(userEmail)},
-            });
-            // Set the Authorization header
-            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            //            JWT jwtGenerated = JWT::generateToken({
+            //                {"email", picojson::value(userEmail)},
+            //            });
+            //            // Set the Authorization header
+            //            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
             req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
 
             client->sendRequest(req,
@@ -965,11 +964,11 @@ DROGON_TEST(DeleteBasketItem) {
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
             req->setMethod(drogon::Delete);
-            JWT jwtGenerated = JWT::generateToken({
-                {"email", picojson::value(userEmail)},
-            });
-            // Set the Authorization header
-            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            //            JWT jwtGenerated = JWT::generateToken({
+            //                {"email", picojson::value(userEmail)},
+            //            });
+            //            // Set the Authorization header
+            //            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
             req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
 
             client->sendRequest(req,
@@ -1002,11 +1001,11 @@ DROGON_TEST(DeleteAddress) {
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
             req->setMethod(drogon::Delete);
-            JWT jwtGenerated = JWT::generateToken({
-                {"email", picojson::value(userEmail)},
-            });
-            // Set the Authorization header
-            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
+            //            JWT jwtGenerated = JWT::generateToken({
+            //                {"email", picojson::value(userEmail)},
+            //            });
+            //            // Set the Authorization header
+            //            req->addHeader("Authorization", fmt::format("Bearer {}", jwtGenerated.getToken()));
             req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
 
             client->sendRequest(req,

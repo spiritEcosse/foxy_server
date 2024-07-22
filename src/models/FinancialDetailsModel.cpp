@@ -7,10 +7,6 @@
 
 using namespace api::v1;
 
-std::vector<BaseField> FinancialDetailsModel::fields() {
-    return {Field::taxRate, Field::gateway, Field::gatewayMerchantId, Field::merchantId, Field::merchantName};
-}
-
 std::vector<
     std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
 FinancialDetailsModel::getObjectValues() const {

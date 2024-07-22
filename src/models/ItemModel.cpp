@@ -26,18 +26,6 @@ std::map<std::string, std::pair<std::string, std::string>, std::less<>> ItemMode
              {BaseModel<ItemModel>::Field::id.getFullFieldName(), BasketItemModel::Field::itemId.getFullFieldName()}}};
 }
 
-std::vector<BaseField> ItemModel::fields() {
-    return {
-        Field::title,
-        Field::description,
-        Field::metaDescription,
-        Field::slug,
-        Field::shippingProfileId,
-        Field::enabled,
-        Field::price,
-    };
-}
-
 std::vector<
     std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
 ItemModel::getObjectValues() const {

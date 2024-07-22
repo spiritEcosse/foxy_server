@@ -14,13 +14,6 @@ std::map<std::string, std::pair<std::string, std::string>, std::less<>> CountryM
     };
 }
 
-std::vector<BaseField> CountryModel::fields() {
-    return {
-        Field::title,
-        Field::code,
-    };
-}
-
 std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 CountryModel::getObjectValues() const {
     return {

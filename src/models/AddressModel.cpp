@@ -13,10 +13,6 @@ namespace api::v1 {
              {BaseModel<AddressModel>::Field::id.getFullFieldName(), OrderModel::Field::addressId.getFullFieldName()}}};
     }
 
-    std::vector<BaseField> AddressModel::fields() {
-        return {Field::address, Field::countryId, Field::city, Field::zipcode, Field::userId};
-    }
-
     std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
     AddressModel::getObjectValues() const {
         return {{Field::address, address},

@@ -54,7 +54,6 @@ namespace api::v1 {
         std::string gatewayMerchantId;
         std::string merchantId;
         std::string merchantName;
-        [[nodiscard]] static std::vector<BaseField> fields();
         [[nodiscard]] std::vector<
             std::pair<BaseField,
                       std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>

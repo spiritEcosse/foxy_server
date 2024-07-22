@@ -72,16 +72,6 @@ CPMAddPackage(
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
 # end drogon
 
-# Start adding jwt-cpp
-CPMAddPackage(
-        NAME jwt-cpp
-        VERSION 0.7.0
-        GITHUB_REPOSITORY Thalhammer/jwt-cpp
-        GIT_TAG v0.7.0
-)
-target_link_libraries(${PROJECT_NAME} PRIVATE jwt-cpp)
-# End adding jwt-cpp
-
 # Start adding libcurl
 CPMAddPackage(
         NAME libcurl
@@ -92,17 +82,6 @@ CPMAddPackage(
 target_link_libraries(${PROJECT_NAME} PRIVATE libcurl)
 # End adding libcurl
 
-
-# Start adding hilch/Bcrypt.cpp
-
-CPMAddPackage(
-        NAME bcrypt
-        GITHUB_REPOSITORY hilch/Bcrypt.cpp
-        GIT_TAG master
-)
-
-target_link_libraries(${PROJECT_NAME} PRIVATE bcrypt)
-# End adding hilch/Bcrypt.cpp
 
 # start sentry
 set(SENTRY_BACKEND crashpad)

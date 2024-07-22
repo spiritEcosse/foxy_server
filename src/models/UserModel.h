@@ -17,7 +17,6 @@ namespace api::v1 {
 
         struct Field : public BaseModel::Field {
             static inline BaseField email = BaseField("email", tableName);
-            static inline BaseField password = BaseField("password", tableName);
             static inline BaseField firstName = BaseField("first_name", tableName);
             static inline BaseField lastName = BaseField("last_name", tableName);
             static inline BaseField birthday = BaseField("birthday", tableName);
@@ -26,7 +25,6 @@ namespace api::v1 {
 
             Field() : BaseModel<UserModel>::Field() {
                 allFields[email.getFieldName()] = email;
-                allFields[password.getFieldName()] = password;
                 allFields[firstName.getFieldName()] = firstName;
                 allFields[lastName.getFieldName()] = lastName;
                 allFields[birthday.getFieldName()] = birthday;
@@ -36,7 +34,6 @@ namespace api::v1 {
         };
 
         std::string email;
-        std::string password;
         std::string firstName;
         std::string lastName;
         std::string birthday = "Null";
@@ -49,7 +46,6 @@ namespace api::v1 {
         UserModel &operator=(UserModel &&) noexcept = default;  // Move assignment operator
 
         explicit UserModel(const Json::Value &json) : BaseModel(json) {
-            password = json[Field::password.getFieldName()].asString();
             email = json[Field::email.getFieldName()].asString();
             firstName = json[Field::firstName.getFieldName()].asString();
             lastName = json[Field::lastName.getFieldName()].asString();
@@ -64,11 +60,9 @@ namespace api::v1 {
             }
 
             validateField(Field::email.getFieldName(), email, missingFields);
-            validateField(Field::password.getFieldName(), password, missingFields);
             validateField(Field::firstName.getFieldName(), firstName, missingFields);
             validateField(Field::lastName.getFieldName(), lastName, missingFields);
             validateField(Field::birthday.getFieldName(), birthday, missingFields);
-            hashPassword();
         }
 
         explicit UserModel(const Json::Value &json, bool google) : BaseModel(json) {
@@ -81,13 +75,9 @@ namespace api::v1 {
             validateField(Field::lastName.getFieldName(), lastName, missingFields);
         }
 
-        [[nodiscard]] static std::vector<BaseField> fields();
         [[nodiscard]] std::vector<
             std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
         getObjectValues() const;
-        void hashPassword();
-        [[nodiscard]] bool checkPassword(const std::string &passwordIn) const;
-        [[nodiscard]] static std::string sqlAuth(const std::string &email);
         [[nodiscard]] std::string sqlGetOrCreateUser();
         [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
     };

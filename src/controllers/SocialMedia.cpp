@@ -73,7 +73,6 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
     qs.only(ItemModel::Field::title, ItemModel::Field::id, ItemModel::Field::slug)
         .join(MediaModel())
         .left_join(SocialMediaModel())
-        .filter(ItemModel::Field::id.getFullFieldName(), std::string("93"))  // remove
         .group_by(ItemModel::Field::id)
         .filter(SocialMediaModel::Field::id.getFullFieldName(), std::string("NULL"), false, std::string("IS"))
         .functions(Function(fmt::format(", json_agg(format_src(media.src, '{}')) AS media_list", app_cloud_name)));

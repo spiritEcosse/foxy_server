@@ -25,19 +25,6 @@ std::map<std::string, std::pair<std::string, std::string>, std::less<>> OrderMod
              {OrderModel::Field::userId.getFullFieldName(), BaseModel<UserModel>::Field::id.getFullFieldName()}}};
 }
 
-std::vector<BaseField> OrderModel::fields() {
-    return {Field::status,
-            Field::basketId,
-            Field::total,
-            Field::totalExTaxes,
-            Field::taxRate,
-            Field::taxes,
-            Field::userId,
-            Field::reference,
-            Field::returned,
-            Field::addressId};
-}
-
 std::vector<
     std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
 OrderModel::getObjectValues() const {

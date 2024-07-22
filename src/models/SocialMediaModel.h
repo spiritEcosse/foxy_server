@@ -46,12 +46,11 @@ namespace api::v1 {
             validateField(Field::itemId.getFieldName(), itemId, missingFields);
         }
 
-        [[nodiscard]] static std::vector<BaseField> fields();
         [[nodiscard]] std::vector<
             std::pair<BaseField,
                       std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
         getObjectValues() const;
-        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const;
+        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
         [[nodiscard]] std::string fieldsJsonObject() override;
         [[nodiscard]] std::string
         sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params) override;

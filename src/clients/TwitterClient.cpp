@@ -15,41 +15,35 @@
 #include <fstream>
 #include <sentry.h>
 #include "sentryHelper.h"
+#include <functional>
 
 std::unique_ptr<TwitterClient> TwitterClient::instance = nullptr;
 
-static size_t WriteCallback(void* contents, size_t size, size_t nmemb, std::string* userp) {
-    userp->append((char*)contents, size * nmemb);
+static size_t WriteCallback(char* contents, size_t size, size_t nmemb, std::string* userp) {
+    userp->append(contents, size * nmemb);
     return size * nmemb;
 }
 
-static size_t WriteCallbackToFile(void* contents, size_t size, size_t nmemb, void* userp) {
-    std::ofstream* ofs = static_cast<std::ofstream*>(userp);
-    ofs->write(static_cast<char*>(contents), size * nmemb);
+static size_t WriteCallbackToFile(char* contents, size_t size, size_t nmemb, std::ofstream* ofs) {
+    ofs->write(contents, size * nmemb);
     return size * nmemb;
 }
 
 std::string urlEncode(const std::string& value) {
-    std::ostringstream escaped;
-    escaped.fill('0');
-    escaped << std::hex;
-
+    std::string escaped;
     for(char c: value) {
         if(isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
-            escaped << c;
+            escaped += c;
         } else {
-            escaped << std::uppercase;
-            escaped << '%' << std::setw(2) << int((unsigned char)c);
-            escaped << std::nouppercase;
+            escaped += std::format("%{:02X}", static_cast<unsigned int>(static_cast<unsigned char>(c)));
         }
     }
-
-    return escaped.str();
+    return escaped;
 }
 
 std::string calculateOAuthSignature(const std::string& httpMethod,
                                     const std::string& baseUrl,
-                                    const std::map<std::string, std::string>& params,
+                                    const std::map<std::string, std::string, std::less<>>& params,
                                     const std::string& consumerSecret,
                                     const std::string& tokenSecret) {
     // Step 1-5: Create the signature base string
@@ -214,12 +208,12 @@ bool TwitterClient::addEasyHandleUpload(CURLM* multi_handle, FileTransferInfo& i
     auto now = std::chrono::system_clock::now().time_since_epoch();
     auto now_in_seconds = std::chrono::duration_cast<std::chrono::seconds>(now).count();
     std::string oauth_timestamp = std::to_string(now_in_seconds);
-    std::map<std::string, std::string> params = {{"oauth_consumer_key", apiKey},
-                                                 {"oauth_nonce", generateNonce()},
-                                                 {"oauth_signature_method", "HMAC-SHA1"},
-                                                 {"oauth_timestamp", oauth_timestamp},
-                                                 {"oauth_token", accessToken},
-                                                 {"oauth_version", "1.0"}};
+    std::map<std::string, std::string, std::less<>> params = {{"oauth_consumer_key", apiKey},
+                                                              {"oauth_nonce", generateNonce()},
+                                                              {"oauth_signature_method", "HMAC-SHA1"},
+                                                              {"oauth_timestamp", oauth_timestamp},
+                                                              {"oauth_token", accessToken},
+                                                              {"oauth_version", "1.0"}};
 
     std::string signature = calculateOAuthSignature("POST", url, params, apiSecretKey, accessTokenSecret);
     params["oauth_signature"] = signature;
@@ -273,12 +267,12 @@ void TwitterClient::performPost(Tweet& tweet) {
         auto now = std::chrono::system_clock::now().time_since_epoch();
         auto now_in_seconds = std::chrono::duration_cast<std::chrono::seconds>(now).count();
         std::string oauth_timestamp = std::to_string(now_in_seconds);
-        std::map<std::string, std::string> params = {{"oauth_consumer_key", apiKey},
-                                                     {"oauth_token", accessToken},
-                                                     {"oauth_signature_method", "HMAC-SHA1"},
-                                                     {"oauth_timestamp", oauth_timestamp},
-                                                     {"oauth_nonce", generateNonce()},
-                                                     {"oauth_version", "1.0"}};
+        std::map<std::string, std::string, std::less<>> params = {{"oauth_consumer_key", apiKey},
+                                                                  {"oauth_token", accessToken},
+                                                                  {"oauth_signature_method", "HMAC-SHA1"},
+                                                                  {"oauth_timestamp", oauth_timestamp},
+                                                                  {"oauth_nonce", generateNonce()},
+                                                                  {"oauth_version", "1.0"}};
 
         std::string signature = calculateOAuthSignature(httpMethod, baseUrl, params, apiSecretKey, accessTokenSecret);
 

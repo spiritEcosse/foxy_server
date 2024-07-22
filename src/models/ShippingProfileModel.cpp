@@ -13,16 +13,6 @@ std::map<std::string, std::pair<std::string, std::string>, std::less<>> Shipping
               ShippingRateModel::Field::shippingProfileId.getFullFieldName()}}};
 }
 
-std::vector<BaseField> ShippingProfileModel::fields() {
-    return {
-        Field::title,
-        Field::processingTime,
-        Field::countryId,
-        Field::postalCode,
-        Field::shippingUpgradeCost,
-    };
-}
-
 std::vector<
     std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
 ShippingProfileModel::getObjectValues() const {
