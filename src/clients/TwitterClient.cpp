@@ -35,7 +35,7 @@ std::string urlEncode(const std::string& value) {
         if(isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
             escaped += c;
         } else {
-            escaped += std::format("%{:02X}", static_cast<unsigned int>(static_cast<unsigned char>(c)));
+            escaped += fmt::format("%{:02X}", static_cast<unsigned int>(static_cast<unsigned char>(c)));
         }
     }
     return escaped;
