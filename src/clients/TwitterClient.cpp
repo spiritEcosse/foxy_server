@@ -306,7 +306,7 @@ void TwitterClient::performPost(Tweet& tweet) {
             fmt::format("{}\nExplore #FaithFishArt: Discover and buy inspiring art. Follow for updates! {}",
                         tweet.title,
                         url);
-        std::for_each(tweet.downloads.begin(), tweet.downloads.end(), [&jsonObj](const auto& info) {
+        std::ranges::for_each(tweet.downloads, [&jsonObj](const FileTransferInfo& info) {
             Json::Value root;
             std::istringstream responseStream(info.response);
             responseStream >> root;

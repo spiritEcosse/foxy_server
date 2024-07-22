@@ -20,7 +20,7 @@ void SocialMedia::handleRow(const auto &row) {
     auto slug = row[2].template as<std::string>();
     auto mediaList = row[3].template as<Json::Value>();
     std::vector<FileTransferInfo> mediaUrls = {};
-    std::for_each(mediaList.begin(), mediaList.end(), [&mediaUrls](const Json::Value &media) {
+    std::ranges::for_each(mediaList, [&mediaUrls](const Json::Value &media) {
         std::string mediaUrl = media.asString();
         std::string fileName = mediaUrl.substr(mediaUrl.find_last_of('/') + 1);
         mediaUrls.emplace_back(fmt::format("{}?twic=v1/cover=4000", mediaUrl), fileName);
