@@ -73,7 +73,7 @@ std::string calculateOAuthSignature(const std::string& httpMethod,
                   signingKey.length(),
                   reinterpret_cast<const unsigned char*>(signatureBaseString.c_str()),
                   signatureBaseString.length(),
-                  NULL,
+                  nullptr,
                   &digest_len);
 
     // Convert the HMAC digest into base64
