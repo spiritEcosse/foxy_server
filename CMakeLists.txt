@@ -41,7 +41,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty" "${CMAKE_BI
 include(3rdparty)
 
 # start src
-file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS src/*.cc src/*.cpp /src/*.h)
+file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS src/*.cc src/*.cpp /src/*.h src/*.hpp)
 add_executable(foxy_server ${RESOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 # end src
@@ -94,7 +94,21 @@ FetchContent_MakeAvailable(backward)
 
 # Add Backward to your target (either Backward::Interface, Backward::Object, or Backward::Backward)
 target_link_libraries(${PROJECT_NAME} PUBLIC Backward::Interface)
-add_definitions(-DBACKWARD_HAS_DWARF=1)
+# Find libbfd
+find_library(LIBBFD_FOUND bfd PATHS ${PATH_LIBBFD})
+if (NOT LIBBFD_FOUND)
+    message(FATAL_ERROR " libbfd not found")
+endif ()
+
+# Find libunwind
+find_library(LIBUNWIND_FOUND unwind)
+if (NOT LIBUNWIND_FOUND)
+    message(FATAL_ERROR "libunwind not found")
+endif ()
+
+# Assuming your target is named foxy_server
+target_link_libraries(foxy_server PRIVATE ${LIBBFD_FOUND} ${LIBUNWIND_FOUND})
+
 
 # start sentry
 set(SENTRY_BACKEND crashpad)
@@ -111,7 +125,7 @@ execute_process(COMMAND bash -c "sed -n '191p' ${PROJECT_BINARY_DIR}/_deps/sentr
 
 if ("${LINE_191_CONTENT}" STREQUAL "")
     execute_process(COMMAND bash -c "sed -i ${EMPTY_STRING} '191i\\
-target_sources(crashpad_snapshot PRIVATE x86/cpuid_reader.cc x86/cpuid_reader.h)' ${PROJECT_BINARY_DIR}/_deps/sentry-src/external/crashpad/snapshot/CMakeLists.txt"
+        target_sources (crashpad_snapshot PRIVATE x86/cpuid_reader.cc x86/cpuid_reader.h) ' ${PROJECT_BINARY_DIR}/_deps/sentry-src/external/crashpad/snapshot/CMakeLists.txt"
             RESULT_VARIABLE FIX_MATCHING_ARCHITECTURE_SENTRY)
     message(STATUS "FIX_MATCHING_ARCHITECTURE_SENTRY : ${FIX_MATCHING_ARCHITECTURE_SENTRY}")
     if (NOT FIX_MATCHING_ARCHITECTURE_SENTRY EQUAL "0")
