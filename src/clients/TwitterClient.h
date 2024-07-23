@@ -13,6 +13,8 @@
 #include <memory>
 #include <vector>
 #include "env.h"
+#include <map>
+#include <json/value.h>
 
 struct FileTransferInfo {
     std::string url;
@@ -22,10 +24,12 @@ struct FileTransferInfo {
     struct curl_slist* headers;
     struct curl_httppost* post;
     std::string response;
+    long responseCode;
+    std::string externalId;
 
     FileTransferInfo(std::string url, const std::string& outputFileName) :
         url(std::move(url)), outputFileName(outputFileName), ofs(new std::ofstream(outputFileName, std::ios::binary)),
-        easy_handle(nullptr), headers(nullptr), post(nullptr) {
+        easy_handle(nullptr), headers(nullptr), post(nullptr), responseCode(0) {
         if(!ofs->is_open()) {
             throw std::runtime_error("Failed to open file: " + outputFileName);
         }
@@ -55,6 +59,11 @@ struct FileTransferInfo {
             other.post = nullptr;
         }
         return *this;
+    }
+
+    // function to detect is it video or not
+    bool isVideo() {
+        return url.find(".mp4") != std::string::npos;
     }
 
     // Destructor
@@ -109,15 +118,25 @@ private:
         getenv("TWITTER_API_SECRET", apiSecretKey);
         getenv("TWITTER_ACCESS_TOKEN", accessToken);
         getenv("TWITTER_ACCESS_TOKEN_SECRET", accessTokenSecret);
-        getenv("TWITTER_BEREAR_TOKEN", bearerToken);
+        getenv("TWITTER_BEARER_TOKEN", bearerToken);
     }
 
     using TransferFunc = bool (TwitterClient::*)(CURLM* multi_handle, FileTransferInfo& info);
 
     bool transMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos, TransferFunc transferFunc);
     bool addEasyHandleUpload(CURLM* multi_handle, FileTransferInfo& info);
+    bool addEasyHandleUploadVideo(FileTransferInfo& info);
     bool addEasyHandleDownload(CURLM* multi_handle, FileTransferInfo& info);
     void performPost(Tweet& tweet);
+    bool uploadVideo(const std::string& url,
+                     std::map<std::string, std::string, std::less<>>& params,
+                     FileTransferInfo& fileTransferInfo,
+                     const char* fileData = nullptr,
+                     size_t fileSize = 0);
+    std::string oauth(const std::string& url, const std::string& method);
+    static std::string createTweetJson(const Tweet& tweet);
+    std::pair<long, Json::Value> processResponse(CURLcode res, long response_code, const std::string& responseString);
+    bool multiHandle(CURLM* multi_handle);
 
 public:
     // Deleted copy constructor and assignment operator
