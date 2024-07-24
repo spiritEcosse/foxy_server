@@ -3,7 +3,7 @@
 #include <sentry.h>
 #include <fmt/format.h>
 #include "sentryHelper.h"
-#include "backward.hpp"
+#include "3rdparty/backward-cpp/backward.hpp"
 #include <csignal>
 #include <iostream>
 
