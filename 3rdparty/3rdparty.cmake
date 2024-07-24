@@ -3,6 +3,8 @@ find_package(Git)
 include(ProcessorCount)
 ProcessorCount(CORES)
 
+include_directories(${CMAKE_SOURCE_DIR}/3rdparty)
+
 if (NOT EXISTS ${PROJECT_BINARY_DIR}/3rdparty)
     execute_process(COMMAND bash -c "mkdir ${PROJECT_BINARY_DIR}/3rdparty")
 endif ()

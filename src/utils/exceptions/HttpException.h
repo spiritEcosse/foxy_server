@@ -1,7 +1,7 @@
 #ifndef HTTPEXCEPTION_H
 #define HTTPEXCEPTION_H
 
-#include "3rdparty/backward-cpp/backward.hpp"
+#include "backward-cpp/backward.hpp"
 #include <exception>
 #include <string>
 #include <sstream>
