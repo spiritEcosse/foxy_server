@@ -91,7 +91,7 @@ if (NOT ZLIB_LIBRARY)
 endif ()
 
 # Link zlib to your target
-target_link_libraries(foxy_server PRIVATE ${ZLIB_LIBRARY})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${ZLIB_LIBRARY})
 
 # Find libbfd
 find_library(LIBBFD_FOUND bfd PATHS ${PATH_LIBBFD})
@@ -105,9 +105,14 @@ if (NOT LIBUNWIND_FOUND)
     message(FATAL_ERROR "libunwind not found")
 endif ()
 
-# Assuming your target is named foxy_server
-target_link_libraries(foxy_server PRIVATE ${LIBBFD_FOUND} ${LIBUNWIND_FOUND})
 
+#find_library(OAUTH_FOUND oauth)
+#if (NOT OAUTH_FOUND)
+#    message(FATAL_ERROR "oauth not found")
+#endif ()
+
+#target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBBFD_FOUND} ${LIBUNWIND_FOUND} ${OAUTH_FOUND})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBBFD_FOUND} ${LIBUNWIND_FOUND})
 
 # start sentry
 set(SENTRY_BACKEND crashpad)

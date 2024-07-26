@@ -94,6 +94,40 @@ struct Tweet {
         title(std::move(title)), downloads(std::move(downloads)), itemSlug(std::move(itemSlug)) {}
 };
 
+class RequestToken {
+private:
+    bool oauth_callback_confirmed;
+    std::string oauth_token;
+    std::string oauth_token_secret;
+
+public:
+    // Constructor
+    RequestToken(bool callback_confirmed, std::string token, std::string token_secret) :
+        oauth_callback_confirmed(callback_confirmed), oauth_token(std::move(token)),
+        oauth_token_secret(std::move(token_secret)) {}
+
+    // Getter methods
+    [[nodiscard]] bool getOauthCallbackConfirmed() const {
+        return oauth_callback_confirmed;
+    }
+
+    [[nodiscard]] std::string getOauthToken() const {
+        return oauth_token;
+    }
+
+    [[nodiscard]] std::string getOauthTokenSecret() const {
+        return oauth_token_secret;
+    }
+
+    // Static method to parse JSON and create RequestToken instance
+    static RequestToken fromJson(const Json::Value& json) {
+        bool callback_confirmed = json["oauth_callback_confirmed"].asString() == "true";
+        std::string token = json["oauth_token"].asString();
+        std::string token_secret = json["oauth_token_secret"].asString();
+        return {callback_confirmed, token, token_secret};
+    }
+};
+
 class TwitterClient {
 private:
     static std::unique_ptr<TwitterClient> instance;
@@ -102,6 +136,7 @@ private:
     std::string accessToken;
     std::string accessTokenSecret;
     std::string bearerToken;
+    std::unique_ptr<RequestToken> requestToken;
 
     // Encapsulate urlencode within TwitterClient to avoid conflicts
     static std::string urlencode(const std::string& value) {
@@ -119,6 +154,7 @@ private:
         getenv("TWITTER_ACCESS_TOKEN", accessToken);
         getenv("TWITTER_ACCESS_TOKEN_SECRET", accessTokenSecret);
         getenv("TWITTER_BEARER_TOKEN", bearerToken);
+        requestToken = std::make_unique<RequestToken>("", "", "");
     }
 
     using TransferFunc = bool (TwitterClient::*)(CURLM* multi_handle, FileTransferInfo& info);
@@ -135,8 +171,11 @@ private:
                      size_t fileSize = 0);
     std::string oauth(const std::string& url, const std::string& method);
     static std::string createTweetJson(const Tweet& tweet);
-    std::pair<long, Json::Value> processResponse(CURLcode res, long response_code, const std::string& responseString);
+    std::pair<long, Json::Value> processResponse(CURL* curl, CURLcode res, const std::string& responseString);
     bool multiHandle(CURLM* multi_handle);
+    Json::Value requestCurl(const std::string& url, const std::string& method);
+    void getRequestToken();
+    void getAccessToken();
 
 public:
     // Deleted copy constructor and assignment operator
