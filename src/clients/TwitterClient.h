@@ -169,13 +169,18 @@ private:
                      FileTransferInfo& fileTransferInfo,
                      const char* fileData = nullptr,
                      size_t fileSize = 0);
-    std::string oauth(const std::string& url, const std::string& method);
+    std::string oauth(const std::string& url,
+                      const std::string& method,
+                      const std::map<std::string, std::string, std::less<>>& params = {});
     static std::string createTweetJson(const Tweet& tweet);
     std::pair<long, Json::Value> processResponse(CURL* curl, CURLcode res, const std::string& responseString);
     bool multiHandle(CURLM* multi_handle);
-    Json::Value requestCurl(const std::string& url, const std::string& method);
-    void getRequestToken();
-    void getAccessToken();
+    Json::Value requestCurl(const std::string& url,
+                            const std::string& method,
+                            const std::map<std::string, std::string, std::less<>>& oauthParams = {});
+    bool getRequestToken();
+    bool getAccessToken(const std::string& pin);
+    std::string authenticate();
 
 public:
     // Deleted copy constructor and assignment operator

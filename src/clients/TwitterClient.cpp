@@ -188,20 +188,43 @@ bool TwitterClient::multiHandle(CURLM* multi_handle) {
     return success;
 }
 
-void TwitterClient::getRequestToken() {
+bool TwitterClient::getRequestToken() {
     std::string url = "https://api.twitter.com/oauth/request_token";
     std::string httpMethod = "POST";
-    const auto& json = requestCurl(url, httpMethod);
+    std::map<std::string, std::string, std::less<>> params = {{"oauth_callback", "oob"}};
+    const auto& json = requestCurl(url, httpMethod, params);
     requestToken = std::make_unique<RequestToken>(RequestToken::fromJson(json));
-    LOG_INFO << "Request token: " << requestToken->getOauthCallbackConfirmed() << ", " << requestToken->getOauthToken()
-             << ", " << requestToken->getOauthTokenSecret();
+    if(requestToken->getOauthToken().empty()) {
+        LOG_ERROR << "Request token is empty.";
+        return false;
+    }
+    return true;
 }
 
-void TwitterClient::getAccessToken() {
+std::string TwitterClient::authenticate() {
+    std::string url =
+        fmt::format("https://api.twitter.com/oauth/authenticate?oauth_token={}", requestToken->getOauthToken());
+    std::cout << "Please visit the following URL to authorize the application: " << url << std::endl;
+    std::cout << "Enter the PIN provided by Twitter: ";
+    std::string pin;
+    std::cin >> pin;
+    return pin;
+}
+
+bool TwitterClient::getAccessToken(const std::string& pin) {
+    if(pin.empty()) {
+        LOG_ERROR << "PIN is empty.";
+        return "";
+    }
     std::string url = "https://api.twitter.com/oauth/access_token";
     std::string httpMethod = "POST";
-    const auto& json = requestCurl(url, httpMethod);
+    std::map<std::string, std::string, std::less<>> params = {
+        {"oauth_token", requestToken->getOauthToken()},
+        {"oauth_verifier", pin},
+    };
+    const auto& json = requestCurl(url, httpMethod, params);
     std::cout << json.toStyledString() << std::endl;
+    return true;
 }
 
 //std::string generate_authorize_url() {
@@ -247,31 +270,30 @@ void TwitterClient::getAccessToken() {
 //    return TwurlOptions::base_url + request.path + "?" + params.str();
 //}
 
-std::string TwitterClient::oauth(const std::string& url, const std::string& method) {
+std::string TwitterClient::oauth(const std::string& url,
+                                 const std::string& method,
+                                 const std::map<std::string, std::string, std::less<>>& params) {
     auto now = std::chrono::system_clock::now().time_since_epoch();
     auto now_in_seconds = std::chrono::duration_cast<std::chrono::seconds>(now).count();
     std::string oauth_timestamp = std::to_string(now_in_seconds);
-    std::string oauth_token = requestToken->getOauthToken();
-    std::string oauth_token_secret = requestToken->getOauthTokenSecret();
-    std::map<std::string, std::string, std::less<>> params = {
+    std::map<std::string, std::string, std::less<>> oauthParams = {
         {"oauth_consumer_key", apiKey},
         {"oauth_nonce", generateNonce()},
         {"oauth_signature_method", "HMAC-SHA1"},
         {"oauth_timestamp", oauth_timestamp},
-        {"oauth_token", oauth_token.empty() ? accessToken : oauth_token},
+        {"oauth_token", accessToken},
         {"oauth_version", "1.0"},
     };
+    for(const auto& param: params) {
+        oauthParams[param.first] = param.second;
+    }
 
-    params["oauth_signature"] =
-        calculateOAuthSignature(method,
-                                url,
-                                params,
-                                apiSecretKey,
-                                oauth_token_secret.empty() ? accessTokenSecret : oauth_token_secret);
+    std::cout << accessTokenSecret << std::endl;
+    oauthParams["oauth_signature"] = calculateOAuthSignature(method, url, oauthParams, apiSecretKey, accessTokenSecret);
 
     std::vector<std::string> parts;
-    parts.reserve(params.size());
-    for(const auto& param: params) {
+    parts.reserve(oauthParams.size());
+    for(const auto& param: oauthParams) {
         parts.push_back(fmt::format(R"({}="{}")", param.first, urlEncode(param.second)));
     }
     return fmt::format("Authorization: OAuth {}", fmt::join(parts.begin(), parts.end(), ", "));
@@ -367,39 +389,39 @@ bool TwitterClient::addEasyHandleUploadVideo(FileTransferInfo& info) {
         sentryHelper(error, "addEasyHandleUploadVideo");
         return false;
     }
-
-    // Step 2: Append
-    std::ifstream fileStream(info.outputFileName, std::ios::in | std::ios::binary);
-    if(!fileStream) {
-        std::string error = fmt::format("Error: Unable to open file. Filename: {}", info.outputFileName);
-        sentryHelper(error, "performPost");
-        return false;
-    }
-
-    std::vector<char> buffer(512 * 1024);  // 512 KB buffer
-    size_t segmentIndex = 0;
-    while(fileStream.read(buffer.data(), buffer.size()) || fileStream.gcount() > 0) {
-        std::map<std::string, std::string, std::less<>> appendParams = {
-            {"command", "APPEND"},
-            {"media_id", info.externalId},
-            {"segment_index", std::to_string(segmentIndex)}};
-
-        result = uploadVideo(url, appendParams, info, buffer.data(), fileStream.gcount());
-        if(!result) {
-            std::string error = fmt::format("Error: Failed to append media segment. responseCode: {}, response: {}",
-                                            info.responseCode,
-                                            info.response);
-            sentryHelper(error, "addEasyHandleUploadVideo");
-            return false;
-        }
-        ++segmentIndex;
-    }
-
-    // Step 3: Finalize
-    std::map<std::string, std::string, std::less<>> finalizeParams = {{"command", "FINALIZE"},
-                                                                      {"media_id", info.externalId}};
-
-    return uploadVideo(url, finalizeParams, info);
+    return false;
+    //    // Step 2: Append
+    //    std::ifstream fileStream(info.outputFileName, std::ios::in | std::ios::binary);
+    //    if(!fileStream) {
+    //        std::string error = fmt::format("Error: Unable to open file. Filename: {}", info.outputFileName);
+    //        sentryHelper(error, "performPost");
+    //        return false;
+    //    }
+    //
+    //    std::vector<char> buffer(512 * 1024);  // 512 KB buffer
+    //    size_t segmentIndex = 0;
+    //    while(fileStream.read(buffer.data(), buffer.size()) || fileStream.gcount() > 0) {
+    //        std::map<std::string, std::string, std::less<>> appendParams = {
+    //            {"command", "APPEND"},
+    //            {"media_id", info.externalId},
+    //            {"segment_index", std::to_string(segmentIndex)}};
+    //
+    //        result = uploadVideo(url, appendParams, info, buffer.data(), fileStream.gcount());
+    //        if(!result) {
+    //            std::string error = fmt::format("Error: Failed to append media segment. responseCode: {}, response: {}",
+    //                                            info.responseCode,
+    //                                            info.response);
+    //            sentryHelper(error, "addEasyHandleUploadVideo");
+    //            return false;
+    //        }
+    //        ++segmentIndex;
+    //    }
+    //
+    //    // Step 3: Finalize
+    //    std::map<std::string, std::string, std::less<>> finalizeParams = {{"command", "FINALIZE"},
+    //                                                                      {"media_id", info.externalId}};
+    //
+    //    return uploadVideo(url, finalizeParams, info);
 }
 
 bool TwitterClient::uploadVideo(const std::string& url,
@@ -415,28 +437,42 @@ bool TwitterClient::uploadVideo(const std::string& url,
         return false;
     }
 
-    auto commandIter = params.find("command");
-
-    std::string postData;
-    for(const auto& param: params) {
-        if(!postData.empty())
-            postData += "&";
-        postData += urlEncode(param.first) + "=" + urlEncode(param.second);
+    if(fileData && fileSize > 0) {
+        curl_formadd(&info.post,
+                     &info.post,
+                     CURLFORM_COPYNAME,
+                     "media",
+                     CURLFORM_BUFFER,
+                     "media",
+                     CURLFORM_BUFFERPTR,
+                     fileData,
+                     CURLFORM_BUFFERLENGTH,
+                     fileSize,
+                     CURLFORM_END);
     }
 
     struct curl_slist* headers = nullptr;
-    std::string oauthData = oauth(url, httpMethod);
+    std::string oauthData = oauth(url, httpMethod, params);
     const char* oauthHeader = oauthData.c_str();
     headers = curl_slist_append(headers, oauthHeader);
     headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
     info.headers = headers;
 
+    // Convert params map to URL-encoded string
+    std::string urlEncodedData;
+    for(const auto& param: params) {
+        if(!urlEncodedData.empty()) {
+            urlEncodedData += "&";
+        }
+        urlEncodedData += urlEncode(param.first) + "=" + urlEncode(param.second);
+    }
+
     curl_easy_setopt(info.easy_handle, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(info.easy_handle, CURLOPT_DEFAULT_PROTOCOL, "https");
     curl_easy_setopt(info.easy_handle, CURLOPT_CUSTOMREQUEST, httpMethod.c_str());
     curl_easy_setopt(info.easy_handle, CURLOPT_URL, url.c_str());
-    //    curl_easy_setopt(info.easy_handle, CURLOPT_HTTPPOST, info.post);
-    curl_easy_setopt(info.easy_handle, CURLOPT_POSTFIELDS, postData.c_str());
+    curl_easy_setopt(info.easy_handle, CURLOPT_HTTPPOST, info.post);
+    curl_easy_setopt(info.easy_handle, CURLOPT_POSTFIELDS, urlEncodedData.c_str());
     curl_easy_setopt(info.easy_handle, CURLOPT_HTTPHEADER, info.headers);
     curl_easy_setopt(info.easy_handle, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(info.easy_handle, CURLOPT_WRITEDATA, &info.response);
@@ -590,7 +626,9 @@ TwitterClient::processResponse(CURL* curl, CURLcode res, const std::string& resp
     return {responseCode, root};
 }
 
-Json::Value TwitterClient::requestCurl(const std::string& url, const std::string& httpMethod) {
+Json::Value TwitterClient::requestCurl(const std::string& url,
+                                       const std::string& httpMethod,
+                                       const std::map<std::string, std::string, std::less<>>& oauthParams) {
     CURL* curl = curl_easy_init();
 
     if(!curl) {
@@ -598,7 +636,7 @@ Json::Value TwitterClient::requestCurl(const std::string& url, const std::string
         return "";
     }
 
-    std::string oauthData = oauth(url, httpMethod);
+    std::string oauthData = oauth(url, httpMethod, oauthParams);
     struct curl_slist* headers = nullptr;
     const char* oauthHeader = oauthData.c_str();
     headers = curl_slist_append(headers, oauthHeader);
@@ -620,8 +658,10 @@ Json::Value TwitterClient::requestCurl(const std::string& url, const std::string
 }
 
 void TwitterClient::postTweet(Tweet& tweet) {
-    //    getRequestToken();
-    //    requestAccessToken();
+    //    if(!getRequestToken()) {
+    //        return;
+    //    }
+    //    getAccessToken(authenticate());
     if(!transMediaFiles(tweet.downloads, &TwitterClient::addEasyHandleDownload)) {
         return;
     }
