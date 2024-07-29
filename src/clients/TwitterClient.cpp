@@ -119,6 +119,7 @@ bool TwitterClient::addEasyHandleDownload(CURLM* multi_handle, FileTransferInfo&
     if(!info.easy_handle) {
         return false;
     }
+    curl_easy_setopt(info.easy_handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
 
     curl_easy_setopt(info.easy_handle, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(info.easy_handle, CURLOPT_DEFAULT_PROTOCOL, "https");
@@ -228,6 +229,9 @@ bool TwitterClient::addEasyHandleUpload(CURLM* multi_handle, FileTransferInfo& i
     if(!info.easy_handle) {
         return false;
     }
+
+    curl_easy_setopt(info.easy_handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+
     // Check if info.fileName is not empty and the file exists
     if(!info.outputFileName.empty() && std::filesystem::exists(info.outputFileName)) {
         LOG_INFO << "File exists: " << info.outputFileName;
@@ -355,6 +359,7 @@ bool TwitterClient::uploadVideo(const std::string& url,
         curl_easy_cleanup(info.easy_handle);
         return false;
     }
+    curl_easy_setopt(info.easy_handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
 
     struct curl_slist* headers = nullptr;
     auto it = params.find("command");
@@ -470,6 +475,7 @@ void TwitterClient::performPost(Tweet& tweet) {
     CURL* curl;
     curl = curl_easy_init();
     if(curl) {
+        curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
         std::string httpMethod = "POST";
         std::string url = "https://api.twitter.com/2/tweets";
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
@@ -581,6 +587,7 @@ Json::Value TwitterClient::requestCurl(const std::string& url,
         curl_easy_cleanup(curl);
         return "";
     }
+    curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
 
     std::string oauthData = oauth(url, httpMethod, oauthParams);
     struct curl_slist* headers = nullptr;

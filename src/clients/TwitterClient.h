@@ -137,17 +137,7 @@ private:
     std::string accessTokenSecret;
     std::string bearerToken;
     std::unique_ptr<RequestToken> requestToken;
-
-    // Encapsulate urlencode within TwitterClient to avoid conflicts
-    static std::string urlencode(const std::string& value) {
-        CURL* curl = curl_easy_init();
-        char* output = curl_easy_escape(curl, value.c_str(), value.length());
-        std::string encoded = output;
-        curl_free(output);
-        curl_easy_cleanup(curl);
-        return encoded;
-    }
-
+    
     TwitterClient() {
         getenv("TWITTER_API_KEY", apiKey);
         getenv("TWITTER_API_SECRET", apiSecretKey);
