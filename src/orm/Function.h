@@ -10,6 +10,10 @@ namespace api::v1 {
             return function;
         }
 
+        [[nodiscard]] std::string getFullFieldName() const {
+            return function;
+        }
+
         std::string function;
     };
 }

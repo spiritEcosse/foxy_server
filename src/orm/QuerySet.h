@@ -25,7 +25,7 @@ namespace api::v1 {
     };
 
     struct OrderInfo {
-        std::vector<std::pair<BaseField, bool>> orderFields;
+        std::vector<std::pair<std::variant<BaseField, Function>, bool>> orderFields;
         std::string orderBy;
     };
 
@@ -36,6 +36,16 @@ namespace api::v1 {
 
     class BaseQuerySet {
     public:
+        using FieldOrFunction = std::variant<api::v1::BaseField, api::v1::Function>;
+
+        std::string getFullFieldName(const FieldOrFunction &fieldOrFunction) const {
+            return std::visit(
+                [](const auto &obj) {
+                    return obj.getFullFieldName();
+                },
+                fieldOrFunction);
+        }
+
         [[nodiscard]] std::string buildSelectOne() const {
             std::string sql = "SELECT ";
             if(_doAndCheck) {
@@ -83,7 +93,7 @@ namespace api::v1 {
             if(!orderInfo.orderFields.empty()) {
                 sql += " ORDER BY ";
                 for(const auto &[field, asc]: orderInfo.orderFields) {
-                    sql += fmt::format("{} {}", field.getFullFieldName(), asc ? "ASC" : "DESC") + ",";
+                    sql += fmt::format("{} {}", getFullFieldName(field), asc ? "ASC" : "DESC") + ",";
                 }
                 sql.pop_back();  // Remove the last comma
             }

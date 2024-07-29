@@ -76,7 +76,12 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
         .group_by(ItemModel::Field::id)
         .filter(ItemModel::Field::id.getFullFieldName(), std::string("93"))
         .filter(SocialMediaModel::Field::id.getFullFieldName(), std::string("NULL"), false, std::string("IS"))
-        .functions(Function(fmt::format(", json_agg(format_src(media.src, '{}')) AS media_list", app_cloud_name)));
+        .functions(Function(fmt::format(", json_agg(format_src({0}, '{1}') ORDER BY CASE "
+                                        " WHEN {0} LIKE '%.mp4' THEN 1"
+                                        " ELSE 2"
+                                        " END ASC) AS media_list",
+                                        MediaModel::Field::src.getFullFieldName(),
+                                        app_cloud_name)));
 
     executeSqlQuery(callbackPtr,
                     qs.buildSelect(),

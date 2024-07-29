@@ -188,45 +188,6 @@ bool TwitterClient::multiHandle(CURLM* multi_handle) {
     return success;
 }
 
-bool TwitterClient::getRequestToken() {
-    std::string url = "https://api.twitter.com/oauth/request_token";
-    std::string httpMethod = "POST";
-    std::map<std::string, std::string, std::less<>> params = {{"oauth_callback", "oob"}};
-    const auto& json = requestCurl(url, httpMethod, params);
-    requestToken = std::make_unique<RequestToken>(RequestToken::fromJson(json));
-    if(requestToken->getOauthToken().empty()) {
-        LOG_ERROR << "Request token is empty.";
-        return false;
-    }
-    return true;
-}
-
-std::string TwitterClient::authenticate() {
-    std::string url =
-        fmt::format("https://api.twitter.com/oauth/authenticate?oauth_token={}", requestToken->getOauthToken());
-    std::cout << "Please visit the following URL to authorize the application: " << url << std::endl;
-    std::cout << "Enter the PIN provided by Twitter: ";
-    std::string pin;
-    std::cin >> pin;
-    return pin;
-}
-
-bool TwitterClient::getAccessToken(const std::string& pin) {
-    if(pin.empty()) {
-        LOG_ERROR << "PIN is empty.";
-        return "";
-    }
-    std::string url = "https://api.twitter.com/oauth/access_token";
-    std::string httpMethod = "POST";
-    std::map<std::string, std::string, std::less<>> params = {
-        {"oauth_token", requestToken->getOauthToken()},
-        {"oauth_verifier", pin},
-    };
-    const auto& json = requestCurl(url, httpMethod, params);
-    std::cout << json.toStyledString() << std::endl;
-    return true;
-}
-
 std::string TwitterClient::oauth(const std::string& url,
                                  const std::string& method,
                                  const std::map<std::string, std::string, std::less<>>& params) {
@@ -431,7 +392,7 @@ bool TwitterClient::uploadVideo(const std::string& url,
         oauthData = oauth(url, httpMethod, params);
         headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
         for(const auto& param: params) {
-            std::cout << param.first << " : " << param.second << std::endl;
+            LOG_INFO << param.first << " : " << param.second;
             if(!urlEncodedData.empty()) {
                 urlEncodedData += "&";
             }
@@ -469,6 +430,7 @@ bool TwitterClient::uploadVideo(const std::string& url,
 
     if(json.isMember("media_id_string")) {
         info.externalId = json["media_id_string"].asString();
+        LOG_INFO << "uploadVideo->info.externalId:" << info.externalId;
     }
     if(info.responseCode < 200 || info.responseCode >= 300) {
         return false;
