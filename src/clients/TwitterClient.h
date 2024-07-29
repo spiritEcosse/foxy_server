@@ -165,7 +165,7 @@ private:
     bool addEasyHandleDownload(CURLM* multi_handle, FileTransferInfo& info);
     void performPost(Tweet& tweet);
     bool uploadVideo(const std::string& url,
-                     std::map<std::string, std::string, std::less<>>& params,
+                     const std::map<std::string, std::string, std::less<>>& params,
                      FileTransferInfo& fileTransferInfo,
                      const char* fileData = nullptr,
                      size_t fileSize = 0);
