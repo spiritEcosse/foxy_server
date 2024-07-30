@@ -8,7 +8,8 @@
 using namespace api::v1;
 
 std::map<std::string, std::pair<std::string, std::string>, std::less<>> SocialMediaModel::joinMap() const {
-    return {{ItemModel::tableName, {Field::itemId.getFullFieldName(), ItemModel::Field::id.getFullFieldName()}}};
+    return {
+        {ItemModel::tableName, {Field::itemId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName()}}};
 }
 
 std::vector<
@@ -37,7 +38,7 @@ SocialMediaModel::sqlSelectList(int page, int limit, const std::map<std::string,
     qs.join(SocialMediaModel())
         .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
         .only(allSetFields())
-        .order_by(std::make_pair(Field::updatedAt, false))
+        .order_by(std::make_pair(BaseModel<SocialMediaModel>::Field::updatedAt, false))
         .functions(Function(fmt::format("format_social_url({}, {}::TEXT) as social_url",
                                         SocialMediaModel::Field::externalId.getFullFieldName(),
                                         SocialMediaModel::Field::title.getFullFieldName())));

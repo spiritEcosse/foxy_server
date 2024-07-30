@@ -9,7 +9,7 @@
 
 using namespace drogon;
 
-void handleSignal(int signal) {
+[[noreturn]] void handleSignal(int signal) {
     std::cerr << "Caught signal " << signal << std::endl;
     // Add your cleanup code or logging here
     // Capture and print the stack trace

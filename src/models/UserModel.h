@@ -65,7 +65,7 @@ namespace api::v1 {
             validateField(Field::birthday.getFieldName(), birthday, missingFields);
         }
 
-        explicit UserModel(const Json::Value &json, bool google) : BaseModel(json) {
+        explicit UserModel(const Json::Value &json, [[maybe_unused]] bool google) : BaseModel(json) {
             email = json[Field::email.getFieldName()].asString();
             firstName = json["given_name"].asString();
             lastName = json["family_name"].asString();

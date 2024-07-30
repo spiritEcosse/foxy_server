@@ -50,7 +50,7 @@ std::string calculateOAuthSignature(const std::string& httpMethod,
                                     const std::string& tokenSecret) {
     // Step 1-5: Create the signature base string
     std::vector<std::string> encodedParams;
-    std::transform(params.begin(), params.end(), std::back_inserter(encodedParams), [](const auto& pair) {
+    std::ranges::transform(params, std::back_inserter(encodedParams), [](const auto& pair) {
         return fmt::format("{}={}", urlEncode(pair.first), urlEncode(pair.second));
     });
     std::string paramString = fmt::to_string(fmt::join(encodedParams, "&"));
@@ -202,8 +202,8 @@ std::string TwitterClient::oauth(const std::string& url,
         {"oauth_token", accessToken},
         {"oauth_version", "1.0"},
     };
-    for(const auto& param: params) {
-        oauthParams[param.first] = param.second;
+    for(const auto& [key, value]: params) {
+        oauthParams[key] = value;
     }
 
     oauthParams["oauth_signature"] = calculateOAuthSignature(method, url, oauthParams, apiSecretKey, accessTokenSecret);
@@ -395,13 +395,12 @@ bool TwitterClient::uploadVideo(const std::string& url,
     } else {
         oauthData = oauth(url, httpMethod, params);
         headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
-        for(const auto& param: params) {
-            LOG_INFO << param.first << " : " << param.second;
-            if(!urlEncodedData.empty()) {
-                urlEncodedData += "&";
-            }
-            urlEncodedData += urlEncode(param.first) + "=" + urlEncode(param.second);
-        }
+        std::vector<std::string> encodedParams;
+        std::ranges::transform(params, std::back_inserter(encodedParams), [](const auto& pair) {
+            LOG_INFO << pair.first << " : " << pair.second;
+            return fmt::format("{}={}", urlEncode(pair.first), urlEncode(pair.second));
+        });
+        urlEncodedData = fmt::to_string(fmt::join(encodedParams, "&"));
     }
     const char* oauthHeader = oauthData.c_str();
     headers = curl_slist_append(headers, oauthHeader);
@@ -525,7 +524,7 @@ Json::Value splitAndConvertToJson(const std::string& urlPath) {
     if(!isUrlPath(urlPath)) {
         return {};
     }
-    std::map<std::string, std::string> params;
+    std::map<std::string, std::string, std::less<>> params;
     std::istringstream stream(urlPath);
     std::string keyValuePair;
 
@@ -611,21 +610,13 @@ Json::Value TwitterClient::requestCurl(const std::string& url,
 }
 
 void TwitterClient::postTweet(Tweet& tweet) {
-    //    if(!getRequestToken()) {
-    //        return;
-    //    }
-    //    getAccessToken(authenticate());
-    if(!transMediaFiles(
-           tweet.downloads,
-           std::bind(&TwitterClient::addEasyHandleDownload, this, std::placeholders::_1, std::placeholders::_2))) {
-        LOG_ERROR << "Downloaded media files failed.";
+    if(!transMediaFiles(tweet.downloads, std::bind_front(&TwitterClient::addEasyHandleDownload, this))) {
+        LOG_ERROR << "Uploaded media files failed.";
         return;
     }
     LOG_INFO << "Downloaded media files successfully.";
 
-    if(!transMediaFiles(
-           tweet.downloads,
-           std::bind(&TwitterClient::addEasyHandleUpload, this, std::placeholders::_1, std::placeholders::_2))) {
+    if(!transMediaFiles(tweet.downloads, std::bind_front(&TwitterClient::addEasyHandleUpload, this))) {
         LOG_ERROR << "Uploaded media files failed.";
         return;
     }

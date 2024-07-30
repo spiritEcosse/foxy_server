@@ -30,7 +30,7 @@ namespace api::v1 {
         qs.join(CountryModel())
             .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
             .only(allSetFields())
-            .order_by(std::make_pair(Field::updatedAt, false))
+            .order_by(std::make_pair(BaseModel<AddressModel>::Field::updatedAt, false))
             .functions(Function(fmt::format(R"(json_build_object({}) AS country)", CountryModel().fieldsJsonObject())));
         applyFilters(qs, qsCount, params);
         return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
@@ -40,7 +40,7 @@ namespace api::v1 {
         std::string str = BaseModel::fieldsJsonObject();
         QuerySet qs(CountryModel::tableName, "country", false, false);
         qs.jsonFields(CountryModel().fieldsJsonObject())
-            .filter(CountryModel::Field::id.getFullFieldName(),
+            .filter(BaseModel<CountryModel>::Field::id.getFullFieldName(),
                     Field::countryId.getFullFieldName(),
                     false,
                     std::string("="));

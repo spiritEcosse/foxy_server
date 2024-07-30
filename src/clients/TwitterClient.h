@@ -15,30 +15,33 @@
 #include "env.h"
 #include <map>
 #include <json/value.h>
+#include "FileOpenException.h"
+#include "fmt/format.h"
 
 struct FileTransferInfo {
     std::string url;
     std::string outputFileName;
     std::unique_ptr<std::ofstream> ofs;
-    CURL* easy_handle;
-    struct curl_slist* headers;
-    struct curl_httppost* post;
+    CURL* easy_handle = nullptr;
+    struct curl_slist* headers = nullptr;
+    struct curl_httppost* post = nullptr;
     std::string response;
-    long responseCode;
+    long responseCode = 0;
     std::string externalId;
 
     FileTransferInfo(std::string url, const std::string& outputFileName) :
-        url(std::move(url)), outputFileName(outputFileName), ofs(new std::ofstream(outputFileName, std::ios::binary)),
-        easy_handle(nullptr), headers(nullptr), post(nullptr), responseCode(0) {
+        url(std::move(url)), outputFileName(outputFileName),
+        ofs(std::make_unique<std::ofstream>(outputFileName, std::ios::binary)) {
         if(!ofs->is_open()) {
-            throw std::runtime_error("Failed to open file: " + outputFileName);
+            throw FileOpenException(fmt::format("Failed to open file: {}", outputFileName));
         }
     }
 
     // Move constructor
     FileTransferInfo(FileTransferInfo&& other) noexcept :
         url(std::move(other.url)), outputFileName(std::move(other.outputFileName)), ofs(std::move(other.ofs)),
-        easy_handle(other.easy_handle), headers(other.headers), post(other.post), response(std::move(other.response)) {
+        easy_handle(other.easy_handle), headers(other.headers), post(other.post), response(std::move(other.response)),
+        responseCode(other.responseCode) {
         other.easy_handle = nullptr;
         other.post = nullptr;
         other.headers = nullptr;
@@ -54,6 +57,7 @@ struct FileTransferInfo {
             headers = other.headers;
             post = other.post;
             response = std::move(other.response);
+            responseCode = other.responseCode;
             other.easy_handle = nullptr;
             other.headers = nullptr;
             other.post = nullptr;
@@ -62,7 +66,7 @@ struct FileTransferInfo {
     }
 
     // function to detect is it video or not
-    bool isVideo() {
+    bool isVideo() const {
         return url.find(".mp4") != std::string::npos;
     }
 
@@ -170,9 +174,6 @@ private:
     Json::Value requestCurl(const std::string& url,
                             const std::string& method,
                             const std::map<std::string, std::string, std::less<>>& oauthParams = {});
-    bool getRequestToken();
-    bool getAccessToken(const std::string& pin);
-    std::string authenticate();
 
 public:
     // Deleted copy constructor and assignment operator

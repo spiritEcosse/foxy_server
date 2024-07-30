@@ -31,14 +31,11 @@ std::string MediaModel::fieldsJsonObject() {
 
     std::stringstream ss;
     const Field field;
-    for(const auto &fieldNames = field.allFields; const auto &pair: fieldNames) {
-        if(pair.first == "src") {
-            ss << fmt::format("'{}', format_src({}, '{}'),",
-                              pair.first,
-                              pair.second.getFullFieldName(),
-                              app_cloud_name);
+    for(const auto &[key, value]: field.allFields) {
+        if(key == "src") {
+            ss << fmt::format("'{}', format_src({}, '{}'),", key, value.getFullFieldName(), app_cloud_name);
         } else {
-            ss << fmt::format("'{}', {},", pair.first, pair.second.getFullFieldName());
+            ss << fmt::format("'{}', {},", key, value.getFullFieldName());
         }
     }
     // remove last comma

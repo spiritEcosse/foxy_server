@@ -79,8 +79,7 @@ namespace api::v1 {
             userId = json[Field::userId.getFieldName()].asInt();
             addressId = json[Field::addressId.getFieldName()].asInt();
             returned = json[Field::returned.getFieldName()].asBool();
-            auto _status = json[Field::status.getFieldName()].asString();
-            if(!_status.empty()) {
+            if(auto _status = json[Field::status.getFieldName()].asString(); !_status.empty()) {
                 status = _status;
             }
 

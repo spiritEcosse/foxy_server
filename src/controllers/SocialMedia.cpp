@@ -70,12 +70,15 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
     auto dbClient = drogon::app().getFastDbClient("default");
     QuerySet qs(ItemModel::tableName, limit, "items", false);
-    qs.only(ItemModel::Field::title, ItemModel::Field::id, ItemModel::Field::slug)
+    qs.only(ItemModel::Field::title, BaseModel<ItemModel>::Field::id, ItemModel::Field::slug)
         .join(MediaModel())
         .left_join(SocialMediaModel())
-        .group_by(ItemModel::Field::id)
-        .filter(ItemModel::Field::id.getFullFieldName(), std::string("93"))
-        .filter(SocialMediaModel::Field::id.getFullFieldName(), std::string("NULL"), false, std::string("IS"))
+        .group_by(BaseModel<ItemModel>::Field::id)
+        .filter(BaseModel<ItemModel>::Field::id.getFullFieldName(), std::string("93"))
+        .filter(BaseModel<SocialMediaModel>::Field::id.getFullFieldName(),
+                std::string("NULL"),
+                false,
+                std::string("IS"))
         .functions(Function(fmt::format(", json_agg(format_src({0}, '{1}') ORDER BY CASE "
                                         " WHEN {0} LIKE '%.mp4' THEN 1"
                                         " ELSE 2"
