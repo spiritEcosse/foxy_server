@@ -32,9 +32,11 @@ struct FileTransferInfo {
 
     FileTransferInfo(std::string url, const std::string& outputFileName) :
         url(std::move(url)), outputFileName(outputFileName),
-        ofs(std::make_unique<std::ofstream>(outputFileName, std::ios::binary)) {
+        ofs(std::make_unique<std::ofstream>(outputFileName, std::ios::binary)) {}
+
+    void openFile() {
         if(!ofs->is_open()) {
-            throw FileOpenException(fmt::format("Failed to open file: {}", outputFileName));
+            throw FileOpenException(outputFileName);
         }
     }
 
@@ -67,7 +69,7 @@ struct FileTransferInfo {
     }
 
     // function to detect is it video or not
-    bool isVideo() const {
+    [[nodiscard]] bool isVideo() const {
         return url.find(".mp4") != std::string::npos;
     }
 

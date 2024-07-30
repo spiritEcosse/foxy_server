@@ -1,6 +1,14 @@
-#include <stdexcept>
+#ifndef FILEOPENEXCEPTION_H
+#define FILEOPENEXCEPTION_H
 
-class FileOpenException : public std::runtime_error {
+#include "BaseException.h"
+#include "fmt/format.h"
+
+class FileOpenException : public BaseException {
 public:
-    explicit FileOpenException(const std::string& message) : std::runtime_error(message) {}
+    explicit FileOpenException(const std::string& filename) {
+        message = fmt::format("Failed to open file: {}", filename);
+    }
 };
+
+#endif  // FILEOPENEXCEPTION_H

@@ -115,7 +115,15 @@ std::string generateNonce(size_t length = 32) {
 
 bool TwitterClient::addEasyHandleDownload(CurlMultiHandle multi_handle, FileTransferInfo& info) {
     info.easy_handle = curl_easy_init();
+
     if(!info.easy_handle) {
+        return false;
+    }
+
+    try {
+        info.openFile();
+    } catch(const FileOpenException& e) {
+        e.printStackTrace(std::cerr);
         return false;
     }
     curl_easy_setopt(info.easy_handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
@@ -309,6 +317,7 @@ bool TwitterClient::addEasyHandleUploadVideo(FileTransferInfo& info) {
         sentryHelper(error, "addEasyHandleUploadVideo");
         return false;
     }
+
     // Step 2: Append
     std::ifstream fileStream(info.outputFileName, std::ios::in | std::ios::binary);
     if(!fileStream) {
@@ -355,7 +364,6 @@ bool TwitterClient::uploadVideo(const std::string& url,
     std::string httpMethod = "POST";
 
     if(!info.easy_handle) {
-        curl_easy_cleanup(info.easy_handle);
         return false;
     }
     curl_easy_setopt(info.easy_handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
@@ -583,7 +591,6 @@ Json::Value TwitterClient::requestCurl(const std::string& url,
     CURL* curl = curl_easy_init();
 
     if(!curl) {
-        curl_easy_cleanup(curl);
         return "";
     }
     curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
