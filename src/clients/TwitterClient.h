@@ -17,6 +17,7 @@
 #include <json/value.h>
 #include "FileOpenException.h"
 #include "fmt/format.h"
+#include <functional>
 
 struct FileTransferInfo {
     std::string url;
