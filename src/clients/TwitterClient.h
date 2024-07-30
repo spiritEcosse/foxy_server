@@ -153,10 +153,10 @@ private:
 
     template<std::predicate<CurlMultiHandle, FileTransferInfo&> TransferFunc>
     bool transMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos, const TransferFunc& transferFunc);
-    void cleanupHandles(CurlMultiHandle multi_handle, std::vector<FileTransferInfo>& fileTransferInfos);
+    void cleanupHandles(CurlMultiHandle multi_handle, std::vector<FileTransferInfo>& fileTransferInfos) const;
     bool addEasyHandleUpload(CurlMultiHandle multi_handle, FileTransferInfo& info);
     bool addEasyHandleUploadVideo(FileTransferInfo& info);
-    bool addEasyHandleDownload(CurlMultiHandle multi_handle, FileTransferInfo& info);
+    bool addEasyHandleDownload(CurlMultiHandle multi_handle, FileTransferInfo& info) const;
     void performPost(Tweet& tweet);
     bool uploadVideo(const std::string& url,
                      const std::map<std::string, std::string, std::less<>>& params,
@@ -167,8 +167,8 @@ private:
                       const std::string& method,
                       const std::map<std::string, std::string, std::less<>>& params = {});
     static std::string createTweetJson(const Tweet& tweet);
-    std::pair<long, Json::Value> processResponse(CURL* curl, CURLcode res, const std::string& responseString);
-    bool multiHandle(CurlMultiHandle multi_handle);
+    std::pair<long, Json::Value> processResponse(CURL* curl, CURLcode res, const std::string& responseString) const;
+    bool multiHandle(CurlMultiHandle multi_handle) const;
     Json::Value requestCurl(const std::string& url,
                             const std::string& method,
                             const std::map<std::string, std::string, std::less<>>& oauthParams = {});

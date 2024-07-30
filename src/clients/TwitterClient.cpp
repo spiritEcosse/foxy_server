@@ -114,7 +114,7 @@ std::string generateNonce(size_t length = 32) {
     return nonce;
 }
 
-bool TwitterClient::addEasyHandleDownload(CurlMultiHandle multi_handle, FileTransferInfo& info) {
+bool TwitterClient::addEasyHandleDownload(CurlMultiHandle multi_handle, FileTransferInfo& info) const {
     info.easy_handle = curl_easy_init();
 
     if(!info.easy_handle) {
@@ -134,7 +134,8 @@ bool TwitterClient::addEasyHandleDownload(CurlMultiHandle multi_handle, FileTran
     return true;
 }
 
-void TwitterClient::cleanupHandles(CurlMultiHandle multi_handle, std::vector<FileTransferInfo>& fileTransferInfos) {
+void TwitterClient::cleanupHandles(CurlMultiHandle multi_handle,
+                                   std::vector<FileTransferInfo>& fileTransferInfos) const {
     for(auto& info: fileTransferInfos) {
         if(info.easy_handle) {
             curl_multi_remove_handle(multi_handle, info.easy_handle);
@@ -159,7 +160,7 @@ void TwitterClient::cleanupHandles(CurlMultiHandle multi_handle, std::vector<Fil
     curl_multi_cleanup(multi_handle);
 }
 
-bool TwitterClient::multiHandle(CurlMultiHandle multi_handle) {
+bool TwitterClient::multiHandle(CurlMultiHandle multi_handle) const {
     bool success = true;
     int still_running;
     curl_multi_perform(multi_handle, &still_running);
@@ -553,7 +554,7 @@ Json::Value splitAndConvertToJson(const std::string& urlPath) {
 }
 
 std::pair<long, Json::Value>
-TwitterClient::processResponse(CurlHandle curl, CURLcode res, const std::string& responseString) {
+TwitterClient::processResponse(CurlHandle curl, CURLcode res, const std::string& responseString) const {
     Json::Value root;
     char* contentTypeC;
     curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &contentTypeC);
@@ -626,7 +627,7 @@ void TwitterClient::postTweet(Tweet& tweet) {
         LOG_ERROR << "Uploaded media files failed.";
         return;
     }
-    for(auto& info: tweet.downloads) {
+    for(auto const& info: tweet.downloads) {
         std::filesystem::remove(info.outputFileName);
     }
     bool success = true;
