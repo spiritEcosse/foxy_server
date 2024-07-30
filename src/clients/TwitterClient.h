@@ -34,12 +34,6 @@ struct FileTransferInfo {
         url(std::move(url)), outputFileName(outputFileName),
         ofs(std::make_unique<std::ofstream>(outputFileName, std::ios::binary)) {}
 
-    void openFile() {
-        if(!ofs->is_open()) {
-            throw FileOpenException(outputFileName);
-        }
-    }
-
     // Move constructor
     FileTransferInfo(FileTransferInfo&& other) noexcept :
         url(std::move(other.url)), outputFileName(std::move(other.outputFileName)), ofs(std::move(other.ofs)),
@@ -135,6 +129,9 @@ public:
     }
 };
 
+using CurlMultiHandle = CURLM*;
+using CurlHandle = CURLM*;
+
 class TwitterClient {
 private:
     static std::unique_ptr<TwitterClient> instance;
@@ -154,9 +151,7 @@ private:
         requestToken = std::make_unique<RequestToken>("", "", "");
     }
 
-    using CurlMultiHandle = CURLM*;
-    using TransferFunc = std::function<bool(CurlMultiHandle, FileTransferInfo&)>;
-
+    template<std::predicate<CurlMultiHandle, FileTransferInfo&> TransferFunc>
     bool transMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos, const TransferFunc& transferFunc);
     void cleanupHandles(CurlMultiHandle multi_handle, std::vector<FileTransferInfo>& fileTransferInfos);
     bool addEasyHandleUpload(CurlMultiHandle multi_handle, FileTransferInfo& info);

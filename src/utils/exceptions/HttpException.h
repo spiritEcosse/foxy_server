@@ -7,7 +7,7 @@
 class HttpException : public BaseException {
 public:
     HttpException(long code, const std::string& response) {
-        message = fmt::format("HTTP request failed with code {} and response: {}", code, response);
+        setMessage(fmt::format("HTTP request failed with code {} and response: {}", code, response));
     }
 };
 

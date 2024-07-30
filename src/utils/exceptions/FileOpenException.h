@@ -7,7 +7,7 @@
 class FileOpenException : public BaseException {
 public:
     explicit FileOpenException(const std::string& filename) {
-        message = fmt::format("Failed to open file: {}", filename);
+        setMessage(fmt::format("Failed to open file: {}", filename));
     }
 };
 

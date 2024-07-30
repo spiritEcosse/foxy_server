@@ -8,13 +8,30 @@
 #include "sentryHelper.h"
 
 class BaseException : public std::exception {
-protected:
-    std::string message;
+private:
+    std::string message = "BaseException message";
     backward::StackTrace st;
     backward::TraceResolver resolver;
 
+protected:
+    [[nodiscard]] const std::string& getMessage() const {
+        return message;
+    }
+
+    void setMessage(const std::string& msg) {
+        message = msg;
+    }
+
+    [[nodiscard]] const backward::StackTrace& getStackTrace() const {
+        return st;
+    }
+
+    [[nodiscard]] const backward::TraceResolver& getResolver() const {
+        return resolver;
+    }
+
 public:
-    BaseException() : message("BaseException message") {
+    BaseException() {
         st.load_here(32);
         resolver.load_stacktrace(st);
     }

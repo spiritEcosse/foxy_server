@@ -4,8 +4,8 @@
 
 #include "MediaModel.h"
 #include "ItemModel.h"
-#include <fmt/core.h>
 #include "env.h"
+#include "fmt/format.h"
 
 using namespace api::v1;
 
@@ -29,17 +29,16 @@ std::string MediaModel::fieldsJsonObject() {
     std::string app_cloud_name;
     getenv("APP_CLOUD_NAME", app_cloud_name);
 
-    std::stringstream ss;
     const Field field;
-    for(const auto &[key, value]: field.allFields) {
+    std::vector<std::string> formattedFields;
+    std::ranges::transform(field.allFields, std::back_inserter(formattedFields), [&](const auto& pair) {
+        const auto& [key, value] = pair;
         if(key == "src") {
-            ss << fmt::format("'{}', format_src({}, '{}'),", key, value.getFullFieldName(), app_cloud_name);
+            return fmt::format("'{}', format_src({}, '{}')", key, value.getFullFieldName(), app_cloud_name);
         } else {
-            ss << fmt::format("'{}', {},", key, value.getFullFieldName());
+            return fmt::format("'{}', {}", key, value.getFullFieldName());
         }
-    }
-    // remove last comma
-    ss.seekp(-1, std::ios_base::end);
-    ss << ' ';  // overwrite the comma with a space
-    return ss.str();
+    });
+
+    return fmt::to_string(fmt::join(formattedFields, ", "));
 }

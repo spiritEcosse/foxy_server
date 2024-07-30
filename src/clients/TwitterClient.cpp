@@ -18,6 +18,7 @@
 #include "HttpException.h"
 #include <functional>
 #include <memory>
+#include <curl/curl.h>
 
 std::unique_ptr<TwitterClient> TwitterClient::instance = nullptr;
 
@@ -120,12 +121,6 @@ bool TwitterClient::addEasyHandleDownload(CurlMultiHandle multi_handle, FileTran
         return false;
     }
 
-    try {
-        info.openFile();
-    } catch(const FileOpenException& e) {
-        e.printStackTrace(std::cerr);
-        return false;
-    }
     curl_easy_setopt(info.easy_handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
 
     curl_easy_setopt(info.easy_handle, CURLOPT_FOLLOWLOCATION, 1L);
@@ -321,8 +316,11 @@ bool TwitterClient::addEasyHandleUploadVideo(FileTransferInfo& info) {
     // Step 2: Append
     std::ifstream fileStream(info.outputFileName, std::ios::in | std::ios::binary);
     if(!fileStream) {
-        std::string error = fmt::format("Error: Unable to open file. Filename: {}", info.outputFileName);
-        sentryHelper(error, "performPost");
+        try {
+            throw FileOpenException(info.outputFileName);
+        } catch(FileOpenException& e) {
+            e.printStackTrace(std::cerr);
+        }
         return false;
     }
 
@@ -449,6 +447,7 @@ bool TwitterClient::uploadVideo(const std::string& url,
     return true;
 }
 
+template<std::predicate<CurlMultiHandle, FileTransferInfo&> TransferFunc>
 bool TwitterClient::transMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos,
                                     const TransferFunc& transferFunc) {
     CurlMultiHandle multi_handle = curl_multi_init();
@@ -554,7 +553,7 @@ Json::Value splitAndConvertToJson(const std::string& urlPath) {
 }
 
 std::pair<long, Json::Value>
-TwitterClient::processResponse(CURL* curl, CURLcode res, const std::string& responseString) {
+TwitterClient::processResponse(CurlHandle curl, CURLcode res, const std::string& responseString) {
     Json::Value root;
     char* contentTypeC;
     curl_easy_getinfo(curl, CURLINFO_CONTENT_TYPE, &contentTypeC);
