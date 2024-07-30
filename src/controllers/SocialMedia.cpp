@@ -69,7 +69,7 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
 
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
     auto dbClient = drogon::app().getFastDbClient("default");
-    QuerySet qs(ItemModel::tableName, limit, "items", false, true);
+    QuerySet qs(ItemModel::tableName, limit, "items", false);
     qs.only(ItemModel::Field::title, ItemModel::Field::id, ItemModel::Field::slug)
         .join(MediaModel())
         .left_join(SocialMediaModel())

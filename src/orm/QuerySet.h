@@ -357,7 +357,7 @@ namespace api::v1 {
         QuerySet(QuerySet &&) noexcept = default;  // Move constructor
         QuerySet &operator=(QuerySet &&) noexcept = default;  // Move assignment operator
 
-        QuerySet(std::string tableName, int limit, std::string alias, bool returnInMain = true, bool multiple = true) :
+        QuerySet(std::string tableName, int limit, std::string alias, bool returnInMain = true) :
             BaseQuerySet(std::move(tableName), limit, std::move(alias), returnInMain) {}
 
         QuerySet(std::string tableName, std::string alias, bool doAndCheck = false, bool returnInMain = true) :

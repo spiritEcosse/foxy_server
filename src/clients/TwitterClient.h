@@ -137,7 +137,7 @@ private:
     std::string accessTokenSecret;
     std::string bearerToken;
     std::unique_ptr<RequestToken> requestToken;
-    
+
     TwitterClient() {
         getenv("TWITTER_API_KEY", apiKey);
         getenv("TWITTER_API_SECRET", apiSecretKey);
@@ -147,12 +147,14 @@ private:
         requestToken = std::make_unique<RequestToken>("", "", "");
     }
 
-    using TransferFunc = bool (TwitterClient::*)(CURLM* multi_handle, FileTransferInfo& info);
+    using CurlMultiHandle = CURLM*;
+    using TransferFunc = std::function<bool(CurlMultiHandle, FileTransferInfo&)>;
 
-    bool transMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos, TransferFunc transferFunc);
-    bool addEasyHandleUpload(CURLM* multi_handle, FileTransferInfo& info);
+    bool transMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos, const TransferFunc& transferFunc);
+    void cleanupHandles(CurlMultiHandle multi_handle, std::vector<FileTransferInfo>& fileTransferInfos);
+    bool addEasyHandleUpload(CurlMultiHandle multi_handle, FileTransferInfo& info);
     bool addEasyHandleUploadVideo(FileTransferInfo& info);
-    bool addEasyHandleDownload(CURLM* multi_handle, FileTransferInfo& info);
+    bool addEasyHandleDownload(CurlMultiHandle multi_handle, FileTransferInfo& info);
     void performPost(Tweet& tweet);
     bool uploadVideo(const std::string& url,
                      const std::map<std::string, std::string, std::less<>>& params,
@@ -164,7 +166,7 @@ private:
                       const std::map<std::string, std::string, std::less<>>& params = {});
     static std::string createTweetJson(const Tweet& tweet);
     std::pair<long, Json::Value> processResponse(CURL* curl, CURLcode res, const std::string& responseString);
-    bool multiHandle(CURLM* multi_handle);
+    bool multiHandle(CurlMultiHandle multi_handle);
     Json::Value requestCurl(const std::string& url,
                             const std::string& method,
                             const std::map<std::string, std::string, std::less<>>& oauthParams = {});

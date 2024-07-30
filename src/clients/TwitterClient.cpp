@@ -21,12 +21,12 @@
 
 std::unique_ptr<TwitterClient> TwitterClient::instance = nullptr;
 
-static size_t WriteCallback(char* contents, size_t size, size_t nmemb, std::string* userp) {
+static size_t WriteCallback(const char* contents, size_t size, size_t nmemb, std::string* userp) {
     userp->append(contents, size * nmemb);
     return size * nmemb;
 }
 
-static size_t WriteCallbackToFile(char* contents, size_t size, size_t nmemb, std::ofstream* ofs) {
+static size_t WriteCallbackToFile(const char* contents, size_t size, size_t nmemb, std::ofstream* ofs) {
     ofs->write(contents, size * nmemb);
     return size * nmemb;
 }
@@ -49,35 +49,34 @@ std::string calculateOAuthSignature(const std::string& httpMethod,
                                     const std::string& consumerSecret,
                                     const std::string& tokenSecret) {
     // Step 1-5: Create the signature base string
-    std::string paramString;
-    for(const auto& p: params) {
-        if(!paramString.empty())
-            paramString += "&";
-        paramString += urlEncode(p.first) + "=" + urlEncode(p.second);
-    }
+    std::vector<std::string> encodedParams;
+    std::transform(params.begin(), params.end(), std::back_inserter(encodedParams), [](const auto& pair) {
+        return fmt::format("{}={}", urlEncode(pair.first), urlEncode(pair.second));
+    });
+    std::string paramString = fmt::to_string(fmt::join(encodedParams, "&"));
 
-    std::string signatureBaseString = urlEncode(httpMethod) + "&" + urlEncode(url) + "&" + urlEncode(paramString);
+    std::string signatureBaseString =
+        fmt::format("{}&{}&{}", urlEncode(httpMethod), urlEncode(url), urlEncode(paramString));
 
     // Step 6: Generate the signing key
-    std::string signingKey = urlEncode(consumerSecret) + "&" + urlEncode(tokenSecret);
+    std::string signingKey = fmt::format("{}&{}", urlEncode(consumerSecret), urlEncode(tokenSecret));
 
     // Step 7-8: Sign the base string using HMAC-SHA1 and encode in base64
-    unsigned char* digest;
     unsigned int digest_len;
-    digest = HMAC(EVP_sha1(),
-                  signingKey.c_str(),
-                  signingKey.length(),
-                  reinterpret_cast<const unsigned char*>(signatureBaseString.c_str()),
-                  signatureBaseString.length(),
-                  nullptr,
-                  &digest_len);
+    const unsigned char* digest = HMAC(EVP_sha1(),
+                                       signingKey.c_str(),
+                                       static_cast<int>(signingKey.size()),
+                                       reinterpret_cast<const unsigned char*>(signatureBaseString.c_str()),
+                                       signatureBaseString.length(),
+                                       nullptr,
+                                       &digest_len);
 
     // Convert the HMAC digest into base64
     BIO* bmem = BIO_new(BIO_s_mem());
     BIO* b64 = BIO_new(BIO_f_base64());
     bmem = BIO_push(b64, bmem);
 
-    BIO_write(bmem, digest, digest_len);
+    BIO_write(bmem, digest, static_cast<int>(digest_len));
     BIO_flush(bmem);
 
     BUF_MEM* bptr;
@@ -114,7 +113,7 @@ std::string generateNonce(size_t length = 32) {
     return nonce;
 }
 
-bool TwitterClient::addEasyHandleDownload(CURLM* multi_handle, FileTransferInfo& info) {
+bool TwitterClient::addEasyHandleDownload(CurlMultiHandle multi_handle, FileTransferInfo& info) {
     info.easy_handle = curl_easy_init();
     if(!info.easy_handle) {
         return false;
@@ -132,7 +131,7 @@ bool TwitterClient::addEasyHandleDownload(CURLM* multi_handle, FileTransferInfo&
     return true;
 }
 
-void cleanupHandles(CURLM* multi_handle, std::vector<FileTransferInfo>& fileTransferInfos) {
+void TwitterClient::cleanupHandles(CurlMultiHandle multi_handle, std::vector<FileTransferInfo>& fileTransferInfos) {
     for(auto& info: fileTransferInfos) {
         if(info.easy_handle) {
             curl_multi_remove_handle(multi_handle, info.easy_handle);
@@ -157,7 +156,7 @@ void cleanupHandles(CURLM* multi_handle, std::vector<FileTransferInfo>& fileTran
     curl_multi_cleanup(multi_handle);
 }
 
-bool TwitterClient::multiHandle(CURLM* multi_handle) {
+bool TwitterClient::multiHandle(CurlMultiHandle multi_handle) {
     bool success = true;
     int still_running;
     curl_multi_perform(multi_handle, &still_running);
@@ -211,13 +210,13 @@ std::string TwitterClient::oauth(const std::string& url,
 
     std::vector<std::string> parts;
     parts.reserve(oauthParams.size());
-    for(const auto& param: oauthParams) {
-        parts.push_back(fmt::format(R"({}="{}")", param.first, urlEncode(param.second)));
+    for(const auto& [key, value]: oauthParams) {
+        parts.push_back(fmt::format(R"({}="{}")", key, urlEncode(value)));
     }
     return fmt::format("Authorization: OAuth {}", fmt::join(parts.begin(), parts.end(), ", "));
 }
 
-bool TwitterClient::addEasyHandleUpload(CURLM* multi_handle, FileTransferInfo& info) {
+bool TwitterClient::addEasyHandleUpload(CurlMultiHandle multi_handle, FileTransferInfo& info) {
     if(info.isVideo()) {
         return addEasyHandleUploadVideo(info);
     }
@@ -371,13 +370,13 @@ bool TwitterClient::uploadVideo(const std::string& url,
     if(it != params.end() && it->second == "APPEND") {
         headers = curl_slist_append(headers, "Content-Type: multipart/form-data");
         oauthData = oauth(url, httpMethod);
-        for(const auto& param: params) {
+        for(const auto& [key, value]: params) {
             curl_formadd(&info.post,
                          &lastptr,
                          CURLFORM_COPYNAME,
-                         param.first.c_str(),
+                         key.c_str(),
                          CURLFORM_COPYCONTENTS,
-                         param.second.c_str(),
+                         value.c_str(),
                          CURLFORM_END);
         }
         curl_formadd(&info.post,
@@ -443,12 +442,13 @@ bool TwitterClient::uploadVideo(const std::string& url,
     return true;
 }
 
-bool TwitterClient::transMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos, TransferFunc transferFunc) {
-    CURLM* multi_handle = curl_multi_init();
+bool TwitterClient::transMediaFiles(std::vector<FileTransferInfo>& fileTransferInfos,
+                                    const TransferFunc& transferFunc) {
+    CurlMultiHandle multi_handle = curl_multi_init();
     bool success = true;
 
     for(auto& info: fileTransferInfos) {
-        if(!(this->*transferFunc)(multi_handle, info)) {
+        if(!transferFunc(multi_handle, info)) {
             success = false;
             break;
         }
@@ -459,7 +459,7 @@ bool TwitterClient::transMediaFiles(std::vector<FileTransferInfo>& fileTransferI
     }
     success = multiHandle(multi_handle);
 
-    for(auto& info: fileTransferInfos) {
+    for(const auto& info: fileTransferInfos) {
         // Assuming success is indicated by a 200-299 status code
         if(info.responseCode < 200 || info.responseCode >= 300) {
             success = false;
@@ -539,8 +539,8 @@ Json::Value splitAndConvertToJson(const std::string& urlPath) {
     }
 
     Json::Value json;
-    for(const auto& param: params) {
-        json[param.first] = param.second;
+    for(const auto& [key, value]: params) {
+        json[key] = value;
     }
 
     return json;
@@ -615,13 +615,18 @@ void TwitterClient::postTweet(Tweet& tweet) {
     //        return;
     //    }
     //    getAccessToken(authenticate());
-    if(!transMediaFiles(tweet.downloads, &TwitterClient::addEasyHandleDownload)) {
-        LOG_INFO << "Downloaded media files successfully.";
+    if(!transMediaFiles(
+           tweet.downloads,
+           std::bind(&TwitterClient::addEasyHandleDownload, this, std::placeholders::_1, std::placeholders::_2))) {
+        LOG_ERROR << "Downloaded media files failed.";
         return;
     }
     LOG_INFO << "Downloaded media files successfully.";
 
-    if(!transMediaFiles(tweet.downloads, &TwitterClient::addEasyHandleUpload)) {
+    if(!transMediaFiles(
+           tweet.downloads,
+           std::bind(&TwitterClient::addEasyHandleUpload, this, std::placeholders::_1, std::placeholders::_2))) {
+        LOG_ERROR << "Uploaded media files failed.";
         return;
     }
     for(auto& info: tweet.downloads) {
