@@ -6,7 +6,7 @@
 using namespace api::utils::jwt;
 using namespace drogon;
 
-size_t WriteCallback(std::any* contents, size_t size, size_t nmemb, std::string* out) {
+size_t WriteCallback(std::any* contents, size_t size, size_t nmemb, const std::string* out) {
     size_t totalSize = size * nmemb;
     out->append((char*)contents, totalSize);
     return totalSize;
