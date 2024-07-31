@@ -91,13 +91,14 @@ std::string calculateOAuthSignature(const std::string& httpMethod,
     return oauthSignature;
 }
 
-std::string generateNonce(size_t length = 37) {
+std::string generateNonce() {
     uuid_t uuid;
-    char uuid_str[length];
+    std::string uuid_str(36, '\0');  // Initialize string with 36 null characters
 
     // Generate a UUID
     uuid_generate(uuid);
-    uuid_unparse(uuid, uuid_str);
+    uuid_unparse(uuid, &uuid_str[0]);
+
     return uuid_str;
 }
 
