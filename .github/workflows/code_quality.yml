@@ -1,24 +1,12 @@
-name: Qodana
-on:
-    workflow_dispatch:
-    pull_request:
-    push:
-        branches:
-            - '*'
-
+name: Cppcheck
+on: [ push, pull_request ]
 jobs:
-    qodana:
+    build:
         runs-on: ubuntu-latest
-        permissions:
-            contents: write
-            pull-requests: write
-            checks: write
         steps:
-            - uses: actions/checkout@v3
-              with:
-                  ref: ${{ github.event.pull_request.head.sha }}  # to check out the actual pull request commit, not the merge commit
-                  fetch-depth: 0  # a full history is required for pull request analysis
-            - name: 'Qodana Scan'
-              uses: JetBrains/qodana-action@latest
-              env:
-                  QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
+            -   uses: actions/checkout@v4.1.6
+            -   name: Run Cppcheck
+                uses: deep5050/cppcheck-action@v3.0
+                with:
+                    check-command: 'cppcheck --enable=all .'
+

@@ -65,6 +65,8 @@ namespace api::v1 {
                                 const std::string &) const;
         virtual void deleteItems(const drogon::HttpRequestPtr &req,
                                  std::function<void(const drogon::HttpResponsePtr &)> &&callback) const;
+        virtual std::map<std::string, std::string, std::less<>>
+        convertSafeStringMapToStdMap(const drogon::SafeStringMap<std::string> &safeMap) const;
     };
 }
 
