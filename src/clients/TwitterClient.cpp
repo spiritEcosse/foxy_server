@@ -19,6 +19,7 @@
 #include <functional>
 #include <memory>
 #include <curl/curl.h>
+#include <uuid/uuid.h>
 
 std::unique_ptr<TwitterClient> TwitterClient::instance = nullptr;
 
@@ -90,28 +91,14 @@ std::string calculateOAuthSignature(const std::string& httpMethod,
     return oauthSignature;
 }
 
-std::string generateNonce(size_t length = 32) {
-    // Characters to generate random part of the nonce
-    const char charset[] = "0123456789"
-                           "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                           "abcdefghijklmnopqrstuvwxyz";
-    const size_t charsetSize = sizeof(charset) - 1;
+std::string generateNonce(size_t length = 37) {
+    uuid_t uuid;
+    char uuid_str[length];
 
-    // Seed with a real random value, if available
-    std::random_device rd;
-    std::mt19937 rng(rd());
-    std::uniform_int_distribution<> dist(0, charsetSize - 1);
-
-    // Start with the current timestamp
-    auto timestamp = std::chrono::system_clock::now().time_since_epoch().count();
-    std::string nonce = std::to_string(timestamp);
-
-    // Append random characters to the nonce
-    for(size_t i = 0; i < length; ++i) {
-        nonce += charset[dist(rng)];
-    }
-
-    return nonce;
+    // Generate a UUID
+    uuid_generate(uuid);
+    uuid_unparse(uuid, uuid_str);
+    return uuid_str;
 }
 
 bool TwitterClient::addEasyHandleDownload(CurlMultiHandle multi_handle, FileTransferInfo& info) const {

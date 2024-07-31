@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.22)
 project(foxy_server)
 
+# Set CMP0115 policy to NEW
+cmake_policy(SET CMP0115 NEW)
+
 set(BUILD_EXAMPLES OFF)
 set(BUILD_CTL OFF)
 #set(BUILD_TESTING OFF)
@@ -139,6 +142,18 @@ endif ()
 target_link_libraries(${PROJECT_NAME} PRIVATE sentry)
 # end sentry
 
+#Start adding libuuid
+CPMAddPackage(
+        NAME libuuid
+        GIT_REPOSITORY https://github.com/karelzak/util-linux.git
+        GIT_TAG v2.40.2
+)
+find_library(UUID_LIBRARY uuid)
+if (NOT UUID_LIBRARY)
+    message(FATAL_ERROR "libuuid not found")
+endif ()
+target_link_libraries(${PROJECT_NAME} PRIVATE ${UUID_LIBRARY})
+# End adding libuuid
 
 # Start Formatting
 CPMAddPackage(
