@@ -7,9 +7,7 @@
 
 using namespace drogon;
 
-
-DROGON_TEST(ListItems)
-{
+DROGON_TEST(ListItems) {
     auto client = HttpClient::newHttpClient("http://localhost:8848");
     auto req = HttpRequest::newHttpRequest();
     req->setPath("/api/v1/item/");
@@ -45,15 +43,18 @@ DROGON_TEST(CreateItem) {
     req->setMethod(drogon::Post);
     req->setContentTypeCode(CT_APPLICATION_JSON);
     std::string slug = "test" + std::to_string(getCurrentTimeSinceEpochInMilliseconds());
-    req->setBody("{\"title\":\"Test\",\"description\":\"Test\",\"meta_description\":\"Test\",\"slug\":\"" + slug + "\"}");
-    std::string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIiLCJlbWFpbCI6IjByYW5nZUZveEBkb21haW4ucHQiLCJleHAiOjE3MDczNTE0NDcsImlhdCI6MTcwNDc1OTQ0NywiaXNzIjoiIiwibmJmIjoxNzA0NzU5NDQ3fQ.FOwWkRQd4Q0-Kv7OOXTlJvmdIGDvvnf6854zrPEU7Z8";
+    req->setBody("{\"title\":\"Test\",\"description\":\"Test\",\"meta_description\":\"Test\",\"slug\":\"" + slug +
+                 "\"}");
+    std::string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+                        "eyJhdWQiOiIiLCJlbWFpbCI6IjByYW5nZUZveEBkb21haW4ucHQiLCJleHAiOjE3MDczNTE0NDcsImlhdCI6MTcwNDc1OT"
+                        "Q0NywiaXNzIjoiIiwibmJmIjoxNzA0NzU5NDQ3fQ.FOwWkRQd4Q0-Kv7OOXTlJvmdIGDvvnf6854zrPEU7Z8";
     req->addHeader("Authorization", "Bearer " + token);
     client->sendRequest(req, [TEST_CTX, slug](ReqResult res, const HttpResponsePtr& resp) {
         // There's nothing we can do if the request didn't reach the server
         // or the server generated garbage.
         REQUIRE(res == ReqResult::Ok);
         REQUIRE(resp != nullptr);
-        std::cout << slug<< std::endl;
+        std::cout << slug << std::endl;
 
         CHECK(resp->getStatusCode() == drogon::k201Created);
         CHECK(resp->contentType() == CT_APPLICATION_JSON);
@@ -65,15 +66,16 @@ DROGON_TEST(CreateItem) {
     });
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     std::promise<void> p1;
     std::future<void> f1 = p1.get_future();
 
     // Start the main loop on another thread
     std::thread thr([&]() {
         // Queues the promise to be fulfilled after starting the loop
-        app().getLoop()->queueInLoop([&p1]() { p1.set_value(); });
+        app().getLoop()->queueInLoop([&p1]() {
+            p1.set_value();
+        });
         app().run();
     });
 
@@ -82,7 +84,9 @@ int main(int argc, char** argv)
     int status = test::run(argc, argv);
 
     // Ask the event loop to shutdown and wait
-    app().getLoop()->queueInLoop([]() { app().quit(); });
+    app().getLoop()->queueInLoop([]() {
+        app().quit();
+    });
     thr.join();
     return status;
 }
