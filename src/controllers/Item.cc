@@ -20,7 +20,7 @@ void Item::getListAdmin(const drogon::HttpRequestPtr &req,
     QuerySet qsCount = ItemModel::qsCount();
     QuerySet qsPage = ItemModel::qsPage(page, limit);
 
-    QuerySet qs(ItemModel::tableName, limit, "data");
+    QuerySet qs(ItemModel::tableName, limit, true);
     auto mediaSort = fmt::format("{}.{}", MediaModel::tableName, MediaModel::Field::sort);
     auto orderByItemField = fmt::format("{}.{}", ItemModel::tableName, ItemModel::orderBy);
     auto itemID = fmt::format("{}.{}", ItemModel::tableName, ItemModel::Field::id);

@@ -22,7 +22,7 @@ std::tuple<drogon::HttpStatusCode, Json::Value> JWT::verifyGoogleToken(const std
     curl = curl_easy_init();
     Json::Value jsonData;
 
-    if(curl) {
+    if(curl != nullptr) {
         std::string url = fmt::format("https://oauth2.googleapis.com/tokeninfo?id_token={}", token);
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
