@@ -1,0 +1,38 @@
+name: Qodana
+on:
+    push:
+        branches:
+            - "*"
+
+jobs:
+    qodana:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            pull-requests: write
+            checks: write
+        steps:
+            -   name: Checkout repository
+                uses: actions/checkout@v4
+
+            -   name: ls -la ${{ github.workspace }}
+                run: ls -la ${{ github.workspace }}
+
+            -   name: pwd
+                run: pwd
+
+            -   name: Pull docker pull jetbrains/qodana-clang:2024.2-eap-clang17
+                run: docker pull jetbrains/qodana-clang:2024.2-eap-clang17
+
+            -   name: Build docker qodana clang image
+                run: |
+                    docker build -t qodana_clang -f Dockerfile_qodana --build-arg LLVM_TAG="${{ secrets.LLVM_TAG }}" .
+
+            -   name: 'Qodana Scan'
+                run: |
+                    docker run --rm \
+                        -e QODANA_TOKEN=$QODANA_TOKEN \
+                        qodana_clang --apply-fixes
+                env:
+                    QODANA_TOKEN: ${{ secrets.QODANA_TOKEN }}
+

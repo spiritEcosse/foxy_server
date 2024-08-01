@@ -1,18 +1,38 @@
 #include "BaseCRUD.h"
-#include "src/utils/request/Request.h"
-#include "src/controllers/Item.h"
-#include "src/controllers/Page.h"
-#include "src/controllers/User.h"
-#include "src/controllers/Media.h"
-#include "src/controllers/ShippingProfile.h"
-#include "src/controllers/ShippingRate.h"
-#include "src/controllers/Country.h"
-#include "src/auth/Auth.h"
-#include <sentry.h>
-#include "src/utils/exceptions/RequiredFieldsException.h"
+#include "Request.h"
+#include "Item.h"
+#include "Page.h"
+#include "User.h"
+#include "Media.h"
+#include "Order.h"
+#include "Basket.h"
+#include "Review.h"
+#include "Address.h"
+#include "BasketItem.h"
+#include "ShippingProfile.h"
+#include "ShippingRate.h"
+#include "Country.h"
+#include "SocialMedia.h"
+#include "Auth.h"
+#include "RequiredFieldsException.h"
+#include "FinancialDetails.h"
+#include "sentryHelper.h"
+#include <drogon/utils/Utilities.h>
 
 using namespace api::v1;
 using namespace drogon::orm;
+
+template<class T, class R>
+std::map<std::string, std::string, std::less<>>
+BaseCRUD<T, R>::convertSafeStringMapToStdMap(const drogon::SafeStringMap<std::string> &safeMap) const {
+    std::map<std::string, std::string, std::less<>> params;
+    for(const auto &[key, value]: safeMap) {
+        if(key != "page" && key != "limit" && key != "sort") {
+            params[key] = value;
+        }
+    }
+    return params;
+}
 
 template<class T, class R>
 void BaseCRUD<T, R>::deleteItem(const drogon::HttpRequestPtr &req,
@@ -25,7 +45,7 @@ void BaseCRUD<T, R>::deleteItem(const drogon::HttpRequestPtr &req,
         return;
     }
 
-    std::string query = T::sqlDelete(id);
+    std::string query = T().sqlDelete(id);
     executeSqlQuery(callbackPtr,
                     query,
                     [this](const drogon::orm::Result &r,
@@ -50,7 +70,7 @@ void BaseCRUD<T, R>::deleteItems(const drogon::HttpRequestPtr &req,
         ids.emplace_back(item.asInt());
     });
 
-    std::string query = T::sqlDeleteMultiple(ids);
+    std::string query = T().sqlDeleteMultiple(ids);
     executeSqlQuery(callbackPtr,
                     query,
                     [this](const drogon::orm::Result &r,
@@ -102,21 +122,20 @@ void BaseCRUD<T, R>::getItems(const drogon::HttpRequestPtr &req,
     std::vector<T> items;
     int index = 1;
     Json::Value jsonResponseError;
-    try {
-        std::ranges::for_each(itemsJson.begin(), itemsJson.end(), [&items, &index, &req](const auto &item) {
-            if(item[T::Field::id].asInt() == 0 && req->method() == drogon::Put) {
-                throw RequiredFieldsException("id is required");
-            }
-            items.emplace_back(std::move(item));
-            ++index;
-        });
-    } catch(const RequiredFieldsException &e) {
-        jsonResponseError[std::to_string(index)] = e.getRequiredFields();
+    std::ranges::for_each(itemsJson, [&items, &index, &jsonResponseError, &req](const auto &item) {
+        if(item[T::Field::id.getFieldName()].asInt() == 0 && req->method() == drogon::Put) {
+            jsonResponseError[std::to_string(index)] = "id is required";
+        }
+        items.emplace_back(std::move(item));
+        ++index;
+    });
+    if(!jsonResponseError.empty()) {
         auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponseError));
         resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
         (*callbackPtr)(resp);
         return;
     }
+
     successCallback(std::move(items));
 }
 
@@ -126,7 +145,7 @@ void BaseCRUD<T, R>::createItem(const drogon::HttpRequestPtr &req,
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
 
     getItem(req, callbackPtr, [this, callbackPtr](T item) {
-        std::string query = T::sqlInsert(item);
+        std::string query = T().sqlInsert(item);
         executeSqlQuery(callbackPtr,
                         query,
                         [this](const drogon::orm::Result &r,
@@ -142,7 +161,7 @@ void BaseCRUD<T, R>::createItems(const drogon::HttpRequestPtr &req,
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
 
     getItems(req, callbackPtr, [this, callbackPtr](std::vector<T> items) {
-        std::string query = T::sqlInsertMultiple(items);
+        std::string query = T().sqlInsertMultiple(items);
         executeSqlQuery(callbackPtr,
                         query,
                         [this](const drogon::orm::Result &r,
@@ -158,7 +177,7 @@ void BaseCRUD<T, R>::updateItems(const drogon::HttpRequestPtr &req,
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
 
     getItems(req, callbackPtr, [this, callbackPtr](std::vector<T> items) {
-        std::string query = T::sqlUpdateMultiple(items);
+        std::string query = T().sqlUpdateMultiple(items);
         executeSqlQuery(callbackPtr,
                         query,
                         [this](const drogon::orm::Result &r,
@@ -173,8 +192,9 @@ void BaseCRUD<T, R>::getList(const drogon::HttpRequestPtr &req,
                              std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
     int page = getInt(req->getParameter("page"), 1);
     int limit = getInt(req->getParameter("limit"), 25);
+
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
-    executeSqlQuery(callbackPtr, T::sqlSelectList(page, limit));
+    executeSqlQuery(callbackPtr, T().sqlSelectList(page, limit, convertSafeStringMapToStdMap(req->getParameters())));
 }
 
 template<class T, class R>
@@ -184,13 +204,13 @@ void BaseCRUD<T, R>::getOne([[maybe_unused]] const drogon::HttpRequestPtr &req,
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
 
     bool isInt = canBeInt(stringId);
-    if(auto resp = check404(req, !isInt && T::Field::slug.empty())) {
+    if(auto resp = check404(req, !isInt)) {
         (*callbackPtr)(resp);
         return;
     }
 
-    std::string filterKey = isInt ? T::primaryKey : T::Field::slug;
-    std::string query = T::sqlSelectOne(filterKey, stringId);
+    std::string filterKey = T::Field::id.getFullFieldName();
+    std::string query = T().sqlSelectOne(filterKey, stringId, {});
 
     executeSqlQuery(callbackPtr, query);
 }
@@ -210,7 +230,7 @@ void BaseCRUD<T, R>::updateItem(const drogon::HttpRequestPtr &req,
             return;
         }
         item.id = id;
-        std::string query = T::sqlUpdate(std::move(item));
+        std::string query = T().sqlUpdate(std::move(item));
         executeSqlQuery(callbackPtr, query);
     });
 }
@@ -285,6 +305,7 @@ void BaseCRUD<T, R>::handleSqlResultDeleting(
     std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const {
     auto resp = drogon::HttpResponse::newHttpResponse();
     resp->setStatusCode(drogon::HttpStatusCode::k204NoContent);
+    resp->setContentTypeCode(drogon::ContentType::CT_APPLICATION_JSON);
     (*callbackPtr)(resp);
 }
 
@@ -303,11 +324,8 @@ void BaseCRUD<T, R>::handleSqlError(
         resp->setStatusCode(drogon::HttpStatusCode::k404NotFound);
         (*callbackPtr)(resp);
     } else {
-        LOG_ERROR << e.base().what();
-        sentry_capture_event(sentry_value_new_message_event(
-            /*   level */ SENTRY_LEVEL_ERROR,
-            /*  logger */ "handleSqlError",
-            /* message */ e.base().what()));
+        std::string error = e.base().what();
+        sentryHelper(error, "handleSqlError");
         auto resp = drogon::HttpResponse::newHttpResponse();
         resp->setStatusCode(drogon::HttpStatusCode::k500InternalServerError);
         (*callbackPtr)(resp);
@@ -364,3 +382,10 @@ template class api::v1::BaseCRUD<UserModel, Auth>;
 template class api::v1::BaseCRUD<ShippingProfileModel, ShippingProfile>;
 template class api::v1::BaseCRUD<CountryModel, Country>;
 template class api::v1::BaseCRUD<ShippingRateModel, ShippingRate>;
+template class api::v1::BaseCRUD<OrderModel, Order>;
+template class api::v1::BaseCRUD<BasketItemModel, BasketItem>;
+template class api::v1::BaseCRUD<AddressModel, Address>;
+template class api::v1::BaseCRUD<ReviewModel, Review>;
+template class api::v1::BaseCRUD<BasketModel, Basket>;
+template class api::v1::BaseCRUD<FinancialDetailsModel, FinancialDetails>;
+template class api::v1::BaseCRUD<SocialMediaModel, SocialMedia>;

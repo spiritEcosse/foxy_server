@@ -3,42 +3,24 @@
 //
 
 #include "ShippingProfileModel.h"
+#include "ShippingRateModel.h"
 
 using namespace api::v1;
 
-std::vector<std::string> ShippingProfileModel::fields() {
-    return {
-        Field::title,
-        Field::processingTime,
-        Field::countryId,
-        Field::postalCode,
-        Field::shippingUpgradeCost,
-    };
+std::map<std::string, std::pair<std::string, std::string>, std::less<>> ShippingProfileModel::joinMap() const {
+    return {{ShippingRateModel::tableName,
+             {BaseModel<ShippingProfileModel>::Field::id.getFullFieldName(),
+              ShippingRateModel::Field::shippingProfileId.getFullFieldName()}}};
 }
 
-std::vector<std::string> ShippingProfileModel::fullFields() {
-    return {
-        Field::id,
-        Field::title,
-        Field::createdAt,
-        Field::updatedAt,
-        Field::processingTime,
-        Field::countryId,
-        Field::postalCode,
-        Field::shippingUpgradeCost,
-    };
-}
-
-std::vector<std::pair<std::string,
-                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
+std::vector<
+    std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
 ShippingProfileModel::getObjectValues() const {
-    std::vector<std::pair<std::string,
-                          std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
-        baseValues = {};
-    baseValues.emplace_back(Field::title, title);
-    baseValues.emplace_back(Field::processingTime, processingTime);
-    baseValues.emplace_back(Field::countryId, countryId);
-    baseValues.emplace_back(Field::postalCode, postalCode);
-    baseValues.emplace_back(Field::shippingUpgradeCost, shippingUpgradeCost);
-    return baseValues;
+    return {
+        {Field::title, title},
+        {Field::processingTime, processingTime},
+        {Field::countryId, countryId},
+        {Field::postalCode, postalCode},
+        {Field::shippingUpgradeCost, shippingUpgradeCost},
+    };
 }
