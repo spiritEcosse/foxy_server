@@ -48,9 +48,8 @@ on:
                 required: true
 
 jobs:
-    build:
+    build_image:
         runs-on: ubuntu-latest
-
         steps:
             -   name: Checkout repository
                 uses: actions/checkout@v4
@@ -83,10 +82,18 @@ jobs:
                     docker build -t ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} --build-arg LLVM_TAG="${{ secrets.LLVM_TAG }}" . && echo "::set-output name=exists::true" || (echo "::set-output name=exists::false" && exit 1)
                 if: steps.check_image.outputs.exists == 'false' || env.FORCE_REBUILD_IMAGE == 'true'
 
+    push_image:
+        runs-on: ubuntu-latest
+        needs: build_image
+        steps:
             -   name: Push Docker image
                 run: docker push ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME}
                 if: steps.build_image.outputs.exists == 'true'
 
+    cmake_build:
+        runs-on: ubuntu-latest
+        needs: build_image
+        steps:
             -   name: Create build folder in home directory
                 run: mkdir -p ~/build && chmod 777 ~/build
 
