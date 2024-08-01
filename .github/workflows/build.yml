@@ -91,6 +91,7 @@ jobs:
                 run: mkdir -p ~/build && chmod 777 ~/build
 
             -   name: CMake Build
+                if: steps.build_image.outputs.exists == 'true' || steps.check_image.outputs.exists == 'true'
                 run: >
                     docker run --rm --privileged
                     -e APP_CLOUD_NAME="${{ secrets.APP_CLOUD_NAME }}"
