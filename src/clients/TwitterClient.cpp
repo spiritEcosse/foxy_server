@@ -260,8 +260,8 @@ bool TwitterClient::addEasyHandleUpload(CurlMultiHandle multi_handle, FileTransf
 
 std::string TwitterClient::createTweetJson(const Tweet& tweet) {
     std::string domain;
-    getenv("APP_DOMAIN", domain);
-    std::string itemUrl = fmt::format("https://{}/item/{}", domain, tweet.itemSlug);
+    getenv("FOXY_CLIENT", domain);
+    std::string itemUrl = fmt::format("{}/item/{}", domain, tweet.itemSlug);
     Json::Value jsonObj;
     jsonObj["text"] = fmt::format("{}\nExplore #FaithFishArt: Discover and buy inspiring art. Follow for updates! {}",
                                   tweet.title,
