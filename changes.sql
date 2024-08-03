@@ -1,28 +1,21 @@
 BEGIN;
 
-ALTER table "user"
-    add column first_name varchar(255);
-ALTER table "user"
-    add column last_name varchar(255);
+truncate table "user";
+
+ALTER TABLE "user"
+    ADD COLUMN first_name VARCHAR(255) NOT NULL;
+ALTER TABLE "user"
+    ADD COLUMN last_name VARCHAR(255) NOT NULL;
 ALTER table "user"
     add column birthday DATE default null;
-
--- UPDATE "user"
--- SET first_name = 'John',
---     last_name  = 'Doe',
---     birthday   = '1990-01-01';
-
-ALTER table "user"
-    drop column password;
-
-ALTER table "user"
-    alter column first_name set not null;
-ALTER table "user"
-    alter column last_name set not null;
 Alter table "user"
     add column has_newsletter BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE "user"
     ADD column is_admin BOOLEAN NOT NULL DEFAULT false;
+
+
+ALTER table "user"
+    drop column password;
 
 
 truncate table "country";
