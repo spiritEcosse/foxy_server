@@ -25,17 +25,6 @@ ALTER TABLE "user"
     ADD column is_admin BOOLEAN NOT NULL DEFAULT false;
 
 
-UPDATE country
-SET title = 'Spain_old',
-    code  = 'ES_old'
-WHERE id = 2;
-
-UPDATE country
-SET title = 'United States_old',
-    code  = 'US_old'
-WHERE id = 1;
-
-
 truncate table "country";
 INSERT INTO country (title, code)
 VALUES ('Vietnam', 'VN'),
@@ -88,34 +77,16 @@ VALUES ('Vietnam', 'VN'),
        ('Belgium', 'BE'),
        ('Austria', 'AT'),
        ('Australia', 'AU'),
-       ('Argentina', 'AR'),
-       ('Spain', 'ES'),
-       ('United States', 'US');
+       ('Argentina', 'AR');
 
-UPDATE shipping_profile
-SET country_id = 55
-WHERE country_id = 1;
-
-UPDATE shipping_profile
-SET country_id = 54
-WHERE country_id = 2;
-
-UPDATE shipping_rate
-SET country_id = 54
-WHERE country_id = 1;
-
-UPDATE shipping_rate
-SET country_id = 55
-WHERE country_id = 2;
+UPDATE country
+SET updated_at = now()
+WHERE id = 2
+   OR id = 1;
 
 UPDATE countries_ips
 SET country_id = country.id
 FROM country
 WHERE countries_ips.country_code = country.code;
-
-DELETE
-FROM country
-WHERE id = 1
-   OR id = 2;
 
 COMMIT;
