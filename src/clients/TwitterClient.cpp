@@ -202,10 +202,12 @@ std::string TwitterClient::oauth(const std::string& url,
 
     std::vector<std::string> parts;
     parts.reserve(oauthParams.size());
-    for(const auto& [key, value]: oauthParams) {
-        parts.push_back(fmt::format(R"({}="{}")", key, urlEncode(value)));
-    }
-    return fmt::format("Authorization: OAuth {}", fmt::join(parts.begin(), parts.end(), ", "));
+    std::transform(oauthParams.begin(), oauthParams.end(), std::back_inserter(parts),
+       [](const auto& [key, value]) {
+           return fmt::format(R"({}="{}")", key, urlEncode(value));
+       });
+    
+    return fmt::format("Authorization: OAuth {}", fmt::join(parts, ", "));
 }
 
 bool TwitterClient::addEasyHandleUpload(CurlMultiHandle multi_handle, FileTransferInfo& info) {
