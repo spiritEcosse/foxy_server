@@ -202,11 +202,13 @@ std::string TwitterClient::oauth(const std::string& url,
 
     std::vector<std::string> parts;
     parts.reserve(oauthParams.size());
-    std::ranges::transform(oauthParams.begin(), oauthParams.end(), std::back_inserter(parts),
-       [](const auto& [key, value]) {
-           return fmt::format(R"({}="{}")", key, urlEncode(value));
-       });
-    
+    std::ranges::transform(oauthParams.begin(),
+                           oauthParams.end(),
+                           std::back_inserter(parts),
+                           [](const auto& [key, value]) {
+                               return fmt::format(R"({}="{}")", key, urlEncode(value));
+                           });
+
     return fmt::format("Authorization: OAuth {}", fmt::join(parts, ", "));
 }
 
