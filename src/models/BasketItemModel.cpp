@@ -31,9 +31,9 @@ BasketItemModel::sqlSelectList(int page, int limit, const std::map<std::string, 
     getenv("APP_CLOUD_NAME", app_cloud_name);
 
     QuerySet qsItem(ItemModel::tableName, "_item", false, false);
-    std::string jsonFieldsItem = ItemModel().fieldsJsonObject();
-    jsonFieldsItem += fmt::format(", 'src', format_src(media.src, '{}')", app_cloud_name);
-    qsItem.jsonFields(jsonFieldsItem)
+    qsItem
+        .jsonFields(
+            fmt::format("{}, 'src', format_src(media.src, '{}')", ItemModel().fieldsJsonObject(), app_cloud_name))
         .join(MediaModel())
         .filter(BaseModel<ItemModel>::Field::id.getFullFieldName(),
                 Field::itemId.getFullFieldName(),
@@ -56,9 +56,7 @@ std::string BasketItemModel::fieldsJsonObject() {
 
     std::string str = BaseModel::fieldsJsonObject();
     QuerySet qs(ItemModel::tableName, "item", false, false);
-    std::string jsonFields = ItemModel().fieldsJsonObject();
-    jsonFields += fmt::format(", 'src', format_src(media.src, '{}')", app_cloud_name);
-    qs.jsonFields(jsonFields)
+    qs.jsonFields(fmt::format("{}, 'src', format_src(media.src, '{}')", ItemModel().fieldsJsonObject(), app_cloud_name))
         .filter(BaseModel<ItemModel>::Field::id.getFullFieldName(),
                 Field::itemId.getFullFieldName(),
                 false,

@@ -381,11 +381,24 @@ namespace api::v1 {
         }
 
         QuerySet &filter(const std::string &field,
-                         std::string value,
+                         const std::string &value,
                          bool escape = true,
-                         std::string op = "=",
-                         std::string conjunction = "AND") {
+                         const std::string &op = "=",
+                         const std::string &conjunction = "AND") {
             filterInfo.filters.emplace_back(field, op, value, conjunction, escape);
+            return *this;
+        }
+
+        QuerySet &filter(std::string &&field,
+                         std::string &&value,
+                         bool escape = true,
+                         std::string &&op = "=",
+                         std::string &&conjunction = "AND") {
+            filterInfo.filters.emplace_back(std::move(field),
+                                            std::move(op),
+                                            std::move(value),
+                                            std::move(conjunction),
+                                            escape);
             return *this;
         }
 
@@ -487,12 +500,12 @@ namespace api::v1 {
             return *this;
         }
 
-        QuerySet &offset(std::string offset) {
+        QuerySet &offset(std::string &&offset) {
             _offset = std::move(offset);
             return *this;
         }
 
-        QuerySet &jsonFields(std::string jsonFields) {
+        QuerySet &jsonFields(std::string &&jsonFields) {
             _jsonFields = std::move(jsonFields);
             return *this;
         }
