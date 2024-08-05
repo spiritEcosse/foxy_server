@@ -1,10 +1,41 @@
 env:
-    FORCE_REBUILD_IMAGE: ${{ secrets.FORCE_REBUILD_IMAGE }}
+    BUILD_FOLDER: "/home/ubuntu/ubuntu_x86_64"
+    SRC: "/home/ubuntu/ubuntu_x86_64_src"
+    FORCE_REBUILD_IMAGE: ${{ vars.FORCE_REBUILD_IMAGE }}
 
 on:
     push:
         branches:
             - '*'
+    workflow_call:
+        inputs:
+            BUILD_FOLDER:
+                required: true
+                type: string
+            SRC:
+                required: true
+                type: string
+        secrets:
+            CR_PAT:
+                required: true
+            SENTRY_DSN:
+                required: true
+            SERVER_HOST:
+                required: true
+            SERVER_USER:
+                required: true
+            SERVER_PASSWORD:
+                required: true
+            SERVER_PSQL_DBNAME:
+                required: true
+            SERVER_PSQL_USER:
+                required: true
+            SERVER_PSQL_PASSWORD:
+                required: true
+            CERT_PATH:
+                required: true
+            KEY_PATH:
+                required: true
 
 jobs:
     build:
@@ -12,7 +43,7 @@ jobs:
 
         steps:
             -   name: Checkout repository
-                uses: actions/checkout@v2
+                uses: actions/checkout@v4
 
             -   name: Extract branch name
                 shell: bash
@@ -31,6 +62,7 @@ jobs:
 
             -   name: Check Docker image
                 id: check_image
+                if: env.FORCE_REBUILD_IMAGE == 'false'
                 run: |
                     docker pull ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} && echo "::set-output name=exists::true" || echo "::set-output name=exists::false"
                 continue-on-error: true
@@ -38,20 +70,24 @@ jobs:
             -   name: Build Docker image
                 id: build_image
                 run: |
-                    docker build -t ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} . && echo "::set-output name=exists::true" || echo "::set-output name=exists::false"
+                    docker build -t ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} --build-arg LLVM_TAG="${{ vars.LLVM_TAG }}" . && echo "::set-output name=exists::true" || (echo "::set-output name=exists::false" && exit 1)
                 if: steps.check_image.outputs.exists == 'false' || env.FORCE_REBUILD_IMAGE == 'true'
 
             -   name: Push Docker image
                 run: docker push ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME}
                 if: steps.build_image.outputs.exists == 'true'
 
+            -   name: Create build folder in home directory
+                run: mkdir -p ~/build && chmod 777 ~/build
+
             -   name: CMake Build
+                if: steps.build_image.outputs.exists == 'true' || steps.check_image.outputs.exists == 'true'
                 run: >
                     docker run --rm --privileged
-                    -e APP_CLOUD_NAME="${{ secrets.APP_CLOUD_NAME }}"
-                    -e CMAKE_BUILD_TYPE="${{ secrets.CMAKE_BUILD_TYPE }}"
-                    -e FOXY_ADMIN="${{ secrets.FOXY_ADMIN }}"
-                    -e FOXY_CLIENT="${{ secrets.FOXY_CLIENT }}"
+                    -e APP_CLOUD_NAME="${{ vars.APP_CLOUD_NAME }}"
+                    -e CMAKE_BUILD_TYPE="${{ vars.CMAKE_BUILD_TYPE }}"
+                    -e FOXY_ADMIN="${{ vars.FOXY_ADMIN }}"
+                    -e FOXY_CLIENT="${{ vars.FOXY_CLIENT }}"
                     -e SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
                     -e SERVER_HOST="${{ secrets.SERVER_HOST }}"
                     -e SERVER_USER="${{ secrets.SERVER_USER }}"
@@ -59,8 +95,21 @@ jobs:
                     -e SERVER_PSQL_DBNAME="${{ secrets.SERVER_PSQL_DBNAME }}"
                     -e SERVER_PSQL_USER="${{ secrets.SERVER_PSQL_USER }}"
                     -e SERVER_PSQL_PASSWORD="${{ secrets.SERVER_PSQL_PASSWORD }}"
-                    -e CERT_PATH="${{ secrets.CERT_PATH }}"
+                    -e TWITTER_ACCESS_TOKEN="${{ secrets.TWITTER_ACCESS_TOKEN }}"
+                    -e TWITTER_ACCESS_TOKEN_SECRET="${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}"
+                    -e TWITTER_API_KEY="${{ secrets.TWITTER_API_KEY }}"
+                    -e TWITTER_API_SECRET="${{ secrets.TWITTER_API_SECRET }}"
+                    -e LLVM_TAG="${{ vars.LLVM_TAG }}"
                     -e KEY_PATH="${{ secrets.KEY_PATH }}"
-                    -v $PWD:/share ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} /bin/bash -c "
+                    -e BUILD_FOLDER="${{ env.BUILD_FOLDER }}"
+                    -e SRC="${{ env.SRC }}"
+                    -v $PWD:"${{ env.SRC }}"
+                    -v ~/build:"${{ env.BUILD_FOLDER }}" ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} /bin/bash -c "
                       curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='$CONTENT'
                     "
+
+            -   name: Archive build directory
+                uses: actions/upload-artifact@v4
+                with:
+                    name: build
+                    path: ~/build

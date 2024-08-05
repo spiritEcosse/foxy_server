@@ -1,0 +1,29 @@
+---
+Checks: '*'
+WarningsAsErrors: '*'
+HeaderFilterRegex: '.*'
+AnalyzeTemporaryDtors: false
+CheckOptions:
+    -   key: google-readability-braces-around-statements.ShortStatementLines
+        value: '1'
+    -   key: readability-braces-around-statements.ShortStatementLines
+        value: '1'
+    -   key: cert-oop54-cpp.WarnOnlyIfThisHasSuspiciousField
+        value: '0'
+    -   key: google-readability-function-size.StatementThreshold
+        value: '800'
+    -   key: readability-function-size.StatementThreshold
+        value: '800'
+    -   key: hippomocks-avoid-mocking-abstract-classes
+        value: '0'
+...
+---
+-   key: checks
+    value: '-*'
+    line: build/*
+-   key: checks
+    value: '-*'
+    line: cmake-build-debug/*
+-   key: checks
+    value: '-*'
+    line: 3rdparty/*

@@ -3,30 +3,21 @@
 //
 
 #include "CountryModel.h"
+#include "AddressModel.h"
 
 using namespace api::v1;
 
-std::vector<std::string> CountryModel::fields() {
+std::map<std::string, std::pair<std::string, std::string>, std::less<>> CountryModel::joinMap() const {
     return {
-        Field::title,
-        Field::code,
+        {AddressModel::tableName,
+         {BaseModel<CountryModel>::Field::id.getFullFieldName(), AddressModel::Field::countryId.getFullFieldName()}},
     };
 }
 
-std::vector<std::string> CountryModel::fullFields() {
-    return {
-        Field::id,
-        Field::title,
-        Field::code,
-        Field::createdAt,
-        Field::updatedAt,
-    };
-}
-
-std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 CountryModel::getObjectValues() const {
-    auto baseValues = BaseModel::getObjectValues();
-    baseValues.emplace_back(Field::title, title);
-    baseValues.emplace_back(Field::code, code);
-    return baseValues;
+    return {
+        {Field::title, title},
+        {Field::code, code},
+    };
 }

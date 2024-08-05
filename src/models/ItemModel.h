@@ -17,17 +17,27 @@ namespace api::v1 {
 
     class ItemModel : public BaseModel<ItemModel> {
     public:
-        struct Field : public BaseModel::Field {
-            static inline const std::string title = "title";
-            static inline const std::string description = "description";
-            static inline const std::string metaDescription = "meta_description";
-            static inline const std::string shippingProfileId = "shipping_profile_id";
-            static inline const std::string slug = "slug";
-            static inline const std::string enabled = "enabled";
-            static inline const std::string price = "price";
-        };
-
         static inline const std::string tableName = "item";
+
+        struct Field : public BaseModel::Field {
+            static inline BaseField title = BaseField("title", tableName);
+            static inline BaseField description = BaseField("description", tableName);
+            static inline BaseField metaDescription = BaseField("meta_description", tableName);
+            static inline BaseField shippingProfileId = BaseField("shipping_profile_id", tableName);
+            static inline BaseField slug = BaseField("slug", tableName);
+            static inline BaseField enabled = BaseField("enabled", tableName);
+            static inline BaseField price = BaseField("price", tableName);
+
+            Field() : BaseModel<ItemModel>::Field() {
+                allFields[title.getFieldName()] = title;
+                allFields[description.getFieldName()] = description;
+                allFields[metaDescription.getFieldName()] = metaDescription;
+                allFields[shippingProfileId.getFieldName()] = shippingProfileId;
+                allFields[slug.getFieldName()] = slug;
+                allFields[enabled.getFieldName()] = enabled;
+                allFields[price.getFieldName()] = price;
+            }
+        };
 
         std::string title;
         int shippingProfileId{};
@@ -37,44 +47,40 @@ namespace api::v1 {
         dec::decimal<2> price;
         std::string metaDescription;
         ItemModel() = default;
-        ItemModel(const ItemModel&) = delete;  // Copy constructor
-        ItemModel& operator=(const ItemModel&) = delete;  // Copy assignment operator
-        ItemModel(ItemModel&&) noexcept = default;  // Move constructor
-        ItemModel& operator=(ItemModel&&) noexcept = default;  // Move assignment operator
+        ItemModel(const ItemModel &) = delete;  // Copy constructor
+        ItemModel &operator=(const ItemModel &) = delete;  // Copy assignment operator
+        ItemModel(ItemModel &&) noexcept = default;  // Move constructor
+        ItemModel &operator=(ItemModel &&) noexcept = default;  // Move assignment operator
 
-        explicit ItemModel(const Json::Value& json) : BaseModel(json) {
-            title = json[Field::title].asString();
-            description = json[Field::description].asString();
-            metaDescription = json[Field::metaDescription].asString();
-            slug = json[Field::slug].asString();
-            shippingProfileId = json[Field::shippingProfileId].asInt();
-            enabled = json[Field::enabled].asBool();
-            auto priceString = json[Field::price].asString();
+        explicit ItemModel(const Json::Value &json) : BaseModel(json) {
+            title = json[Field::title.getFieldName()].asString();
+            description = json[Field::description.getFieldName()].asString();
+            metaDescription = json[Field::metaDescription.getFieldName()].asString();
+            slug = json[Field::slug.getFieldName()].asString();
+            shippingProfileId = json[Field::shippingProfileId.getFieldName()].asInt();
+            enabled = json[Field::enabled.getFieldName()].asBool();
+            price = json[Field::price.getFieldName()].asDouble();
 
-            validateField(Field::title, title, missingFields);
-            validateField(Field::description, description, missingFields);
-            validateField(Field::shippingProfileId, shippingProfileId, missingFields);
-            validateField(Field::metaDescription, metaDescription, missingFields);
-            validateField(Field::slug, slug, missingFields);
-            validateField(Field::price, priceString, missingFields);
-            if(missingFields.empty()) {
-                price = std::stod(priceString);
-            }
+            validateField(Field::title.getFieldName(), title, missingFields);
+            validateField(Field::description.getFieldName(), description, missingFields);
+            validateField(Field::shippingProfileId.getFieldName(), shippingProfileId, missingFields);
+            validateField(Field::metaDescription.getFieldName(), metaDescription, missingFields);
+            validateField(Field::slug.getFieldName(), slug, missingFields);
+            validateField(Field::price.getFieldName(), price, missingFields);
         }
 
-        [[nodiscard]] static QuerySet qsCount();
+        [[nodiscard]] QuerySet qsCount() override;
 
-        [[nodiscard]] static std::vector<std::string> fields();
-        [[nodiscard]] static std::vector<std::string> fullFields();
         [[nodiscard]] std::vector<
-            std::pair<std::string,
+            std::pair<BaseField,
                       std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
         getObjectValues() const;
-        [[nodiscard]] static std::string sqlSelectList(int page, int limit);
-        [[nodiscard]] static std::string
-        sqlSelectOne(const std::string& field,
-                     const std::string& value,
-                     const std::map<std::string, std::string, std::less<>>& params = {});
+        [[nodiscard]] std::string
+        sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params) override;
+        [[nodiscard]] std::string sqlSelectOne(const std::string &field,
+                                               const std::string &value,
+                                               const std::map<std::string, std::string, std::less<>> &params) override;
+        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
     };
 }
 

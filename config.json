@@ -11,6 +11,18 @@
       "is_fast": true,
       "connection_number": 1,
       "filename": ""
+    },
+    {
+      "name": "default_not_fast",
+      "rdbms": "postgresql",
+      "host": "127.0.0.1",
+      "port": 5432,
+      "dbname": "foxy",
+      "user": "foxy",
+      "passwd": "foxy",
+      "is_fast": false,
+      "connection_number": 1,
+      "filename": ""
     }
   ]
 }
