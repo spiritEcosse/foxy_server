@@ -66,7 +66,7 @@ void BaseCRUD<T, R>::deleteItems(const drogon::HttpRequestPtr &req,
     auto itemsJson = jsonObject["items"];
 
     std::vector<int> ids;
-    std::ranges::for_each(itemsJson.begin(), itemsJson.end(), [&ids](const auto &item) {
+    std::ranges::for_each(itemsJson, [&ids](const auto &item) {
         ids.emplace_back(item.asInt());
     });
 

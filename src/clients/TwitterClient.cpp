@@ -202,10 +202,11 @@ std::string TwitterClient::oauth(const std::string& url,
 
     std::vector<std::string> parts;
     parts.reserve(oauthParams.size());
-    for(const auto& [key, value]: oauthParams) {
-        parts.push_back(fmt::format(R"({}="{}")", key, urlEncode(value)));
-    }
-    return fmt::format("Authorization: OAuth {}", fmt::join(parts.begin(), parts.end(), ", "));
+    std::ranges::transform(oauthParams, std::back_inserter(parts), [](const auto& pair) {
+        return fmt::format(R"({}="{}")", pair.first, urlEncode(pair.second));
+    });
+
+    return fmt::format("Authorization: OAuth {}", fmt::join(parts, ", "));
 }
 
 bool TwitterClient::addEasyHandleUpload(CurlMultiHandle multi_handle, FileTransferInfo& info) {
@@ -260,8 +261,8 @@ bool TwitterClient::addEasyHandleUpload(CurlMultiHandle multi_handle, FileTransf
 
 std::string TwitterClient::createTweetJson(const Tweet& tweet) {
     std::string domain;
-    getenv("APP_DOMAIN", domain);
-    std::string itemUrl = fmt::format("https://{}/item/{}", domain, tweet.itemSlug);
+    getenv("FOXY_CLIENT", domain);
+    std::string itemUrl = fmt::format("{}/item/{}", domain, tweet.itemSlug);
     Json::Value jsonObj;
     jsonObj["text"] = fmt::format("{}\nExplore #FaithFishArt: Discover and buy inspiring art. Follow for updates! {}",
                                   tweet.title,

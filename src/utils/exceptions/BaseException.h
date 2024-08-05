@@ -18,8 +18,8 @@ protected:
         return message;
     }
 
-    void setMessage(std::string msg) {
-        message = std::move(msg);
+    void setMessage(std::string_view msg) {
+        message = msg;
     }
 
     [[nodiscard]] const backward::StackTrace& getStackTrace() const {

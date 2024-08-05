@@ -26,7 +26,7 @@ jobs:
 
             -   name: Build docker qodana clang image
                 run: |
-                    docker build -t qodana_clang -f Dockerfile_qodana --build-arg LLVM_TAG="${{ secrets.LLVM_TAG }}" .
+                    docker build -t qodana_clang -f Dockerfile_qodana --build-arg LLVM_TAG="${{ vars.LLVM_TAG }}" .
 
             -   name: 'Qodana Scan'
                 run: |
