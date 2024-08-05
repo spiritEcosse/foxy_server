@@ -46,9 +46,8 @@ std::string timePointToString(std::chrono::system_clock::time_point tp) {
 }
 
 template<class T>
-std::string BaseModel<T>::sqlDelete(int id) {
-    return "DELETE FROM \"" + T::tableName + "\" WHERE " + T::Field::id.getFullFieldName() + " = " +
-           std::to_string(id) + ";";
+std::string BaseModel<T>::sqlDelete(int idKey) {
+    return fmt::format(R"(DELETE FROM "{}" WHERE {} = {})", T::tableName, T::Field::id.getFullFieldName(), idKey);
 }
 
 template<class T>
@@ -124,7 +123,7 @@ void BaseModel<T>::sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColum
 
     for(const auto &[key, value]: item.getObjectValues()) {
         std::visit(
-            [&item, &uniqueColumns, key](const auto &arg) {
+            [&item, &uniqueColumns, &key](const auto &arg) {
                 std::string data;
                 using Type = std::decay_t<decltype(arg)>;
                 if constexpr(std::is_same_v<Type, std::chrono::system_clock::time_point>) {
