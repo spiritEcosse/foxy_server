@@ -363,8 +363,7 @@ namespace api::v1 {
         QuerySet(std::string tableName, std::string alias, bool doAndCheck = false, bool returnInMain = true) :
             BaseQuerySet(std::move(tableName), std::move(alias), doAndCheck, returnInMain) {}
 
-        [[nodiscard]]
-        std::string alias() const {
+        [[nodiscard]] std::string alias() const {
             return _alias;
         }
 
