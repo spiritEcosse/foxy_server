@@ -252,95 +252,109 @@ $$
             updated_at          TIMESTAMP      NOT NULL DEFAULT NOW()
         );
 
-        CREATE INDEX idx_media_item_id_sort ON media (item_id, sort ASC);
-        CREATE INDEX idx_item_slug ON item (slug);
-        CREATE INDEX idx_shipping_rate_shipping_profile_id_country_id ON shipping_rate (shipping_profile_id, country_id);
-        CREATE INDEX idx_shipping_rate_country_id ON shipping_rate (country_id);
-        CREATE INDEX idx_item_shipping_profile_id ON item (shipping_profile_id);
-        CREATE INDEX idx_countries_ips_country_id ON countries_ips (country_id);
-        CREATE INDEX end_range_with_include_idx ON countries_ips USING btree (end_range ASC NULLS LAST) INCLUDE (start_range, country_id);
-        CREATE INDEX idx_item_updated_at ON item (updated_at);
-        CREATE INDEX idx_item_enabled ON item (enabled);
-        CREATE INDEX idx_order_status ON "order" (status);
+        CREATE INDEX IF NOT EXISTS idx_media_item_id_sort ON media (item_id, sort ASC);
+        CREATE INDEX IF NOT EXISTS idx_item_slug ON item (slug);
+        CREATE INDEX IF NOT EXISTS idx_shipping_rate_shipping_profile_id_country_id ON shipping_rate (shipping_profile_id, country_id);
+        CREATE INDEX IF NOT EXISTS idx_shipping_rate_country_id ON shipping_rate (country_id);
+        CREATE INDEX IF NOT EXISTS idx_item_shipping_profile_id ON item (shipping_profile_id);
+        CREATE INDEX IF NOT EXISTS idx_countries_ips_country_id ON countries_ips (country_id);
+        CREATE INDEX IF NOT EXISTS end_range_with_include_idx ON countries_ips USING btree (end_range ASC NULLS LAST) INCLUDE (start_range, country_id);
+        CREATE INDEX IF NOT EXISTS idx_item_updated_at ON item (updated_at);
+        CREATE INDEX IF NOT EXISTS idx_item_enabled ON item (enabled);
+        CREATE INDEX IF NOT EXISTS idx_order_status ON "order" (status);
 
+        DROP TRIGGER IF EXISTS set_timestamp ON "item";
         CREATE TRIGGER set_timestamp
             BEFORE UPDATE
             ON "item"
             FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
 
+        DROP TRIGGER IF EXISTS set_timestamp ON "media";
         CREATE TRIGGER set_timestamp
             BEFORE UPDATE
             ON "media"
             FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
 
+        DROP TRIGGER IF EXISTS set_timestamp ON "page";
         CREATE TRIGGER set_timestamp
             BEFORE UPDATE
             ON "page"
             FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
 
+        DROP TRIGGER IF EXISTS set_timestamp ON "user";
         CREATE TRIGGER set_timestamp
             BEFORE UPDATE
             ON "user"
             FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
 
+        DROP TRIGGER IF EXISTS set_timestamp ON "shipping_profile";
         CREATE TRIGGER set_timestamp
             BEFORE UPDATE
             ON "shipping_profile"
             FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
 
+        DROP TRIGGER IF EXISTS set_timestamp ON "shipping_rate";
         CREATE TRIGGER set_timestamp
             BEFORE UPDATE
             ON "shipping_rate"
             FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
 
+        DROP TRIGGER IF EXISTS set_timestamp ON "country";
         CREATE TRIGGER set_timestamp
             BEFORE UPDATE
             ON "country"
             FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
 
+        DROP TRIGGER IF EXISTS set_timestamp ON "order";
         CREATE TRIGGER set_timestamp
             BEFORE UPDATE
             ON "order"
             FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
 
+        DROP TRIGGER IF EXISTS set_timestamp ON "basket_item";
         CREATE TRIGGER set_timestamp
             BEFORE UPDATE
             ON "basket_item"
             FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
 
+        DROP TRIGGER IF EXISTS set_timestamp ON "basket";
         CREATE TRIGGER set_timestamp
             BEFORE UPDATE
             ON "basket"
             FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
 
+        DROP TRIGGER IF EXISTS set_timestamp ON "address";
         CREATE TRIGGER set_timestamp
             BEFORE UPDATE
             ON "address"
             FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
 
+        DROP TRIGGER IF EXISTS set_timestamp ON "review";
         CREATE TRIGGER set_timestamp
             BEFORE UPDATE
             ON "review"
             FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
 
+        DROP TRIGGER IF EXISTS set_timestamp ON "countries_ips";
         CREATE TRIGGER set_timestamp
             BEFORE UPDATE
             ON "countries_ips"
             FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
 
+        DROP TRIGGER IF EXISTS set_timestamp ON "financial_details";
         CREATE TRIGGER set_timestamp
             BEFORE UPDATE
             ON "financial_details"

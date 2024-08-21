@@ -18,7 +18,6 @@ ALTER table "user"
     drop column password;
 
 
-truncate table "country";
 INSERT INTO country (title, code)
 VALUES ('Vietnam', 'VN'),
        ('United Kingdom', 'GB'),
