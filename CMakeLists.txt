@@ -1,24 +1,30 @@
 cmake_minimum_required(VERSION 3.22)
 project(foxy_server)
 
+# Set CMP0115 policy to NEW
+cmake_policy(SET CMP0115 NEW)
+
 set(BUILD_EXAMPLES OFF)
 set(BUILD_CTL OFF)
 #set(BUILD_TESTING OFF)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # start https://github.com/an-tao/trantor/issues/296
 set(EMPTY_STRING "")
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(EMPTY_STRING "''")
     set(CMAKE_BUILD_RPATH "${CMAKE_LLVM_LIB_DIR}")
-endif()
+endif ()
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 get_cmake_property(_variableNames VARIABLES)
 list(SORT _variableNames)
-foreach(_variableName ${_variableNames})
+foreach (_variableName ${_variableNames})
     message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()
+endforeach ()
 
 add_definitions(-DCMAKE_BINARY_DIR="${CMAKE_BINARY_DIR}")
 
@@ -28,52 +34,103 @@ execute_process(COMMAND bash -c "cp -f config.json ${PROJECT_BINARY_DIR}"
 
 if (NOT COPY_CONFIG EQUAL "0")
     message(FATAL_ERROR "cp config.json failed with : ${COPY_CONFIG}, please check")
-endif()
+endif ()
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     link_directories(/usr/lib/x86_64-linux-gnu/)
-endif()
+endif ()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty" "${CMAKE_BINARY_DIR}/_deps/cmake-scripts-src/")
 include(3rdparty)
 
 # start src
-file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS src/*.cc src/*.cpp /src/*.h)
+file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS src/*.cc src/*.cpp /src/*.h src/*.hpp)
 add_executable(foxy_server ${RESOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 # end src
 
+include_directories(${CMAKE_SOURCE_DIR}/src/orm)
+include_directories(${CMAKE_SOURCE_DIR}/src/utils/db)
+include_directories(${CMAKE_SOURCE_DIR}/src/utils)
+include_directories(${CMAKE_SOURCE_DIR}/src/models)
+include_directories(${CMAKE_SOURCE_DIR}/src/utils/jwt)
+include_directories(${CMAKE_SOURCE_DIR}/src/utils/exceptions)
+include_directories(${CMAKE_SOURCE_DIR}/src/utils/request)
+include_directories(${CMAKE_SOURCE_DIR}/src/controllers)
+include_directories(${CMAKE_SOURCE_DIR}/src/clients)
+include_directories(${CMAKE_SOURCE_DIR}/src/auth)
+include_directories(${CMAKE_SOURCE_DIR}/src/filters)
+include_directories(${CMAKE_SOURCE_DIR}/src/sentry_catcher)
+
 set(CMAKE_SYSTEM_PROCESSOR arm) # why this?
+
+#Start adding libuuid
+CPMAddPackage(
+        NAME libuuid
+        GIT_REPOSITORY https://github.com/karelzak/util-linux.git
+        GIT_TAG v2.40.2
+)
+find_library(UUID_LIBRARY uuid)
+if (NOT UUID_LIBRARY)
+    message(FATAL_ERROR "libuuid not found")
+endif ()
+target_link_libraries(${PROJECT_NAME} PRIVATE ${UUID_LIBRARY})
+# End adding libuuid
+
 
 # start drogon
 CPMAddPackage(
         NAME drogon
+        VERSION v1.9.4
         GITHUB_REPOSITORY drogonframework/drogon
-        GIT_TAG master
+        GIT_TAG v1.9.4
+        OPTIONS "BUILD_TESTING OFF"
 )
+
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
 # end drogon
 
-# Start adding jwt-cpp
+# Start adding libcurl
 CPMAddPackage(
-        NAME jwt-cpp
-        VERSION 0.7.0
-        GITHUB_REPOSITORY Thalhammer/jwt-cpp
-        GIT_TAG v0.7.0
+        NAME libcurl
+        VERSION 8.8.0
+        GITHUB_REPOSITORY curl/curl
+        GIT_TAG curl-8_8_0
 )
-target_link_libraries(${PROJECT_NAME} PRIVATE jwt-cpp)
-# End adding jwt-cpp
+target_link_libraries(${PROJECT_NAME} PRIVATE libcurl)
+# End adding libcurl
 
-# Start adding hilch/Bcrypt.cpp
+# Find zlib library
+find_library(ZLIB_LIBRARY NAMES z)
 
-CPMAddPackage(
-        NAME bcrypt
-        GITHUB_REPOSITORY hilch/Bcrypt.cpp
-        GIT_TAG master
-)
+# Check if zlib was found
+if (NOT ZLIB_LIBRARY)
+    message(FATAL_ERROR "zlib not found")
+endif ()
 
-target_link_libraries(${PROJECT_NAME} PRIVATE bcrypt)
-# End adding hilch/Bcrypt.cpp
+# Link zlib to your target
+target_link_libraries(${PROJECT_NAME} PRIVATE ${ZLIB_LIBRARY})
+
+# Find libbfd
+find_library(LIBBFD_FOUND bfd PATHS ${PATH_LIBBFD})
+if (NOT LIBBFD_FOUND)
+    message(FATAL_ERROR " libbfd not found")
+endif ()
+
+# Find libunwind
+find_library(LIBUNWIND_FOUND unwind)
+if (NOT LIBUNWIND_FOUND)
+    message(FATAL_ERROR "libunwind not found")
+endif ()
+
+
+#find_library(OAUTH_FOUND oauth)
+#if (NOT OAUTH_FOUND)
+#    message(FATAL_ERROR "oauth not found")
+#endif ()
+
+#target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBBFD_FOUND} ${LIBUNWIND_FOUND} ${OAUTH_FOUND})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBBFD_FOUND} ${LIBUNWIND_FOUND})
 
 # start sentry
 set(SENTRY_BACKEND crashpad)
@@ -88,18 +145,17 @@ CPMAddPackage(
 execute_process(COMMAND bash -c "sed -n '191p' ${PROJECT_BINARY_DIR}/_deps/sentry-src/external/crashpad/snapshot/CMakeLists.txt | tr -d '\n'"
         OUTPUT_VARIABLE LINE_191_CONTENT)
 
-if("${LINE_191_CONTENT}" STREQUAL "")
+if ("${LINE_191_CONTENT}" STREQUAL "")
     execute_process(COMMAND bash -c "sed -i ${EMPTY_STRING} '191i\\
-target_sources(crashpad_snapshot PRIVATE x86/cpuid_reader.cc x86/cpuid_reader.h)' ${PROJECT_BINARY_DIR}/_deps/sentry-src/external/crashpad/snapshot/CMakeLists.txt"
+        target_sources (crashpad_snapshot PRIVATE x86/cpuid_reader.cc x86/cpuid_reader.h) ' ${PROJECT_BINARY_DIR}/_deps/sentry-src/external/crashpad/snapshot/CMakeLists.txt"
             RESULT_VARIABLE FIX_MATCHING_ARCHITECTURE_SENTRY)
     message(STATUS "FIX_MATCHING_ARCHITECTURE_SENTRY : ${FIX_MATCHING_ARCHITECTURE_SENTRY}")
-    if(NOT FIX_MATCHING_ARCHITECTURE_SENTRY EQUAL "0")
+    if (NOT FIX_MATCHING_ARCHITECTURE_SENTRY EQUAL "0")
         message(FATAL_ERROR "sed, changing architecture matching in sentry failed with : ${FIX_MATCHING_ARCHITECTURE_SENTRY}, please check")
-    endif()
-endif()
+    endif ()
+endif ()
 target_link_libraries(${PROJECT_NAME} PRIVATE sentry)
 # end sentry
-
 
 # Start Formatting
 CPMAddPackage(
@@ -137,5 +193,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
 if (BUILD_TESTING)
     enable_testing()
     add_subdirectory(tests)
-endif()
+endif ()
 # End Tests

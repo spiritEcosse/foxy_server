@@ -1,8 +1,8 @@
 #include "Item.h"
 #include "ShippingRate.h"
-#include "src/utils/request/Request.h"
-#include "src/orm/QuerySet.h"
-#include "src/utils/env.h"
+#include "Request.h"
+#include "QuerySet.h"
+#include "env.h"
 #include <fmt/core.h>
 
 using namespace api::v1;
@@ -32,7 +32,8 @@ void ShippingRate::getShippingRateByItem(const drogon::HttpRequestPtr &req,
     std::map<std::string, std::string, std::less<>> params;
     params["client_ip"] = std::to_string(integer_ip);
 
-    std::string query = ShippingRateModel::getShippingRateByItem(ItemModel::Field::slug, stringId, params);
+    std::string query =
+        ShippingRateModel::getShippingRateByItem(ItemModel::Field::slug.getFullFieldName(), stringId, params);
 
     executeSqlQuery(callbackPtr, query);
 }

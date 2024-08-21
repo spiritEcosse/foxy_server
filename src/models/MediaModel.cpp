@@ -3,53 +3,42 @@
 //
 
 #include "MediaModel.h"
-#include <fmt/core.h>
-#include "src/utils/env.h"
+#include "ItemModel.h"
+#include "env.h"
+#include "fmt/format.h"
 
 using namespace api::v1;
 
-std::vector<std::string> MediaModel::fields() {
+std::map<std::string, std::pair<std::string, std::string>, std::less<>> MediaModel::joinMap() const {
     return {
-        Field::src,
-        Field::itemId,
-        Field::sort,
+        {ItemModel::tableName,
+         {MediaModel::Field::itemId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName()}},
     };
 }
 
-std::vector<std::string> MediaModel::fullFields() {
-    return {
-        Field::id,
-        Field::itemId,
-        Field::sort,
-        Field::src,
-        Field::createdAt,
-        Field::updatedAt,
-    };
-}
-
-std::vector<std::pair<std::string, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
+std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
 MediaModel::getObjectValues() const {
-    auto baseValues = BaseModel::getObjectValues();
-    baseValues.emplace_back(Field::src, src);
-    baseValues.emplace_back(Field::itemId, itemId);
-    baseValues.emplace_back(Field::sort, sort);
-    return baseValues;
+    return {
+        {Field::src, src},
+        {Field::itemId, itemId},
+        {Field::sort, sort},
+    };
 }
 
 std::string MediaModel::fieldsJsonObject() {
     std::string app_cloud_name;
     getenv("APP_CLOUD_NAME", app_cloud_name);
 
-    std::stringstream ss;
-    for(auto fieldNames = fullFields(); const auto &fieldName: fieldNames) {
-        if(fieldName == "src") {
-            ss << fmt::format("'{}', format_src({}, '{}') ", fieldName, fieldName, app_cloud_name);
+    const Field field;
+    std::vector<std::string> formattedFields;
+    std::ranges::transform(field.allFields, std::back_inserter(formattedFields), [&](const auto& pair) {
+        const auto& [key, value] = pair;
+        if(key == "src") {
+            return fmt::format("'{}', format_src({}, '{}')", key, value.getFullFieldName(), app_cloud_name);
         } else {
-            ss << fmt::format("'{}', {} ", fieldName, fieldName);
+            return fmt::format("'{}', {}", key, value.getFullFieldName());
         }
-        if(&fieldName != &fieldNames.back()) {
-            ss << ", ";
-        }
-    }
-    return ss.str();
+    });
+
+    return fmt::to_string(fmt::join(formattedFields, ", "));
 }
