@@ -116,8 +116,8 @@ namespace api::v1 {
                               std::string alias,
                               bool doAndCheck = false,
                               bool returnInMain = true) :
-            tableName(std::move(tableName)),
-            _alias(std::move(alias)), _one(true), _doAndCheck(doAndCheck), _returnInMain(returnInMain) {}
+            tableName(std::move(tableName)), _alias(std::move(alias)), _one(true), _doAndCheck(doAndCheck),
+            _returnInMain(returnInMain) {}
 
         std::string tableName;
         FilterInfo filterInfo;
