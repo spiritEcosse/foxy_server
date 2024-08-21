@@ -64,6 +64,20 @@ include_directories(${CMAKE_SOURCE_DIR}/src/sentry_catcher)
 
 set(CMAKE_SYSTEM_PROCESSOR arm) # why this?
 
+#Start adding libuuid
+CPMAddPackage(
+        NAME libuuid
+        GIT_REPOSITORY https://github.com/karelzak/util-linux.git
+        GIT_TAG v2.40.2
+)
+find_library(UUID_LIBRARY uuid)
+if (NOT UUID_LIBRARY)
+    message(FATAL_ERROR "libuuid not found")
+endif ()
+target_link_libraries(${PROJECT_NAME} PRIVATE ${UUID_LIBRARY})
+# End adding libuuid
+
+
 # start drogon
 CPMAddPackage(
         NAME drogon
@@ -72,6 +86,7 @@ CPMAddPackage(
         GIT_TAG v1.9.4
         OPTIONS "BUILD_TESTING OFF"
 )
+
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
 # end drogon
 
@@ -141,19 +156,6 @@ if ("${LINE_191_CONTENT}" STREQUAL "")
 endif ()
 target_link_libraries(${PROJECT_NAME} PRIVATE sentry)
 # end sentry
-
-#Start adding libuuid
-CPMAddPackage(
-        NAME libuuid
-        GIT_REPOSITORY https://github.com/karelzak/util-linux.git
-        GIT_TAG v2.40.2
-)
-find_library(UUID_LIBRARY uuid)
-if (NOT UUID_LIBRARY)
-    message(FATAL_ERROR "libuuid not found")
-endif ()
-target_link_libraries(${PROJECT_NAME} PRIVATE ${UUID_LIBRARY})
-# End adding libuuid
 
 # Start Formatting
 CPMAddPackage(
