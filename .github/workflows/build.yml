@@ -102,7 +102,6 @@ jobs:
                     -e LLVM_TAG="${{ vars.LLVM_TAG }}"
                     -e KEY_PATH="${{ vars.KEY_PATH }}"
                     -e CERT_PATH="${{ vars.CERT_PATH }}"
-                    -e KEY_PATH="${{ secrets.KEY_PATH }}"
                     -e BUILD_FOLDER="${{ env.BUILD_FOLDER }}"
                     -e SRC="${{ env.SRC }}"
                     -v $PWD:"${{ env.SRC }}"
