@@ -144,10 +144,13 @@ $$
             FOREIGN KEY (item_id) REFERENCES item (id) ON DELETE CASCADE
         );
 
+        CREATE TYPE media_type AS ENUM ('video', 'image');
+
         CREATE TABLE IF NOT EXISTS media
         (
             id         SERIAL PRIMARY KEY,
             src        VARCHAR(255) NOT NULL,
+            type       media_type   NOT NULL,
             item_id    INT          NOT NULL,
             sort       INT                   DEFAULT 1,
             created_at TIMESTAMP    NOT NULL DEFAULT NOW(),
