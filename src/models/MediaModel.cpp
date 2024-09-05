@@ -22,6 +22,7 @@ MediaModel::getObjectValues() const {
         {Field::src, src},
         {Field::itemId, itemId},
         {Field::sort, sort},
+        {Field::type, type},
     };
 }
 
