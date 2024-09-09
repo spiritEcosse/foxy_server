@@ -264,9 +264,22 @@ std::string TwitterClient::createTweetJson(const Tweet& tweet) {
     getenv("FOXY_CLIENT", domain);
     std::string itemUrl = fmt::format("{}/item/{}", domain, tweet.itemSlug);
     Json::Value jsonObj;
-    jsonObj["text"] = fmt::format("{}\nExplore #FaithFishArt: Discover and buy inspiring art. Follow for updates! {}",
-                                  tweet.title,
-                                  itemUrl);
+
+    // Append tags as hashtags using fmt::join
+    std::string hashtags = fmt::format("{}", fmt::join(tweet.tags, " #"));
+    hashtags = hashtags.empty() ? "" : " #" + hashtags;
+
+    // Combine the base text with hashtags
+    // Construct the base tweet text
+    std::string tweetText =
+        fmt::format("{}\nExplore #FaithFishArt: Discover and buy inspiring art. Follow for updates! {}. {}",
+                    tweet.title,
+                    itemUrl,
+                    hashtags);
+    jsonObj["text"] = tweetText;
+    std::cout << "Tweet text: " << jsonObj["text"] << std::endl;
+
+    // Add media ids to JSON object
     std::ranges::for_each(tweet.downloads, [&jsonObj](const FileTransferInfo& info) {
         jsonObj["media"]["media_ids"].append(info.externalId);
     });
