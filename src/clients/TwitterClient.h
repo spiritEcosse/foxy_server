@@ -90,9 +90,14 @@ struct Tweet {
     std::vector<FileTransferInfo> downloads;
     std::string tweetId;
     std::string itemSlug;
+    std::vector<std::string> tags;
 
-    Tweet(std::string title, std::vector<FileTransferInfo> downloads, std::string itemSlug) :
-        title(std::move(title)), downloads(std::move(downloads)), itemSlug(std::move(itemSlug)) {}
+    Tweet(std::string title,
+          std::vector<FileTransferInfo> downloads,
+          std::string itemSlug,
+          std::vector<std::string> tags = {}) :
+        title(std::move(title)), downloads(std::move(downloads)), itemSlug(std::move(itemSlug)), tags(std::move(tags)) {
+    }
 };
 
 class RequestToken {

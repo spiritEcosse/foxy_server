@@ -19,13 +19,22 @@ void SocialMedia::handleRow(const auto &row) {
     auto itemId = row[1].template as<int>();
     auto slug = row[2].template as<std::string>();
     auto mediaList = row[3].template as<Json::Value>();
+    auto tagsJson = row[4].template as<Json::Value>();
+    // Convert tagsJson to std::vector<std::string>
+    std::vector<std::string> tags;
+    if(tagsJson.isArray()) {
+        tags.reserve(tagsJson.size());
+        for(const auto &tag: tagsJson) {
+            tags.push_back(tag.asString());
+        }
+    }
     std::vector<FileTransferInfo> mediaUrls = {};
     std::ranges::for_each(mediaList, [&mediaUrls](const Json::Value &media) {
         std::string mediaUrl = media.asString();
         std::string fileName = mediaUrl.substr(mediaUrl.find_last_of('/') + 1);
         mediaUrls.emplace_back(fmt::format("{}?twic=v1/cover=4000", mediaUrl), fileName);
     });
-    Tweet tweet(title, std::move(mediaUrls), std::move(slug));
+    Tweet tweet(title, std::move(mediaUrls), std::move(slug), std::move(tags));
     twitterClient.postTweet(tweet);
 
     if(!tweet.tweetId.empty()) {
@@ -84,7 +93,8 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
                                         " ELSE 2"
                                         " END ASC) AS media_list",
                                         MediaModel::Field::src.getFullFieldName(),
-                                        app_cloud_name)));
+                                        app_cloud_name)))
+        .functions(Function(fmt::format(" to_json(tags) AS tags_json")));
 
     executeSqlQuery(callbackPtr,
                     qs.buildSelect(),

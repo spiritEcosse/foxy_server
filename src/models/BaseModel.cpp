@@ -81,6 +81,16 @@ std::string BaseModel<T>::sqlInsertSingle(const T &item) {
                     std::stringstream ss;
                     ss << arg;
                     data = ss.str();
+                } else if constexpr(std::is_same_v<Type, std::vector<std::string>>) {
+                    // Handle vector of strings (e.g., for tags)
+                    data = "{";  // Start array representation in SQL
+                    for(const auto &str: arg) {
+                        data.append(addExtraQuotes(str)).append(",");
+                    }
+                    if(!arg.empty()) {
+                        data.pop_back();  // Remove trailing comma
+                    }
+                    data.append("}");  // End array representation in SQL
                 } else {
                     data = arg;
                 }
@@ -138,6 +148,15 @@ void BaseModel<T>::sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColum
                     std::stringstream ss;
                     ss << arg;
                     data = ss.str();
+                } else if constexpr(std::is_same_v<Type, std::vector<std::string>>) {
+                    data = "{";  // No single quotes here, we add them later when building SQL
+                    for(const auto &str: arg) {
+                        data.append(addExtraQuotes(str)).append(",");
+                    }
+                    if(!arg.empty()) {
+                        data.pop_back();  // Remove trailing comma
+                    }
+                    data.append("}");  // End array representation
                 } else {
                     data = arg;
                 }

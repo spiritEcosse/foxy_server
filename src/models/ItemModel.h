@@ -27,6 +27,7 @@ namespace api::v1 {
             static inline BaseField slug = BaseField("slug", tableName);
             static inline BaseField enabled = BaseField("enabled", tableName);
             static inline BaseField price = BaseField("price", tableName);
+            static inline BaseField tags = BaseField("tags", tableName);
 
             Field() : BaseModel<ItemModel>::Field() {
                 allFields[title.getFieldName()] = title;
@@ -36,9 +37,11 @@ namespace api::v1 {
                 allFields[slug.getFieldName()] = slug;
                 allFields[enabled.getFieldName()] = enabled;
                 allFields[price.getFieldName()] = price;
+                allFields[tags.getFieldName()] = tags;
             }
         };
 
+        // start fields
         std::string title;
         int shippingProfileId{};
         std::string description;
@@ -46,6 +49,9 @@ namespace api::v1 {
         bool enabled = false;
         dec::decimal<2> price;
         std::string metaDescription;
+        std::vector<std::string> tags = {};
+        // end fields
+
         ItemModel() = default;
         ItemModel(const ItemModel &) = delete;  // Copy constructor
         ItemModel &operator=(const ItemModel &) = delete;  // Copy assignment operator
@@ -60,6 +66,9 @@ namespace api::v1 {
             shippingProfileId = json[Field::shippingProfileId.getFieldName()].asInt();
             enabled = json[Field::enabled.getFieldName()].asBool();
             price = json[Field::price.getFieldName()].asDouble();
+            for(const auto &tag: json[Field::tags.getFieldName()]) {
+                tags.push_back(tag.asString());
+            }
 
             validateField(Field::title.getFieldName(), title, missingFields);
             validateField(Field::description.getFieldName(), description, missingFields);
@@ -71,9 +80,13 @@ namespace api::v1 {
 
         [[nodiscard]] QuerySet qsCount() override;
 
-        [[nodiscard]] std::vector<
-            std::pair<BaseField,
-                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
+        [[nodiscard]] std::vector<std::pair<BaseField,
+                                            std::variant<int,
+                                                         bool,
+                                                         std::string,
+                                                         std::vector<std::string>,
+                                                         std::chrono::system_clock::time_point,
+                                                         dec::decimal<2>>>>
         getObjectValues() const;
         [[nodiscard]] std::string
         sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params) override;
