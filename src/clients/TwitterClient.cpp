@@ -259,6 +259,43 @@ bool TwitterClient::addEasyHandleUpload(CurlMultiHandle multi_handle, FileTransf
     return true;
 }
 
+std::string createTruncatedTweetText(const std::string& title,
+                                     const std::string& itemUrl,
+                                     const std::string& hashtags,
+                                     size_t maxLength = 280) {
+    std::string tweetText =
+        fmt::format("{}. Explore #FaithFishArt: Discover and buy inspiring art. Follow for updates! {}. {}.",
+                    title,
+                    itemUrl,
+                    hashtags);
+
+    if(tweetText.length() <= maxLength) {
+        return tweetText;
+    }
+
+    std::vector<std::string> words;
+    std::istringstream iss(tweetText);
+    std::string word;
+    while(iss >> word) {
+        words.push_back(word);
+    }
+
+    while(!words.empty() && tweetText.length() > maxLength) {
+        words.pop_back();
+        tweetText = fmt::format("{}", fmt::join(words, " "));
+    }
+
+    // Ensure we don't cut off in the middle of a URL
+    size_t lastSpacePos = tweetText.rfind(' ', maxLength - 3);
+    if(lastSpacePos != std::string::npos) {
+        tweetText = tweetText.substr(0, lastSpacePos) + "...";
+    } else {
+        tweetText = tweetText.substr(0, maxLength - 3) + "...";
+    }
+
+    return tweetText;
+}
+
 std::string TwitterClient::createTweetJson(const Tweet& tweet) {
     std::string domain;
     getenv("FOXY_CLIENT", domain);
@@ -267,17 +304,13 @@ std::string TwitterClient::createTweetJson(const Tweet& tweet) {
 
     // Append tags as hashtags using fmt::join
     std::string hashtags = fmt::format("{}", fmt::join(tweet.tags, " #"));
-    hashtags = hashtags.empty() ? "" : " #" + hashtags;
+    hashtags = hashtags.empty() ? "" : "#" + hashtags;
 
     // Combine the base text with hashtags
     // Construct the base tweet text
-    std::string tweetText =
-        fmt::format("{}\nExplore #FaithFishArt: Discover and buy inspiring art. Follow for updates! {}. {}",
-                    tweet.title,
-                    itemUrl,
-                    hashtags);
+
+    std::string tweetText = createTruncatedTweetText(tweet.title, itemUrl, hashtags);
     jsonObj["text"] = tweetText;
-    std::cout << "Tweet text: " << jsonObj["text"] << std::endl;
 
     // Add media ids to JSON object
     std::ranges::for_each(tweet.downloads, [&jsonObj](const FileTransferInfo& info) {
