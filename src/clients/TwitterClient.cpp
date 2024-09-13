@@ -259,13 +259,11 @@ bool TwitterClient::addEasyHandleUpload(CurlMultiHandle multi_handle, FileTransf
     return true;
 }
 
-std::string createTruncatedTweetText(const std::string& title,
-                                     const std::string& itemUrl,
+std::string createTruncatedTweetText(const std::string& itemUrl,
                                      const std::string& hashtags,
                                      size_t maxLength = 280) {
     std::string tweetText =
-        fmt::format("{}. Explore #FaithFishArt: Discover and buy inspiring art. Follow for updates! {}. {}.",
-                    title,
+        fmt::format("Explore #FaithFishArt: Discover and buy inspiring art. Follow for updates! {}. {}.",
                     itemUrl,
                     hashtags);
 
@@ -286,8 +284,7 @@ std::string createTruncatedTweetText(const std::string& title,
     }
 
     // Ensure we don't cut off in the middle of a URL
-    size_t lastSpacePos = tweetText.rfind(' ', maxLength - 3);
-    if(lastSpacePos != std::string::npos) {
+    if(size_t lastSpacePos = tweetText.rfind(' ', maxLength - 3); lastSpacePos != std::string::npos) {
         tweetText = tweetText.substr(0, lastSpacePos) + "...";
     } else {
         tweetText = tweetText.substr(0, maxLength - 3) + "...";
@@ -309,7 +306,7 @@ std::string TwitterClient::createTweetJson(const Tweet& tweet) {
     // Combine the base text with hashtags
     // Construct the base tweet text
 
-    std::string tweetText = createTruncatedTweetText(tweet.title, itemUrl, hashtags);
+    std::string tweetText = createTruncatedTweetText(itemUrl, hashtags);
     jsonObj["text"] = tweetText;
 
     // Add media ids to JSON object
