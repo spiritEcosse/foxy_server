@@ -259,9 +259,7 @@ bool TwitterClient::addEasyHandleUpload(CurlMultiHandle multi_handle, FileTransf
     return true;
 }
 
-std::string createTruncatedTweetText(const std::string& itemUrl,
-                                     const std::string& hashtags,
-                                     size_t maxLength = 280) {
+std::string createTruncatedTweetText(const std::string& itemUrl, const std::string& hashtags, size_t maxLength = 280) {
     std::string tweetText =
         fmt::format("Explore #FaithFishArt: Discover and buy inspiring art. Follow for updates! {}. {}.",
                     itemUrl,
