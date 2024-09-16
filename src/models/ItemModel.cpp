@@ -59,7 +59,9 @@ std::string ItemModel::sqlSelectList(int page,
     getenv("APP_CLOUD_NAME", app_cloud_name);
 
     auto orderByItem = BaseModel<ItemModel>::Field::updatedAt;
-    auto mediaSort = MediaModel::Field::sort.getFullFieldName();
+    std::string media_image = "media_image";
+    std::string media_video = "media_video";
+    auto mediaSort = fmt::format(R"("{}".{})", media_image, MediaModel::Field::sort.getFieldName());
     auto itemID = BaseModel<ItemModel>::Field::id;
     auto mediaItemID = MediaModel::Field::itemId.getFullFieldName();
 
@@ -68,7 +70,8 @@ std::string ItemModel::sqlSelectList(int page,
 
     QuerySet qs(ItemModel::tableName, limit, "data");
     qs.distinct(orderByItem, itemID)
-        .join(MediaModel())
+        .join(MediaModel(), media_image, fmt::format(" AND {}.type = 'image'", media_image))
+        .left_join(MediaModel(), media_video, fmt::format(" AND {}.type = 'video'", media_video))
         .filter(ItemModel::Field::enabled.getFullFieldName(),
                 std::string("true"),
                 false,
@@ -76,14 +79,15 @@ std::string ItemModel::sqlSelectList(int page,
                 std::string("AND"))
         .filter(mediaSort,
                 std::string(fmt::format("(SELECT MIN({}) FROM {} WHERE {} = {})",
-                                        mediaSort,
+                                        MediaModel::Field::sort.getFullFieldName(),
                                         MediaModel::tableName,
                                         BaseModel<ItemModel>::Field::id.getFullFieldName(),
                                         mediaItemID)),
                 false)
         .order_by(std::make_pair(orderByItem, false), std::make_pair(itemID, false))
         .only(allSetFields())
-        .functions(Function(fmt::format("format_src(media.src, '{}') as src", app_cloud_name)))
+        .functions(Function(fmt::format("format_src({}.src, '{}') as src", media_image, app_cloud_name)))
+        .functions(Function(fmt::format("format_src({}.src, '{}') as src_video", media_video, app_cloud_name)))
         .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit));
     return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
 }
