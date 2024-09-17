@@ -61,6 +61,12 @@ int main() {
             throw std::invalid_argument("FOXY_CLIENT is not set");
         }
 
+        std::string app_bucket_host;
+        getenv("APP_BUCKET_HOST", app_bucket_host);
+        if(app_bucket_host.empty()) {
+            throw std::invalid_argument("APP_BUCKET_HOST is not set");
+        }
+
         if(std::string app_cloud_name; !getenv("APP_CLOUD_NAME", app_cloud_name)) {
             throw std::invalid_argument("APP_CLOUD_NAME is not set");
         }

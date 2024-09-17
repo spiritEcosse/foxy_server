@@ -13,9 +13,9 @@
 namespace api::v1 {
 
     struct JoinInfo {
-        std::vector<std::string> joinTable;
+        std::vector<std::pair<std::string, std::string>> joinTable;
         std::vector<std::string> joinCondition;
-        std::vector<std::string> leftJoinTable;
+        std::vector<std::pair<std::string, std::string>> leftJoinTable;
         std::vector<std::string> leftJoinCondition;
     };
 
@@ -267,13 +267,18 @@ namespace api::v1 {
             functions_impl(args...);
         }
 
-        static std::string generateJoinSQL(const std::vector<std::string> &tables,
+        static std::string generateJoinSQL(const std::vector<std::pair<std::string, std::string>> &tables,
                                            const std::vector<std::string> &conditions,
                                            const std::string &joinType) {
             std::string sql;
             for(size_t i = 0; i < tables.size(); ++i) {
-                if(!tables[i].empty()) {
-                    sql += fmt::format(R"( {} JOIN "{}" ON {})", joinType, tables[i], conditions[i]);
+                auto [tableName, alias] = tables[i];
+                if(!tableName.empty()) {
+                    sql += fmt::format(R"( {} JOIN "{}" {} ON {})",
+                                       joinType,
+                                       tableName,
+                                       alias.empty() ? "" : fmt::format(R"( AS "{}")", alias),
+                                       conditions[i]);
                 }
             }
             return sql;
@@ -346,6 +351,31 @@ namespace api::v1 {
                 query = addExtraQuotes(query);
             }
             return query;
+        }
+
+        template<class T, bool isLeftJoin>
+        void join_impl(const T &model, const std::string &alias, std::string &&addConditions) {
+            // Get the last element from joinTable
+            std::string lastJoinTable = joinInfo.joinTable.empty() ? tableName : joinInfo.joinTable.back().first;
+
+            auto mapFields = model.joinMap();
+            // Use lastJoinTable to find in model's joinMap
+            auto it = mapFields.find(lastJoinTable);
+            if(it == mapFields.end()) {
+                it = mapFields.find(tableName);
+            }
+            if(it != mapFields.end()) {
+                const auto &[joinFieldFirstTable, joinFieldSecondField] = it->second;
+                auto &joinTable = isLeftJoin ? joinInfo.leftJoinTable : joinInfo.joinTable;
+                auto &joinCondition = isLeftJoin ? joinInfo.leftJoinCondition : joinInfo.joinCondition;
+                joinTable.emplace_back(std::move(model.tableName), alias);
+                joinCondition.emplace_back(std::move(
+                    fmt::format(R"({}.{} = {} {})",
+                                alias.empty() ? joinFieldFirstTable.substr(0, joinFieldFirstTable.find('.')) : alias,
+                                joinFieldFirstTable.substr(joinFieldFirstTable.find('.') + 1),
+                                joinFieldSecondField,
+                                std::move(addConditions))));
+            }
         }
     };
 
@@ -423,50 +453,14 @@ namespace api::v1 {
         }
 
         template<class T>
-        QuerySet &join(const T &model) {
-            // Get the last element from joinTable
-            std::string lastJoinTable = joinInfo.joinTable.empty() ? tableName : joinInfo.joinTable.back();
-
-            auto mapFields = model.joinMap();
-            // Use lastJoinTable to find in model's joinMap
-            auto it = mapFields.find(lastJoinTable);
-            if(it == mapFields.end()) {
-                it = mapFields.find(tableName);
-            }
-            if(it != mapFields.end()) {
-                const auto &[joinField, joinModelField] = it->second;
-                joinInfo.joinTable.emplace_back(model.tableName);
-                joinInfo.joinCondition.emplace_back(std::move(fmt::format(R"({} = {})", joinField, joinModelField)));
-            } else {
-                // Table name not found in the map
-                // You can either return an empty string or throw an exception
-                // For this example, we do nothing
-            }
+        QuerySet &join(const T &model, const std::string &alias = "", std::string &&addConditions = "") {
+            join_impl<T, false>(model, alias, std::move(addConditions));
             return *this;
         }
 
         template<class T>
-        QuerySet &left_join(const T &model) {
-            // Get the last element from joinTable
-            std::string lastJoinTable = joinInfo.joinTable.empty() ? tableName : joinInfo.joinTable.back();
-
-            auto mapFields = model.joinMap();
-            // Use lastJoinTable to find in model's joinMap
-            // Use lastJoinTable to find in model's joinMap
-            auto it = mapFields.find(lastJoinTable);
-            if(it == mapFields.end()) {
-                it = mapFields.find(tableName);
-            }
-            if(it != mapFields.end()) {
-                const auto &[joinField, joinModelField] = it->second;
-                joinInfo.leftJoinTable.emplace_back(std::move(model.tableName));
-                joinInfo.leftJoinCondition.emplace_back(
-                    std::move(fmt::format(R"({} = {})", joinField, joinModelField)));
-            } else {
-                // Table name not found in the map
-                // You can either return an empty string or throw an exception
-                // For this example, we do nothing
-            }
+        QuerySet &left_join(const T &model, const std::string &alias = "", std::string &&addConditions = "") {
+            join_impl<T, true>(model, alias, std::move(addConditions));
             return *this;
         }
 
