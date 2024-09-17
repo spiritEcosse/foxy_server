@@ -85,6 +85,7 @@ jobs:
                 run: >
                     docker run --rm --privileged
                     -e APP_CLOUD_NAME="${{ vars.APP_CLOUD_NAME }}"
+                    -e APP_BUCKET_HOST="${{ vars.APP_BUCKET_HOST }}"
                     -e CMAKE_BUILD_TYPE="${{ vars.CMAKE_BUILD_TYPE }}"
                     -e FOXY_ADMIN="${{ vars.FOXY_ADMIN }}"
                     -e FOXY_CLIENT="${{ vars.FOXY_CLIENT }}"
