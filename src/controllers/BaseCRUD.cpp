@@ -6,6 +6,7 @@
 #include "Media.h"
 #include "Order.h"
 #include "Basket.h"
+#include "Tag.h"
 #include "Review.h"
 #include "Address.h"
 #include "BasketItem.h"
@@ -16,6 +17,7 @@
 #include "Auth.h"
 #include "RequiredFieldsException.h"
 #include "FinancialDetails.h"
+#include "TagModel.h"
 #include "sentryHelper.h"
 #include <drogon/utils/Utilities.h>
 
@@ -389,3 +391,4 @@ template class api::v1::BaseCRUD<ReviewModel, Review>;
 template class api::v1::BaseCRUD<BasketModel, Basket>;
 template class api::v1::BaseCRUD<FinancialDetailsModel, FinancialDetails>;
 template class api::v1::BaseCRUD<SocialMediaModel, SocialMedia>;
+template class api::v1::BaseCRUD<TagModel, Tag>;

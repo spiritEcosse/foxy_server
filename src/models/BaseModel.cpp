@@ -25,6 +25,7 @@
 #include "decimal.h"
 #include "FinancialDetailsModel.h"
 #include "SocialMediaModel.h"
+#include "TagModel.h"
 
 using namespace api::v1;
 
@@ -315,3 +316,4 @@ template class api::v1::BaseModel<AddressModel>;
 template class api::v1::BaseModel<ReviewModel>;
 template class api::v1::BaseModel<FinancialDetailsModel>;
 template class api::v1::BaseModel<SocialMediaModel>;
+template class api::v1::BaseModel<TagModel>;

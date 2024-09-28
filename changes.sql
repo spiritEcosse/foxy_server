@@ -3,7 +3,7 @@ BEGIN;
 ALTER TABLE item
     DROP COLUMN IF EXISTS "tags";
 
-CREATE TABLE IF NOT EXISTS tags
+CREATE TABLE IF NOT EXISTS tag
 (
     id           SERIAL PRIMARY KEY,
     title        VARCHAR(255) NOT NULL,
@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS tags
     item_id      INT          NOT NULL,
     created_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
     updated_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
+    UNIQUE (title, item_id),
     FOREIGN KEY (item_id) REFERENCES item (id) ON DELETE CASCADE
 );
 

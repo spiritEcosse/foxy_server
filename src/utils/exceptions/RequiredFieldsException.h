@@ -6,7 +6,6 @@
 #define REQUIREDFIELDSEXCEPTION_H
 
 #include <exception>
-#include <nlohmann/json.hpp>
 #include <utility>
 
 class RequiredFieldsException : public std::exception {

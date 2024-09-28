@@ -42,7 +42,6 @@ ItemModel::getObjectValues() const {
         {Field::shippingProfileId, shippingProfileId},
         {Field::enabled, enabled},
         {Field::price, price},
-        {Field::tags, tags},
     };
 }
 
