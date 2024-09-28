@@ -86,6 +86,19 @@ $$
             FOREIGN KEY (shipping_profile_id) REFERENCES shipping_profile (id) ON DELETE CASCADE
         );
 
+        CREATE TYPE social_media_type AS ENUM ('Facebook', 'Twitter', 'Instagram', 'Pinterest', 'Quora', 'YouTube');
+
+        CREATE TABLE IF NOT EXISTS tags
+        (
+            id           SERIAL PRIMARY KEY,
+            title        VARCHAR(255) NOT NULL,
+            social_media social_media_type[],
+            item_id      INT          NOT NULL,
+            created_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
+            updated_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
+            FOREIGN KEY (item_id) REFERENCES item (id) ON DELETE CASCADE
+        );
+
         --         INSERT INTO country (title, code)
 --         VALUES ('United States of America', 'US'),
 --                ('Spain', 'ES');
@@ -229,8 +242,6 @@ $$
             PRIMARY KEY (start_range, end_range),
             FOREIGN KEY (country_id) REFERENCES country (id) ON DELETE CASCADE
         );
-
-        CREATE TYPE social_media_type AS ENUM ('Facebook', 'Twitter', 'Instagram', 'Pinterest', 'Quora', 'YouTube');
 
         CREATE TABLE IF NOT EXISTS social_media
         (
