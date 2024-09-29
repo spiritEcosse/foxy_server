@@ -6,7 +6,9 @@
 
 using namespace api::v1;
 
-std::vector<std::pair<BaseField, std::variant<int, bool, std::vector<std::string>, std::string, std::chrono::system_clock::time_point>>>
+std::vector<
+    std::pair<BaseField,
+              std::variant<int, bool, std::vector<std::string>, std::string, std::chrono::system_clock::time_point>>>
 TagModel::getObjectValues() const {
     return {
         {Field::title, title},
