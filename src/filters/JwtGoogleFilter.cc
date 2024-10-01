@@ -7,7 +7,6 @@ using namespace api::utils::jwt;
 
 void JwtGoogleFilter::doFilter(const HttpRequestPtr &request, FilterCallback &&fcb, FilterChainCallback &&fccb) {
     // Skip the verification on method Options
-    return fccb();
     if(request->getMethod() == HttpMethod::Options)
         return fccb();
 

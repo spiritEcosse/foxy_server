@@ -15,4 +15,15 @@ CREATE TABLE IF NOT EXISTS tag
     FOREIGN KEY (item_id) REFERENCES item (id) ON DELETE CASCADE
 );
 
+DROP TRIGGER IF EXISTS set_timestamp ON "tag";
+CREATE TRIGGER set_timestamp
+    BEFORE UPDATE
+    ON "tag"
+    FOR EACH ROW
+EXECUTE PROCEDURE trigger_set_timestamp();
+
+ALTER TYPE social_media_type ADD VALUE 'Snapchat';
+ALTER TYPE social_media_type ADD VALUE 'TikTok';
+ALTER TYPE social_media_type ADD VALUE 'LinkedIn';
+
 COMMIT;

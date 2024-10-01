@@ -53,6 +53,7 @@ namespace api::v1 {
         [[nodiscard]] std::vector<
             std::pair<BaseField, std::variant<int, bool, std::vector<std::string>, std::string, std::chrono::system_clock::time_point>>>
         getObjectValues() const;
+        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
     };
 }
 

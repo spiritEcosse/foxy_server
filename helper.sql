@@ -86,7 +86,8 @@ $$
             FOREIGN KEY (shipping_profile_id) REFERENCES shipping_profile (id) ON DELETE CASCADE
         );
 
-        CREATE TYPE social_media_type AS ENUM ('Facebook', 'Twitter', 'Instagram', 'Pinterest', 'Quora', 'YouTube');
+        CREATE TYPE social_media_type AS ENUM (
+            'Facebook', 'Twitter', 'Instagram', 'Pinterest', 'Quora', 'YouTube', 'Pinterest', 'LinkedIn', 'TikTok', 'Snapchat');
 
         CREATE TABLE IF NOT EXISTS tag
         (
@@ -373,6 +374,13 @@ $$
         CREATE TRIGGER set_timestamp
             BEFORE UPDATE
             ON "financial_details"
+            FOR EACH ROW
+        EXECUTE PROCEDURE trigger_set_timestamp();
+
+        DROP TRIGGER IF EXISTS set_timestamp ON "tag";
+        CREATE TRIGGER set_timestamp
+            BEFORE UPDATE
+            ON "tag"
             FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
 
