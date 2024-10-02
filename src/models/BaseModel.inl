@@ -1,49 +1,12 @@
-//
-// Created by ihor on 14.01.2024.
-//
+#pragma once
 
-#include <ctime>
-#include <sstream>
-#include <fmt/core.h>
-#include <fmt/chrono.h>
-#include "BaseModel.h"
-#include "ReviewModel.h"
-#include "ItemModel.h"
-#include "PageModel.h"
-#include "UserModel.h"
-#include "MediaModel.h"
-#include "AddressModel.h"
-#include "BasketModel.h"
-#include "BasketItemModel.h"
-#include "ShippingProfileModel.h"
-#include "ShippingRateModel.h"
-#include "OrderModel.h"
-#include "CountriesIpsModel.h"
-#include "CountryModel.h"
-#include "QuerySet.h"
-#include "StringUtils.h"
-#include "decimal.h"
-#include "FinancialDetailsModel.h"
-#include "SocialMediaModel.h"
-#include "TagModel.h"
+namespace api::v1 {
 
-using namespace api::v1;
-
-std::string timePointToString(std::chrono::system_clock::time_point tp) {
-    auto time_t = std::chrono::system_clock::to_time_t(tp);
-
-    struct tm local_time {};
-
-    localtime_r(&time_t, &local_time);
-
-    std::string time_string = fmt::format("{:%Y-%m-%d %H:%M:%S}", local_time);
-
-    auto duration = tp.time_since_epoch();
-    auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration);
-    duration -= seconds;
-    auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
-
-    return fmt::format("{}.{}", time_string, milliseconds.count());
+template<class T>
+BaseModel<T>::BaseModel(const Json::Value &json) {
+    if(json.isMember(Field::id.getFieldName())) {
+        id = json[Field::id.getFieldName()].asInt();
+    }
 }
 
 template<class T>
@@ -83,7 +46,6 @@ std::string BaseModel<T>::sqlInsertSingle(const T &item) {
                     ss << arg;
                     data = ss.str();
                 } else if constexpr(std::is_same_v<Type, std::vector<std::string>>) {
-                    // Handle vector of strings (e.g., for tags)
                     data = "{";  // Start array representation in SQL
                     for(const auto &str: arg) {
                         data.append(addExtraQuotes(str)).append(",");
@@ -259,7 +221,7 @@ QuerySet BaseModel<T>::qsCount() {
 template<class T>
 QuerySet BaseModel<T>::qsPage(int page, int limit) {
     QuerySet qsCount = T().qsCount();
-    QuerySet qsPage(ItemModel::tableName, "_page", false, true);
+    QuerySet qsPage(T::tableName, "_page", false, true);
     return std::move(qsPage.functions(
         Function(fmt::format("GetValidPage({}, {}, (SELECT * FROM {}))", page, limit, qsCount.alias()))));
 }
@@ -284,11 +246,6 @@ std::string BaseModel<T>::sqlSelectOne(const std::string &field,
 }
 
 template<class T>
-std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseModel<T>::joinMap() const {
-    return {};
-}
-
-template<class T>
 void BaseModel<T>::applyFilters(QuerySet &qs,
                                 QuerySet &qsCount,
                                 const std::map<std::string, std::string, std::less<>> &params) const {
@@ -301,19 +258,5 @@ void BaseModel<T>::applyFilters(QuerySet &qs,
     }
 }
 
-template class api::v1::BaseModel<PageModel>;
-template class api::v1::BaseModel<ItemModel>;
-template class api::v1::BaseModel<UserModel>;
-template class api::v1::BaseModel<MediaModel>;
-template class api::v1::BaseModel<ShippingProfileModel>;
-template class api::v1::BaseModel<ShippingRateModel>;
-template class api::v1::BaseModel<CountryModel>;
-template class api::v1::BaseModel<CountriesIpsModel>;
-template class api::v1::BaseModel<OrderModel>;
-template class api::v1::BaseModel<BasketItemModel>;
-template class api::v1::BaseModel<BasketModel>;
-template class api::v1::BaseModel<AddressModel>;
-template class api::v1::BaseModel<ReviewModel>;
-template class api::v1::BaseModel<FinancialDetailsModel>;
-template class api::v1::BaseModel<SocialMediaModel>;
-template class api::v1::BaseModel<TagModel>;
+
+} // namespace api::v1
