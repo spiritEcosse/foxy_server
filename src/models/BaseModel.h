@@ -47,8 +47,11 @@ namespace api::v1 {
         [[nodiscard]] virtual QuerySet qsPage(int page, int limit);
         virtual void sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColumns);
         [[nodiscard]] virtual std::string sqlUpdate(T &&item);
-        [[nodiscard]] virtual std::string sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params);
-        [[nodiscard]] virtual std::string sqlSelectOne(const std::string &field, const std::string &value, const std::map<std::string, std::string, std::less<>> &params);
+        [[nodiscard]] virtual std::string
+        sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params);
+        [[nodiscard]] virtual std::string sqlSelectOne(const std::string &field,
+                                                       const std::string &value,
+                                                       const std::map<std::string, std::string, std::less<>> &params);
         [[nodiscard]] virtual std::string fieldsToString();
         [[nodiscard]] virtual std::string fieldsJsonObject();
         [[nodiscard]] virtual std::string sqlDelete(int id);
@@ -56,7 +59,9 @@ namespace api::v1 {
 
         [[nodiscard]] bool fieldExists(const std::string &fieldName) const;
         [[nodiscard]] std::vector<BaseField> allSetFields() const;
-        virtual void applyFilters(QuerySet &qs, QuerySet &qsCount, const std::map<std::string, std::string, std::less<>> &params) const;
+        virtual void applyFilters(QuerySet &qs,
+                                  QuerySet &qsCount,
+                                  const std::map<std::string, std::string, std::less<>> &params) const;
     };
 }
 
