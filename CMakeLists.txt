@@ -62,8 +62,6 @@ include_directories(${CMAKE_SOURCE_DIR}/src/auth)
 include_directories(${CMAKE_SOURCE_DIR}/src/filters)
 include_directories(${CMAKE_SOURCE_DIR}/src/sentry_catcher)
 
-set(CMAKE_SYSTEM_PROCESSOR arm) # why this?
-
 #Start adding libuuid
 CPMAddPackage(
         NAME libuuid
@@ -137,23 +135,11 @@ set(SENTRY_BACKEND crashpad)
 
 CPMAddPackage(
         NAME sentry
-        VERSION 0.7.0
+        VERSION 0.7.10
         GITHUB_REPOSITORY getsentry/sentry-native
-        GIT_TAG 0.7.0
+        GIT_TAG 0.7.10
         OPTIONS "SENTRY_BACKEND=${SENTRY_BACKEND}"
 )
-execute_process(COMMAND bash -c "sed -n '191p' ${PROJECT_BINARY_DIR}/_deps/sentry-src/external/crashpad/snapshot/CMakeLists.txt | tr -d '\n'"
-        OUTPUT_VARIABLE LINE_191_CONTENT)
-
-if ("${LINE_191_CONTENT}" STREQUAL "")
-    execute_process(COMMAND bash -c "sed -i ${EMPTY_STRING} '191i\\
-        target_sources (crashpad_snapshot PRIVATE x86/cpuid_reader.cc x86/cpuid_reader.h) ' ${PROJECT_BINARY_DIR}/_deps/sentry-src/external/crashpad/snapshot/CMakeLists.txt"
-            RESULT_VARIABLE FIX_MATCHING_ARCHITECTURE_SENTRY)
-    message(STATUS "FIX_MATCHING_ARCHITECTURE_SENTRY : ${FIX_MATCHING_ARCHITECTURE_SENTRY}")
-    if (NOT FIX_MATCHING_ARCHITECTURE_SENTRY EQUAL "0")
-        message(FATAL_ERROR "sed, changing architecture matching in sentry failed with : ${FIX_MATCHING_ARCHITECTURE_SENTRY}, please check")
-    endif ()
-endif ()
 target_link_libraries(${PROJECT_NAME} PRIVATE sentry)
 # end sentry
 
