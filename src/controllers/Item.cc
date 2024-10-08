@@ -62,8 +62,8 @@ void Item::getOne(const drogon::HttpRequestPtr &req,
 }
 
 void Item::getOneAdmin(const drogon::HttpRequestPtr &req,
-                  std::function<void(const drogon::HttpResponsePtr &)> &&callback,
-                  const std::string &stringId) const {
+                       std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                       const std::string &stringId) const {
     bool isInt = canBeInt(stringId);
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
 
@@ -76,7 +76,8 @@ void Item::getOneAdmin(const drogon::HttpRequestPtr &req,
     getenv("APP_CLOUD_NAME", app_cloud_name);
 
     QuerySet qsItem(ItemModel::tableName, "_item", true, true);
-    qsItem.filter(BaseModel<ItemModel>::Field::id.getFullFieldName(), stringId).jsonFields(addExtraQuotes(ItemModel().fieldsJsonObject()));
+    qsItem.filter(BaseModel<ItemModel>::Field::id.getFullFieldName(), stringId)
+        .jsonFields(addExtraQuotes(ItemModel().fieldsJsonObject()));
 
     QuerySet qsMedia(MediaModel::tableName, 0, std::string("_media"));
     QuerySet qsTag(TagModel::tableName, 0, std::string("_tag"));

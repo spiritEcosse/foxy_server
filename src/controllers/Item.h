@@ -25,7 +25,7 @@ namespace api::v1 {
                     std::function<void(const drogon::HttpResponsePtr &)> &&callback,
                     const std::string &) const override;
         void getOneAdmin(const drogon::HttpRequestPtr &req,
-                    std::function<void(const drogon::HttpResponsePtr &)> &&callback,
-                    const std::string &) const;
+                         std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                         const std::string &) const;
     };
 }
