@@ -2,6 +2,7 @@
 #include "Request.h"
 #include "QuerySet.h"
 #include "MediaModel.h"
+#include "TagModel.h"
 #include "env.h"
 #include <fmt/core.h>
 
@@ -58,4 +59,37 @@ void Item::getOne(const drogon::HttpRequestPtr &req,
     std::string query = ItemModel().sqlSelectOne(filterKey, stringId, {});
 
     executeSqlQuery(callbackPtr, query);
+}
+
+void Item::getOneAdmin(const drogon::HttpRequestPtr &req,
+                       std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                       const std::string &stringId) const {
+    bool isInt = canBeInt(stringId);
+    auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
+
+    if(auto resp = check404(req, !isInt)) {
+        (*callbackPtr)(resp);
+        return;
+    }
+
+    std::string app_cloud_name;
+    getenv("APP_CLOUD_NAME", app_cloud_name);
+
+    QuerySet qsItem(ItemModel::tableName, "_item", true, true);
+    qsItem.filter(BaseModel<ItemModel>::Field::id.getFullFieldName(), stringId)
+        .jsonFields(addExtraQuotes(ItemModel().fieldsJsonObject()));
+
+    QuerySet qsMedia(MediaModel::tableName, 0, std::string("_media"));
+    QuerySet qsTag(TagModel::tableName, 0, std::string("_tag"));
+    qsMedia.join(ItemModel())
+        .filter(BaseModel<ItemModel>::Field::id.getFullFieldName(), stringId)
+        .order_by(std::make_pair(MediaModel::Field::sort, true))
+        .only(MediaModel().allSetFields())
+        .functions(Function(fmt::format("format_src(media.src, '{}') as src", app_cloud_name)));
+    qsTag.join(ItemModel())
+        .filter(TagModel::Field::itemId.getFullFieldName(), std::string(stringId))
+        .order_by(std::make_pair(BaseModel<TagModel>::Field::updatedAt, false))
+        .only(TagModel().allSetFields());
+
+    executeSqlQuery(callbackPtr, QuerySet::buildQuery(std::move(qsMedia), std::move(qsItem), std::move(qsTag)));
 }
