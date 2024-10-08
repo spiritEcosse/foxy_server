@@ -74,6 +74,8 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
                           std::function<void(const drogon::HttpResponsePtr &)> &&callback) {
     std::string app_cloud_name;
     getenv("APP_CLOUD_NAME", app_cloud_name);
+    std::string app_bucket_host;
+    getenv("APP_BUCKET_HOST", app_bucket_host);
     int limit = getInt(req->getParameter("limit"), 1);
 
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
@@ -83,17 +85,23 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
         .join(MediaModel())
         .left_join(SocialMediaModel())
         .group_by(BaseModel<ItemModel>::Field::id)
-        .filter(BaseModel<ItemModel>::Field::id.getFullFieldName(), std::string("93"))
         .filter(BaseModel<SocialMediaModel>::Field::id.getFullFieldName(),
                 std::string("NULL"),
                 false,
                 std::string("IS"))
-        .functions(Function(fmt::format(", json_agg(format_src({0}, '{1}') ORDER BY CASE "
-                                        " WHEN {0} LIKE '%.mp4' THEN 1"
-                                        " ELSE 2"
-                                        " END ASC) AS media_list",
+        .functions(Function(fmt::format(", json_agg("
+                                        "CASE "
+                                        "WHEN {0}::text LIKE 'video' THEN format_src({1}, '{3}') "
+                                        "ELSE format_src({1}, '{2}') "
+                                        "END "
+                                        "ORDER BY CASE "
+                                        "WHEN {0}::text LIKE 'video' THEN 1 "
+                                        "ELSE 2 "
+                                        "END ASC) AS media_list",
+                                        MediaModel::Field::type.getFullFieldName(),
                                         MediaModel::Field::src.getFullFieldName(),
-                                        app_cloud_name)))
+                                        app_cloud_name,
+                                        app_bucket_host)))
         .functions(Function(fmt::format(" to_json(tags) AS tags_json")));
 
     executeSqlQuery(callbackPtr,
