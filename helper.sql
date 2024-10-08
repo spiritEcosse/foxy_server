@@ -86,6 +86,21 @@ $$
             FOREIGN KEY (shipping_profile_id) REFERENCES shipping_profile (id) ON DELETE CASCADE
         );
 
+        CREATE TYPE social_media_type AS ENUM (
+            'Facebook', 'Twitter', 'Instagram', 'Pinterest', 'Quora', 'YouTube', 'Pinterest', 'LinkedIn', 'TikTok', 'Snapchat');
+
+        CREATE TABLE IF NOT EXISTS tag
+        (
+            id           SERIAL PRIMARY KEY,
+            title        VARCHAR(255) NOT NULL,
+            social_media social_media_type[],
+            item_id      INT          NOT NULL,
+            created_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
+            updated_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
+            UNIQUE (title, item_id),
+            FOREIGN KEY (item_id) REFERENCES item (id) ON DELETE CASCADE
+        );
+
         --         INSERT INTO country (title, code)
 --         VALUES ('United States of America', 'US'),
 --                ('Spain', 'ES');
@@ -230,8 +245,6 @@ $$
             FOREIGN KEY (country_id) REFERENCES country (id) ON DELETE CASCADE
         );
 
-        CREATE TYPE social_media_type AS ENUM ('Facebook', 'Twitter', 'Instagram', 'Pinterest', 'Quora', 'YouTube');
-
         CREATE TABLE IF NOT EXISTS social_media
         (
             id          SERIAL PRIMARY KEY,
@@ -361,6 +374,13 @@ $$
         CREATE TRIGGER set_timestamp
             BEFORE UPDATE
             ON "financial_details"
+            FOR EACH ROW
+        EXECUTE PROCEDURE trigger_set_timestamp();
+
+        DROP TRIGGER IF EXISTS set_timestamp ON "tag";
+        CREATE TRIGGER set_timestamp
+            BEFORE UPDATE
+            ON "tag"
             FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
 
