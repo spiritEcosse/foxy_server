@@ -104,7 +104,6 @@ std::string ItemModel::sqlSelectOne(const std::string &field,
     qsItem.filter(field, std::string(value)).jsonFields(addExtraQuotes(fieldsJsonObject()));
 
     QuerySet qsMedia(MediaModel::tableName, 0, std::string("_media"));
-    QuerySet qsTag(TagModel::tableName, 0, std::string("_tag"));
     std::string itemField = field;
     if(field == BaseModel::Field::id.getFullFieldName())
         itemField = MediaModel::Field::itemId.getFullFieldName();
@@ -113,9 +112,5 @@ std::string ItemModel::sqlSelectOne(const std::string &field,
         .order_by(std::make_pair(MediaModel::Field::sort, true))
         .only(MediaModel().allSetFields())
         .functions(Function(fmt::format("format_src(media.src, '{}') as src", app_cloud_name)));
-    qsTag.join(ItemModel())
-        .filter(TagModel::Field::itemId.getFullFieldName(), std::string(value))
-        .order_by(std::make_pair(BaseModel<TagModel>::Field::updatedAt, false))
-        .only(TagModel().allSetFields());
-    return QuerySet::buildQuery(std::move(qsMedia), std::move(qsItem), std::move(qsTag));
+    return QuerySet::buildQuery(std::move(qsMedia), std::move(qsItem));
 }
