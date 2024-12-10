@@ -5,7 +5,7 @@
 #include "ShippingProfileModel.h"
 
 namespace api::v1 {
-    class ShippingProfile : public drogon::HttpController<ShippingProfile>,
+    class ShippingProfile final : public drogon::HttpController<ShippingProfile>,
                             public BaseCRUD<ShippingProfileModel, ShippingProfile> {
     public:
         METHOD_LIST_BEGIN

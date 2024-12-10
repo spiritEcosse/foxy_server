@@ -1,27 +1,28 @@
-#ifndef ADDRESSMODEL_H
-#define ADDRESSMODEL_H
+#pragma once
 
 #include <string>
 #include "BaseModel.h"
 
 namespace api::v1 {
-    class AddressModel : public BaseModel<AddressModel> {
+    class AddressModel final : public BaseModel<AddressModel> {
     public:
-        static inline const std::string tableName = "address";
+        using BaseModel::BaseModel;
 
-        struct Field : public BaseModel::Field {
-            static inline BaseField address = BaseField("address", tableName);
-            static inline BaseField city = BaseField("city", tableName);
-            static inline BaseField zipcode = BaseField("zipcode", tableName);
-            static inline BaseField userId = BaseField("user_id", tableName);
-            static inline BaseField countryId = BaseField("country_id", tableName);
+        static const inline std::string tableName = "address";
+
+        struct Field : BaseModel::Field {
+            static inline auto address = BaseField("address", tableName);
+            static inline auto city = BaseField("city", tableName);
+            static inline auto zipcode = BaseField("zipcode", tableName);
+            static inline auto userId = BaseField("user_id", tableName);
+            static inline auto countryId = BaseField("country_id", tableName);
 
             Field() : BaseModel::Field() {
-                allFields[address.getFieldName()] = address;
-                allFields[city.getFieldName()] = city;
-                allFields[zipcode.getFieldName()] = zipcode;
-                allFields[userId.getFieldName()] = userId;
-                allFields[countryId.getFieldName()] = countryId;
+                allFields.try_emplace(address.getFieldName(), std::cref(address));
+                allFields.try_emplace(city.getFieldName(), std::cref(city));
+                allFields.try_emplace(zipcode.getFieldName(), std::cref(zipcode));
+                allFields.try_emplace(userId.getFieldName(), std::cref(userId));
+                allFields.try_emplace(countryId.getFieldName(), std::cref(countryId));
             }
         };
 
@@ -30,8 +31,6 @@ namespace api::v1 {
         std::string zipcode;
         int countryId{};
         int userId{};
-
-        AddressModel() = default;
 
         explicit AddressModel(const Json::Value &json) : BaseModel(json) {
             address = json[Field::address.getFieldName()].asString();
@@ -47,14 +46,10 @@ namespace api::v1 {
             validateField(Field::countryId.getFieldName(), countryId, missingFields);
         }
 
-        [[nodiscard]] std::vector<
-            std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        getObjectValues() const;
-        [[nodiscard]] std::string
-        sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params) override;
+        [[nodiscard]] SetMapFieldTypes getObjectValues() const;
+        [[nodiscard]] static std::string
+        sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params);
         [[nodiscard]] std::string fieldsJsonObject() override;
         [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
     };
 }
-
-#endif  //ADDRESSMODEL_H

@@ -1,37 +1,34 @@
-//
-// Created by ihor on 20.01.2024.
-//
-
-#ifndef MEDIAMODEL_H
-#define MEDIAMODEL_H
+#pragma once
 
 #include "BaseModel.h"
 #include "json/json.h"
 
 namespace api::v1 {
-    class MediaModel : public BaseModel<MediaModel> {
+    struct MediaType final {
+        static inline std::string VIDEO = "video";
+        static inline std::string IMAGE = "image";
+    };
+
+    class MediaModel final : public BaseModel<MediaModel> {
     public:
-        static inline const std::string tableName = "media";
+        using BaseModel::BaseModel;
+
+        static const inline std::string tableName = "media";
 
         struct Field : public BaseModel::Field {
-            static inline BaseField src = BaseField("src", tableName);
-            static inline BaseField itemId = BaseField("item_id", tableName);
-            static inline BaseField sort = BaseField("sort", tableName);
-            static inline BaseField type = BaseField("type", tableName);
+            static inline auto src = BaseField("src", tableName);
+            static inline auto itemId = BaseField("item_id", tableName);
+            static inline auto sort = BaseField("sort", tableName);
+            static inline auto type = BaseField("type", tableName);
 
-            Field() : BaseModel<MediaModel>::Field() {
-                allFields[src.getFieldName()] = src;
-                allFields[itemId.getFieldName()] = itemId;
-                allFields[sort.getFieldName()] = sort;
-                allFields[type.getFieldName()] = type;
+            Field() : BaseModel::Field() {
+                allFields.try_emplace(src.getFieldName(), std::cref(src));
+                allFields.try_emplace(itemId.getFieldName(), std::cref(itemId));
+                allFields.try_emplace(sort.getFieldName(), std::cref(sort));
+                allFields.try_emplace(type.getFieldName(), std::cref(type));
             }
         };
 
-        MediaModel() = default;
-        MediaModel(const MediaModel &) = delete;  // Copy constructor
-        MediaModel &operator=(const MediaModel &) = delete;  // Copy assignment operator
-        MediaModel(MediaModel &&) noexcept = default;  // Move constructor
-        MediaModel &operator=(MediaModel &&) noexcept = default;  // Move assignment operator
         std::string src;
         std::string type;
         int itemId = 0;
@@ -50,11 +47,7 @@ namespace api::v1 {
         }
 
         [[nodiscard]] std::string fieldsJsonObject() override;
-        [[nodiscard]] std::vector<
-            std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        getObjectValues() const;
+        [[nodiscard]] SetMapFieldTypes getObjectValues() const;
         [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
     };
 }
-
-#endif  //MEDIAMODEL_H

@@ -1,14 +1,9 @@
-//
-// Created by ihor on 22.07.2024.
-//
-
-#ifndef LOCALRUN_H
-#define LOCALRUN_H
+#pragma once
 
 #include <drogon/drogon.h>
 
 namespace api::v1::filters {
-    class LocalRun : public drogon::HttpFilter<LocalRun> {
+    class LocalRun final : public drogon::HttpFilter<LocalRun> {
     public:
         LocalRun() = default;
 
@@ -17,4 +12,3 @@ namespace api::v1::filters {
                       drogon::FilterChainCallback &&fccb) override;
     };
 }
-#endif  //LOCALRUN_H

@@ -1,9 +1,4 @@
-//
-// Created by ihor on 14.01.2024.
-//
-
-#ifndef PAGEMODEL_H
-#define PAGEMODEL_H
+#pragma once
 
 #include <string>
 #include <chrono>
@@ -11,25 +6,27 @@
 #include "BaseModel.h"
 
 namespace api::v1 {
-    class PageModel : public BaseModel<PageModel> {
+    class PageModel final : public BaseModel<PageModel> {
     public:
-        static inline const std::string tableName = "page";
+        using BaseModel::BaseModel;
 
-        struct Field : public BaseModel::Field {
-            static inline BaseField title = BaseField("title", tableName);
-            static inline BaseField description = BaseField("description", tableName);
-            static inline BaseField metaDescription = BaseField("meta_description", tableName);
-            static inline BaseField slug = BaseField("slug", tableName);
-            static inline BaseField canonicalUrl = BaseField("canonical_url", tableName);
-            static inline BaseField enabled = BaseField("enabled", tableName);
+        static const inline std::string tableName = "page";
 
-            Field() : BaseModel<PageModel>::Field() {
-                allFields[title.getFieldName()] = title;
-                allFields[description.getFieldName()] = description;
-                allFields[metaDescription.getFieldName()] = metaDescription;
-                allFields[slug.getFieldName()] = slug;
-                allFields[canonicalUrl.getFieldName()] = canonicalUrl;
-                allFields[enabled.getFieldName()] = enabled;
+        struct Field : BaseModel::Field {
+            static inline auto title = BaseField("title", tableName);
+            static inline auto description = BaseField("description", tableName);
+            static inline auto metaDescription = BaseField("meta_description", tableName);
+            static inline auto slug = BaseField("slug", tableName);
+            static inline auto canonicalUrl = BaseField("canonical_url", tableName);
+            static inline auto enabled = BaseField("enabled", tableName);
+
+            Field() : BaseModel::Field() {
+                allFields.try_emplace(title.getFieldName(), std::cref(title));
+                allFields.try_emplace(description.getFieldName(), std::cref(description));
+                allFields.try_emplace(metaDescription.getFieldName(), std::cref(metaDescription));
+                allFields.try_emplace(slug.getFieldName(), std::cref(slug));
+                allFields.try_emplace(canonicalUrl.getFieldName(), std::cref(canonicalUrl));
+                allFields.try_emplace(enabled.getFieldName(), std::cref(enabled));
             }
         };
 
@@ -39,11 +36,6 @@ namespace api::v1 {
         std::string metaDescription;
         std::string canonicalUrl;
         bool enabled = false;
-        PageModel() = default;
-        PageModel(const PageModel &) = delete;  // Copy constructor
-        PageModel &operator=(const PageModel &) = delete;  // Copy assignment operator
-        PageModel(PageModel &&) noexcept = default;  // Move constructor
-        PageModel &operator=(PageModel &&) noexcept = default;  // Move assignment operator
 
         explicit PageModel(const Json::Value &json) : BaseModel(json) {
             title = json[Field::title.getFieldName()].asString();
@@ -60,10 +52,6 @@ namespace api::v1 {
             validateField(Field::slug.getFieldName(), slug, missingFields);
         }
 
-        [[nodiscard]] std::vector<
-            std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        getObjectValues() const;
+        [[nodiscard]] SetMapFieldTypes getObjectValues() const;
     };
 }
-
-#endif  //PAGEMODEL_H

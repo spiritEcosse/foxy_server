@@ -1,5 +1,4 @@
-#ifndef BASEMODEL_H
-#define BASEMODEL_H
+#pragma once
 
 #include <unordered_map>
 #include "BaseModelImpl.h"
@@ -9,25 +8,18 @@ namespace api::v1 {
     template<class T>
     class BaseModel : public BaseModelImpl {
     public:
-        static inline const std::string tableName;
+        using BaseModelImpl::BaseModelImpl;
+        static const inline std::string tableName;
 
         struct Field {
-            static inline BaseField id = BaseField("id", T::tableName);
-            static inline BaseField createdAt = BaseField("created_at", T::tableName);
-            static inline BaseField updatedAt = BaseField("updated_at", T::tableName);
-            std::map<std::string, BaseField, std::less<>> allFields = {
-                {id.getFieldName(), id},
-                {createdAt.getFieldName(), createdAt},
-                {updatedAt.getFieldName(), updatedAt},
-            };
+            static inline auto id = BaseField("id", T::tableName);
+            static inline auto createdAt = BaseField("created_at", T::tableName);
+            static inline auto updatedAt = BaseField("updated_at", T::tableName);
+            std::map<std::string, std::reference_wrapper<const BaseField>, std::less<>> allFields = {
+                {id.getFieldName(), std::cref(id)},
+                {createdAt.getFieldName(), std::cref(createdAt)},
+                {updatedAt.getFieldName(), std::cref(updatedAt)}};
         };
-
-        BaseModel() = default;
-        BaseModel(const BaseModel &) = delete;
-        BaseModel &operator=(const BaseModel &) = delete;
-        BaseModel(BaseModel &&) noexcept = default;
-        BaseModel &operator=(BaseModel &&) noexcept = default;
-        virtual ~BaseModel() = default;
 
         Json::Value missingFields;
         std::chrono::system_clock::time_point updatedAt;
@@ -39,15 +31,23 @@ namespace api::v1 {
         using ModelFieldKeyHash =
             decltype(std::unordered_map<std::string, std::string, ModelFieldHasher, std::equal_to<>>());
 
-        [[nodiscard]] virtual std::string sqlInsertMultiple(const std::vector<T> &item);
+        using MapFieldTypes = std::pair<std::reference_wrapper<const BaseField>,
+                                        std::variant<int,
+                                                     bool,
+                                                     std::vector<std::string>,
+                                                     std::string,
+                                                     std::chrono::system_clock::time_point,
+                                                     dec::decimal<2>>>;
+        using SetMapFieldTypes = std::vector<MapFieldTypes>;
+        [[nodiscard]] virtual std::string sqlInsertMultiple(const std::vector<T> &items);
         [[nodiscard]] virtual std::string sqlInsertSingle(const T &item);
         [[nodiscard]] virtual std::string sqlInsert(const T &item);
-        [[nodiscard]] virtual std::string sqlUpdateMultiple(const std::vector<T> &item);
-        [[nodiscard]] virtual QuerySet qsCount();
-        [[nodiscard]] virtual QuerySet qsPage(int page, int limit);
+        [[nodiscard]] virtual std::string sqlUpdateMultiple(const std::vector<T> &items);
+        [[nodiscard]] static QuerySet qsCount();
+        [[nodiscard]] static QuerySet qsPage(int page, int limit);
         virtual void sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColumns);
         [[nodiscard]] virtual std::string sqlUpdate(T &&item);
-        [[nodiscard]] virtual std::string
+        [[nodiscard]] static std::string
         sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params);
         [[nodiscard]] virtual std::string sqlSelectOne(const std::string &field,
                                                        const std::string &value,
@@ -57,14 +57,10 @@ namespace api::v1 {
         [[nodiscard]] virtual std::string sqlDelete(int id);
         [[nodiscard]] virtual std::string sqlDeleteMultiple(const std::vector<int> &ids);
 
-        [[nodiscard]] bool fieldExists(const std::string &fieldName) const;
-        [[nodiscard]] std::vector<BaseField> allSetFields() const;
-        virtual void applyFilters(QuerySet &qs,
-                                  QuerySet &qsCount,
-                                  const std::map<std::string, std::string, std::less<>> &params) const;
+        [[nodiscard]] static std::vector<std::reference_wrapper<const BaseField>> allSetFields();
+        static void
+        applyFilters(QuerySet &qs, QuerySet &qsCount, const std::map<std::string, std::string, std::less<>> &params);
     };
 }
 
 #include "BaseModel.inl"
-
-#endif  //BASEMODEL_H

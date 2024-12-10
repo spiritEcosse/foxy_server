@@ -5,7 +5,7 @@
 #include "AddressModel.h"
 
 namespace api::v1 {
-    class Address : public drogon::HttpController<Address>, public BaseCRUD<AddressModel, Address> {
+    class Address final : public drogon::HttpController<Address>, public BaseCRUD<AddressModel, Address> {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(Address::createItem, "", drogon::Post, drogon::Options, "api::v1::filters::JwtGoogleFilter");

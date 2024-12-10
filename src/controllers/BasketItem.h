@@ -5,7 +5,7 @@
 #include "BasketItemModel.h"
 
 namespace api::v1 {
-    class BasketItem : public drogon::HttpController<BasketItem>, public BaseCRUD<BasketItemModel, BasketItem> {
+    class BasketItem final : public drogon::HttpController<BasketItem>, public BaseCRUD<BasketItemModel, BasketItem> {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(BasketItem::getOne, "{1}", drogon::Get, drogon::Options, "api::v1::filters::JwtGoogleFilter");

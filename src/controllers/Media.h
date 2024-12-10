@@ -1,15 +1,10 @@
-//
-// Created by ihor on 20.01.2024.
-//
-
-#ifndef MEDIA_H
-#define MEDIA_H
+#pragma once
 
 #include "drogon/HttpController.h"
 #include "MediaModel.h"
 
 namespace api::v1 {
-    class Media : public drogon::HttpController<Media>, public BaseCRUD<MediaModel, Media> {
+    class Media final : public drogon::HttpController<Media>, public BaseCRUD<MediaModel, Media> {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(Media::getOne, "{1}", drogon::Get, drogon::Options);
@@ -39,5 +34,3 @@ namespace api::v1 {
         METHOD_LIST_END
     };
 }
-
-#endif  //MEDIA_H

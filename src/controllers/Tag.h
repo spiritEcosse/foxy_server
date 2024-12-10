@@ -7,7 +7,7 @@
 
 namespace api::v1 {
 
-    class Tag : public drogon::HttpController<Tag>, public BaseCRUD<TagModel, Tag> {
+    class Tag final : public drogon::HttpController<Tag>, public BaseCRUD<TagModel, Tag> {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(Tag::getList, "admin", drogon::Get, drogon::Options, "api::v1::filters::JwtGoogleFilter");

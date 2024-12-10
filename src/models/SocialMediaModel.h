@@ -1,39 +1,31 @@
-//
-// Created by ihor on 08.07.2024.
-//
-
-#ifndef SOCIALMEDIAMODEL_H
-#define SOCIALMEDIAMODEL_H
+#pragma once
 
 #include "BaseModel.h"
 
 namespace api::v1 {
-    class SocialMediaModel : public BaseModel<SocialMediaModel> {
+    class SocialMediaModel final : public BaseModel<SocialMediaModel> {
     public:
-        static inline const std::string tableName = "social_media";
+        using BaseModel::BaseModel;
 
-        struct Field : public BaseModel::Field {
-            static inline BaseField title = BaseField("title", tableName);
-            static inline BaseField externalId = BaseField("external_id", tableName);
-            static inline BaseField itemId = BaseField("item_id", tableName);
+        static const inline std::string tableName = "social_media";
 
-            Field() : BaseModel<SocialMediaModel>::Field() {
-                allFields[title.getFieldName()] = title;
-                allFields[externalId.getFieldName()] = externalId;
-                allFields[itemId.getFieldName()] = itemId;
+        struct Field : BaseModel::Field {
+            static inline auto title = BaseField("title", tableName);
+            static inline auto externalId = BaseField("external_id", tableName);
+            static inline auto itemId = BaseField("item_id", tableName);
+
+            Field() : BaseModel::Field() {
+                allFields.try_emplace(title.getFieldName(), std::cref(title));
+                allFields.try_emplace(externalId.getFieldName(), std::cref(externalId));
+                allFields.try_emplace(itemId.getFieldName(), std::cref(itemId));
             }
         };
 
         std::string title;
         std::string externalId;
         int itemId{};
-        SocialMediaModel() = default;
-        SocialMediaModel(const SocialMediaModel &) = delete;  // Copy constructor
-        SocialMediaModel &operator=(const SocialMediaModel &) = delete;  // Copy assignment operator
-        SocialMediaModel(SocialMediaModel &&) noexcept = default;  // Move constructor
-        SocialMediaModel &operator=(SocialMediaModel &&) noexcept = default;  // Move assignment operator
 
-        explicit SocialMediaModel(std::string title, std::string externalId, int itemId) :
+        explicit SocialMediaModel(std::string title, std::string externalId, const int itemId) :
             title(std::move(title)), externalId(std::move(externalId)), itemId(itemId) {}
 
         explicit SocialMediaModel(const Json::Value &json) : BaseModel(json) {
@@ -46,16 +38,11 @@ namespace api::v1 {
             validateField(Field::itemId.getFieldName(), itemId, missingFields);
         }
 
-        [[nodiscard]] std::vector<
-            std::pair<BaseField,
-                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
-        getObjectValues() const;
+        [[nodiscard]] SetMapFieldTypes getObjectValues() const;
         [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
         [[nodiscard]] std::string fieldsJsonObject() override;
-        [[nodiscard]] std::string
-        sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params) override;
+        [[nodiscard]] static std::string
+        sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params);
     };
 
 }
-
-#endif  //SOCIALMEDIAMODEL_H

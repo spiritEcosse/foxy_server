@@ -6,7 +6,7 @@
 #include <UserModel.h>
 
 namespace api::v1 {
-    class Auth : public drogon::HttpController<Auth>, public BaseCRUD<UserModel, Auth> {
+    class Auth final : public drogon::HttpController<Auth>, public BaseCRUD<UserModel, Auth> {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(Auth::googleLogin, "google_login", drogon::Post, drogon::Options);

@@ -5,7 +5,7 @@
 #include "UserModel.h"
 
 namespace api::v1 {
-    class User : public drogon::HttpController<User>, public BaseCRUD<UserModel, User> {
+    class User final : public drogon::HttpController<User>, public BaseCRUD<UserModel, User> {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(User::getOne, "{1}", drogon::Get, drogon::Options, "api::v1::filters::JwtGoogleFilter");

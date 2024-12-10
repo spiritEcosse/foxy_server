@@ -5,7 +5,8 @@
 #include "SocialMediaModel.h"
 
 namespace api::v1 {
-    class SocialMedia : public drogon::HttpController<SocialMedia>, public BaseCRUD<SocialMediaModel, SocialMedia> {
+    class SocialMedia final : public drogon::HttpController<SocialMedia>,
+                              public BaseCRUD<SocialMediaModel, SocialMedia> {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(SocialMedia::publish, "admin/publish", drogon::Post, drogon::Options, "api::v1::filters::LocalRun");
@@ -29,8 +30,8 @@ namespace api::v1 {
         METHOD_LIST_END
 
         void publish(const drogon::HttpRequestPtr &req,
-                     std::function<void(const drogon::HttpResponsePtr &)> &&callback);
-        void handleSqlResultPublish(const drogon::orm::Result &r);
-        void handleRow(const auto &row);
+                     std::function<void(const drogon::HttpResponsePtr &)> &&callback) const;
+        void handleSqlResultPublish(const drogon::orm::Result &r) const;
+        void handleRow(const auto &row) const;
     };
 }

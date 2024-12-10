@@ -5,7 +5,7 @@
 #include "PageModel.h"
 
 namespace api::v1 {
-    class Page : public drogon::HttpController<Page>, public BaseCRUD<PageModel, Page> {
+    class Page final : public drogon::HttpController<Page>, public BaseCRUD<PageModel, Page> {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(Page::getOne, "{1}", drogon::Get, drogon::Options);

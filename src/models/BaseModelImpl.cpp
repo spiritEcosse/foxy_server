@@ -1,7 +1,3 @@
-//
-// Created by ihor on 2/10/24.
-//
-
 #include <fmt/chrono.h>
 #include <fmt/core.h>
 

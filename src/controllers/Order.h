@@ -5,7 +5,7 @@
 #include "OrderModel.h"
 
 namespace api::v1 {
-    class Order : public drogon::HttpController<Order>, public BaseCRUD<OrderModel, Order> {
+    class Order final : public drogon::HttpController<Order>, public BaseCRUD<OrderModel, Order> {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(Order::createItem, "", drogon::Post, drogon::Options, "api::v1::filters::JwtGoogleFilter");

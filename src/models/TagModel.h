@@ -1,9 +1,4 @@
-//
-// Created by ihor on 28.09.2024.
-//
-
-#ifndef TAGMODEL_H
-#define TAGMODEL_H
+#pragma once
 
 #include <string>
 #include <chrono>
@@ -11,19 +6,21 @@
 #include "BaseModel.h"
 
 namespace api::v1 {
-    class TagModel : public BaseModel<TagModel> {
+    class TagModel final : public BaseModel<TagModel> {
     public:
-        static inline const std::string tableName = "tag";
+        using BaseModel::BaseModel;
 
-        struct Field : public BaseModel::Field {
-            static inline BaseField title = BaseField("title", tableName);
-            static inline BaseField socialMedia = BaseField("social_media", tableName);
-            static inline BaseField itemId = BaseField("item_id", tableName);
+        static const inline std::string tableName = "tag";
 
-            Field() : BaseModel<TagModel>::Field() {
-                allFields[title.getFieldName()] = title;
-                allFields[socialMedia.getFieldName()] = socialMedia;
-                allFields[itemId.getFieldName()] = itemId;
+        struct Field : BaseModel::Field {
+            static inline auto title = BaseField("title", tableName);
+            static inline auto socialMedia = BaseField("social_media", tableName);
+            static inline auto itemId = BaseField("item_id", tableName);
+
+            Field() : BaseModel::Field() {
+                allFields.try_emplace(title.getFieldName(), std::cref(title));
+                allFields.try_emplace(socialMedia.getFieldName(), std::cref(socialMedia));
+                allFields.try_emplace(itemId.getFieldName(), std::cref(itemId));
             }
         };
 
@@ -32,11 +29,6 @@ namespace api::v1 {
         std::vector<std::string> socialMedia = {};
 
         bool enabled = false;
-        TagModel() = default;
-        TagModel(const TagModel &) = delete;  // Copy constructor
-        TagModel &operator=(const TagModel &) = delete;  // Copy assignment operator
-        TagModel(TagModel &&) noexcept = default;  // Move constructor
-        TagModel &operator=(TagModel &&) noexcept = default;  // Move assignment operator
 
         explicit TagModel(const Json::Value &json) : BaseModel(json) {
             title = json[Field::title.getFieldName()].asString();
@@ -50,12 +42,7 @@ namespace api::v1 {
             validateField(Field::socialMedia.getFieldName(), socialMedia, missingFields);
         }
 
-        [[nodiscard]] std::vector<std::pair<
-            BaseField,
-            std::variant<int, bool, std::vector<std::string>, std::string, std::chrono::system_clock::time_point>>>
-        getObjectValues() const;
+        [[nodiscard]] SetMapFieldTypes getObjectValues() const;
         [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
     };
 }
-
-#endif  //TAGMODEL_H

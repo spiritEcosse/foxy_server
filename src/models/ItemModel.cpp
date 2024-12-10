@@ -1,6 +1,3 @@
-//
-// Created by ihor on 13.01.2024.
-//
 #include "ItemModel.h"
 #include "MediaModel.h"
 #include "ShippingRateModel.h"
@@ -15,44 +12,34 @@
 using namespace api::v1;
 
 std::map<std::string, std::pair<std::string, std::string>, std::less<>> ItemModel::joinMap() const {
-    return {{MediaModel::tableName,
-             {BaseModel<ItemModel>::Field::id.getFullFieldName(), MediaModel::Field::itemId.getFullFieldName()}},
-            {ShippingRateModel::tableName,
-             {ItemModel::Field::shippingProfileId.getFullFieldName(),
-              ShippingRateModel::Field::shippingProfileId.getFullFieldName()}},
-            {ShippingProfileModel::tableName,
-             {ItemModel::Field::shippingProfileId.getFullFieldName(),
-              BaseModel<ShippingProfileModel>::Field::id.getFullFieldName()}},
-            {BasketItemModel::tableName,
-             {BaseModel<ItemModel>::Field::id.getFullFieldName(), BasketItemModel::Field::itemId.getFullFieldName()}}};
+    return {
+        {MediaModel::tableName,
+         {BaseModel::Field::id.getFullFieldName(), MediaModel::Field::itemId.getFullFieldName()}},
+        {ShippingRateModel::tableName,
+         {Field::shippingProfileId.getFullFieldName(), ShippingRateModel::Field::shippingProfileId.getFullFieldName()}},
+        {ShippingProfileModel::tableName,
+         {Field::shippingProfileId.getFullFieldName(), BaseModel<ShippingProfileModel>::Field::id.getFullFieldName()}},
+        {BasketItemModel::tableName,
+         {BaseModel::Field::id.getFullFieldName(), BasketItemModel::Field::itemId.getFullFieldName()}}};
 }
 
-std::vector<std::pair<BaseField,
-                      std::variant<int,
-                                   bool,
-                                   std::string,
-                                   std::vector<std::string>,
-                                   std::chrono::system_clock::time_point,
-                                   dec::decimal<2>>>>
-ItemModel::getObjectValues() const {
-    return {
-        {Field::title, title},
-        {Field::description, description},
-        {Field::metaDescription, metaDescription},
-        {Field::slug, slug},
-        {Field::shippingProfileId, shippingProfileId},
-        {Field::enabled, enabled},
-        {Field::price, price},
-    };
+BaseModel<ItemModel>::SetMapFieldTypes ItemModel::getObjectValues() const {
+    return {{std::cref(Field::title), title},
+            {std::cref(Field::description), description},
+            {std::cref(Field::metaDescription), metaDescription},
+            {std::cref(Field::slug), slug},
+            {std::cref(Field::shippingProfileId), shippingProfileId},
+            {std::cref(Field::enabled), enabled},
+            {std::cref(Field::price), price}};
 }
 
 QuerySet ItemModel::qsCount() {
-    QuerySet qsCount(ItemModel::tableName, "total", false, true);
+    QuerySet qsCount(tableName, "total", false, true);
     return std::move(qsCount.filter(Field::enabled.getFullFieldName(), std::string("true"), false, std::string("="))
                          .functions(Function("count(*)::integer")));
 }
 
-std::string ItemModel::sqlSelectList(int page,
+std::string ItemModel::sqlSelectList(const int page,
                                      int limit,
                                      [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
     std::string app_cloud_name;
@@ -60,17 +47,17 @@ std::string ItemModel::sqlSelectList(int page,
     std::string app_bucket_host;
     getenv("APP_BUCKET_HOST", app_bucket_host);
 
-    auto orderByItem = BaseModel<ItemModel>::Field::updatedAt;
+    const auto &orderByItem = std::cref(BaseModel::Field::updatedAt);
     std::string media_image = "media_image";
     std::string media_video = "media_video";
-    auto mediaSort = fmt::format(R"("{}".{})", media_image, MediaModel::Field::sort.getFieldName());
-    auto itemID = BaseModel<ItemModel>::Field::id;
+    const auto mediaSort = fmt::format(R"("{}".{})", media_image, MediaModel::Field::sort.getFieldName());
+    const auto &itemID = std::cref(BaseModel::Field::id);
     auto mediaItemID = MediaModel::Field::itemId.getFullFieldName();
 
-    QuerySet qsCount = ItemModel().qsCount();
-    QuerySet qsPage = ItemModel().qsPage(page, limit);
+    QuerySet qsCount = ItemModel::qsCount();
+    QuerySet qsPage = ItemModel::qsPage(page, limit);
 
-    QuerySet qs(ItemModel::tableName, limit, "data");
+    QuerySet qs(tableName, limit, "data");
     qs.distinct(orderByItem, itemID)
         .join(MediaModel(), media_image, fmt::format(" AND {}.type = 'image'", media_image))
         .left_join(MediaModel(), media_video, fmt::format(" AND {}.type = 'video'", media_video))
@@ -83,7 +70,7 @@ std::string ItemModel::sqlSelectList(int page,
                 std::string(fmt::format("(SELECT MIN({}) FROM {} WHERE {} = {})",
                                         MediaModel::Field::sort.getFullFieldName(),
                                         MediaModel::tableName,
-                                        BaseModel<ItemModel>::Field::id.getFullFieldName(),
+                                        BaseModel::Field::id.getFullFieldName(),
                                         mediaItemID)),
                 false)
         .order_by(std::make_pair(orderByItem, false), std::make_pair(itemID, false))
@@ -109,8 +96,8 @@ std::string ItemModel::sqlSelectOne(const std::string &field,
         itemField = MediaModel::Field::itemId.getFullFieldName();
     qsMedia.join(ItemModel())
         .filter(itemField, std::string(value))
-        .order_by(std::make_pair(MediaModel::Field::sort, true))
-        .only(MediaModel().allSetFields())
+        .order_by(std::make_pair(std::cref(MediaModel::Field::sort), true))
+        .only(allSetFields())
         .functions(Function(fmt::format("format_src(media.src, '{}') as src", app_cloud_name)));
     return QuerySet::buildQuery(std::move(qsMedia), std::move(qsItem));
 }

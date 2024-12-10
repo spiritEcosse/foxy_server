@@ -1,7 +1,3 @@
-//
-// Created by ihor on 21.05.2024.
-//
-
 #include "ShippingRateModel.h"
 #include "CountriesIpsModel.h"
 #include "ShippingProfileModel.h"
@@ -9,18 +5,19 @@
 
 using namespace api::v1;
 
-std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-ShippingRateModel::getObjectValues() const {
-    std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        baseValues = {};
+BaseModel<ShippingRateModel>::SetMapFieldTypes ShippingRateModel::getObjectValues() const {
+    SetMapFieldTypes baseValues = {};
+
     if(countryId) {
-        baseValues.emplace_back(Field::countryId, countryId);
+        baseValues.emplace_back(std::cref(Field::countryId), countryId);
     } else {
-        baseValues.emplace_back(Field::countryId, "Null");
+        baseValues.emplace_back(std::cref(Field::countryId), "Null");
     }
-    baseValues.emplace_back(Field::shippingProfileId, shippingProfileId);
-    baseValues.emplace_back(Field::deliveryDaysMin, deliveryDaysMin);
-    baseValues.emplace_back(Field::deliveryDaysMax, deliveryDaysMax);
+
+    baseValues.emplace_back(std::cref(Field::shippingProfileId), shippingProfileId);
+    baseValues.emplace_back(std::cref(Field::deliveryDaysMin), deliveryDaysMin);
+    baseValues.emplace_back(std::cref(Field::deliveryDaysMax), deliveryDaysMax);
+
     return baseValues;
 }
 
@@ -28,8 +25,8 @@ std::string ShippingRateModel::getShippingRateByItem(const std::string &field,
                                                      const std::string &value,
                                                      const std::map<std::string, std::string, std::less<>> &params) {
     std::string app_cloud_name;
-    auto it = params.find("client_ip");
-    auto clientIp = it->second;
+    const auto it = params.find("client_ip");
+    const auto clientIp = it->second;
 
     QuerySet qsCountry(CountriesIpsModel::tableName, "one_country_id", false, false);
     qsCountry
@@ -39,9 +36,9 @@ std::string ShippingRateModel::getShippingRateByItem(const std::string &field,
                 std::string("<="),
                 std::string("AND"))
         .filter(CountriesIpsModel::Field::endRange.getFullFieldName(), clientIp, true, std::string(">="))
-        .only(CountriesIpsModel::Field::countryId);
+        .only(std::cref(CountriesIpsModel::Field::countryId));
 
-    QuerySet qsShipping(ShippingRateModel::tableName, "shipping", false);
+    QuerySet qsShipping(tableName, "shipping", false);
     qsShipping.join(ShippingProfileModel())
         .join(ItemModel())
         .filter(

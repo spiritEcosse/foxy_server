@@ -64,16 +64,16 @@ void setUpBeforeEachTest(const std::shared_ptr<orm::DbClient> &dbClient) {
 }
 
 DROGON_TEST(Create) {
-    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
-        const auto dbClient = drogon::app().getDbClient("tests");
+    app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
 
         auto checkFields = [TEST_CTX,
                             dbClient](const HttpResponsePtr &resp, fieldsValMap &expectedValues, std::string entity) {
             std::cout << entity << std::endl;
             auto respJson = *resp->getJsonObject();
-            Json::StreamWriterBuilder builder;
-            const std::string jsonString = Json::writeString(builder, respJson);
+            const Json::StreamWriterBuilder builder;
+            const std::string jsonString = writeString(builder, respJson);
             std::cout << jsonString << std::endl;
             REQUIRE(resp->getStatusCode() == k201Created);
             REQUIRE(resp->contentType() == CT_APPLICATION_JSON);
@@ -112,8 +112,8 @@ DROGON_TEST(Create) {
             auto client = HttpClient::newHttpClient(host);
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
-            req->setMethod(drogon::Post);
-            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+            req->setMethod(Post);
+            req->setContentTypeCode(CT_APPLICATION_JSON);
             Json::Value jsonValue;
             for(const auto &[key, value]: expectedValues) {
                 std::visit(
@@ -123,8 +123,8 @@ DROGON_TEST(Create) {
                     value);
             }
 
-            Json::StreamWriterBuilder writer;
-            std::string jsonString = Json::writeString(writer, jsonValue);
+            const Json::StreamWriterBuilder writer;
+            std::string jsonString = writeString(writer, jsonValue);
             req->setBody(std::move(jsonString));
             client->sendRequest(
                 req,
@@ -261,11 +261,11 @@ DROGON_TEST(Create) {
         };
         sendHttpRequest(path, expectedValues, entity);
     });
-};
+}
 
 DROGON_TEST(CheckMissingFields) {
-    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
-        const auto dbClient = drogon::app().getDbClient("tests");
+    app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
     });
 
@@ -288,8 +288,8 @@ DROGON_TEST(CheckMissingFields) {
         auto client = HttpClient::newHttpClient(host);
         auto req = HttpRequest::newHttpRequest();
         req->setPath(std::move(path));
-        req->setMethod(drogon::Post);
-        req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+        req->setMethod(Post);
+        req->setContentTypeCode(CT_APPLICATION_JSON);
         req->setBody("{}");
         client->sendRequest(req,
                             [TEST_CTX, checkFields, missingFields](ReqResult res, const HttpResponsePtr &resp) mutable {
@@ -350,16 +350,16 @@ DROGON_TEST(CheckMissingFields) {
 }
 
 DROGON_TEST(Update) {
-    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
-        const auto dbClient = drogon::app().getDbClient("tests");
+    app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
 
         auto checkFields = [TEST_CTX,
                             dbClient](const HttpResponsePtr &resp, fieldsValMap &expectedValues, std::string entity) {
             std::cout << entity << std::endl;
             auto respJson = *resp->getJsonObject();
-            Json::StreamWriterBuilder builder;
-            const std::string jsonString = Json::writeString(builder, respJson);
+            const Json::StreamWriterBuilder builder;
+            const std::string jsonString = writeString(builder, respJson);
             std::cout << jsonString << std::endl;
             REQUIRE(resp->getStatusCode() == k200OK);
             REQUIRE(resp->contentType() == CT_APPLICATION_JSON);
@@ -398,8 +398,8 @@ DROGON_TEST(Update) {
             auto client = HttpClient::newHttpClient(host);
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
-            req->setMethod(drogon::Put);
-            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+            req->setMethod(Put);
+            req->setContentTypeCode(CT_APPLICATION_JSON);
             Json::Value jsonValue;
             for(const auto &[key, value]: expectedValues) {
                 std::visit(
@@ -409,8 +409,8 @@ DROGON_TEST(Update) {
                     value);
             }
 
-            Json::StreamWriterBuilder writer;
-            std::string jsonString = Json::writeString(writer, jsonValue);
+            const Json::StreamWriterBuilder writer;
+            std::string jsonString = writeString(writer, jsonValue);
             req->setBody(std::move(jsonString));
             client->sendRequest(
                 req,
@@ -556,11 +556,11 @@ DROGON_TEST(Update) {
         };
         sendHttpRequest(path, expectedValues, entity);
     });
-};
+}
 
 DROGON_TEST(DeleteItem) {
-    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
-        const auto dbClient = drogon::app().getDbClient("tests");
+    app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
 
         auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
@@ -575,8 +575,8 @@ DROGON_TEST(DeleteItem) {
             auto client = HttpClient::newHttpClient(host);
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
-            req->setMethod(drogon::Delete);
-            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+            req->setMethod(Delete);
+            req->setContentTypeCode(CT_APPLICATION_JSON);
 
             client->sendRequest(req,
                                 [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
@@ -588,11 +588,11 @@ DROGON_TEST(DeleteItem) {
 
         sendHttpRequest("/api/v1/item/admin/1", "item");
     });
-};
+}
 
 DROGON_TEST(DeletePage) {
-    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
-        const auto dbClient = drogon::app().getDbClient("tests");
+    app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
 
         auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
@@ -607,8 +607,8 @@ DROGON_TEST(DeletePage) {
             auto client = HttpClient::newHttpClient(host);
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
-            req->setMethod(drogon::Delete);
-            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+            req->setMethod(Delete);
+            req->setContentTypeCode(CT_APPLICATION_JSON);
 
             client->sendRequest(req,
                                 [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
@@ -620,11 +620,11 @@ DROGON_TEST(DeletePage) {
 
         sendHttpRequest("/api/v1/page/admin/1", "page");
     });
-};
+}
 
 DROGON_TEST(DeleteUser) {
-    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
-        const auto dbClient = drogon::app().getDbClient("tests");
+    app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
 
         auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
@@ -639,8 +639,8 @@ DROGON_TEST(DeleteUser) {
             auto client = HttpClient::newHttpClient(host);
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
-            req->setMethod(drogon::Delete);
-            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+            req->setMethod(Delete);
+            req->setContentTypeCode(CT_APPLICATION_JSON);
 
             client->sendRequest(req,
                                 [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
@@ -652,11 +652,11 @@ DROGON_TEST(DeleteUser) {
 
         sendHttpRequest("/api/v1/user/admin/1", "user");
     });
-};
+}
 
 DROGON_TEST(DeleteShippingProfile) {
-    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
-        const auto dbClient = drogon::app().getDbClient("tests");
+    app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
 
         auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
@@ -671,8 +671,8 @@ DROGON_TEST(DeleteShippingProfile) {
             auto client = HttpClient::newHttpClient(host);
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
-            req->setMethod(drogon::Delete);
-            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+            req->setMethod(Delete);
+            req->setContentTypeCode(CT_APPLICATION_JSON);
 
             client->sendRequest(req,
                                 [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
@@ -684,11 +684,11 @@ DROGON_TEST(DeleteShippingProfile) {
 
         sendHttpRequest("/api/v1/shippingprofile/admin/1", "shipping_profile");
     });
-};
+}
 
 DROGON_TEST(DeleteShippingRate) {
-    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
-        const auto dbClient = drogon::app().getDbClient("tests");
+    app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
 
         auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
@@ -703,8 +703,8 @@ DROGON_TEST(DeleteShippingRate) {
             auto client = HttpClient::newHttpClient(host);
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
-            req->setMethod(drogon::Delete);
-            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+            req->setMethod(Delete);
+            req->setContentTypeCode(CT_APPLICATION_JSON);
 
             client->sendRequest(req,
                                 [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
@@ -716,11 +716,11 @@ DROGON_TEST(DeleteShippingRate) {
 
         sendHttpRequest("/api/v1/shippingrate/admin/1", "shipping_rate");
     });
-};
+}
 
 DROGON_TEST(DeleteReview) {
-    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
-        const auto dbClient = drogon::app().getDbClient("tests");
+    app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
 
         auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
@@ -735,8 +735,8 @@ DROGON_TEST(DeleteReview) {
             auto client = HttpClient::newHttpClient(host);
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
-            req->setMethod(drogon::Delete);
-            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+            req->setMethod(Delete);
+            req->setContentTypeCode(CT_APPLICATION_JSON);
 
             client->sendRequest(req,
                                 [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
@@ -748,11 +748,11 @@ DROGON_TEST(DeleteReview) {
 
         sendHttpRequest("/api/v1/review/admin/1", "review");
     });
-};
+}
 
 DROGON_TEST(DeleteOrder) {
-    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
-        const auto dbClient = drogon::app().getDbClient("tests");
+    app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
 
         auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
@@ -767,8 +767,8 @@ DROGON_TEST(DeleteOrder) {
             auto client = HttpClient::newHttpClient(host);
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
-            req->setMethod(drogon::Delete);
-            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+            req->setMethod(Delete);
+            req->setContentTypeCode(CT_APPLICATION_JSON);
 
             client->sendRequest(req,
                                 [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
@@ -780,11 +780,11 @@ DROGON_TEST(DeleteOrder) {
 
         sendHttpRequest("/api/v1/order/admin/1", "order");
     });
-};
+}
 
 DROGON_TEST(DeleteMedia) {
-    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
-        const auto dbClient = drogon::app().getDbClient("tests");
+    app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
 
         auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
@@ -799,8 +799,8 @@ DROGON_TEST(DeleteMedia) {
             auto client = HttpClient::newHttpClient(host);
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
-            req->setMethod(drogon::Delete);
-            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+            req->setMethod(Delete);
+            req->setContentTypeCode(CT_APPLICATION_JSON);
 
             client->sendRequest(req,
                                 [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
@@ -812,11 +812,11 @@ DROGON_TEST(DeleteMedia) {
 
         sendHttpRequest("/api/v1/media/admin/1", "media");
     });
-};
+}
 
 DROGON_TEST(DeleteCountry) {
-    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
-        const auto dbClient = drogon::app().getDbClient("tests");
+    app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
 
         auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
@@ -831,8 +831,8 @@ DROGON_TEST(DeleteCountry) {
             auto client = HttpClient::newHttpClient(host);
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
-            req->setMethod(drogon::Delete);
-            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+            req->setMethod(Delete);
+            req->setContentTypeCode(CT_APPLICATION_JSON);
 
             client->sendRequest(req,
                                 [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
@@ -844,11 +844,11 @@ DROGON_TEST(DeleteCountry) {
 
         sendHttpRequest("/api/v1/country/admin/1", "country");
     });
-};
+}
 
 DROGON_TEST(DeleteBasket) {
-    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
-        const auto dbClient = drogon::app().getDbClient("tests");
+    app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
 
         auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
@@ -863,8 +863,8 @@ DROGON_TEST(DeleteBasket) {
             auto client = HttpClient::newHttpClient(host);
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
-            req->setMethod(drogon::Delete);
-            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+            req->setMethod(Delete);
+            req->setContentTypeCode(CT_APPLICATION_JSON);
 
             client->sendRequest(req,
                                 [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
@@ -876,11 +876,11 @@ DROGON_TEST(DeleteBasket) {
 
         sendHttpRequest("/api/v1/basket/admin/1", "basket");
     });
-};
+}
 
 DROGON_TEST(DeleteBasketItem) {
-    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
-        const auto dbClient = drogon::app().getDbClient("tests");
+    app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
 
         auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
@@ -895,8 +895,8 @@ DROGON_TEST(DeleteBasketItem) {
             auto client = HttpClient::newHttpClient(host);
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
-            req->setMethod(drogon::Delete);
-            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+            req->setMethod(Delete);
+            req->setContentTypeCode(CT_APPLICATION_JSON);
 
             client->sendRequest(req,
                                 [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
@@ -908,11 +908,11 @@ DROGON_TEST(DeleteBasketItem) {
 
         sendHttpRequest("/api/v1/basketitem/admin/1", "basket_item");
     });
-};
+}
 
 DROGON_TEST(DeleteAddress) {
-    drogon::app().getLoop()->runInLoop([TEST_CTX]() {
-        const auto dbClient = drogon::app().getDbClient("tests");
+    app().getLoop()->runInLoop([TEST_CTX]() {
+        const auto dbClient = app().getDbClient("tests");
         setUpBeforeEachTest(dbClient);
 
         auto checkDbObject = [TEST_CTX, dbClient](const HttpResponsePtr &resp, std::string entity) {
@@ -927,8 +927,8 @@ DROGON_TEST(DeleteAddress) {
             auto client = HttpClient::newHttpClient(host);
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
-            req->setMethod(drogon::Delete);
-            req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
+            req->setMethod(Delete);
+            req->setContentTypeCode(CT_APPLICATION_JSON);
 
             client->sendRequest(req,
                                 [TEST_CTX, checkDbObject, entity](ReqResult res, const HttpResponsePtr &resp) mutable {
@@ -940,7 +940,7 @@ DROGON_TEST(DeleteAddress) {
 
         sendHttpRequest("/api/v1/address/admin/1", "address");
     });
-};
+}
 
 int main(int argc, char **argv) {
     // Initialize the Drogon application

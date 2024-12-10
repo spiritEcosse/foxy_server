@@ -1,7 +1,3 @@
-//
-// Created by ihor on 20.01.2024.
-//
-
 #include "MediaModel.h"
 #include "ItemModel.h"
 #include "env.h"
@@ -11,19 +7,15 @@ using namespace api::v1;
 
 std::map<std::string, std::pair<std::string, std::string>, std::less<>> MediaModel::joinMap() const {
     return {
-        {ItemModel::tableName,
-         {MediaModel::Field::itemId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName()}},
+        {ItemModel::tableName, {Field::itemId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName()}},
     };
 }
 
-std::vector<std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-MediaModel::getObjectValues() const {
-    return {
-        {Field::src, src},
-        {Field::itemId, itemId},
-        {Field::sort, sort},
-        {Field::type, type},
-    };
+BaseModel<MediaModel>::SetMapFieldTypes MediaModel::getObjectValues() const {
+    return {{std::cref(Field::src), std::cref(src)},
+            {std::cref(Field::itemId), std::cref(itemId)},
+            {std::cref(Field::sort), std::cref(sort)},
+            {std::cref(Field::type), std::cref(type)}};
 }
 
 std::string MediaModel::fieldsJsonObject() {
@@ -35,10 +27,9 @@ std::string MediaModel::fieldsJsonObject() {
     std::ranges::transform(field.allFields, std::back_inserter(formattedFields), [&](const auto& pair) {
         const auto& [key, value] = pair;
         if(key == "src") {
-            return fmt::format("'{}', format_src({}, '{}')", key, value.getFullFieldName(), app_cloud_name);
-        } else {
-            return fmt::format("'{}', {}", key, value.getFullFieldName());
+            return fmt::format("'{}', format_src({}, '{}')", key, value.get().getFullFieldName(), app_cloud_name);
         }
+        return fmt::format("'{}', {}", key, value.get().getFullFieldName());
     });
 
     return fmt::to_string(fmt::join(formattedFields, ", "));

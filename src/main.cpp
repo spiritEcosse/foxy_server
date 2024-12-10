@@ -75,7 +75,7 @@ int main() {
         if(!getenv("FOXY_ADMIN", foxy_admin)) {
             throw std::invalid_argument("FOXY_ADMIN is not set");
         }
-        drogon::app().loadConfigFile(config_app_path);
+        app().loadConfigFile(config_app_path);
         app().registerHandler("/",
                               [](const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
                                   Json::Value json;
@@ -109,8 +109,8 @@ int main() {
                                       std::move(callback));
                                   (*callbackPtr)(resp);
                               });
-        app().registerPostHandlingAdvice([foxy_client, foxy_admin]([[maybe_unused]] const drogon::HttpRequestPtr &req,
-                                                                   const drogon::HttpResponsePtr &resp) {
+        app().registerPostHandlingAdvice([foxy_client, foxy_admin]([[maybe_unused]] const HttpRequestPtr &req,
+                                                                   const HttpResponsePtr &resp) {
             auto origin = req->getHeader("Origin");
             if(origin == foxy_client || origin == foxy_admin) {
                 resp->addHeader("Access-Control-Allow-Origin", origin);

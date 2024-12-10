@@ -2,7 +2,6 @@
 #include <drogon/drogon.h>
 #include "UserModel.h"
 #include <JWT.h>
-#include <json/json.h>
 #include <string>
 #include "JwtGoogleFilter.h"
 

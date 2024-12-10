@@ -1,9 +1,4 @@
-//
-// Created by ihor on 18.01.2024.
-//
-
-#ifndef USERMODEL_H
-#define USERMODEL_H
+#pragma once
 
 #include <string>
 #include <chrono>
@@ -11,25 +6,27 @@
 #include "BaseModel.h"
 
 namespace api::v1 {
-    class UserModel : public BaseModel<UserModel> {
+    class UserModel final : public BaseModel<UserModel> {
     public:
-        static inline const std::string tableName = "user";
+        using BaseModel::BaseModel;
+
+        static const inline std::string tableName = "user";
 
         struct Field : public BaseModel::Field {
-            static inline BaseField email = BaseField("email", tableName);
-            static inline BaseField firstName = BaseField("first_name", tableName);
-            static inline BaseField lastName = BaseField("last_name", tableName);
-            static inline BaseField birthday = BaseField("birthday", tableName);
-            static inline BaseField hasNewsletter = BaseField("has_newsletter", tableName);
-            static inline BaseField isAdmin = BaseField("is_admin", tableName);
+            static inline auto email = BaseField("email", tableName);
+            static inline auto firstName = BaseField("first_name", tableName);
+            static inline auto lastName = BaseField("last_name", tableName);
+            static inline auto birthday = BaseField("birthday", tableName);
+            static inline auto hasNewsletter = BaseField("has_newsletter", tableName);
+            static inline auto isAdmin = BaseField("is_admin", tableName);
 
-            Field() : BaseModel<UserModel>::Field() {
-                allFields[email.getFieldName()] = email;
-                allFields[firstName.getFieldName()] = firstName;
-                allFields[lastName.getFieldName()] = lastName;
-                allFields[birthday.getFieldName()] = birthday;
-                allFields[hasNewsletter.getFieldName()] = hasNewsletter;
-                allFields[isAdmin.getFieldName()] = hasNewsletter;
+            Field() : BaseModel::Field() {
+                allFields.try_emplace(email.getFieldName(), std::cref(email));
+                allFields.try_emplace(firstName.getFieldName(), std::cref(firstName));
+                allFields.try_emplace(lastName.getFieldName(), std::cref(lastName));
+                allFields.try_emplace(birthday.getFieldName(), std::cref(birthday));
+                allFields.try_emplace(hasNewsletter.getFieldName(), std::cref(hasNewsletter));
+                allFields.try_emplace(isAdmin.getFieldName(), std::cref(isAdmin));
             }
         };
 
@@ -39,11 +36,6 @@ namespace api::v1 {
         std::string birthday = "Null";
         bool hasNewsletter{};
         bool isAdmin{};
-        UserModel() = default;
-        UserModel(const UserModel &) = delete;  // Copy constructor
-        UserModel &operator=(const UserModel &) = delete;  // Copy assignment operator
-        UserModel(UserModel &&) noexcept = default;  // Move constructor
-        UserModel &operator=(UserModel &&) noexcept = default;  // Move assignment operator
 
         explicit UserModel(const Json::Value &json) : BaseModel(json) {
             email = json[Field::email.getFieldName()].asString();
@@ -75,12 +67,8 @@ namespace api::v1 {
             validateField(Field::lastName.getFieldName(), lastName, missingFields);
         }
 
-        [[nodiscard]] std::vector<
-            std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        getObjectValues() const;
+        [[nodiscard]] SetMapFieldTypes getObjectValues() const;
         [[nodiscard]] std::string sqlGetOrCreateUser();
         [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
     };
 }
-
-#endif  //USERMODEL_H

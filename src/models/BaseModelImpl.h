@@ -1,7 +1,6 @@
-//
-// Created by ihor on 2/10/24.
-//
 #pragma once
+#include "BaseClass.h"
+
 #include <string>
 #include <json/value.h>
 #include <chrono>
@@ -10,9 +9,9 @@
 
 namespace api::v1 {
 
-    class BaseModelImpl {
+    class BaseModelImpl : public BaseClass {
     public:
-        virtual ~BaseModelImpl() = default;
+        using BaseClass::BaseClass;
 
     protected:
         struct ModelFieldHasher {

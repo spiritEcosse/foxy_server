@@ -1,8 +1,10 @@
+#pragma once
+
 namespace api::v1 {
 
-    class Function {
+    class Function final : public BaseClass {
     public:
-        explicit Function() = default;
+        using BaseClass::BaseClass;
 
         explicit Function(std::string function) : function(std::move(function)) {}
 

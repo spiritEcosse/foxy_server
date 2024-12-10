@@ -5,8 +5,8 @@
 #include "FinancialDetailsModel.h"
 
 namespace api::v1 {
-    class FinancialDetails : public drogon::HttpController<FinancialDetails>,
-                             public BaseCRUD<FinancialDetailsModel, FinancialDetails> {
+    class FinancialDetails final : public drogon::HttpController<FinancialDetails>,
+                                   public BaseCRUD<FinancialDetailsModel, FinancialDetails> {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(FinancialDetails::getList, "", drogon::Get, drogon::Options, "api::v1::filters::JwtGoogleFilter");

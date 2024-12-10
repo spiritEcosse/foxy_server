@@ -45,7 +45,8 @@ include(3rdparty)
 
 # start src
 file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS src/*.cc src/*.cpp /src/*.h src/*.hpp)
-add_executable(foxy_server ${RESOURCES})
+add_executable(foxy_server ${RESOURCES}
+        src/clients/models/SocialMediaType.inl)
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 # end src
 
@@ -88,15 +89,15 @@ CPMAddPackage(
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
 # end drogon
 
-# Start adding libcurl
+# Start adding cpr
 CPMAddPackage(
-        NAME libcurl
-        VERSION 8.8.0
-        GITHUB_REPOSITORY curl/curl
-        GIT_TAG curl-8_8_0
+        NAME cpr
+        VERSION 1.11.0
+        GITHUB_REPOSITORY libcpr/cpr
+        GIT_TAG 1.11.0
 )
-target_link_libraries(${PROJECT_NAME} PRIVATE libcurl)
-# End adding libcurl
+target_link_libraries(${PROJECT_NAME} PRIVATE cpr)
+# End adding cpr
 
 # Find zlib library
 find_library(ZLIB_LIBRARY NAMES z)
@@ -146,11 +147,14 @@ target_link_libraries(${PROJECT_NAME} PRIVATE sentry)
 # Start Formatting
 CPMAddPackage(
         NAME cmake-scripts
-        VERSION 23.09
+        VERSION 24.08.1
         GITHUB_REPOSITORY StableCoder/cmake-scripts
-        GIT_TAG 23.09
+        GIT_TAG 24.08.1
 )
 include(formatting)
+include(sanitizers)
+add_sanitizer_support(address leak)
+target_link_libraries(${PROJECT_NAME} PRIVATE -fsanitize=address)
 
 file(GLOB_RECURSE ALL_CODE_FILES ${PROJECT_SOURCE_DIR}/src/*.cc ${PROJECT_SOURCE_DIR}/src/*.cpp
         ${PROJECT_SOURCE_DIR}/src/*.h ${PROJECT_SOURCE_DIR}/tests/*.cc

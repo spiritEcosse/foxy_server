@@ -4,7 +4,7 @@
 #include <JWT.h>
 
 namespace api::v1::filters {
-    class JwtGoogleFilter : public drogon::HttpFilter<JwtGoogleFilter> {
+    class JwtGoogleFilter final : public drogon::HttpFilter<JwtGoogleFilter> {
     public:
         JwtGoogleFilter() = default;
 

@@ -10,6 +10,32 @@
 #include <fmt/core.h>
 
 namespace api::v1 {
+    using FieldOrFunction = std::variant<std::reference_wrapper<const BaseField>, Function>;
+
+    namespace detail {
+        template<typename T>
+        std::string getFullFieldName(const T &obj);
+
+        template<>
+        inline std::string getFullFieldName(const Function &obj) {
+            return obj.getFullFieldName();
+        }
+
+        template<>
+        inline std::string getFullFieldName(const std::reference_wrapper<const BaseField> &obj) {
+            return obj.get().getFullFieldName();
+        }
+
+        template<>
+        inline std::string
+        getFullFieldName(const std::variant<std::reference_wrapper<const BaseField>, Function> &obj) {
+            return std::visit(
+                [](const auto &value) {
+                    return getFullFieldName(value);
+                },
+                obj);
+        }
+    }
 
     struct JoinInfo {
         std::vector<std::pair<std::string, std::string>> joinTable;
@@ -24,26 +50,18 @@ namespace api::v1 {
     };
 
     struct OrderInfo {
-        std::vector<std::pair<std::variant<BaseField, Function>, bool>> orderFields;
+        std::vector<std::pair<std::variant<std::reference_wrapper<const BaseField>, Function>, bool>> orderFields;
         std::string orderBy;
     };
 
     struct DistinctInfo {
-        std::vector<BaseField> distinctFields;
+        std::vector<std::reference_wrapper<const BaseField>> distinctFields;
         std::string distinctOn;
     };
 
-    class BaseQuerySet {
+    class BaseQuerySet : public BaseClass {
     public:
-        using FieldOrFunction = std::variant<api::v1::BaseField, api::v1::Function>;
-
-        std::string getFullFieldName(const FieldOrFunction &fieldOrFunction) const {
-            return std::visit(
-                [](const auto &obj) {
-                    return obj.getFullFieldName();
-                },
-                fieldOrFunction);
-        }
+        using BaseClass::BaseClass;
 
         [[nodiscard]] std::string buildSelectOne() const {
             std::string sql = "SELECT ";
@@ -77,7 +95,7 @@ namespace api::v1 {
             if(!distinctInfo.distinctFields.empty()) {
                 sql += "DISTINCT ON (";
                 for(const auto &field: distinctInfo.distinctFields) {
-                    sql += field.getFullFieldName() + ",";
+                    sql += field.get().getFullFieldName() + ",";
                 }
                 sql.pop_back();
                 sql += ") ";
@@ -92,7 +110,7 @@ namespace api::v1 {
             if(!orderInfo.orderFields.empty()) {
                 sql += " ORDER BY ";
                 for(const auto &[field, asc]: orderInfo.orderFields) {
-                    sql += fmt::format("{} {}", getFullFieldName(field), asc ? "ASC" : "DESC") + ",";
+                    sql += fmt::format("{} {}", detail::getFullFieldName(field), asc ? "ASC" : "DESC") + ",";
                 }
                 sql.pop_back();  // Remove the last comma
             }
@@ -100,23 +118,16 @@ namespace api::v1 {
             return sql;
         }
 
-        BaseQuerySet() = default;
-        BaseQuerySet(const BaseQuerySet &) = delete;  // Copy constructor
-        BaseQuerySet &operator=(const BaseQuerySet &) = delete;  // Copy assignment operator
-        BaseQuerySet(BaseQuerySet &&) noexcept = default;  // Move constructor
-        BaseQuerySet &operator=(BaseQuerySet &&) noexcept = default;  // Move assignment operator
-        virtual ~BaseQuerySet() = default;
-
-        explicit BaseQuerySet(std::string tableName, int limit, std::string alias, bool returnInMain = true) :
-            tableName(std::move(tableName)), _limit(limit), _alias(std::move(alias)), _doAndCheck(false),
+        explicit
+        BaseQuerySet(const std::string_view &tableName, int limit, std::string alias, bool returnInMain = true) :
+            tableName(tableName), _limit(limit), _alias(std::move(alias)), _doAndCheck(false),
             _returnInMain(returnInMain) {}
 
-        explicit BaseQuerySet(std::string tableName,
-                              std::string alias,
+        explicit BaseQuerySet(const std::string_view &tableName,
+                              const std::string_view &alias,
                               bool doAndCheck = false,
                               bool returnInMain = true) :
-            tableName(std::move(tableName)), _alias(std::move(alias)), _one(true), _doAndCheck(doAndCheck),
-            _returnInMain(returnInMain) {}
+            tableName(tableName), _alias(alias), _one(true), _doAndCheck(doAndCheck), _returnInMain(returnInMain) {}
 
         std::string tableName;
         FilterInfo filterInfo;
@@ -124,9 +135,9 @@ namespace api::v1 {
         OrderInfo orderInfo;
         DistinctInfo distinctInfo;
         std::string _jsonFields;
-        std::vector<BaseField> onlyFields;
+        std::vector<std::reference_wrapper<const BaseField>> onlyFields;
         std::vector<Function> functionsSet;
-        std::vector<BaseField> groupByFields;
+        std::vector<std::reference_wrapper<const BaseField>> groupByFields;
         int _limit{};
         std::string _offset;
         std::string _alias;
@@ -135,12 +146,12 @@ namespace api::v1 {
         bool _returnInMain{};
 
         template<typename T>
-        void group_by_impl(T t) {
+        void group_by_impl(const T &t) {
             groupByFields.emplace_back(t);
         }
 
         template<typename T, typename... Args>
-        void group_by_impl(T t, Args... args) {
+        void group_by_impl(const T &t, Args... args) {
             groupByFields.emplace_back(t);
             group_by_impl(args...);
         }
@@ -172,29 +183,29 @@ namespace api::v1 {
             std::string sql;
 
             for(const auto &field: onlyFields) {
-                sql += fmt::format("{}, ", field.getFullFieldName());
+                sql += fmt::format("{}, ", field.get().getFullFieldName());
             }
             return removeLastComma(sql);
         }
 
         template<typename T>
-        void only_impl(T t) {
+        void only_impl(const T &t) {
             onlyFields.emplace_back(t);
         }
 
         template<typename T, typename... Args>
-        void only_impl(T t, Args... args) {
+        void only_impl(const T &t, Args... args) {
             onlyFields.emplace_back(t);
             only_impl(args...);
         }
 
         template<typename T>
-        void distinct_impl(T t) {
+        void distinct_impl(const T &t) {
             distinctInfo.distinctFields.emplace_back(t);
         }
 
         template<typename T, typename... Args>
-        void distinct_impl(T t, Args... args) {
+        void distinct_impl(const T &t, const Args &...args) {
             distinctInfo.distinctFields.emplace_back(t);
             distinct_impl(args...);
         }
@@ -243,27 +254,26 @@ namespace api::v1 {
         }
 
         template<typename T>
-        void order_by_impl(T t) {
+        void order_by_impl(const T &t) {
             orderInfo.orderFields.emplace_back(t.first, t.second);
         }
 
         template<typename T, typename... Args>
-        void order_by_impl(T t, Args... args) {
+        void order_by_impl(const T &t, const Args &...args) {
             orderInfo.orderFields.emplace_back(t.first, t.second);
             // Recursively call order_by_impl with the rest of the arguments
             order_by_impl(args...);
         }
 
         template<typename T>
-        void functions_impl(T t) {
-            functionsSet.emplace_back(t);
+        void functions_impl(T &&t) {
+            functionsSet.emplace_back(std::forward<T>(t));
         }
 
         template<typename T, typename... Args>
-        void functions_impl(T t, Args... args) {
-            functionsSet.emplace_back(t);
-            // Recursively call order_by_impl with the rest of the arguments
-            functions_impl(args...);
+        void functions_impl(T &&t, Args &&...args) {
+            functionsSet.emplace_back(std::forward<T>(t));
+            functions_impl(std::forward<Args>(args)...);
         }
 
         static std::string generateJoinSQL(const std::vector<std::pair<std::string, std::string>> &tables,
@@ -283,12 +293,12 @@ namespace api::v1 {
             return sql;
         }
 
-        static std::string generateGroupBySQL(const std::vector<BaseField> &fields) {
+        static std::string generateGroupBySQL(const std::vector<std::reference_wrapper<const BaseField>> &fields) {
             std::string sql;
             if(!fields.empty()) {
                 sql += " GROUP BY ";
                 for(const auto &field: fields) {
-                    sql += fmt::format("{}, ", field.getFullFieldName());
+                    sql += fmt::format("{}, ", field.get().getFullFieldName());
                 }
             }
             return removeLastComma(sql);
@@ -378,26 +388,26 @@ namespace api::v1 {
         }
     };
 
-    class QuerySet : public BaseQuerySet {
+    class QuerySet final : public BaseQuerySet {
     public:
-        QuerySet() = default;
-        QuerySet(const QuerySet &) = delete;  // Copy constructor
-        QuerySet &operator=(const QuerySet &) = delete;  // Copy assignment operator
-        QuerySet(QuerySet &&) noexcept = default;  // Move constructor
-        QuerySet &operator=(QuerySet &&) noexcept = default;  // Move assignment operator
+        using BaseQuerySet::BaseQuerySet;
 
-        QuerySet(std::string tableName, int limit, std::string alias, bool returnInMain = true) :
-            BaseQuerySet(std::move(tableName), limit, std::move(alias), returnInMain) {}
+        QuerySet(const std::string_view &tableName,
+                 const int limit,
+                 std::string alias,
+                 const bool returnInMain = true) : BaseQuerySet(tableName, limit, std::move(alias), returnInMain) {}
 
-        QuerySet(std::string tableName, std::string alias, bool doAndCheck = false, bool returnInMain = true) :
-            BaseQuerySet(std::move(tableName), std::move(alias), doAndCheck, returnInMain) {}
+        QuerySet(const std::string_view &tableName,
+                 const std::string_view &alias,
+                 const bool doAndCheck = false,
+                 const bool returnInMain = true) : BaseQuerySet(tableName, alias, doAndCheck, returnInMain) {}
 
         [[nodiscard]] std::string alias() const {
             return _alias;
         }
 
         template<typename... Args>
-        QuerySet &group_by(Args... args) {
+        QuerySet &group_by(const Args &...args) {
             group_by_impl(args...);
             return *this;
         }
@@ -440,14 +450,14 @@ namespace api::v1 {
         }
 
         template<typename... Args>
-        QuerySet &order_by(Args... args) {
+        QuerySet &order_by(const Args &...args) {
             order_by_impl(args...);
             return *this;
         }
 
         template<typename... Args>
-        QuerySet &functions(Args... args) {
-            functions_impl(args...);
+        QuerySet &functions(Args &&...args) {
+            functions_impl(std::forward<Args>(args)...);
             return *this;
         }
 
@@ -464,25 +474,25 @@ namespace api::v1 {
         }
 
         template<typename... Args>
-        QuerySet &distinct(Args... args) {
+        QuerySet &distinct(const Args &...args) {
             distinct_impl(args...);
             return *this;
         }
 
-        QuerySet &only(const std::vector<BaseField> &fields) {
+        QuerySet &only(const std::vector<std::reference_wrapper<const BaseField>> &fields) {
             for(const auto &field: fields) {
                 only(field);
             }
             return *this;
         }
 
-        QuerySet &only(const BaseField &field) {
+        QuerySet &only(const std::reference_wrapper<const BaseField> &field) {
             onlyFields.emplace_back(field);
             return *this;
         }
 
         template<typename... Args>
-        QuerySet &only(Args... args) {
+        QuerySet &only(const Args &...args) {
             only_impl(args...);
             return *this;
         }

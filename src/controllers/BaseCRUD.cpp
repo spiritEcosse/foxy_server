@@ -195,8 +195,9 @@ void BaseCRUD<T, R>::getList(const drogon::HttpRequestPtr &req,
     int page = getInt(req->getParameter("page"), 1);
     int limit = getInt(req->getParameter("limit"), 25);
 
-    auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
-    executeSqlQuery(callbackPtr, T().sqlSelectList(page, limit, convertSafeStringMapToStdMap(req->getParameters())));
+    const auto callbackPtr =
+        std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
+    executeSqlQuery(callbackPtr, T::sqlSelectList(page, limit, convertSafeStringMapToStdMap(req->getParameters())));
 }
 
 template<class T, class R>
@@ -212,7 +213,7 @@ void BaseCRUD<T, R>::getOne([[maybe_unused]] const drogon::HttpRequestPtr &req,
     }
 
     std::string filterKey = T::Field::id.getFullFieldName();
-    std::string query = T().sqlSelectOne(filterKey, stringId, {});
+    const std::string query = T().sqlSelectOne(filterKey, stringId, {});
 
     executeSqlQuery(callbackPtr, query);
 }

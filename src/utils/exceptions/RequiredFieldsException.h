@@ -1,14 +1,9 @@
-//
-// Created by ihor on 15.01.2024.
-//
-
-#ifndef REQUIREDFIELDSEXCEPTION_H
-#define REQUIREDFIELDSEXCEPTION_H
+#pragma once
 
 #include <exception>
 #include <utility>
 
-class RequiredFieldsException : public std::exception {
+class RequiredFieldsException final : public std::exception, api::v1::BaseClass {
 private:
     Json::Value requiredFields;
     std::string message;
@@ -26,5 +21,3 @@ public:
         return requiredFields;
     }
 };
-
-#endif  //REQUIREDFIELDSEXCEPTION_H

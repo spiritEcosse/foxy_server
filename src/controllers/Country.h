@@ -5,7 +5,7 @@
 #include "CountryModel.h"
 
 namespace api::v1 {
-    class Country : public drogon::HttpController<Country>, public BaseCRUD<CountryModel, Country> {
+    class Country final : public drogon::HttpController<Country>, public BaseCRUD<CountryModel, Country> {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(Country::getList, "", drogon::Get, drogon::Options);

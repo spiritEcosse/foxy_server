@@ -8,7 +8,7 @@
 
 namespace api::v1 {
 
-    class Item : public drogon::HttpController<Item>, public BaseCRUD<ItemModel, Item> {
+    class Item final : public drogon::HttpController<Item>, public BaseCRUD<ItemModel, Item> {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(Item::getList, "", drogon::Get, drogon::Options);

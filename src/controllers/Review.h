@@ -5,7 +5,7 @@
 #include "ReviewModel.h"
 
 namespace api::v1 {
-    class Review : public drogon::HttpController<Review>, public BaseCRUD<ReviewModel, Review> {
+    class Review final : public drogon::HttpController<Review>, public BaseCRUD<ReviewModel, Review> {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(Review::getOne, "admin/{1}", drogon::Get, drogon::Options, "api::v1::filters::JwtGoogleFilter");

@@ -1,9 +1,4 @@
-//
-// Created by ihor on 20.05.2024.
-//
-
-#ifndef ORDERMODEL_H
-#define ORDERMODEL_H
+#pragma once
 
 #include <string>
 #include <chrono>
@@ -23,41 +18,37 @@ struct OrderStatus {
 };
 
 namespace api::v1 {
-    class OrderModel : public BaseModel<OrderModel> {
+    class OrderModel final : public BaseModel<OrderModel> {
     public:
-        static inline const std::string tableName = "order";
+        using BaseModel::BaseModel;
 
-        struct Field : public BaseModel::Field {
-            static inline BaseField status = BaseField("status", tableName);
-            static inline BaseField basketId = BaseField("basket_id", tableName);
-            static inline BaseField total = BaseField("total", tableName);
-            static inline BaseField totalExTaxes = BaseField("total_ex_taxes", tableName);
-            static inline BaseField taxRate = BaseField("tax_rate", tableName);
-            static inline BaseField taxes = BaseField("taxes", tableName);
-            static inline BaseField userId = BaseField("user_id", tableName);
-            static inline BaseField reference = BaseField("reference", tableName);
-            static inline BaseField addressId = BaseField("address_id", tableName);
-            static inline BaseField returned = BaseField("returned", tableName);
+        static const inline std::string tableName = "order";
+
+        struct Field : BaseModel::Field {
+            static inline auto status = BaseField("status", tableName);
+            static inline auto basketId = BaseField("basket_id", tableName);
+            static inline auto total = BaseField("total", tableName);
+            static inline auto totalExTaxes = BaseField("total_ex_taxes", tableName);
+            static inline auto taxRate = BaseField("tax_rate", tableName);
+            static inline auto taxes = BaseField("taxes", tableName);
+            static inline auto userId = BaseField("user_id", tableName);
+            static inline auto reference = BaseField("reference", tableName);
+            static inline auto addressId = BaseField("address_id", tableName);
+            static inline auto returned = BaseField("returned", tableName);
 
             Field() : BaseModel::Field() {
-                allFields[status.getFieldName()] = status;
-                allFields[basketId.getFieldName()] = basketId;
-                allFields[total.getFieldName()] = total;
-                allFields[totalExTaxes.getFieldName()] = totalExTaxes;
-                allFields[taxRate.getFieldName()] = taxRate;
-                allFields[taxes.getFieldName()] = taxes;
-                allFields[userId.getFieldName()] = userId;
-                allFields[reference.getFieldName()] = reference;
-                allFields[addressId.getFieldName()] = addressId;
-                allFields[returned.getFieldName()] = returned;
+                allFields.try_emplace(status.getFieldName(), std::cref(status));
+                allFields.try_emplace(basketId.getFieldName(), std::cref(basketId));
+                allFields.try_emplace(total.getFieldName(), std::cref(total));
+                allFields.try_emplace(totalExTaxes.getFieldName(), std::cref(totalExTaxes));
+                allFields.try_emplace(taxRate.getFieldName(), std::cref(taxRate));
+                allFields.try_emplace(taxes.getFieldName(), std::cref(taxes));
+                allFields.try_emplace(userId.getFieldName(), std::cref(userId));
+                allFields.try_emplace(reference.getFieldName(), std::cref(reference));
+                allFields.try_emplace(addressId.getFieldName(), std::cref(addressId));
+                allFields.try_emplace(returned.getFieldName(), std::cref(returned));
             }
         };
-
-        OrderModel() = default;
-        OrderModel(const OrderModel &) = delete;  // Copy constructor
-        OrderModel &operator=(const OrderModel &) = delete;  // Copy assignment operator
-        OrderModel(OrderModel &&) noexcept = default;  // Move constructor
-        OrderModel &operator=(OrderModel &&) noexcept = default;  // Move assignment operator
 
         std::string status = OrderStatus::ordered;
         int basketId{};
@@ -93,17 +84,12 @@ namespace api::v1 {
             validateField(Field::addressId.getFieldName(), addressId, missingFields);
         }
 
-        [[nodiscard]] std::vector<
-            std::pair<BaseField,
-                      std::variant<int, bool, std::string, std::chrono::system_clock::time_point, dec::decimal<2>>>>
-        getObjectValues() const;
-        [[nodiscard]] std::string
-        sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params) override;
+        [[nodiscard]] SetMapFieldTypes getObjectValues() const;
+        [[nodiscard]] static std::string
+        sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params);
         [[nodiscard]] std::string sqlSelectOne(const std::string &field,
                                                const std::string &value,
                                                const std::map<std::string, std::string, std::less<>> &params) override;
         [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
     };
 }
-
-#endif  //ORDERMODEL_H

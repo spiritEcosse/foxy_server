@@ -1,15 +1,12 @@
-//
-// Created by ihor on 13.01.2024.
-//
+#pragma once
 
-#ifndef BASE_H
-#define BASE_H
+#include "BaseClass.h"
 
 #include <drogon/drogon.h>
 
 namespace api::v1 {
     template<class T, class R>
-    class BaseCRUD {
+    class BaseCRUD : public BaseClass {
     protected:
         virtual void
         handleSqlResult(const drogon::orm::Result &r,
@@ -45,7 +42,6 @@ namespace api::v1 {
                       std::function<void(std::vector<T>)> successCallback) const;
 
     public:
-        virtual ~BaseCRUD() = default;
         virtual void getOne(const drogon::HttpRequestPtr &req,
                             std::function<void(const drogon::HttpResponsePtr &)> &&callback,
                             const std::string &) const;
@@ -69,5 +65,3 @@ namespace api::v1 {
         convertSafeStringMapToStdMap(const drogon::SafeStringMap<std::string> &safeMap) const;
     };
 }
-
-#endif  //BASE_H

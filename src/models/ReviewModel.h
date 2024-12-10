@@ -1,9 +1,4 @@
-//
-// Created by ihor on 14.01.2024.
-//
-
-#ifndef REVIEWMODEL_H
-#define REVIEWMODEL_H
+#pragma once
 
 #include <string>
 #include <chrono>
@@ -11,21 +6,22 @@
 #include "BaseModel.h"
 
 namespace api::v1 {
-    class ReviewModel : public BaseModel<ReviewModel> {
+    class ReviewModel final : public BaseModel<ReviewModel> {
     public:
-        static inline const std::string tableName = "review";
+        using BaseModel::BaseModel;
+        static const inline std::string tableName = "review";
 
         struct Field : public BaseModel::Field {
-            static inline BaseField status = BaseField("status", tableName);
-            static inline BaseField userId = BaseField("user_id", tableName);
-            static inline BaseField itemId = BaseField("item_id", tableName);
-            static inline BaseField comment = BaseField("comment", tableName);
+            static inline auto status = BaseField("status", tableName);
+            static inline auto userId = BaseField("user_id", tableName);
+            static inline auto itemId = BaseField("item_id", tableName);
+            static inline auto comment = BaseField("comment", tableName);
 
-            Field() : BaseModel<ReviewModel>::Field() {
-                allFields[status.getFieldName()] = status;
-                allFields[userId.getFieldName()] = userId;
-                allFields[itemId.getFieldName()] = itemId;
-                allFields[comment.getFieldName()] = comment;
+            Field() : BaseModel::Field() {
+                allFields.try_emplace(status.getFieldName(), std::cref(status));
+                allFields.try_emplace(userId.getFieldName(), std::cref(userId));
+                allFields.try_emplace(itemId.getFieldName(), std::cref(itemId));
+                allFields.try_emplace(comment.getFieldName(), std::cref(comment));
             }
         };
 
@@ -33,12 +29,6 @@ namespace api::v1 {
         int userId{};
         int itemId{};
         std::string comment;
-
-        ReviewModel() = default;
-        ReviewModel(const ReviewModel &) = delete;  // Copy constructor
-        ReviewModel &operator=(const ReviewModel &) = delete;  // Copy assignment operator
-        ReviewModel(ReviewModel &&) noexcept = default;  // Move constructor
-        ReviewModel &operator=(ReviewModel &&) noexcept = default;  // Move assignment operator
 
         explicit ReviewModel(const Json::Value &json) : BaseModel(json) {
             status = json[Field::status.getFieldName()].asString();
@@ -52,10 +42,6 @@ namespace api::v1 {
             validateField(Field::comment.getFieldName(), comment, missingFields);
         }
 
-        [[nodiscard]] std::vector<
-            std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        getObjectValues() const;
+        [[nodiscard]] SetMapFieldTypes getObjectValues() const;
     };
 }
-
-#endif  //REVIEWMODEL_H

@@ -1,9 +1,4 @@
-//
-// Created by ihor on 14.01.2024.
-//
-
-#ifndef COUNTRYMODEL_H
-#define COUNTRYMODEL_H
+#pragma once
 
 #include <string>
 #include <chrono>
@@ -11,27 +6,23 @@
 #include "BaseModel.h"
 
 namespace api::v1 {
-    class CountryModel : public BaseModel<CountryModel> {
+    class CountryModel final : public BaseModel<CountryModel> {
     public:
-        static inline const std::string tableName = "country";
+        using BaseModel::BaseModel;
+        static const inline std::string tableName = "country";
 
-        struct Field : public BaseModel::Field {
-            static inline BaseField title = BaseField("title", tableName);
-            static inline BaseField code = BaseField("code", tableName);
+        struct Field : BaseModel::Field {
+            static inline auto title = BaseField("title", tableName);
+            static inline auto code = BaseField("code", tableName);
 
-            Field() : BaseModel<CountryModel>::Field() {
-                allFields[title.getFieldName()] = title;
-                allFields[code.getFieldName()] = code;
+            Field() : BaseModel::Field() {
+                allFields.try_emplace(title.getFieldName(), std::cref(title));
+                allFields.try_emplace(code.getFieldName(), std::cref(code));
             }
         };
 
         std::string title;
         std::string code;
-        CountryModel() = default;
-        CountryModel(const CountryModel &) = delete;  // Copy constructor
-        CountryModel &operator=(const CountryModel &) = delete;  // Copy assignment operator
-        CountryModel(CountryModel &&) noexcept = default;  // Move constructor
-        CountryModel &operator=(CountryModel &&) noexcept = default;  // Move assignment operator
 
         explicit CountryModel(const Json::Value &json) : BaseModel(json) {
             title = json[Field::title.getFieldName()].asString();
@@ -41,11 +32,7 @@ namespace api::v1 {
             validateField(Field::code.getFieldName(), code, missingFields);
         }
 
-        [[nodiscard]] std::vector<
-            std::pair<BaseField, std::variant<int, bool, std::string, std::chrono::system_clock::time_point>>>
-        getObjectValues() const;
+        [[nodiscard]] SetMapFieldTypes getObjectValues() const;
         [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
     };
 }
-
-#endif  //COUNTRYMODEL_H

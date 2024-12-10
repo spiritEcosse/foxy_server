@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 
 inline bool getenv(const char *name, std::string &env) {
