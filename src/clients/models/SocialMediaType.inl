@@ -24,7 +24,6 @@ namespace api::v1 {
     template<typename ClientType, typename PostType>
     bool SocialMediaType<ClientType, PostType>::post() {
         return client->post(static_cast<PostType *>(this)) && saveToDb();
-        // return true;
     }
 
     template<typename ClientType, typename PostType>
