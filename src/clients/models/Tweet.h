@@ -18,6 +18,6 @@ namespace api::v1 {
               const Json::Value& tags);
 
         std::string toJson() override;
-        void post() override;
+        bool post() override;
     };
 }

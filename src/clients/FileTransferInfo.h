@@ -44,9 +44,8 @@ namespace api::v1 {
 
         [[nodiscard]] bool saveFile(std::string&& content) const {
             std::ofstream outputFile(fileName, std::ios::binary);
-            if(!outputFile) {
+            if(!outputFile)
                 return false;
-            }
 
             outputFile.write(content.c_str(), content.size());
 

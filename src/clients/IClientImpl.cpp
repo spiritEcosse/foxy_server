@@ -20,13 +20,12 @@ namespace api::v1 {
                                     const Json::Value& jsonResponse) {
         if(!jsonResponse.isMember(field)) {
             // Capture JSON parsing error
-            sentryHelper(std::runtime_error(fmt::format(
-                             "No data or id in PostType to post. Url: {}, Header: {}, Status: {}, Response: {}.",
-                             response.url.str(),
-                             response.raw_header,
-                             response.status_code,
-                             response.text)),
-                         "IClient::post");
+            sentryHelper(
+                std::runtime_error(fmt::format("No data or id in PostType to post. Url: {}, Status: {}, Response: {}.",
+                                               response.url.str(),
+                                               response.status_code,
+                                               response.text)),
+                "IClient::post");
             return false;
         }
         return true;
@@ -35,14 +34,12 @@ namespace api::v1 {
     bool IClientImpl::parseJson(const cpr::Response& response, Json::Value& jsonResponse) {
         if(Json::Reader reader; !reader.parse(response.text, jsonResponse)) {
             // Capture JSON parsing error
-            sentryHelper(
-                std::runtime_error(fmt::format("JSON parsing error: {}. Url: {}, Header: {}, Status: {}, Response: {}.",
-                                               reader.getFormattedErrorMessages(),
-                                               response.url.str(),
-                                               response.raw_header,
-                                               response.status_code,
-                                               response.text)),
-                "IClientImpl::parseJson");
+            sentryHelper(std::runtime_error(fmt::format("JSON parsing error: {}. Url: {}, Status: {}, Response: {}.",
+                                                        reader.getFormattedErrorMessages(),
+                                                        response.url.str(),
+                                                        response.status_code,
+                                                        response.text)),
+                         "IClientImpl::parseJson");
             return false;
         }
         return true;
@@ -57,9 +54,8 @@ namespace api::v1 {
                                    std::back_inserter(errorMessages),
                                    [status_code](const cpr::Response& response) {
                                        return response.status_code != status_code
-                                                  ? fmt::format("Url: {}, Header: {}, Status: {}, Response: {}\n",
+                                                  ? fmt::format("Url: {}, Status: {}, Response: {}\n",
                                                                 response.url.str(),
-                                                                response.raw_header,
                                                                 response.status_code,
                                                                 response.text)
                                                   : "";

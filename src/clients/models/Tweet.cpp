@@ -29,12 +29,8 @@ namespace api::v1 {
         return writeString(builder, jsonObj);
     }
 
-    void Tweet::post() {
-        if(!client->uploadMedia(this)) {
-            return;
-        }
-        std::cout << "TwitterClient::uploadMedia successfully" << std::endl;
-        SocialMediaType::post();
+    bool Tweet::post() {
+        return client->uploadMedia(this) && SocialMediaType::post();
     }
 
 };

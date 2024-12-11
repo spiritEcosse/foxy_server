@@ -28,15 +28,13 @@ namespace api::v1 {
         // Perform all requests
         std::vector<cpr::Response> responses = multiplePerform.Get();
 
-        if(const bool responsesIsOk = checkResponses(responses); !responsesIsOk) {
+        if(!checkResponses(responses))
             return false;
-        }
 
         // Process responses
         for(size_t idx = 0; idx < responses.size(); ++idx) {
-            if(!media[idx]->saveFile(std::move(responses[idx].text))) {
+            if(!media[idx]->saveFile(std::move(responses[idx].text)))
                 return false;
-            }
         }
         return true;
     }

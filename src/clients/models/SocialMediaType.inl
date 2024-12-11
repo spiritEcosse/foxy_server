@@ -22,17 +22,15 @@ namespace api::v1 {
     }
 
     template<typename ClientType, typename PostType>
-    void SocialMediaType<ClientType, PostType>::post() {
-        if(!client->post(static_cast<PostType *>(this))) {
-            sentryHelper(std::runtime_error(fmt::format("{}", "")), "SocialMediaType::post");
-        }
-        saveToDb();
+    bool SocialMediaType<ClientType, PostType>::post() {
+        return client->post(static_cast<PostType *>(this)) && saveToDb();
+        // return true;
     }
 
     template<typename ClientType, typename PostType>
-    void SocialMediaType<ClientType, PostType>::saveToDb() {
+    bool SocialMediaType<ClientType, PostType>::saveToDb() {
         if(!postId.empty()) {
-            const SocialMediaModel item(ClientType::clientName, postId, itemId);
+            const SocialMediaModel item(std::string(ClientType::clientName), postId, itemId);
             std::string query = SocialMediaModel().sqlInsert(item);
             auto dbClient = drogon::app().getDbClient("default_not_fast");
             dbClient->execSqlAsync(
@@ -44,7 +42,9 @@ namespace api::v1 {
                     const std::string error = e.base().what();
                     sentryHelper(error, "saveToDb");
                 });
+            return true;
         }
+        return false;
     }
 
     template<typename ClientType, typename PostType>

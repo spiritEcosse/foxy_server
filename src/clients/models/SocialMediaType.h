@@ -24,8 +24,8 @@ namespace api::v1 {
             createClient();
         }
 
-        virtual void post();
-        virtual void saveToDb();
+        virtual bool post();
+        virtual bool saveToDb();
         std::unique_ptr<ClientType> client;
         std::string title;
         std::string slug;

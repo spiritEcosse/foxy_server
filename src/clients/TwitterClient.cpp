@@ -17,13 +17,11 @@ namespace api::v1 {
             // Parse JSON response using JsonCpp
             Json::Value jsonResponse;
 
-            if(!parseJson(response, jsonResponse)) {
+            if(!parseJson(response, jsonResponse))
                 return false;
-            }
 
-            if(!fieldIsMember("media_id_string", response, jsonResponse)) {
+            if(!fieldIsMember("media_id_string", response, jsonResponse))
                 return false;
-            }
             media->setExternalId(jsonResponse["media_id_string"].asString());
             std::cout << media->getExternalId() << " : " << media->getFileName() << std::endl;
             ++i;
@@ -36,17 +34,14 @@ namespace api::v1 {
     }
 
     bool TwitterClient::uploadMediaImage(const Tweet* tweet) {
-        std::cout << "start TwitterClient::uploadMediaImage" << std::endl;
-
         std::vector<SharedFileTransferInfo> medias;
         std::ranges::copy_if(tweet->media, std::back_inserter(medias), [](const auto& mediaItem) {
             return !mediaItem->isVideo();
         });
 
         // If no images, return true (no images to upload)
-        if(std::ranges::empty(medias)) {
+        if(std::ranges::empty(medias))
             return true;
-        }
 
         // Create a MultiPerform object
         cpr::MultiPerform multiplePerform;
@@ -67,17 +62,13 @@ namespace api::v1 {
 
         // Perform all requests
         const std::vector<cpr::Response> responses = multiplePerform.Post();
-        if(!checkResponses(responses)) {
+        if(!checkResponses(responses))
             return false;
-        }
         // save media_id_string to media
-        std::cout << "TwitterClient::uploadMediaImage successfully" << std::endl;
         return saveMediaIdString(responses, medias);
     }
 
     bool TwitterClient::uploadMediaVideo(const Tweet* tweet) {
-        std::cout << "start TwitterClient::uploadMediaVideo" << std::endl;
-
         // Filter out video files from media
         std::vector<SharedFileTransferInfo> medias;
         std::ranges::copy_if(tweet->media, std::back_inserter(medias), [](const auto& mediaItem) {
@@ -85,9 +76,8 @@ namespace api::v1 {
         });
 
         // If no videos, return true (no videos to upload)
-        if(std::ranges::empty(medias)) {
+        if(std::ranges::empty(medias))
             return true;
-        }
 
         cpr::MultiPerform multiplePerform;
 
@@ -113,9 +103,8 @@ namespace api::v1 {
         // Execute INIT requests
         const auto initResponses = multiplePerform.Post();
 
-        if(!checkResponses(initResponses, 202)) {
+        if(!checkResponses(initResponses, 202))
             return false;
-        }
 
         // save media_id_string to media
         saveMediaIdString(initResponses, medias);
@@ -127,21 +116,17 @@ namespace api::v1 {
         allFileContents.reserve(medias.size());
 
         for(const auto& media: medias) {
-            if(!media) {
-                // Skip null media pointers
+            if(!media)
                 continue;
-            }
             // Safely get file content
             auto fileContent = media->getFileContent();
-            if(fileContent->empty()) {
+            if(fileContent->empty())
                 continue;
-            }
 
             std::string externalId = media->getExternalId();
             std::filesystem::path fileName = media->getFileName();
-            if(externalId.empty() || fileName.empty()) {
+            if(externalId.empty() || fileName.empty())
                 continue;
-            }
             constexpr size_t chunkSize = 1048576;  // 1MB chunks
             allFileContents.push_back(fileContent);
 
@@ -177,9 +162,8 @@ namespace api::v1 {
 
         // Execute APPEND requests
 
-        if(!checkResponses(multiplePerformAppend.Post(), 204)) {
+        if(!checkResponses(multiplePerformAppend.Post(), 204))
             return false;
-        }
 
         // FINALIZE: Mark video upload as complete
         cpr::MultiPerform multiplePerformFin;
