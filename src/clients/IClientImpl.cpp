@@ -25,7 +25,7 @@ namespace api::v1 {
                                                response.url.str(),
                                                response.status_code,
                                                response.text)),
-                "IClient::post");
+                "IClientImpl::fieldIsMember");
             return false;
         }
         return true;
@@ -64,7 +64,6 @@ namespace api::v1 {
                          "IClientImpl::checkResponses");
             return false;
         }
-        std::cout << "TwitterClient::checkResponses successfully" << std::endl;
         return true;
     }
 
