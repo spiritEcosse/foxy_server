@@ -23,16 +23,34 @@ void SocialMedia::handleRow(const auto &row) const {
     auto slug = row[2].template as<std::string>();
     auto description = row[3].template as<std::string>();
     auto media = row[4].template as<Json::Value>();
-    auto tags = row[5].template as<Json::Value>();
+    auto netsJson = row[5].template as<Json::Value>();
+    auto tags = row[6].template as<Json::Value>();
 
-    auto clientDownloadMedia = MastodonClient(media);
-    if(!clientDownloadMedia.downloadMedia()) {
+    std::set<std::string, std::less<>> target = {std::string(TwitterClient::clientName),
+                                                 std::string(PinterestClient::clientName)};
+
+    std::vector<std::string> nets;
+    for(const auto &net: netsJson) {
+        nets.emplace_back(net.asString());
+    }
+
+    std::set<std::string, std::less<>> netsSet(nets.begin(), nets.end());
+
+    // Calculate difference: elements in target that do NOT exist in netsSet
+    std::set<std::string, std::less<>> diffNets;
+    std::ranges::set_difference(target, netsSet, std::inserter(diffNets, diffNets.end()));
+
+    if(diffNets.empty())
         return;
+    auto clientDownloadMedia = MastodonClient(media);
+    if(!clientDownloadMedia.downloadMedia())
+        return;
+
+    if(diffNets.contains(TwitterClient::clientName)) {
+        Tweet(itemId, title, slug, "", clientDownloadMedia.media, tags).post();
     }
     // Pin pin(itemId, title, slug, description, transformedMedia, tags);
     // pin.post();
-    Tweet tweet(itemId, title, slug, "", clientDownloadMedia.media, tags);
-    tweet.post();
 }
 
 void SocialMedia::handleSqlResultPublish(const drogon::orm::Result &r) const {
@@ -75,6 +93,12 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
                 fmt::format("{}", BaseModel<ItemModel>::Field::id.getFullFieldName()),
                 false);
 
+    QuerySet qsSocialMedia(SocialMediaModel::tableName, 0, std::string("_social_media"), false);
+    qsSocialMedia.functions(Function(fmt::format("json_agg({})", SocialMediaModel::Field::title.getFullFieldName())))
+        .filter(SocialMediaModel::Field::itemId.getFullFieldName(),
+                fmt::format("{}", BaseModel<ItemModel>::Field::id.getFullFieldName()),
+                false);
+
     const auto callbackPtr =
         std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
     auto dbClient = drogon::app().getFastDbClient("default");
@@ -87,10 +111,6 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
         .left_join(SocialMediaModel())
         .group_by(std::cref(BaseModel<ItemModel>::Field::id))
         .filter(BaseModel<ItemModel>::Field::id.getFullFieldName(), std::string("93"))
-        .filter(BaseModel<SocialMediaModel>::Field::id.getFullFieldName(),
-                std::string("NULL"),
-                false,
-                std::string("IS"))
         .functions(Function(fmt::format(", json_agg("
                                         "json_build_object('type', {0}, 'url', CASE "
                                         "WHEN {0}::text LIKE 'video' THEN format_src({1}, '{3}') "
@@ -104,6 +124,7 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
                                         MediaModel::Field::src.getFullFieldName(),
                                         app_cloud_name,
                                         app_bucket_host)))
+        .functions(Function(fmt::format(R"( COALESCE(({}), '[]'::json) AS nets)", qsSocialMedia.buildSelect())))
         .functions(Function(fmt::format(R"( COALESCE(({}), '[]'::json) AS tags)", qsTag.buildSelect())));
 
     executeSqlQuery(callbackPtr,

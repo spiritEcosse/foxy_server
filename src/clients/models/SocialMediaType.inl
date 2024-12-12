@@ -65,15 +65,16 @@ namespace api::v1 {
     }
 
     template<typename ClientType, typename PostType>
+    bool SocialMediaType<ClientType, PostType>::isEqualPlatform(const Json::Value &platform) {
+        return platform.asString() == ClientType::clientName;
+    }
+
+    template<typename ClientType, typename PostType>
     std::vector<std::string> SocialMediaType<ClientType, PostType>::extractTags(const Json::Value &tagsJson) {
         std::vector<std::string> tags;
 
-        auto isEqualPlatform = [](const Json::Value &platform) {
-            return platform.asString() == ClientType::clientName;
-        };
-
         //must be for_each, because of: no matching function for call to object of type 'const __transform_fn'
-        std::ranges::for_each(tagsJson, [&tags, &isEqualPlatform](const auto &tag) {
+        std::ranges::for_each(tagsJson, [&tags](const auto &tag) {
             std::string tagTitle = tag["title"].asString();
             if(std::ranges::any_of(tag["social_media"], isEqualPlatform)) {
                 tags.emplace_back(tagTitle);

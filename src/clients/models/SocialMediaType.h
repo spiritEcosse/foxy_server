@@ -24,8 +24,9 @@ namespace api::v1 {
             createClient();
         }
 
-        virtual bool post();
-        virtual bool saveToDb();
+        // Functions
+        static bool isEqualPlatform(const Json::Value& platform);
+        // Params
         std::unique_ptr<ClientType> client;
         std::string title;
         std::string slug;
@@ -36,6 +37,9 @@ namespace api::v1 {
         std::vector<std::string> tags;
         std::string postId;
 
+    private:
+        virtual bool saveToDb();
+
     protected:
         static std::vector<std::string> extractTags(const Json::Value& tagsJson);
         static std::string truncateDescription(const std::string_view& description);
@@ -45,6 +49,7 @@ namespace api::v1 {
         std::string tagsToString();
         virtual std::string toJson() = 0;
         void createClient();
+        virtual bool post();
     };
 }
 
