@@ -6,7 +6,7 @@
 
 namespace api::v1 {
     class ShippingProfile final : public drogon::HttpController<ShippingProfile>,
-                            public BaseCRUD<ShippingProfileModel, ShippingProfile> {
+                                  public BaseCRUD<ShippingProfileModel, ShippingProfile> {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(ShippingProfile::getOne,

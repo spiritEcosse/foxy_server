@@ -118,8 +118,10 @@ namespace api::v1 {
             return sql;
         }
 
-        explicit
-        BaseQuerySet(const std::string_view &tableName, int limit, std::string alias, bool returnInMain = true) :
+        explicit BaseQuerySet(const std::string_view &tableName,
+                              int limit,
+                              std::string alias,
+                              bool returnInMain = true) :
             tableName(tableName), _limit(limit), _alias(std::move(alias)), _doAndCheck(false),
             _returnInMain(returnInMain) {}
 

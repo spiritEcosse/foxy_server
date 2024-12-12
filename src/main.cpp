@@ -109,13 +109,13 @@ int main() {
                                       std::move(callback));
                                   (*callbackPtr)(resp);
                               });
-        app().registerPostHandlingAdvice([foxy_client, foxy_admin]([[maybe_unused]] const HttpRequestPtr &req,
-                                                                   const HttpResponsePtr &resp) {
-            auto origin = req->getHeader("Origin");
-            if(origin == foxy_client || origin == foxy_admin) {
-                resp->addHeader("Access-Control-Allow-Origin", origin);
-            }
-        });
+        app().registerPostHandlingAdvice(
+            [foxy_client, foxy_admin]([[maybe_unused]] const HttpRequestPtr &req, const HttpResponsePtr &resp) {
+                auto origin = req->getHeader("Origin");
+                if(origin == foxy_client || origin == foxy_admin) {
+                    resp->addHeader("Access-Control-Allow-Origin", origin);
+                }
+            });
         app().setThreadNum(std::thread::hardware_concurrency() + 2);
         std::string http_port;
         if(!getenv("FOXY_HTTP_PORT", http_port)) {
