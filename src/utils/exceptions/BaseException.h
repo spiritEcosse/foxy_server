@@ -7,7 +7,7 @@
 #include "sentryHelper.h"
 
 namespace api::v1 {
-    class BaseException : public std::exception, BaseClass {
+    class BaseException : public std::exception, public BaseClass {
     private:
         std::string message = "BaseException message";
         backward::StackTrace st;
