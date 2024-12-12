@@ -47,7 +47,7 @@ namespace api::v1 {
             if(!outputFile)
                 return false;
 
-            outputFile.write(content.c_str(), content.size());
+            outputFile.write(std::move(content).c_str(), content.size());
 
             return outputFile.good();
         }
@@ -126,7 +126,7 @@ namespace api::v1 {
             bio = BIO_push(b64, bio);
             BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
 
-            BIO_write(bio, fileContent.data(), fileContent.size());
+            BIO_write(bio, fileContent.data(), static_cast<int>(fileContent.size()));
             BIO_flush(bio);
 
             BUF_MEM* mem_ptr = nullptr;
