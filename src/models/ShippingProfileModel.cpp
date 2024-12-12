@@ -4,9 +4,9 @@
 using namespace api::v1;
 
 std::map<std::string, std::pair<std::string, std::string>, std::less<>> ShippingProfileModel::joinMap() const {
-    return {{ShippingRateModel::tableName,
-             {BaseModel::Field::id.getFullFieldName(),
-              ShippingRateModel::Field::shippingProfileId.getFullFieldName()}}};
+    return {
+        {ShippingRateModel::tableName,
+         {BaseModel::Field::id.getFullFieldName(), ShippingRateModel::Field::shippingProfileId.getFullFieldName()}}};
 }
 
 BaseModel<ShippingProfileModel>::SetMapFieldTypes ShippingProfileModel::getObjectValues() const {

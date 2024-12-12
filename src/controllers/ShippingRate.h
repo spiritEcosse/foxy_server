@@ -5,7 +5,8 @@
 #include "ShippingRateModel.h"
 
 namespace api::v1 {
-    class ShippingRate final : public drogon::HttpController<ShippingRate>, public BaseCRUD<ShippingRateModel, ShippingRate> {
+    class ShippingRate final : public drogon::HttpController<ShippingRate>,
+                               public BaseCRUD<ShippingRateModel, ShippingRate> {
     public:
         METHOD_LIST_BEGIN
         METHOD_ADD(ShippingRate::getShippingRateByItem, "item/{}", drogon::Get, drogon::Options);
