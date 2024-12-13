@@ -6,22 +6,6 @@
 namespace api::v1 {
     class Tweet;
 
-    class StringViewHasher final : public BaseClass {
-    public:
-        // Support hashing for std::string, std::string_view, and const char*
-        using is_transparent = void;  // This signals that the hasher is "transparent"
-
-        // Hash for std::string_view (covers std::string as well)
-        size_t operator()(const std::string_view key) const noexcept {
-            return std::hash<std::string_view>{}(key);
-        }
-
-        // Hash for const char* (c-string)
-        size_t operator()(const char* key) const noexcept {
-            return std::hash<std::string_view>{}(key);
-        }
-    };
-
     class TwitterClient final : public IClient<TwitterClient, Tweet> {
         std::string apiKey;
         std::string apiSecretKey;
@@ -30,9 +14,7 @@ namespace api::v1 {
         std::string bearerToken;
 
         std::string
-        auth(const std::string_view url,
-             const std::string_view method = "POST",
-             const std::unordered_map<std::string, std::string, StringViewHasher, std::less<>>& params = {});
+        auth(const std::string_view url, const std::string_view method = "POST", const TransparentMap& params = {});
         std::string auth() override;
         bool uploadMediaImage(const Tweet* tweet);
         bool uploadMediaVideo(const Tweet* tweet);

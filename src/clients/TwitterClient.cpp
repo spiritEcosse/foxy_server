@@ -3,7 +3,7 @@
 #include <cpr/cpr.h>
 #include "fmt/format.h"
 #include <string>
-#include <map>
+#include "TransparentStringHash.h"
 #include <drogon/drogon.h>
 #include <models/Tweet.h>
 #include "cuuid.h"
@@ -86,16 +86,21 @@ namespace api::v1 {
         initSessions.reserve(medias.size());
 
         std::ranges::transform(medias, std::back_inserter(initSessions), [this, &multiplePerform](const auto& media) {
+            const TransparentMap authParams({{"command", "INIT"},
+                                             {"media_type", media->getContentType()},
+                                             {"total_bytes", std::to_string(static_cast<int>(media->getSize()))},
+                                             {"media_category", "tweet_video"}});
             auto session = std::make_shared<cpr::Session>();
             session->SetUrl(cpr::Url{apiUploadMedia});
-            session->SetHeader({{"Authorization", auth(apiUploadMedia)}});
+            session->SetHeader({{"Authorization", auth(apiUploadMedia, "POST", authParams)}});
 
             // Prepare video file info for INIT
-            session->SetMultipart({{"command", "INIT"},
-                                   {"media_type", media->getContentType()},
-                                   {"total_bytes", static_cast<int>(media->getSize())},
-                                   {"media_category", "tweet_video"}});
+            std::vector<cpr::Pair> payloadPairs;
+            for(const auto& [key, value]: authParams) {
+                payloadPairs.emplace_back(key, value);
+            }
 
+            session->SetPayload(cpr::Payload(payloadPairs.begin(), payloadPairs.end()));
             multiplePerform.AddSession(session);
             return session;
         });
@@ -173,11 +178,17 @@ namespace api::v1 {
         std::ranges::transform(medias,
                                std::back_inserter(finalizeSessions),
                                [this, &multiplePerformFin](const auto& media) {
+                                   const TransparentMap authParams{{"command", "FINALIZE"},
+                                                                   {"media_id", media->getExternalId()}};
                                    auto session = std::make_shared<cpr::Session>();
                                    session->SetUrl(cpr::Url{apiUploadMedia});
-                                   session->SetHeader({{"Authorization", auth(apiUploadMedia)}});
-                                   session->SetMultipart(
-                                       {{"command", "FINALIZE"}, {"media_id", media->getExternalId()}});
+                                   session->SetHeader({{"Authorization", auth(apiUploadMedia, "POST", authParams)}});
+                                   std::vector<cpr::Pair> payloadPairs;
+                                   for(const auto& [key, value]: authParams) {
+                                       payloadPairs.emplace_back(key, value);
+                                   }
+
+                                   session->SetPayload(cpr::Payload(payloadPairs.begin(), payloadPairs.end()));
                                    multiplePerformFin.AddSession(session);
                                    return session;
                                });
@@ -200,9 +211,7 @@ namespace api::v1 {
     }
 
     std::string
-    TwitterClient::auth(const std::string_view url,
-                        const std::string_view method,
-                        const std::unordered_map<std::string, std::string, StringViewHasher, std::less<>>& params) {
+    TwitterClient::auth(const std::string_view url, const std::string_view method, const TransparentMap& params) {
         const auto now = std::chrono::system_clock::now().time_since_epoch();
         const auto now_in_seconds = std::chrono::duration_cast<std::chrono::seconds>(now).count();
         std::string oauth_timestamp = std::to_string(now_in_seconds);
@@ -214,9 +223,9 @@ namespace api::v1 {
             {"oauth_token", accessToken},
             {"oauth_version", "1.0"},
         };
-        for(const auto& [key, value]: params) {
-            oauthParams[key] = value;
-        }
+        std::ranges::transform(params, std::inserter(oauthParams, oauthParams.end()), [](const auto& pair) {
+            return pair;  // Return the key-value pair unchanged
+        });
 
         oauthParams["oauth_signature"] =
             calculateOAuthSignature(method, url, oauthParams, apiSecretKey, accessTokenSecret);
