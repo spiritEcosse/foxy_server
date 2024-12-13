@@ -86,21 +86,15 @@ namespace api::v1 {
         initSessions.reserve(medias.size());
 
         std::ranges::transform(medias, std::back_inserter(initSessions), [this, &multiplePerform](const auto& media) {
-            const TransparentMap authParams({{"command", "INIT"},
-                                             {"media_type", media->getContentType()},
-                                             {"total_bytes", std::to_string(static_cast<int>(media->getSize()))},
-                                             {"media_category", "tweet_video"}});
             auto session = std::make_shared<cpr::Session>();
             session->SetUrl(cpr::Url{apiUploadMedia});
-            session->SetHeader({{"Authorization", auth(apiUploadMedia, "POST", authParams)}});
+            session->SetHeader({{"Authorization", auth(apiUploadMedia, "POST")}});
 
             // Prepare video file info for INIT
-            std::vector<cpr::Pair> payloadPairs;
-            for(const auto& [key, value]: authParams) {
-                payloadPairs.emplace_back(key, value);
-            }
-
-            session->SetPayload(cpr::Payload(payloadPairs.begin(), payloadPairs.end()));
+            session->SetMultipart({{"command", "INIT"},
+                                   {"media_type", media->getContentType()},
+                                   {"total_bytes", std::to_string(static_cast<int>(media->getSize()))},
+                                   {"media_category", "tweet_video"}});
             multiplePerform.AddSession(session);
             return session;
         });
@@ -178,17 +172,11 @@ namespace api::v1 {
         std::ranges::transform(medias,
                                std::back_inserter(finalizeSessions),
                                [this, &multiplePerformFin](const auto& media) {
-                                   const TransparentMap authParams{{"command", "FINALIZE"},
-                                                                   {"media_id", media->getExternalId()}};
                                    auto session = std::make_shared<cpr::Session>();
                                    session->SetUrl(cpr::Url{apiUploadMedia});
-                                   session->SetHeader({{"Authorization", auth(apiUploadMedia, "POST", authParams)}});
-                                   std::vector<cpr::Pair> payloadPairs;
-                                   for(const auto& [key, value]: authParams) {
-                                       payloadPairs.emplace_back(key, value);
-                                   }
-
-                                   session->SetPayload(cpr::Payload(payloadPairs.begin(), payloadPairs.end()));
+                                   session->SetHeader({{"Authorization", auth(apiUploadMedia, "POST")}});
+                                   session->SetMultipart(
+                                       {{"command", "FINALIZE"}, {"media_id", media->getExternalId()}});
                                    multiplePerformFin.AddSession(session);
                                    return session;
                                });

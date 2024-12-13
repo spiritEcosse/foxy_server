@@ -8,8 +8,5 @@ namespace api::v1 {
         using IClientImpl::IClientImpl;
         virtual bool post(PostType* postType);
         virtual std::string auth() = 0;
-        // Json::Value requestCurlOauth(const std::string& url,
-        //                              const std::string& method,
-        //                              const std::map<std::string, std::string, std::less<>>& oauthParams = {});
     };
 }
