@@ -85,6 +85,29 @@ CPMAddPackage(
         GIT_TAG v1.9.4
         OPTIONS "BUILD_TESTING OFF"
 )
+set(PINTEREST_ACCESS_TOKEN "$ENV{PINTEREST_ACCESS_TOKEN}")
+if (NOT PINTEREST_ACCESS_TOKEN)
+    message(FATAL_ERROR "PINTEREST_ACCESS_TOKEN environment variable is not set.")
+endif ()
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC
+        -DPINTEREST_ACCESS_TOKEN="${PINTEREST_ACCESS_TOKEN}"
+)
+set(PINTEREST_API_CREATE_ENDPOINT "$ENV{PINTEREST_API_CREATE_ENDPOINT}")
+if (NOT PINTEREST_API_CREATE_ENDPOINT)
+    message(FATAL_ERROR "PINTEREST_API_CREATE_ENDPOINT environment variable is not set.")
+endif ()
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC
+        -DPINTEREST_API_CREATE_ENDPOINT="${PINTEREST_API_CREATE_ENDPOINT}"
+)
+set(PINTEREST_BOARD_ID "$ENV{PINTEREST_BOARD_ID}")
+if (NOT PINTEREST_BOARD_ID)
+    message(FATAL_ERROR "PINTEREST_BOARD_ID environment variable is not set.")
+endif ()
+target_compile_definitions(${PROJECT_NAME} PUBLIC
+        -DPINTEREST_BOARD_ID="${PINTEREST_BOARD_ID}"
+)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
 # end drogon

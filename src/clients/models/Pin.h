@@ -2,9 +2,13 @@
 
 #include "SocialMediaType.h"
 
+#ifndef PINTEREST_BOARD_ID
+#error PINTEREST_BOARD_ID must be defined at compile-time
+#endif
+
 namespace api::v1 {
     class Pin final : public SocialMediaType<PinterestClient, Pin> {
-        std::string boardId;
+        static constexpr std::string_view boardId = PINTEREST_BOARD_ID;
 
     public:
         static constexpr int maxDescriptionSize = 800;
@@ -19,5 +23,6 @@ namespace api::v1 {
             const Json::Value& tags);
 
         std::string toJson() override;
+        bool post() override;
     };
 }

@@ -46,11 +46,12 @@ void SocialMedia::handleRow(const auto &row) const {
     if(!clientDownloadMedia.downloadMedia())
         return;
 
+    // if(diffNets.contains(TwitterClient::clientName)) {
+    //     Tweet(itemId, title, slug, "", clientDownloadMedia.media, tags).post();
+    // }
     if(diffNets.contains(TwitterClient::clientName)) {
-        Tweet(itemId, title, slug, "", clientDownloadMedia.media, tags).post();
+        Pin(itemId, title, slug, description, clientDownloadMedia.media, tags).post();
     }
-    // Pin pin(itemId, title, slug, description, transformedMedia, tags);
-    // pin.post();
 }
 
 void SocialMedia::handleSqlResultPublish(const drogon::orm::Result &r) const {

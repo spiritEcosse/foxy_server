@@ -3,19 +3,23 @@
 #include "IClient.h"
 #include "env.h"
 
+#ifndef PINTEREST_ACCESS_TOKEN
+#error PINTEREST_ACCESS_TOKEN must be defined at compile-time
+#endif
+
+#ifndef PINTEREST_API_CREATE_ENDPOINT
+#error PINTEREST_API_CREATE_ENDPOINT must be defined at compile-time
+#endif
+
 namespace api::v1 {
     class Pin;
 
     class PinterestClient final : public IClient<PinterestClient, Pin> {
-        std::string accessToken;
+        static constexpr std::string_view accessToken = PINTEREST_ACCESS_TOKEN;
         std::string auth() override;
 
     public:
-        static constexpr std::string_view apiCreatePost = "https://api.pinterest.com/v5/pins";
+        static constexpr std::string_view apiCreatePost = PINTEREST_API_CREATE_ENDPOINT;
         static constexpr std::string_view clientName = "Pinterest";
-
-        PinterestClient() {
-            getenv("PINTEREST_ACCESS_TOKEN", accessToken);
-        }
     };
 }

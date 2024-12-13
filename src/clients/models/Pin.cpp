@@ -8,10 +8,13 @@ namespace api::v1 {
              const std::string_view& description,
              const std::vector<SharedFileTransferInfo>& media,
              const Json::Value& tags) : SocialMediaType(itemId, title, slug, description, media, tags) {
-        getenv("PIN_BOARD_ID", boardId);
         // formating description
         this->description = truncateDescription(fmt::format("{} {}", description, tagsToString()));
     };
+
+    bool Pin::post() {
+        return SocialMediaType::post();
+    }
 
     std::string Pin::toJson() {
         // {
@@ -41,7 +44,7 @@ namespace api::v1 {
         Json::Value jsonObj;
         jsonObj["title"] = title;
         jsonObj["description"] = description;
-        jsonObj["board_id"] = boardId;
+        jsonObj["board_id"] = std::string(boardId);
 
         // Create media_source object
         Json::Value mediaSource;
@@ -49,13 +52,16 @@ namespace api::v1 {
 
         // Create items array for multiple images !!!!!!!!!!!!!!!!!!!!!!!!!!!
         Json::Value items = Json::arrayValue;
-        std::ranges::for_each(media, [&items](const SharedFileTransferInfo& info) {
-            Json::Value item;
-            item["data"] = info->getBase64Response();
-            item["content_type"] = info->getContentType();
-            item["link"] = info->getUrl();
-            items.append(item);
-        });
+        std::ranges::for_each(media | std::views::filter([](const SharedFileTransferInfo& info) {
+                                  return !info->isVideo();
+                              }),
+                              [&items](const SharedFileTransferInfo& info) {
+                                  Json::Value item;
+                                  item["data"] = info->getBase64Response();
+                                  item["content_type"] = info->getContentType();
+                                  item["link"] = info->getUrl();
+                                  items.append(item);
+                              });
 
         // Add items array to media_source
         mediaSource["items"] = items;

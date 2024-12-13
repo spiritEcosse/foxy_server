@@ -26,16 +26,12 @@ int main() {
     try {
         std::string env;
 
-        if(!getenv("ENV", env)) {
-            throw std::invalid_argument("ENV is not set");
-        }
+        getenv("ENV", env);
 
         std::string sentry_dsn;
 
         if(env != "dev") {
-            if(!getenv("SENTRY_DSN", sentry_dsn)) {
-                throw std::invalid_argument("SENTRY_DSN is not set");
-            }
+            getenv("SENTRY_DSN", sentry_dsn);
 
             sentry_options_t *options = sentry_options_new();
             sentry_options_set_dsn(options, sentry_dsn.c_str());
@@ -51,15 +47,11 @@ int main() {
         }
 
         std::string config_app_path;
-        if(!getenv("CONFIG_APP_PATH", config_app_path)) {
-            throw std::invalid_argument("CONFIG_APP_PATH is not set");
-        }
+        getenv("CONFIG_APP_PATH", config_app_path);
 
         std::string foxy_client;
 
-        if(!getenv("FOXY_CLIENT", foxy_client)) {
-            throw std::invalid_argument("FOXY_CLIENT is not set");
-        }
+        getenv("FOXY_CLIENT", foxy_client);
 
         std::string app_bucket_host;
         getenv("APP_BUCKET_HOST", app_bucket_host);
@@ -67,14 +59,11 @@ int main() {
             throw std::invalid_argument("APP_BUCKET_HOST is not set");
         }
 
-        if(std::string app_cloud_name; !getenv("APP_CLOUD_NAME", app_cloud_name)) {
-            throw std::invalid_argument("APP_CLOUD_NAME is not set");
-        }
+        std::string app_cloud_name;
+        getenv("APP_CLOUD_NAME", app_cloud_name);
 
         std::string foxy_admin;
-        if(!getenv("FOXY_ADMIN", foxy_admin)) {
-            throw std::invalid_argument("FOXY_ADMIN is not set");
-        }
+        getenv("FOXY_ADMIN", foxy_admin);
         app().loadConfigFile(config_app_path);
         app().registerHandler("/",
                               [](const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
@@ -118,9 +107,7 @@ int main() {
             });
         app().setThreadNum(std::thread::hardware_concurrency() + 2);
         std::string http_port;
-        if(!getenv("FOXY_HTTP_PORT", http_port)) {
-            throw std::invalid_argument("FOXY_HTTP_PORT is not set");
-        }
+        getenv("FOXY_HTTP_PORT", http_port);
         std::string host = env == "dev" ? "127.0.0.1" : "0.0.0.0";
         app().addListener(host, static_cast<uint16_t>(std::stoi(http_port))).run();
 

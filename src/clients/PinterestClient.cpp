@@ -2,6 +2,6 @@
 
 namespace api::v1 {
     std::string PinterestClient::auth() {
-        return accessToken;
+        return fmt::format("Bearer {}", accessToken);
     }
 }
