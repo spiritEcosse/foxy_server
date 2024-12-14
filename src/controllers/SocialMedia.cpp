@@ -46,12 +46,18 @@ void SocialMedia::handleRow(const auto &row) const {
     if(!clientDownloadMedia.downloadMedia())
         return;
 
-    // if(diffNets.contains(TwitterClient::clientName)) {
-    //     Tweet(itemId, title, slug, "", clientDownloadMedia.media, tags).post();
-    // }
-    if(diffNets.contains(TwitterClient::clientName)) {
-        Pin(itemId, title, slug, description, clientDownloadMedia.media, tags).post();
-    }
+    std::future<void> tweetPost = std::async(std::launch::async, [&]() {
+        if(diffNets.contains(TwitterClient::clientName)) {
+            Tweet(itemId, title, slug, "", clientDownloadMedia.media, tags).post();
+        }
+    });
+    std::future<void> pinPost = std::async(std::launch::async, [&]() {
+        if(diffNets.contains(PinterestClient::clientName)) {
+            Pin(itemId, title, slug, description, clientDownloadMedia.media, tags).post();
+        }
+    });
+    tweetPost.get();
+    pinPost.get();
 }
 
 void SocialMedia::handleSqlResultPublish(const drogon::orm::Result &r) const {
