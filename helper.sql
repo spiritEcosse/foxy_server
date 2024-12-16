@@ -163,13 +163,14 @@ $$
 
         CREATE TABLE IF NOT EXISTS media
         (
-            id         SERIAL PRIMARY KEY,
-            src        VARCHAR(255) NOT NULL,
-            type       media_type   NOT NULL,
-            item_id    INT          NOT NULL,
-            sort       INT                   DEFAULT 1,
-            created_at TIMESTAMP    NOT NULL DEFAULT NOW(),
-            updated_at TIMESTAMP    NOT NULL DEFAULT NOW(),
+            id           SERIAL PRIMARY KEY,
+            src          VARCHAR(255) NOT NULL,
+            type         media_type   NOT NULL,
+            item_id      INT          NOT NULL,
+            sort         INT                   DEFAULT 1,
+            content_type VARCHAR(20)           DEFAULT '' not null,
+            created_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
+            updated_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
             FOREIGN KEY (item_id) REFERENCES item (id) ON DELETE CASCADE
         );
 

@@ -13,7 +13,5 @@ ANALYZE social_media;
 ANALYZE media;
 
 ALTER TABLE media
-    DROP COLUMN content_type;
-ALTER TABLE media
     ADD COLUMN content_type VARCHAR(20) DEFAULT '' not null;
 COMMIT;
