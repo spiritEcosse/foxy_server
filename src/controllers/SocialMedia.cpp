@@ -115,22 +115,21 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
             std::cref(ItemModel::Field::slug),
             std::cref(ItemModel::Field::description))
         .join(MediaModel())
-        .left_join(SocialMediaModel())
         .group_by(std::cref(BaseModel<ItemModel>::Field::id))
         .filter(BaseModel<ItemModel>::Field::id.getFullFieldName(), std::string("93"))
         .functions(Function(fmt::format(", json_agg("
                                         "json_build_object('type', {0}, 'url', CASE "
                                         "WHEN {0}::text LIKE 'video' THEN format_src({1}, '{3}') "
                                         "ELSE format_src({1}, '{2}') "
-                                        "END "
-                                        ") ORDER BY CASE "
+                                        "END, 'content_type', {4}) ORDER BY CASE "
                                         "WHEN {0}::text LIKE 'video' THEN 1 "
                                         "ELSE 2 "
                                         "END ASC) AS media_list",
                                         MediaModel::Field::type.getFullFieldName(),
                                         MediaModel::Field::src.getFullFieldName(),
                                         app_cloud_name,
-                                        app_bucket_host)))
+                                        app_bucket_host,
+                                        MediaModel::Field::contentType.getFullFieldName())))
         .functions(Function(fmt::format(R"( COALESCE(({}), '[]'::json) AS nets)", qsSocialMedia.buildSelect())))
         .functions(Function(fmt::format(R"( COALESCE(({}), '[]'::json) AS tags)", qsTag.buildSelect())));
 

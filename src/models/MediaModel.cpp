@@ -15,6 +15,7 @@ BaseModel<MediaModel>::SetMapFieldTypes MediaModel::getObjectValues() const {
     return {{std::cref(Field::src), std::cref(src)},
             {std::cref(Field::itemId), std::cref(itemId)},
             {std::cref(Field::sort), std::cref(sort)},
+            {std::cref(Field::contentType), std::cref(contentType)},
             {std::cref(Field::type), std::cref(type)}};
 }
 

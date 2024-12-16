@@ -1,4 +1,5 @@
 #pragma once
+#include "Base64.h"
 #include "BaseClass.h"
 
 #include <MediaModel.h>
@@ -21,10 +22,9 @@ namespace api::v1 {
         std::string contentType;
 
     public:
-        FileTransferInfo(std::string url, std::string fileName, std::string type) :
-            url(std::move(url)), fileName(std::move(fileName)), type(std::move(type)) {
-            contentType = createContentType();
-        }
+        FileTransferInfo(std::string url, std::string fileName, std::string type, std::string contentType) :
+            url(std::move(url)), fileName(std::move(fileName)), type(std::move(type)),
+            contentType(std::move(contentType)) {}
 
         FileTransferInfo(FileTransferInfo&& other) noexcept :
             url(std::move(other.url)), fileName(std::move(other.fileName)), externalId(std::move(other.externalId)),
@@ -104,39 +104,13 @@ namespace api::v1 {
             return externalId;
         }
 
-        [[nodiscard]] std::string getBase64Response() const {
-            // Open the file in binary mode
+        [[nodiscard]] std::string getBase64ContentOfFile() const {
             std::ifstream file(fileName, std::ios::binary);
-            if(!file) {
-                return "";  // Return empty string if file cannot be opened
-            }
+            if(!file)
+                return {};
 
-            // Read the entire file content
-            std::string fileContent((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-
-            // If file is empty, return empty string
-            if(fileContent.empty()) {
-                return "";
-            }
-
-            // OpenSSL Base64 encoding
-            BIO* bio = BIO_new(BIO_s_mem());
-            BIO* b64 = BIO_new(BIO_f_base64());
-
-            bio = BIO_push(b64, bio);
-            BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
-
-            BIO_write(bio, fileContent.data(), static_cast<int>(fileContent.size()));
-            BIO_flush(bio);
-
-            BUF_MEM* mem_ptr = nullptr;
-            BIO_get_mem_ptr(bio, &mem_ptr);
-
-            std::string encodedData(mem_ptr->data, mem_ptr->length);
-
-            BIO_free_all(bio);
-
-            return encodedData;
+            return Base64::Encode(
+                std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>()));
         }
 
         [[nodiscard]] const std::string& getUrl() const {
@@ -149,23 +123,6 @@ namespace api::v1 {
 
         [[nodiscard]] const std::string& getContentType() const {
             return contentType;
-        }
-
-        std::string createContentType() {
-            // Extract the file extension from fileName
-            const size_t pos = fileName.find_last_of('.');
-            std::string extension;
-            if(pos != std::string::npos) {
-                extension = fileName.substr(pos + 1);  // Get the extension without the dot
-            }
-
-            // Concatenate type and extension to form contentType
-            if(!type.empty() && !extension.empty()) {
-                return fmt::format("{}/{}", type, extension);
-            }
-
-            // Fallback for missing type or extension
-            return "";
         }
 
         // function to detect is it video or not

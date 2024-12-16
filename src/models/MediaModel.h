@@ -20,6 +20,7 @@ namespace api::v1 {
             static inline auto itemId = BaseField("item_id", tableName);
             static inline auto sort = BaseField("sort", tableName);
             static inline auto type = BaseField("type", tableName);
+            static inline auto contentType = BaseField("content_type", tableName);
 
             Field() : BaseModel::Field() {
                 allFields.try_emplace(src.getFieldName(), std::cref(src));
@@ -31,6 +32,7 @@ namespace api::v1 {
 
         std::string src;
         std::string type;
+        std::string contentType;
         int itemId = 0;
         int sort = 0;
 
@@ -39,8 +41,10 @@ namespace api::v1 {
             itemId = json[Field::itemId.getFieldName()].asInt();
             sort = json[Field::sort.getFieldName()].asInt();
             type = json[Field::type.getFieldName()].asString();
+            contentType = json[Field::contentType.getFieldName()].asString();
 
             validateField(Field::src.getFieldName(), src, missingFields);
+            validateField(Field::contentType.getFieldName(), contentType, missingFields);
             validateField(Field::itemId.getFieldName(), itemId, missingFields);
             validateField(Field::sort.getFieldName(), sort, missingFields);
             validateField(Field::type.getFieldName(), type, missingFields);

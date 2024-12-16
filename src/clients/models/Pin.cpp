@@ -57,7 +57,7 @@ namespace api::v1 {
                               }),
                               [&items](const SharedFileTransferInfo& info) {
                                   Json::Value item;
-                                  item["data"] = info->getBase64Response();
+                                  item["data"] = info->getBase64ContentOfFile();
                                   item["content_type"] = info->getContentType();
                                   item["link"] = info->getUrl();
                                   items.append(item);

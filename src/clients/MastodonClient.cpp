@@ -59,7 +59,8 @@ namespace api::v1 {
                                    return std::make_shared<FileTransferInfo>(
                                        fmt::format("{}?twic=v1/cover=4000", mediaUrl),
                                        mediaUrl.substr(mediaUrl.find_last_of('/') + 1),
-                                       objJson["type"].asString());
+                                       objJson["type"].asString(),
+                                       objJson["content_type"].asString());
                                });
         return mediaUrls;
     }
