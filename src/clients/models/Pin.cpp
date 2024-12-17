@@ -1,5 +1,5 @@
 #include "Pin.h"
-#include "env.h"
+#include <execution>
 
 namespace api::v1 {
     Pin::Pin(const int itemId,
@@ -13,7 +13,21 @@ namespace api::v1 {
     };
 
     bool Pin::post() {
-        return SocialMediaType::post();
+        std::future<bool> postVideoFuture = std::async(std::launch::async, [this]() {
+            return postVideos();
+        });
+
+        std::future<bool> postImagesFuture = std::async(std::launch::async, [this]() {
+            return SocialMediaType::post();
+        });
+
+        const bool postImagesResult = postImagesFuture.get();
+        const bool postVideoResult = postVideoFuture.get();
+        return postImagesResult && postVideoResult;
+    }
+
+    bool Pin::postVideos() const {
+        return client->uploadVideos(this);
     }
 
     std::string Pin::toJson() {

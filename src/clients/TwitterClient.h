@@ -19,10 +19,9 @@ namespace api::v1 {
         bool setPostId(const cpr::Response& response, const Json::Value& jsonResponse, Tweet* tweet) const override;
         bool uploadMediaImage(const Tweet* tweet);
         bool uploadMediaVideo(const Tweet* tweet);
-        static bool saveMediaIdString(const std::vector<cpr::Response>& responses,
-                                      const std::vector<SharedFileTransferInfo>& medias);
 
     public:
+        static constexpr std::string media_id = "media_id_string";
         static constexpr std::string_view apiUploadMedia = "https://upload.twitter.com/1.1/media/upload.json";
         static constexpr std::string_view apiCreatePost = "https://api.twitter.com/2/tweets";
         static constexpr std::string_view clientName = "Twitter";

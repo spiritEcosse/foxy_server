@@ -24,5 +24,6 @@ namespace api::v1 {
 
         std::string toJson() override;
         bool post() override;
+        bool postVideos() const;
     };
 }

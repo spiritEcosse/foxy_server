@@ -20,6 +20,7 @@ namespace api::v1 {
         std::string externalId;
         std::string type;
         std::string contentType;
+        Json::Value response;
 
     public:
         FileTransferInfo(std::string url, std::string fileName, std::string type, std::string contentType) :
@@ -28,7 +29,8 @@ namespace api::v1 {
 
         FileTransferInfo(FileTransferInfo&& other) noexcept :
             url(std::move(other.url)), fileName(std::move(other.fileName)), externalId(std::move(other.externalId)),
-            type(std::move(other.type)), contentType(std::move(other.contentType)) {}
+            type(std::move(other.type)), contentType(std::move(other.contentType)),
+            response(std::move(other.response)) {}
 
         // Destructor to remove the file when the object is destroyed
         ~FileTransferInfo() override {
@@ -40,6 +42,14 @@ namespace api::v1 {
                 // For example, you might want to log the error or use a logging framework
                 std::cerr << "Error removing file: " << e.what() << std::endl;
             }
+        }
+
+        [[nodiscard]] Json::Value getResponse() const {
+            return response;
+        }
+
+        void setResponse(const Json::Value& originalResponse) {
+            response = originalResponse;
         }
 
         [[nodiscard]] bool saveFile(std::string&& content) const {

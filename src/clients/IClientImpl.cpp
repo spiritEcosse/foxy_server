@@ -15,10 +15,10 @@
 #include <uuid/uuid.h>
 
 namespace api::v1 {
-    bool IClientImpl::fieldIsMember(const std::string& field,
+    bool IClientImpl::fieldIsMember(const std::string_view& field,
                                     const cpr::Response& response,
                                     const Json::Value& jsonResponse) {
-        if(!jsonResponse.isMember(field)) {
+        if(!jsonResponse.isMember(std::string(field))) {
             // Capture JSON parsing error
             sentryHelper(
                 std::runtime_error(fmt::format("No data or id in PostType to post. Url: {}, Status: {}, Response: {}.",

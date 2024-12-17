@@ -2,13 +2,14 @@
 
 #include "IClient.h"
 #include "env.h"
+#include <fmt/format.h>
 
 #ifndef PINTEREST_ACCESS_TOKEN
 #error PINTEREST_ACCESS_TOKEN must be defined at compile-time
 #endif
 
-#ifndef PINTEREST_API_CREATE_ENDPOINT
-#error PINTEREST_API_CREATE_ENDPOINT must be defined at compile-time
+#ifndef PINTEREST_API_HOST
+#error PINTEREST_API_HOST must be defined at compile-time
 #endif
 
 namespace api::v1 {
@@ -20,7 +21,15 @@ namespace api::v1 {
         bool setPostId(const cpr::Response& response, const Json::Value& jsonResponse, Pin* pin) const override;
 
     public:
-        static constexpr std::string_view apiCreatePost = PINTEREST_API_CREATE_ENDPOINT;
+        static constexpr std::string media_id = "media_id";
+        bool uploadVideos(const Pin* pin);
+        static std::string apiUploadMedia;
+        static std::string apiCreatePost;
         static constexpr std::string_view clientName = "Pinterest";
+
+        // PinterestClient() {
+        //     apiUploadMedia = fmt::format("{}/v5/media", PINTEREST_API_HOST);
+        //     apiCreatePost = fmt::format("{}/v5/pins", PINTEREST_API_HOST);
+        // }
     };
 }

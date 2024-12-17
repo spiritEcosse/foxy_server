@@ -93,20 +93,20 @@ endif ()
 target_compile_definitions(${PROJECT_NAME} PUBLIC
         -DPINTEREST_ACCESS_TOKEN="${PINTEREST_ACCESS_TOKEN}"
 )
-set(PINTEREST_API_CREATE_ENDPOINT "$ENV{PINTEREST_API_CREATE_ENDPOINT}")
-if (NOT PINTEREST_API_CREATE_ENDPOINT)
-    message(FATAL_ERROR "PINTEREST_API_CREATE_ENDPOINT environment variable is not set.")
-endif ()
-
-target_compile_definitions(${PROJECT_NAME} PUBLIC
-        -DPINTEREST_API_CREATE_ENDPOINT="${PINTEREST_API_CREATE_ENDPOINT}"
-)
 set(PINTEREST_BOARD_ID "$ENV{PINTEREST_BOARD_ID}")
 if (NOT PINTEREST_BOARD_ID)
     message(FATAL_ERROR "PINTEREST_BOARD_ID environment variable is not set.")
 endif ()
 target_compile_definitions(${PROJECT_NAME} PUBLIC
         -DPINTEREST_BOARD_ID="${PINTEREST_BOARD_ID}"
+)
+
+set(PINTEREST_API_HOST "$ENV{PINTEREST_API_HOST}")
+if (NOT PINTEREST_API_HOST)
+    message(FATAL_ERROR "PINTEREST_API_HOST environment variable is not set.")
+endif ()
+target_compile_definitions(${PROJECT_NAME} PUBLIC
+        -DPINTEREST_API_HOST="${PINTEREST_API_HOST}"
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon)

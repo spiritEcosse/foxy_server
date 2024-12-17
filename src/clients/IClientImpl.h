@@ -20,6 +20,6 @@ namespace api::v1 {
         static bool checkResponses(const std::vector<cpr::Response>& responses, int status_code = 200);
         [[nodiscard]] static bool parseJson(const cpr::Response& response, Json::Value& jsonResponse);
         [[nodiscard]] static bool
-        fieldIsMember(const std::string& field, const cpr::Response& response, const Json::Value& jsonResponse);
+        fieldIsMember(const std::string_view& field, const cpr::Response& response, const Json::Value& jsonResponse);
     };
 }

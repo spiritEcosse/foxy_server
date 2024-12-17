@@ -9,26 +9,6 @@
 #include "cuuid.h"
 
 namespace api::v1 {
-    bool TwitterClient::saveMediaIdString(const std::vector<cpr::Response>& responses,
-                                          const std::vector<SharedFileTransferInfo>& medias) {
-        for(size_t i = 0; const auto& media: medias) {
-            const auto& response = responses[i];
-
-            // Parse JSON response using JsonCpp
-            Json::Value jsonResponse;
-
-            if(!parseJson(response, jsonResponse))
-                return false;
-
-            if(!fieldIsMember("media_id_string", response, jsonResponse))
-                return false;
-            media->setExternalId(jsonResponse["media_id_string"].asString());
-            std::cout << media->getExternalId() << " : " << media->getFileName() << std::endl;
-            ++i;
-        }
-        return true;
-    }
-
     std::string TwitterClient::auth() {
         return auth(apiCreatePost);
     }
@@ -69,10 +49,7 @@ namespace api::v1 {
 
         // Perform all requests
         const std::vector<cpr::Response> responses = multiplePerform.Post();
-        if(!checkResponses(responses))
-            return false;
-        // save media_id_string to media
-        return saveMediaIdString(responses, medias);
+        return checkResponses(responses) && saveMediaIdString(responses, medias);
     }
 
     bool TwitterClient::uploadMediaVideo(const Tweet* tweet) {

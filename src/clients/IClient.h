@@ -10,5 +10,7 @@ namespace api::v1 {
         virtual std::string auth() = 0;
         virtual bool
         setPostId(const cpr::Response& response, const Json::Value& jsonResponse, PostType* tweet) const = 0;
+        static bool saveMediaIdString(const std::vector<cpr::Response>& responses,
+                                      const std::vector<SharedFileTransferInfo>& medias);
     };
 }
