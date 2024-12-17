@@ -46,30 +46,25 @@ namespace api::v1 {
         jsonObj["description"] = description;
         jsonObj["board_id"] = std::string(boardId);
 
-        // Create media_source object
         Json::Value mediaSource;
         mediaSource["source_type"] = "multiple_image_base64";
 
-        // Create items array for multiple images !!!!!!!!!!!!!!!!!!!!!!!!!!!
         Json::Value items = Json::arrayValue;
         std::ranges::for_each(media | std::views::filter([](const SharedFileTransferInfo& info) {
                                   return !info->isVideo();
                               }),
-                              [&items](const SharedFileTransferInfo& info) {
+                              [&items, this](const SharedFileTransferInfo& info) {
                                   Json::Value item;
                                   item["data"] = info->getBase64ContentOfFile();
                                   item["content_type"] = info->getContentType();
-                                  item["link"] = info->getUrl();
+                                  item["link"] = itemUrl;
                                   items.append(item);
                               });
 
-        // Add items array to media_source
         mediaSource["items"] = items;
 
-        // Add media_source to root object
         jsonObj["media_source"] = mediaSource;
 
-        // Build the JSON string
         Json::StreamWriterBuilder builder;
         builder["commentStyle"] = "None";
         builder["indentation"] = "";  // Compact JSON
