@@ -40,28 +40,19 @@ namespace api::v1 {
     }
 
     std::vector<SharedFileTransferInfo> MastodonClient::transformMedia(const Json::Value& mediaJson) {
-        // Find the minimum number of media items to process
-        // This ensures we don't exceed the maximum allowed media items for either Tweets or Pins
-        constexpr size_t maxMediaItems =
-            std::max(static_cast<size_t>(Tweet::maxMediaItems), static_cast<size_t>(Pin::maxMediaItems));
-        const size_t numItems = std::min(maxMediaItems, static_cast<size_t>(mediaJson.size()));
-
         // Create an empty vector to store FileTransferInfo objects
         // Use reserve to optimize memory allocation
         std::vector<SharedFileTransferInfo> mediaUrls;
-        mediaUrls.reserve(numItems);
+        mediaUrls.reserve(mediaJson.size());
 
         // Iterate through the mediaJson
-        std::ranges::transform(mediaJson | std::ranges::views::take(numItems),
-                               std::back_inserter(mediaUrls),
-                               [](const Json::Value& objJson) {
-                                   const std::string mediaUrl = objJson["url"].asString();
-                                   return std::make_shared<FileTransferInfo>(
-                                       fmt::format("{}?twic=v1/cover=2000x2000", mediaUrl),
-                                       mediaUrl.substr(mediaUrl.find_last_of('/') + 1),
-                                       objJson["type"].asString(),
-                                       objJson["content_type"].asString());
-                               });
+        std::ranges::transform(mediaJson, std::back_inserter(mediaUrls), [](const Json::Value& objJson) {
+            const std::string mediaUrl = objJson["url"].asString();
+            return std::make_shared<FileTransferInfo>(fmt::format("{}?twic=v1/cover=2000x2000", mediaUrl),
+                                                      mediaUrl.substr(mediaUrl.find_last_of('/') + 1),
+                                                      objJson["type"].asString(),
+                                                      objJson["content_type"].asString());
+        });
         return mediaUrls;
     }
 }
