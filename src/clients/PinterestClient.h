@@ -17,6 +17,7 @@ namespace api::v1 {
     class PinterestClient final : public IClient<PinterestClient, Pin> {
         static constexpr std::string_view accessToken = PINTEREST_ACCESS_TOKEN;
         std::string auth() override;
+        bool setPostId(const cpr::Response& response, const Json::Value& jsonResponse, Pin* pin) const override;
 
     public:
         static constexpr std::string_view apiCreatePost = PINTEREST_API_CREATE_ENDPOINT;

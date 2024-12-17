@@ -16,6 +16,7 @@ namespace api::v1 {
         std::string
         auth(const std::string_view url, const std::string_view method = "POST", const TransparentMap& params = {});
         std::string auth() override;
+        bool setPostId(const cpr::Response& response, const Json::Value& jsonResponse, Tweet* tweet) const override;
         bool uploadMediaImage(const Tweet* tweet);
         bool uploadMediaVideo(const Tweet* tweet);
         static bool saveMediaIdString(const std::vector<cpr::Response>& responses,

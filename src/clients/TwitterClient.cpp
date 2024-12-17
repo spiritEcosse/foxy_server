@@ -33,6 +33,13 @@ namespace api::v1 {
         return auth(apiCreatePost);
     }
 
+    bool TwitterClient::setPostId(const cpr::Response& response, const Json::Value& jsonResponse, Tweet* tweet) const {
+        if(!fieldIsMember("data", response, jsonResponse) || !fieldIsMember("id", response, jsonResponse["data"]))
+            return false;
+        tweet->postId = jsonResponse["data"]["id"].asString();
+        return true;
+    }
+
     bool TwitterClient::uploadMediaImage(const Tweet* tweet) {
         std::vector<SharedFileTransferInfo> medias;
         std::ranges::copy_if(tweet->media, std::back_inserter(medias), [](const auto& mediaItem) {

@@ -57,7 +57,7 @@ namespace api::v1 {
                                [](const Json::Value& objJson) {
                                    const std::string mediaUrl = objJson["url"].asString();
                                    return std::make_shared<FileTransferInfo>(
-                                       fmt::format("{}?twic=v1/cover=4000", mediaUrl),
+                                       fmt::format("{}?twic=v1/cover=2000x2000", mediaUrl),
                                        mediaUrl.substr(mediaUrl.find_last_of('/') + 1),
                                        objJson["type"].asString(),
                                        objJson["content_type"].asString());

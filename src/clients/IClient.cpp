@@ -15,13 +15,7 @@ namespace api::v1 {
             return false;
 
         Json::Value jsonResponse;
-        if(!parseJson(response, jsonResponse))
-            return false;
-
-        if(!fieldIsMember("data", response, jsonResponse) || !fieldIsMember("id", response, jsonResponse["data"]))
-            return false;
-        postType->postId = jsonResponse["data"]["id"].asString();
-        return true;
+        return parseJson(response, jsonResponse) && setPostId(response, jsonResponse, postType);
     }
 
     template class IClient<PinterestClient, Pin>;
