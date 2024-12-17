@@ -32,11 +32,9 @@ namespace api::v1 {
             Post(cpr::Url{ClientType::apiCreatePost},
                  cpr::Body{postType->toJson()},
                  cpr::Header{{"Content-Type", "application/json"}, {"Authorization", auth()}});
-        if(!checkResponses(std::vector{response}, 201))
-            return false;
-
         Json::Value jsonResponse;
-        return parseJson(response, jsonResponse) && setPostId(response, jsonResponse, postType);
+        return checkResponses(std::vector{response}, 201) && parseJson(response, jsonResponse) &&
+               setPostId(response, jsonResponse, postType);
     }
 
     template class IClient<PinterestClient, Pin>;
