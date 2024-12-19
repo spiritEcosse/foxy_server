@@ -20,7 +20,7 @@ namespace api::v1 {
              const SharedFileTransferInfo& coverImage,
              const SharedFileTransferInfo& video,
              const std::vector<std::string>& tags) :
-        SocialMediaType(itemId, title, slug, description, tags), coverImage(coverImage), video(video) {};
+        SocialMediaType(itemId, title, slug, description, tags), coverImage(coverImage), video(video){};
 
     bool Pin::post() {
         std::future<bool> postVideoFuture = std::async(std::launch::async, [this]() {
