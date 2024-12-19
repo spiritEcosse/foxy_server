@@ -17,7 +17,7 @@ namespace api::v1 {
               const std::vector<SharedFileTransferInfo>& media,
               const Json::Value& tags);
 
-        std::string toJson() override;
+        std::string toJson() const override;
         bool post() override;
     };
 }

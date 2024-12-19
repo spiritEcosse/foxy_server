@@ -9,7 +9,7 @@
 #include "cuuid.h"
 
 namespace api::v1 {
-    std::string TwitterClient::auth() {
+    std::string TwitterClient::auth() const {
         return auth(apiCreatePost);
     }
 
@@ -20,68 +20,63 @@ namespace api::v1 {
         return true;
     }
 
-    bool TwitterClient::uploadMediaImage(const Tweet* tweet) {
-        std::vector<SharedFileTransferInfo> medias;
-        std::ranges::copy_if(tweet->media, std::back_inserter(medias), [](const auto& mediaItem) {
-            return !mediaItem->isVideo();
-        });
-
+    bool TwitterClient::uploadMediaImage(const Tweet* tweet) const {
         // If no images, return true (no images to upload)
-        if(std::ranges::empty(medias))
-            return true;
+        if(tweet->images.empty())
+            return false;
 
         // Create a MultiPerform object
         cpr::MultiPerform multiplePerform;
 
         // Store shared pointers to sessions to prevent premature destruction
         std::vector<std::shared_ptr<cpr::Session>> sessions;
-        sessions.reserve(medias.size());
+        sessions.reserve(tweet->images.size());
 
         // Create sessions for each media item
-        std::ranges::transform(medias, std::back_inserter(sessions), [this, &multiplePerform](const auto& media) {
-            auto session = std::make_shared<cpr::Session>();
-            session->SetUrl(cpr::Url{apiUploadMedia});
-            session->SetHeader({{"Authorization", auth(apiUploadMedia)}});
-            session->SetMultipart({{"media", cpr::File{media->getFileName()}}, {"media_category", "tweet_image"}});
-            multiplePerform.AddSession(session);
-            return session;
-        });
+        std::ranges::transform(tweet->images,
+                               std::back_inserter(sessions),
+                               [this, &multiplePerform](const auto& media) {
+                                   auto session = std::make_shared<cpr::Session>();
+                                   session->SetUrl(cpr::Url{apiUploadMedia});
+                                   session->SetHeader({{"Authorization", auth(apiUploadMedia)}});
+                                   session->SetMultipart(
+                                       {{"media", cpr::File{media->getFileName()}}, {"media_category", "tweet_image"}});
+                                   multiplePerform.AddSession(session);
+                                   return session;
+                               });
 
         // Perform all requests
         const std::vector<cpr::Response> responses = multiplePerform.Post();
-        return checkResponses(responses) && saveMediaIdString(responses, medias);
+        return checkResponses(responses) && saveMediaIdString(responses, tweet->images);
     }
 
-    bool TwitterClient::uploadMediaVideo(const Tweet* tweet) {
-        // Filter out video files from media
-        std::vector<SharedFileTransferInfo> medias;
-        std::ranges::copy_if(tweet->media, std::back_inserter(medias), [](const auto& mediaItem) {
-            return mediaItem->isVideo();
-        });
-
+    bool TwitterClient::uploadMediaVideo(const Tweet* tweet) const {
         // If no videos, return true (no videos to upload)
-        if(std::ranges::empty(medias))
-            return true;
+        if(tweet->videos.empty())
+            return false;
 
         cpr::MultiPerform multiplePerform;
 
         // INIT: First step of Twitter's chunked video upload
         std::vector<std::shared_ptr<cpr::Session>> initSessions;
-        initSessions.reserve(medias.size());
+        initSessions.reserve(tweet->videos.size());
 
-        std::ranges::transform(medias, std::back_inserter(initSessions), [this, &multiplePerform](const auto& media) {
-            auto session = std::make_shared<cpr::Session>();
-            session->SetUrl(cpr::Url{apiUploadMedia});
-            session->SetHeader({{"Authorization", auth(apiUploadMedia, "POST")}});
+        std::ranges::transform(tweet->videos,
+                               std::back_inserter(initSessions),
+                               [this, &multiplePerform](const auto& media) {
+                                   auto session = std::make_shared<cpr::Session>();
+                                   session->SetUrl(cpr::Url{apiUploadMedia});
+                                   session->SetHeader({{"Authorization", auth(apiUploadMedia, "POST")}});
 
-            // Prepare video file info for INIT
-            session->SetMultipart({{"command", "INIT"},
-                                   {"media_type", media->getContentType()},
-                                   {"total_bytes", std::to_string(static_cast<int>(media->getSize()))},
-                                   {"media_category", "tweet_video"}});
-            multiplePerform.AddSession(session);
-            return session;
-        });
+                                   // Prepare video file info for INIT
+                                   session->SetMultipart(
+                                       {{"command", "INIT"},
+                                        {"media_type", media->getContentType()},
+                                        {"total_bytes", std::to_string(static_cast<int>(media->getSize()))},
+                                        {"media_category", "tweet_video"}});
+                                   multiplePerform.AddSession(session);
+                                   return session;
+                               });
 
         // Execute INIT requests
         const auto initResponses = multiplePerform.Post();
@@ -90,15 +85,15 @@ namespace api::v1 {
             return false;
 
         // save media_id_string to media
-        saveMediaIdString(initResponses, medias);
+        saveMediaIdString(initResponses, tweet->videos);
 
         // APPEND: Upload video in chunks
         cpr::MultiPerform multiplePerformAppend;
         std::vector<std::shared_ptr<cpr::Session>> appendSessions;
         std::vector<std::shared_ptr<std::vector<char>>> allFileContents;
-        allFileContents.reserve(medias.size());
+        allFileContents.reserve(tweet->videos.size());
 
-        for(const auto& media: medias) {
+        for(const auto& media: tweet->videos) {
             if(!media)
                 continue;
             // Safely get file content
@@ -151,9 +146,9 @@ namespace api::v1 {
         // FINALIZE: Mark video upload as complete
         cpr::MultiPerform multiplePerformFin;
         std::vector<std::shared_ptr<cpr::Session>> finalizeSessions;
-        finalizeSessions.reserve(medias.size());
+        finalizeSessions.reserve(tweet->videos.size());
 
-        std::ranges::transform(medias,
+        std::ranges::transform(tweet->videos,
                                std::back_inserter(finalizeSessions),
                                [this, &multiplePerformFin](const auto& media) {
                                    auto session = std::make_shared<cpr::Session>();
@@ -169,7 +164,7 @@ namespace api::v1 {
         return checkResponses(multiplePerformFin.Post());
     }
 
-    bool TwitterClient::uploadMedia(const Tweet* tweet) {
+    bool TwitterClient::uploadMedia(const Tweet* tweet) const {
         std::future<bool> imageUploadFuture = std::async(std::launch::async, [this, tweet]() {
             return uploadMediaImage(tweet);
         });
@@ -179,11 +174,12 @@ namespace api::v1 {
         });
         const bool videoUploadResult = videoUploadFuture.get();
         const bool imageUploadResult = imageUploadFuture.get();
+        std::this_thread::sleep_for(std::chrono::seconds(5));
         return videoUploadResult && imageUploadResult;
     }
 
     std::string
-    TwitterClient::auth(const std::string_view url, const std::string_view method, const TransparentMap& params) {
+    TwitterClient::auth(const std::string_view url, const std::string_view method, const TransparentMap& params) const {
         const auto now = std::chrono::system_clock::now().time_since_epoch();
         const auto now_in_seconds = std::chrono::duration_cast<std::chrono::seconds>(now).count();
         std::string oauth_timestamp = std::to_string(now_in_seconds);

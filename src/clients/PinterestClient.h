@@ -17,19 +17,14 @@ namespace api::v1 {
 
     class PinterestClient final : public IClient<PinterestClient, Pin> {
         static constexpr std::string_view accessToken = PINTEREST_ACCESS_TOKEN;
-        std::string auth() override;
+        std::string auth() const override;
         bool setPostId(const cpr::Response& response, const Json::Value& jsonResponse, Pin* pin) const override;
 
     public:
         static constexpr std::string media_id = "media_id";
-        bool uploadVideos(const Pin* pin);
+        [[nodiscard]] bool uploadVideos(const Pin* pin) const;
         static std::string apiUploadMedia;
         static std::string apiCreatePost;
         static constexpr std::string_view clientName = "Pinterest";
-
-        // PinterestClient() {
-        //     apiUploadMedia = fmt::format("{}/v5/media", PINTEREST_API_HOST);
-        //     apiCreatePost = fmt::format("{}/v5/pins", PINTEREST_API_HOST);
-        // }
     };
 }

@@ -46,15 +46,13 @@ void SocialMedia::handleRow(const auto &row) const {
     if(!clientDownloadMedia.downloadMedia())
         return;
 
-    std::future<void> tweetPost = std::async(std::launch::async, [&]() {
-        if(diffNets.contains(TwitterClient::clientName)) {
-            Tweet(itemId, title, slug, "", clientDownloadMedia.media, tags).post();
-        }
+    std::future<bool> tweetPost = std::async(std::launch::async, [&]() {
+        return diffNets.contains(TwitterClient::clientName) &&
+               Tweet(itemId, title, slug, "", clientDownloadMedia.media, tags).post();
     });
-    std::future<void> pinPost = std::async(std::launch::async, [&]() {
-        if(diffNets.contains(PinterestClient::clientName)) {
-            Pin(itemId, title, slug, description, clientDownloadMedia.media, tags).post();
-        }
+    std::future<bool> pinPost = std::async(std::launch::async, [&]() {
+        return diffNets.contains(PinterestClient::clientName) &&
+               Pin(itemId, title, slug, description, clientDownloadMedia.media, tags).post();
     });
     tweetPost.get();
     pinPost.get();
@@ -62,7 +60,7 @@ void SocialMedia::handleRow(const auto &row) const {
 
 void SocialMedia::handleSqlResultPublish(const drogon::orm::Result &r) const {
     // The error occurs because drogon::orm::ConstResultIterator does not support random access. The standard algorithm std::for_each with std::execution::par requires random-access iterators (like std::vector::iterator or std::array::iterator), but Drogon's ConstResultIterator is a bidirectional iterator, similar to those used in linked lists.
-    // std::for_each(std::execution::par, r.begin(), r.end(), [this](const auto &row) {
+    // std::ranges::for_each(r, [this](const auto &row) {
     //     handleRow(row);
     // });
 

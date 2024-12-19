@@ -13,19 +13,20 @@ namespace api::v1 {
         std::string accessTokenSecret;
         std::string bearerToken;
 
-        std::string
-        auth(const std::string_view url, const std::string_view method = "POST", const TransparentMap& params = {});
-        std::string auth() override;
+        std::string auth(const std::string_view url,
+                         const std::string_view method = "POST",
+                         const TransparentMap& params = {}) const;
+        std::string auth() const override;
         bool setPostId(const cpr::Response& response, const Json::Value& jsonResponse, Tweet* tweet) const override;
-        bool uploadMediaImage(const Tweet* tweet);
-        bool uploadMediaVideo(const Tweet* tweet);
+        bool uploadMediaImage(const Tweet* tweet) const;
+        bool uploadMediaVideo(const Tweet* tweet) const;
 
     public:
         static constexpr std::string media_id = "media_id_string";
         static constexpr std::string_view apiUploadMedia = "https://upload.twitter.com/1.1/media/upload.json";
         static constexpr std::string_view apiCreatePost = "https://api.twitter.com/2/tweets";
         static constexpr std::string_view clientName = "Twitter";
-        bool uploadMedia(const Tweet* tweet);
+        bool uploadMedia(const Tweet* tweet) const;
 
         TwitterClient() {
             getenv("TWITTER_API_KEY", apiKey);
