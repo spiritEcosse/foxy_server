@@ -77,7 +77,7 @@ namespace api::v1 {
         mediaSource["source_type"] = "video_id";
         mediaSource["cover_image_content_type"] = coverImage->getContentType();
         mediaSource["cover_image_data"] = coverImage->getBase64ContentOfFile();
-        mediaSource["media_id"] = video->getExternalId();
+        mediaSource["media_id"] = video->getExternalId<Pin>();
         return toJsonInternal(mediaSource);
     }
 

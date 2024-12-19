@@ -2,7 +2,6 @@
 
 #include "IClient.h"
 #include "env.h"
-#include <fmt/format.h>
 
 #ifndef PINTEREST_ACCESS_TOKEN
 #error PINTEREST_ACCESS_TOKEN must be defined at compile-time
@@ -21,8 +20,9 @@ namespace api::v1 {
         bool setPostId(const cpr::Response& response, const Json::Value& jsonResponse, Pin* pin) const override;
 
     public:
-        static constexpr std::string media_id = "media_id";
         [[nodiscard]] bool uploadVideos(const Pin* pin) const;
+
+        static constexpr std::string field_media_id = "media_id";
         static std::string apiUploadMedia;
         static std::string apiCreatePost;
         static constexpr std::string_view clientName = "Pinterest";

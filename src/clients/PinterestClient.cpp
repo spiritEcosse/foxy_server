@@ -28,11 +28,8 @@ namespace api::v1 {
                                    multiplePerform.AddSession(session);
                                    return session;
                                });
-        const auto responses = multiplePerform.Post();
-        if(!checkResponses(responses, 201))
-            return false;
-
-        if(!saveMediaIdString(responses, pin->videos))
+        if(const auto responses = multiplePerform.Post();
+           !checkResponses(responses, 201) || !saveMediaIdString(responses, pin->videos))
             return false;
 
         cpr::MultiPerform multipleUpload;

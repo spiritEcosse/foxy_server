@@ -22,11 +22,12 @@ namespace api::v1 {
         bool uploadMediaVideo(const Tweet* tweet) const;
 
     public:
-        static constexpr std::string media_id = "media_id_string";
+        [[nodiscard]] bool uploadMedia(const Tweet* tweet) const;
+
+        static constexpr std::string field_media_id = "media_id_string";
         static constexpr std::string_view apiUploadMedia = "https://upload.twitter.com/1.1/media/upload.json";
         static constexpr std::string_view apiCreatePost = "https://api.twitter.com/2/tweets";
         static constexpr std::string_view clientName = "Twitter";
-        bool uploadMedia(const Tweet* tweet) const;
 
         TwitterClient() {
             getenv("TWITTER_API_KEY", apiKey);

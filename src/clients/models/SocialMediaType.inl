@@ -28,22 +28,21 @@ namespace api::v1 {
 
     template<typename ClientType, typename PostType>
     bool SocialMediaType<ClientType, PostType>::saveToDb() {
-        if(!postId.empty()) {
-            const SocialMediaModel item(std::string(ClientType::clientName), postId, itemId);
-            std::string query = SocialMediaModel().sqlInsert(item);
-            auto dbClient = drogon::app().getDbClient("default_not_fast");
-            dbClient->execSqlAsync(
-                query,
-                [](const drogon::orm::Result &r) {
-                    std::cout << "Inserted " << r.affectedRows() << " rows." << std::endl;
-                },
-                [](const drogon::orm::DrogonDbException &e) {
-                    const std::string error = e.base().what();
-                    sentryHelper(error, "saveToDb");
-                });
-            return true;
-        }
-        return false;
+        if(!postId.empty())
+            return false;
+        const SocialMediaModel item(std::string(ClientType::clientName), postId, itemId);
+        std::string query = SocialMediaModel().sqlInsert(item);
+        auto dbClient = drogon::app().getDbClient("default_not_fast");
+        dbClient->execSqlAsync(
+            query,
+            [](const drogon::orm::Result &r) {
+                std::cout << "Inserted " << r.affectedRows() << " rows." << std::endl;
+            },
+            [](const drogon::orm::DrogonDbException &e) {
+                const std::string error = e.base().what();
+                sentryHelper(error, "saveToDb");
+            });
+        return true;
     }
 
     template<typename ClientType, typename PostType>
@@ -58,9 +57,8 @@ namespace api::v1 {
 
     template<typename ClientType, typename PostType>
     std::string SocialMediaType<ClientType, PostType>::truncateTitle(const std::string_view &title) {
-        if(PostType::maxDescriptionSize == 0) {
+        if(PostType::maxDescriptionSize == 0)
             return truncateText(fmt::format("{} {}", INTRODUCTION_TEXT_POST, title), PostType::maxTitleSize);
-        }
         return truncateText(title, PostType::maxTitleSize);
     }
 
@@ -76,9 +74,8 @@ namespace api::v1 {
         //must be for_each, because of: no matching function for call to object of type 'const __transform_fn'
         std::ranges::for_each(tagsJson, [&tags](const auto &tag) {
             std::string tagTitle = tag["title"].asString();
-            if(std::ranges::any_of(tag["social_media"], isEqualPlatform)) {
+            if(std::ranges::any_of(tag["social_media"], isEqualPlatform))
                 tags.emplace_back(tagTitle);
-            }
         });
 
         return tags;

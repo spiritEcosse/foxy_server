@@ -18,7 +18,7 @@ namespace api::v1 {
         Json::Value mediaArray = Json::arrayValue;
         //must be for_each, because of: no member named 'push_back' in 'Json::Value'
         std::ranges::for_each(concatVectors(videos, images), [&mediaArray](const SharedFileTransferInfo& info) {
-            mediaArray.append(info->getExternalId());
+            mediaArray.append(info->getExternalId<Tweet>());
         });
 
         jsonObj["media"] = Json::objectValue;

@@ -14,13 +14,17 @@
 constexpr size_t MAX_FILE_SIZE = 20 * 1024 * 1024;  // 20 MB in bytes
 
 namespace api::v1 {
+    class Pin;
+
     class FileTransferInfo final : public BaseClass {
         std::string url;
         std::string fileName;
-        std::string externalId;
+        std::string externalIdPin;
+        std::string externalIdTweet;
         std::string type;
         std::string contentType;
-        Json::Value response;
+        Json::Value responsePin;
+        Json::Value responseTweet;
 
     public:
         FileTransferInfo(std::string url, std::string fileName, std::string type, std::string contentType) :
@@ -28,9 +32,10 @@ namespace api::v1 {
             contentType(std::move(contentType)) {}
 
         FileTransferInfo(FileTransferInfo&& other) noexcept :
-            url(std::move(other.url)), fileName(std::move(other.fileName)), externalId(std::move(other.externalId)),
+            url(std::move(other.url)), fileName(std::move(other.fileName)),
+            externalIdPin(std::move(other.externalIdPin)), externalIdTweet(std::move(other.externalIdTweet)),
             type(std::move(other.type)), contentType(std::move(other.contentType)),
-            response(std::move(other.response)) {}
+            responsePin(std::move(other.responsePin)), responseTweet(std::move(other.responseTweet)) {}
 
         // Destructor to remove the file when the object is destroyed
         ~FileTransferInfo() override {
@@ -45,11 +50,15 @@ namespace api::v1 {
         }
 
         [[nodiscard]] Json::Value getResponse() const {
-            return response;
+            return responsePin;
         }
 
+        template<typename PostType>
         void setResponse(const Json::Value& originalResponse) {
-            response = originalResponse;
+            if constexpr(std::is_same_v<PostType, Pin>)
+                responsePin = originalResponse;
+            else
+                responseTweet = originalResponse;
         }
 
         [[nodiscard]] bool saveFile(std::string&& content) const {
@@ -110,8 +119,12 @@ namespace api::v1 {
             return fileName;
         }
 
+        template<typename PostType>
         [[nodiscard]] const std::string& getExternalId() const {
-            return externalId;
+            if constexpr(std::is_same_v<PostType, Pin>)
+                return externalIdPin;
+            else
+                return externalIdTweet;
         }
 
         [[nodiscard]] std::string getBase64ContentOfFile() const {
@@ -127,8 +140,12 @@ namespace api::v1 {
             return url;
         }
 
+        template<typename PostType>
         void setExternalId(std::string&& value) {
-            externalId = std::move(value);
+            if constexpr(std::is_same_v<PostType, Pin>)
+                externalIdPin = std::move(value);
+            else
+                externalIdTweet = std::move(value);
         }
 
         [[nodiscard]] const std::string& getContentType() const {

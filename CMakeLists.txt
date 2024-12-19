@@ -179,11 +179,15 @@ include(sanitizers)
 add_sanitizer_support(address leak)
 target_link_libraries(${PROJECT_NAME} PRIVATE -fsanitize=address)
 
-file(GLOB_RECURSE ALL_CODE_FILES ${PROJECT_SOURCE_DIR}/src/*.cc ${PROJECT_SOURCE_DIR}/src/*.cpp
-        ${PROJECT_SOURCE_DIR}/src/*.h ${PROJECT_SOURCE_DIR}/tests/*.cc
+file(GLOB_RECURSE ALL_CODE_FILES
+        ${PROJECT_SOURCE_DIR}/src/*.cc
+        ${PROJECT_SOURCE_DIR}/src/*.cpp
+        ${PROJECT_SOURCE_DIR}/src/*.h
+        ${PROJECT_SOURCE_DIR}/src/*.inl
+        ${PROJECT_SOURCE_DIR}/tests/*.cc
         ${PROJECT_SOURCE_DIR}/tests/*.h)
 
-clang_format(format ${ALL_CODE_FILES})
+clang_format(${PROJECT_NAME} ${ALL_CODE_FILES})
 
 file(GLOB_RECURSE CMAKE_FILES ${PROJECT_SOURCE_DIR}/src/CMakeLists.txt
         ${PROJECT_SOURCE_DIR}/tests/CMakeLists.txt)

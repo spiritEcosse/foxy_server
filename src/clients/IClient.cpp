@@ -14,18 +14,12 @@ namespace api::v1 {
                                                           const std::vector<SharedFileTransferInfo>& medias) {
         for(size_t i = 0; const auto& media: medias) {
             const auto& response = responses[i];
-
-            // Parse JSON response using JsonCpp
             Json::Value jsonResponse;
-
-            if(!parseJson(response, jsonResponse))
+            if(!parseJson(response, jsonResponse) || !fieldIsMember(ClientType::field_media_id, response, jsonResponse))
                 return false;
-
-            media->setResponse(jsonResponse);
-            if(!fieldIsMember(ClientType::media_id, response, jsonResponse))
-                return false;
-            media->setExternalId(jsonResponse[ClientType::media_id].asString());
-            std::cout << media->getExternalId() << " : " << media->getFileName() << std::endl;
+            media->setResponse<PostType>(jsonResponse);
+            media->setExternalId<PostType>(jsonResponse[ClientType::field_media_id].asString());
+            std::cout << media->getExternalId<PostType>() << " : " << media->getFileName() << std::endl;
             ++i;
         }
         return true;

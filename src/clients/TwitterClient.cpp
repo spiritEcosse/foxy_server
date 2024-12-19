@@ -101,7 +101,7 @@ namespace api::v1 {
             if(fileContent->empty())
                 continue;
 
-            std::string externalId = media->getExternalId();
+            std::string externalId = media->getExternalId<Tweet>();
             std::filesystem::path fileName = media->getFileName();
             if(externalId.empty() || fileName.empty())
                 continue;
@@ -155,7 +155,7 @@ namespace api::v1 {
                                    session->SetUrl(cpr::Url{apiUploadMedia});
                                    session->SetHeader({{"Authorization", auth(apiUploadMedia, "POST")}});
                                    session->SetMultipart(
-                                       {{"command", "FINALIZE"}, {"media_id", media->getExternalId()}});
+                                       {{"command", "FINALIZE"}, {"media_id", media->template getExternalId<Tweet>()}});
                                    multiplePerformFin.AddSession(session);
                                    return session;
                                });
