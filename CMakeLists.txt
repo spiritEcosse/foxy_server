@@ -155,8 +155,17 @@ CPMAddPackage(
 )
 include(formatting)
 include(sanitizers)
-add_sanitizer_support(address leak)
-target_link_libraries(${PROJECT_NAME} PRIVATE -fsanitize=address)
+if (ENVIRONMENT STREQUAL "dev")
+    # Address + Leak sanitizers
+    add_sanitizer_support(address leak undefined)
+
+    # Thread + Undefined Behavior sanitizers
+    #    add_sanitizer_support(thread undefined)
+
+    # Memory + Undefined Behavior sanitizers
+    #    add_sanitizer_support(memory undefined)
+    target_link_libraries(${PROJECT_NAME} PRIVATE -fsanitize=address)
+endif ()
 
 file(GLOB_RECURSE ALL_CODE_FILES
         ${PROJECT_SOURCE_DIR}/src/*.cc
