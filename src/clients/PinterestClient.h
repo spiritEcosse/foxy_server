@@ -3,14 +3,6 @@
 #include "IClient.h"
 #include "env.h"
 
-#ifndef PINTEREST_ACCESS_TOKEN
-#error PINTEREST_ACCESS_TOKEN must be defined at compile-time
-#endif
-
-#ifndef PINTEREST_API_HOST
-#error PINTEREST_API_HOST must be defined at compile-time
-#endif
-
 namespace api::v1 {
     class Pin;
 

@@ -184,11 +184,11 @@ namespace api::v1 {
         const auto now_in_seconds = std::chrono::duration_cast<std::chrono::seconds>(now).count();
         std::string oauth_timestamp = std::to_string(now_in_seconds);
         std::map<std::string, std::string, std::less<>> oauthParams = {
-            {"oauth_consumer_key", apiKey},
+            {"oauth_consumer_key", std::string(apiKey)},
             {"oauth_nonce", cuuid()},
             {"oauth_signature_method", "HMAC-SHA1"},
             {"oauth_timestamp", oauth_timestamp},
-            {"oauth_token", accessToken},
+            {"oauth_token", std::string(accessToken)},
             {"oauth_version", "1.0"},
         };
         std::ranges::transform(params, std::inserter(oauthParams, oauthParams.end()), [](const auto& pair) {

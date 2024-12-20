@@ -4,15 +4,14 @@
 #include "SocialMediaModel.h"
 #include "TwitterClient.h"  // must be because of it : ClientType::clientName
 #include "sentryHelper.h"
+#include "env.h"
 #include <ranges>
 
 namespace api::v1 {
 
     template<typename ClientType, typename PostType>
     std::string SocialMediaType<ClientType, PostType>::createItemUrl(const std::string_view &slug) {
-        std::string domain;
-        getenv("FOXY_CLIENT", domain);
-        return fmt::format("{}/item/{}", domain, slug);
+        return fmt::format("{}/item/{}", FOXY_CLIENT, slug);
     }
 
     template<typename ClientType, typename PostType>
@@ -28,7 +27,7 @@ namespace api::v1 {
 
     template<typename ClientType, typename PostType>
     bool SocialMediaType<ClientType, PostType>::saveToDb() {
-        if(!postId.empty())
+        if(postId.empty())
             return false;
         const SocialMediaModel item(std::string(ClientType::clientName), postId, itemId);
         std::string query = SocialMediaModel().sqlInsert(item);

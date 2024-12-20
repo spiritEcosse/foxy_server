@@ -20,15 +20,12 @@ BaseModel<MediaModel>::SetMapFieldTypes MediaModel::getObjectValues() const {
 }
 
 std::string MediaModel::fieldsJsonObject() {
-    std::string app_cloud_name;
-    getenv("APP_CLOUD_NAME", app_cloud_name);
-
     const Field field;
     std::vector<std::string> formattedFields;
     std::ranges::transform(field.allFields, std::back_inserter(formattedFields), [&](const auto& pair) {
         const auto& [key, value] = pair;
         if(key == "src") {
-            return fmt::format("'{}', format_src({}, '{}')", key, value.get().getFullFieldName(), app_cloud_name);
+            return fmt::format("'{}', format_src({}, '{}')", key, value.get().getFullFieldName(), APP_CLOUD_NAME);
         }
         return fmt::format("'{}', {}", key, value.get().getFullFieldName());
     });

@@ -7,11 +7,11 @@ namespace api::v1 {
     class Tweet;
 
     class TwitterClient final : public IClient<TwitterClient, Tweet> {
-        std::string apiKey;
-        std::string apiSecretKey;
-        std::string accessToken;
-        std::string accessTokenSecret;
-        std::string bearerToken;
+        static constexpr std::string_view apiKey = TWITTER_API_KEY;
+        static constexpr std::string_view apiSecretKey = TWITTER_API_SECRET;
+        static constexpr std::string_view accessToken = TWITTER_ACCESS_TOKEN;
+        static constexpr std::string_view accessTokenSecret = TWITTER_ACCESS_TOKEN_SECRET;
+        static constexpr std::string_view bearerToken = TWITTER_BEARER_TOKEN;
 
         std::string auth(const std::string_view url,
                          const std::string_view method = "POST",
@@ -28,13 +28,5 @@ namespace api::v1 {
         static constexpr std::string_view apiUploadMedia = "https://upload.twitter.com/1.1/media/upload.json";
         static constexpr std::string_view apiCreatePost = "https://api.twitter.com/2/tweets";
         static constexpr std::string_view clientName = "Twitter";
-
-        TwitterClient() {
-            getenv("TWITTER_API_KEY", apiKey);
-            getenv("TWITTER_API_SECRET", apiSecretKey);
-            getenv("TWITTER_ACCESS_TOKEN", accessToken);
-            getenv("TWITTER_ACCESS_TOKEN_SECRET", accessTokenSecret);
-            getenv("TWITTER_BEARER_TOKEN", bearerToken);
-        }
     };
 }

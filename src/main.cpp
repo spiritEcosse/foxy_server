@@ -24,17 +24,9 @@ int main() {
     std::signal(SIGTRAP, handleSignal);
 
     try {
-        std::string env;
-
-        getenv("ENV", env);
-
-        std::string sentry_dsn;
-
-        if(env != "dev") {
-            getenv("SENTRY_DSN", sentry_dsn);
-
+        if(ENVIRONMENT != "dev") {
             sentry_options_t *options = sentry_options_new();
-            sentry_options_set_dsn(options, sentry_dsn.c_str());
+            sentry_options_set_dsn(options, SENTRY_DSN);
             // This is also the default-path. For further information and recommendations:
             // https://docs.sentry.io/platforms/native/configuration/options/#database-path
             //        sentry_options_set_database_path(options, ".sentry-native");
@@ -46,25 +38,7 @@ int main() {
             sentry_init(options);
         }
 
-        std::string config_app_path;
-        getenv("CONFIG_APP_PATH", config_app_path);
-
-        std::string foxy_client;
-
-        getenv("FOXY_CLIENT", foxy_client);
-
-        std::string app_bucket_host;
-        getenv("APP_BUCKET_HOST", app_bucket_host);
-        if(app_bucket_host.empty()) {
-            throw std::invalid_argument("APP_BUCKET_HOST is not set");
-        }
-
-        std::string app_cloud_name;
-        getenv("APP_CLOUD_NAME", app_cloud_name);
-
-        std::string foxy_admin;
-        getenv("FOXY_ADMIN", foxy_admin);
-        app().loadConfigFile(config_app_path);
+        app().loadConfigFile(CONFIG_APP_PATH);
         app().registerHandler("/",
                               [](const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
                                   Json::Value json;
@@ -98,20 +72,17 @@ int main() {
                                       std::move(callback));
                                   (*callbackPtr)(resp);
                               });
-        app().registerPostHandlingAdvice(
-            [foxy_client, foxy_admin]([[maybe_unused]] const HttpRequestPtr &req, const HttpResponsePtr &resp) {
-                auto origin = req->getHeader("Origin");
-                if(origin == foxy_client || origin == foxy_admin) {
-                    resp->addHeader("Access-Control-Allow-Origin", origin);
-                }
-            });
+        app().registerPostHandlingAdvice([]([[maybe_unused]] const HttpRequestPtr &req, const HttpResponsePtr &resp) {
+            auto origin = req->getHeader("Origin");
+            if(origin == FOXY_CLIENT || origin == FOXY_ADMIN) {
+                resp->addHeader("Access-Control-Allow-Origin", origin);
+            }
+        });
         app().setThreadNum(std::thread::hardware_concurrency() + 2);
-        std::string http_port;
-        getenv("FOXY_HTTP_PORT", http_port);
-        std::string host = env == "dev" ? "127.0.0.1" : "0.0.0.0";
-        app().addListener(host, static_cast<uint16_t>(std::stoi(http_port))).run();
+        std::string host = ENVIRONMENT == "dev" ? "127.0.0.1" : "0.0.0.0";
+        app().addListener(host, static_cast<uint16_t>(std::stoi(FOXY_HTTP_PORT))).run();
 
-        if(env != "dev") {
+        if(ENVIRONMENT != "dev") {
             sentry_close();
         }
     } catch(...) {

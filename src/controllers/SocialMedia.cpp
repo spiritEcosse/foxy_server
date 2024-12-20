@@ -5,7 +5,6 @@
 #include <memory>
 #include <future>
 #include <vector>
-#include "sentryHelper.h"
 #include "Request.h"
 #include "TagModel.h"
 #include "models/Pin.h"
@@ -86,10 +85,6 @@ void SocialMedia::handleSqlResultPublish(const drogon::orm::Result &r) const {
 
 void SocialMedia::publish(const drogon::HttpRequestPtr &req,
                           std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
-    std::string app_cloud_name;
-    getenv("APP_CLOUD_NAME", app_cloud_name);
-    std::string app_bucket_host;
-    getenv("APP_BUCKET_HOST", app_bucket_host);
     const int limit = getInt(req->getParameter("limit"), 1);
 
     QuerySet qsTag(TagModel::tableName, 0, std::string("_tag"), false);
@@ -125,8 +120,8 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
                                         "END ASC) AS media_list",
                                         MediaModel::Field::type.getFullFieldName(),
                                         MediaModel::Field::src.getFullFieldName(),
-                                        app_cloud_name,
-                                        app_bucket_host,
+                                        APP_CLOUD_NAME,
+                                        APP_BUCKET_HOST,
                                         MediaModel::Field::contentType.getFullFieldName())))
         .functions(Function(fmt::format(R"( COALESCE(({}), '[]'::json) AS nets)", qsSocialMedia.buildSelect())))
         .functions(Function(fmt::format(R"( COALESCE(({}), '[]'::json) AS tags)", qsTag.buildSelect())));

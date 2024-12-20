@@ -16,9 +16,6 @@ void Item::getListAdmin(const drogon::HttpRequestPtr &req,
     const int page = getInt(req->getParameter("page"), 1);
     int limit = getInt(req->getParameter("limit"), 25);
 
-    std::string app_cloud_name;
-    getenv("APP_CLOUD_NAME", app_cloud_name);
-
     QuerySet qsCount = ItemModel::qsCount();
     QuerySet qsPage = ItemModel::qsPage(page, limit);
 
@@ -39,7 +36,7 @@ void Item::getListAdmin(const drogon::HttpRequestPtr &req,
                 false)
         .order_by(std::make_pair(std::cref(orderByItemField), false), std::make_pair(std::cref(itemID), false))
         .only(ItemModel::allSetFields())
-        .functions(Function(fmt::format("format_src(media.src, '{}') as src", app_cloud_name)))
+        .functions(Function(fmt::format("format_src(media.src, '{}') as src", APP_CLOUD_NAME)))
         .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit));
     executeSqlQuery(callbackPtr, QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs)));
 }
@@ -75,9 +72,6 @@ void Item::getOneAdmin(const drogon::HttpRequestPtr &req,
         return;
     }
 
-    std::string app_cloud_name;
-    getenv("APP_CLOUD_NAME", app_cloud_name);
-
     QuerySet qsItem(ItemModel::tableName, "_item", true, true);
     qsItem.filter(BaseModel<ItemModel>::Field::id.getFullFieldName(), stringId)
         .jsonFields(addExtraQuotes(ItemModel().fieldsJsonObject()));
@@ -88,7 +82,7 @@ void Item::getOneAdmin(const drogon::HttpRequestPtr &req,
         .filter(BaseModel<ItemModel>::Field::id.getFullFieldName(), stringId)
         .order_by(std::make_pair(std::cref(MediaModel::Field::sort), true))
         .only(MediaModel::allSetFields())
-        .functions(Function(fmt::format("format_src(media.src, '{}') as src", app_cloud_name)));
+        .functions(Function(fmt::format("format_src(media.src, '{}') as src", APP_CLOUD_NAME)));
     qsTag.join(ItemModel())
         .filter(TagModel::Field::itemId.getFullFieldName(), std::string(stringId))
         .order_by(std::make_pair(std::cref(BaseModel<TagModel>::Field::updatedAt), false))

@@ -31,9 +31,7 @@ std::tuple<drogon::HttpStatusCode, Json::Value> JWT::verifyGoogleToken(const std
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
         curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-        std::string env;
-        getenv("ENV", env);
-        if(env == "dev") {
+        if(ENVIRONMENT == "dev") {
             curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
         }
         res = curl_easy_perform(curl);

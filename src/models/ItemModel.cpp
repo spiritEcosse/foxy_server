@@ -5,7 +5,6 @@
 #include "BasketItemModel.h"
 #include "QuerySet.h"
 #include "StringUtils.h"
-#include "TagModel.h"
 #include "env.h"
 #include <fmt/core.h>
 
@@ -42,11 +41,6 @@ QuerySet ItemModel::qsCount() {
 std::string ItemModel::sqlSelectList(const int page,
                                      int limit,
                                      [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
-    std::string app_cloud_name;
-    getenv("APP_CLOUD_NAME", app_cloud_name);
-    std::string app_bucket_host;
-    getenv("APP_BUCKET_HOST", app_bucket_host);
-
     const auto &orderByItem = std::cref(BaseModel::Field::updatedAt);
     std::string media_image = "media_image";
     std::string media_video = "media_video";
@@ -75,8 +69,8 @@ std::string ItemModel::sqlSelectList(const int page,
                 false)
         .order_by(std::make_pair(orderByItem, false), std::make_pair(itemID, false))
         .only(allSetFields())
-        .functions(Function(fmt::format("format_src({}.src, '{}') as src", media_image, app_cloud_name)))
-        .functions(Function(fmt::format("format_src({}.src, '{}') as src_video", media_video, app_bucket_host)))
+        .functions(Function(fmt::format("format_src({}.src, '{}') as src", media_image, APP_CLOUD_NAME)))
+        .functions(Function(fmt::format("format_src({}.src, '{}') as src_video", media_video, APP_BUCKET_HOST)))
         .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit));
     return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
 }
@@ -84,9 +78,6 @@ std::string ItemModel::sqlSelectList(const int page,
 std::string ItemModel::sqlSelectOne(const std::string &field,
                                     const std::string &value,
                                     [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
-    std::string app_cloud_name;
-    getenv("APP_CLOUD_NAME", app_cloud_name);
-
     QuerySet qsItem(tableName, "_item", true, true);
     qsItem.filter(field, std::string(value)).jsonFields(addExtraQuotes(fieldsJsonObject()));
 
@@ -98,6 +89,6 @@ std::string ItemModel::sqlSelectOne(const std::string &field,
         .filter(itemField, std::string(value))
         .order_by(std::make_pair(std::cref(MediaModel::Field::sort), true))
         .only(allSetFields())
-        .functions(Function(fmt::format("format_src(media.src, '{}') as src", app_cloud_name)));
+        .functions(Function(fmt::format("format_src(media.src, '{}') as src", APP_CLOUD_NAME)));
     return QuerySet::buildQuery(std::move(qsMedia), std::move(qsItem));
 }

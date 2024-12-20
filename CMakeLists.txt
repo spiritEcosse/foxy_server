@@ -63,6 +63,8 @@ include_directories(${CMAKE_SOURCE_DIR}/src/auth)
 include_directories(${CMAKE_SOURCE_DIR}/src/filters)
 include_directories(${CMAKE_SOURCE_DIR}/src/sentry_catcher)
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/envs.cmake)
+
 #Start adding libuuid
 CPMAddPackage(
         NAME libuuid
@@ -84,29 +86,6 @@ CPMAddPackage(
         GITHUB_REPOSITORY drogonframework/drogon
         GIT_TAG v1.9.4
         OPTIONS "BUILD_TESTING OFF"
-)
-set(PINTEREST_ACCESS_TOKEN "$ENV{PINTEREST_ACCESS_TOKEN}")
-if (NOT PINTEREST_ACCESS_TOKEN)
-    message(FATAL_ERROR "PINTEREST_ACCESS_TOKEN environment variable is not set.")
-endif ()
-
-target_compile_definitions(${PROJECT_NAME} PUBLIC
-        -DPINTEREST_ACCESS_TOKEN="${PINTEREST_ACCESS_TOKEN}"
-)
-set(PINTEREST_BOARD_ID "$ENV{PINTEREST_BOARD_ID}")
-if (NOT PINTEREST_BOARD_ID)
-    message(FATAL_ERROR "PINTEREST_BOARD_ID environment variable is not set.")
-endif ()
-target_compile_definitions(${PROJECT_NAME} PUBLIC
-        -DPINTEREST_BOARD_ID="${PINTEREST_BOARD_ID}"
-)
-
-set(PINTEREST_API_HOST "$ENV{PINTEREST_API_HOST}")
-if (NOT PINTEREST_API_HOST)
-    message(FATAL_ERROR "PINTEREST_API_HOST environment variable is not set.")
-endif ()
-target_compile_definitions(${PROJECT_NAME} PUBLIC
-        -DPINTEREST_API_HOST="${PINTEREST_API_HOST}"
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon)

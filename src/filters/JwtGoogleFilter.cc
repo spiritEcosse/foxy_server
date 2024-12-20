@@ -18,15 +18,9 @@ void JwtGoogleFilter::doFilter(const HttpRequestPtr &request, FilterCallback &&f
         resultJson["error"] = "No header authentication!";
         resultJson["status"] = 0;
 
-        auto res = HttpResponse::newHttpJsonResponse(resultJson);
-        auto origin = request->getHeader("Origin");
+        const auto res = HttpResponse::newHttpJsonResponse(resultJson);
 
-        std::string foxy_admin;
-        getenv("FOXY_ADMIN", foxy_admin);
-        std::string foxy_client;
-        getenv("FOXY_CLIENT", foxy_client);
-
-        if(origin == foxy_client || origin == foxy_admin) {
+        if(const auto origin = request->getHeader("Origin"); origin == FOXY_CLIENT || origin == FOXY_ADMIN) {
             res->addHeader("Access-Control-Allow-Origin", origin);
         }
         res->setStatusCode(k401Unauthorized);
@@ -36,17 +30,11 @@ void JwtGoogleFilter::doFilter(const HttpRequestPtr &request, FilterCallback &&f
     }
 
     // Remove the string "Bearer " on token and decode it
-    auto [statusCode, jsonResponse] = JWT::verifyGoogleToken(token.substr(7));
-    if(statusCode != drogon::k200OK) {
-        auto res = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
+    if(auto [statusCode, jsonResponse] = JWT::verifyGoogleToken(token.substr(7)); statusCode != k200OK) {
+        const auto res = HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
         res->setStatusCode(drogon::k401Unauthorized);
-        res->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
-        auto origin = request->getHeader("Origin");
-        std::string foxy_admin;
-        getenv("FOXY_ADMIN", foxy_admin);
-        std::string foxy_client;
-        getenv("FOXY_CLIENT", foxy_client);
-        if(origin == foxy_client || origin == foxy_admin) {
+        res->setContentTypeCode(CT_APPLICATION_JSON);
+        if(const auto origin = request->getHeader("Origin"); origin == FOXY_CLIENT || origin == FOXY_ADMIN) {
             res->addHeader("Access-Control-Allow-Origin", origin);
         }
 
@@ -59,8 +47,8 @@ std::tuple<bool, Json::Value>
 JwtGoogleFilter::verifyTokenAndRespond(const std::string &credentialsStr,
                                        std::shared_ptr<std::function<void(const HttpResponsePtr &)>> callbackPtr) {
     auto [statusCode, jsonResponse] = JWT::verifyGoogleToken(credentialsStr);
-    if(statusCode != drogon::k200OK) {
-        auto res = HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
+    if(statusCode != k200OK) {
+        const auto res = HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
         res->setStatusCode(drogon::k401Unauthorized);
         res->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         (*callbackPtr)(res);

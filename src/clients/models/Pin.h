@@ -1,10 +1,7 @@
 #pragma once
 
 #include "SocialMediaType.h"
-
-#ifndef PINTEREST_BOARD_ID
-#error PINTEREST_BOARD_ID must be defined at compile-time
-#endif
+#include "env.h"
 
 namespace api::v1 {
     class Pin final : public SocialMediaType<PinterestClient, Pin> {
