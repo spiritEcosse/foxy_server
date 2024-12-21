@@ -6,7 +6,7 @@ cmake_policy(SET CMP0115 NEW)
 
 set(BUILD_EXAMPLES OFF)
 set(BUILD_CTL OFF)
-#set(BUILD_TESTING OFF)
+set(BUILD_TESTING OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -194,9 +194,12 @@ CPMAddPackage(
 target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
 # End adding fmt
 
-# Tests
-if (BUILD_TESTING)
+option(ENABLE_TESTS "Enable testing support" OFF)
+
+if (ENABLE_TESTS)
+    message(STATUS "Testing is enabled.")
     enable_testing()
     add_subdirectory(tests)
+else ()
+    message(STATUS "Testing is disabled.")
 endif ()
-# End Tests

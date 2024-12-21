@@ -4,10 +4,10 @@ file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS ../src/**/*.cc ../src/**/*.cpp ../
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-
 add_executable(${PROJECT_NAME} ${RESOURCES} main.cpp)
-target_link_libraries(${PROJECT_NAME} PRIVATE drogon fmt::fmt sentry)
+target_link_libraries(${PROJECT_NAME} PRIVATE drogon fmt::fmt sentry cpr)
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+include(${CMAKE_CURRENT_SOURCE_DIR}/../envs.cmake)
 
 ParseAndAddDrogonTests(${PROJECT_NAME})
 execute_process(COMMAND bash -c "cp -f config.json ${PROJECT_BINARY_DIR}"
