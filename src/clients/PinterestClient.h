@@ -14,7 +14,7 @@ namespace api::v1 {
     public:
         [[nodiscard]] bool uploadVideos(const Pin* pin) const;
 
-        static constexpr std::string field_media_id = "media_id";
+        static constexpr std::string_view field_media_id = "media_id";
         static std::string apiUploadMedia;
         static std::string apiCreatePost;
         static constexpr std::string_view clientName = "Pinterest";

@@ -18,7 +18,7 @@ namespace api::v1 {
             if(!parseJson(response, jsonResponse) || !fieldIsMember(ClientType::field_media_id, response, jsonResponse))
                 return false;
             media->setResponse<PostType>(jsonResponse);
-            media->setExternalId<PostType>(jsonResponse[ClientType::field_media_id].asString());
+            media->setExternalId<PostType>(jsonResponse[std::string(ClientType::field_media_id)].asString());
             std::cout << media->getExternalId<PostType>() << " : " << media->getFileName() << std::endl;
             ++i;
         }
