@@ -24,7 +24,7 @@ int main() {
     std::signal(SIGTRAP, handleSignal);
 
     try {
-        if(ENVIRONMENT != "dev") {
+        if(strcmp(ENVIRONMENT, "dev") == 0) {
             sentry_options_t *options = sentry_options_new();
             sentry_options_set_dsn(options, SENTRY_DSN);
             // This is also the default-path. For further information and recommendations:
@@ -79,10 +79,10 @@ int main() {
             }
         });
         app().setThreadNum(std::thread::hardware_concurrency() + 2);
-        std::string host = ENVIRONMENT == "dev" ? "127.0.0.1" : "0.0.0.0";
+        const std::string host = (strcmp(ENVIRONMENT, "dev") == 0) ? "127.0.0.1" : "0.0.0.0";
         app().addListener(host, static_cast<uint16_t>(std::stoi(FOXY_HTTP_PORT))).run();
 
-        if(ENVIRONMENT != "dev") {
+        if(strcmp(ENVIRONMENT, "dev") == 0) {
             sentry_close();
         }
     } catch(...) {
