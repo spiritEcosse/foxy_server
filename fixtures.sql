@@ -1,6 +1,7 @@
 DO
 $$
     BEGIN
+
         -- Mock data for country
         INSERT INTO country (title, code)
         VALUES ('Country1', 'C1'),
@@ -32,9 +33,9 @@ $$
                ('Pending', 2, 2, 'Good quality.');
 
 -- Mock data for media
-        INSERT INTO media (src, item_id, sort)
-        VALUES ('media1.png', 1, 1),
-               ('media2.png', 2, 2);
+        INSERT INTO media (src, item_id, sort, type, content_type)
+        VALUES ('media1.png', 1, 1, 'image', 'image/png'),
+               ('media2.png', 2, 2, 'image', 'image/png');
 
 -- Mock data for page
         INSERT INTO page (title, slug, meta_description, description, enabled, canonical_url)
@@ -58,14 +59,21 @@ $$
                (2, 2, 2, 200.00);
 
 -- Mock data for order
-        INSERT INTO "order" (status, basket_id, total, total_ex_taxes, tax_rate, taxes, user_id, reference, address_id,
-                             returned)
-        VALUES ('Completed', 1, 100.00, 90.00, 0.10, 10.00, 1, 'REF1', 1, false),
-               ('Pending', 2, 200.00, 180.00, 0.10, 20.00, 2, 'REF2', 2, false);
+        INSERT INTO "order" (status, basket_id, total, total_ex_taxes, tax_rate, taxes, user_id, address_id, returned)
+        VALUES ('Completed', 1, 100.00, 90.00, 0.10, 10.00, 1, 1, false),
+               ('Processing', 2, 200.00, 180.00, 0.10, 20.00, 2, 2, false);
 
 -- Mock data for countries_ips
         INSERT INTO countries_ips (start_range, end_range, country_code, country_name, country_id)
         VALUES (1, 100, 'US', 'United States of America', 1),
                (101, 200, 'ES', 'Spain', 2);
+
+        INSERT INTO tag (title, social_media, item_id)
+        VALUES ('Tag1', ARRAY ['Facebook']::social_media_type[], 1),
+               ('Tag2', ARRAY ['Twitter', 'Facebook']::social_media_type[], 2);
+
+        INSERT INTO social_media (title, item_id, external_id)
+        VALUES ('Facebook', 1, 100),
+               ('Twitter', 2, 20000);
     END
 $$;

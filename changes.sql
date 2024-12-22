@@ -14,4 +14,6 @@ ANALYZE media;
 
 ALTER TABLE media
     ADD COLUMN content_type VARCHAR(20) DEFAULT '' not null;
+ALTER TABLE media
+    ALTER COLUMN content_type DROP DEFAULT;
 COMMIT;

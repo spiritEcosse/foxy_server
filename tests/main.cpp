@@ -113,6 +113,7 @@ DROGON_TEST(Create) {
             auto req = HttpRequest::newHttpRequest();
             req->setPath(std::move(path));
             req->setMethod(Post);
+            req->addHeader("Authorization", "Bearer mock_token");
             req->setContentTypeCode(CT_APPLICATION_JSON);
             Json::Value jsonValue;
             for(const auto &[key, value]: expectedValues) {
@@ -950,7 +951,7 @@ int main(int argc, char **argv) {
     std::future<void> appStartedFuture = appStartedPromise.get_future();
 
     // Start the main loop on another thread
-    std::thread appThread([&appStartedPromise]() {
+    std::jthread appThread([&appStartedPromise]() {
         // Queues the promise to be fulfilled after starting the loop
         app().getLoop()->queueInLoop([&appStartedPromise]() {
             appStartedPromise.set_value();
