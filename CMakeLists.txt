@@ -198,6 +198,17 @@ option(ENABLE_TESTS "Enable testing support" OFF)
 
 if (ENABLE_TESTS)
     message(STATUS "Testing is enabled.")
+    # Start adding gtest
+    CPMAddPackage(
+            NAME googletest
+            GITHUB_REPOSITORY google/googletest
+            GIT_TAG v1.15.2
+            VERSION 1.15.2
+            OPTIONS
+            "INSTALL_GTEST OFF"
+            "gtest_force_shared_crt ON"
+    )
+    # End adding gtest
     enable_testing()
     add_subdirectory(tests)
 else ()

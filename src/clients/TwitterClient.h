@@ -2,6 +2,7 @@
 
 #include "IClient.h"
 #include "env.h"
+#include "TransparentHasher.h"
 
 namespace api::v1 {
     class Tweet;

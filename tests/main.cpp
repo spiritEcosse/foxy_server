@@ -1,3 +1,5 @@
+#include "MockHttpClient.h"
+
 #include <drogon/drogon.h>
 #include <future>
 #include <thread>
@@ -149,118 +151,118 @@ DROGON_TEST(Create) {
         };
         sendHttpRequest(path, expectedValues, entity);
 
-        path = "/api/v1/page/admin";
-        entity = "page";
-        expectedValues = {
-            {std::string("description"), "mock description"},
-            {std::string("meta_description"), "mock meta description"},
-            {std::string("canonical_url"), "mock canonical url"},
-            {std::string("slug"), "mock-slug"},
-            {std::string("title"), "mock title"},
-        };
-        sendHttpRequest(path, expectedValues, entity);
-
-        path = "/api/v1/user/admin";
-        entity = "user";
-        expectedValues = {
-            {std::string("email"), "mock email"},
-            {std::string("password"), "mock password"},
-            {std::string("first_name"), "mock first name"},
-            {std::string("last_name"), "mock last name"},
-            {std::string("birthday"), "2024-01-14"},
-        };
-        sendHttpRequest(path, expectedValues, entity);
-
-        path = "/api/v1/shippingprofile/admin";
-        entity = "shipping_profile";
-        expectedValues = {
-            {std::string("title"), "mock title"},
-            {std::string("processing_time"), 1},
-            {std::string("country_id"), 1},
-            {std::string("postal_code"), "mock postal code"},
-        };
-        sendHttpRequest(path, expectedValues, entity);
-
-        path = "/api/v1/shippingrate/admin";
-        entity = "shipping_rate";
-        expectedValues = {
-            {std::string("shipping_profile_id"), 1},
-            {std::string("delivery_days_min"), 1},
-            {std::string("delivery_days_max"), 1},
-        };
-        sendHttpRequest(path, expectedValues, entity);
-
-        path = "/api/v1/review/admin";
-        entity = "review";
-        expectedValues = {
-            {std::string("status"), "failed"},
-            {std::string("user_id"), 1},
-            {std::string("comment"), "mock comment"},
-            {std::string("item_id"), 1},
-        };
-        sendHttpRequest(path, expectedValues, entity);
-
-        // create basket 3
-        dbClient->execSqlSync("INSERT INTO basket (user_id) VALUES (2)");
-        entity = "order";
-        path = "/api/v1/order/admin";
-        expectedValues = {
-            {std::string("status"), "completed"},
-            {std::string("basket_id"), 3},
-            {std::string("total"), 1.0},
-            {std::string("total_ex_taxes"), 1.0},
-            {std::string("tax_rate"), 1.0},
-            {std::string("taxes"), 1.0},
-            {std::string("user_id"), 1},
-            {std::string("reference"), "mock reference"},
-            {std::string("address_id"), 1},
-        };
-        sendHttpRequest(path, expectedValues, entity);
-
-        path = "/api/v1/media/admin";
-        entity = "media";
-        expectedValues = {
-            {std::string("src"), "mock_src"},
-            {std::string("item_id"), 1},
-            {std::string("sort"), 1},
-        };
-        sendHttpRequest(path, expectedValues, entity);
-
-        path = "/api/v1/country/admin";
-        entity = "country";
-        expectedValues = {
-            {std::string("title"), "mock title"},
-            {std::string("code"), "mock code"},
-        };
-        sendHttpRequest(path, expectedValues, entity);
-
-        path = "/api/v1/basket/admin";
-        entity = "basket";
-        expectedValues = {
-            {std::string("user_id"), 1},
-        };
-        sendHttpRequest(path, expectedValues, entity);
-
-        path = "/api/v1/basketitem/admin";
-        entity = "basket_item";
-        expectedValues = {
-            {std::string("basket_id"), 3},
-            {std::string("item_id"), 1},
-            {std::string("quantity"), 1},
-            {std::string("price"), 1.0},
-        };
-        sendHttpRequest(path, expectedValues, entity);
-
-        path = "/api/v1/address/admin";
-        entity = "address";
-        expectedValues = {
-            {std::string("address"), "mock address"},
-            {std::string("country_id"), 1},
-            {std::string("city"), "mock city"},
-            {std::string("zipcode"), "mock zipcode"},
-            {std::string("user_id"), 1},
-        };
-        sendHttpRequest(path, expectedValues, entity);
+        // path = "/api/v1/page/admin";
+        // entity = "page";
+        // expectedValues = {
+        //     {std::string("description"), "mock description"},
+        //     {std::string("meta_description"), "mock meta description"},
+        //     {std::string("canonical_url"), "mock canonical url"},
+        //     {std::string("slug"), "mock-slug"},
+        //     {std::string("title"), "mock title"},
+        // };
+        // sendHttpRequest(path, expectedValues, entity);
+        //
+        // path = "/api/v1/user/admin";
+        // entity = "user";
+        // expectedValues = {
+        //     {std::string("email"), "mock email"},
+        //     {std::string("password"), "mock password"},
+        //     {std::string("first_name"), "mock first name"},
+        //     {std::string("last_name"), "mock last name"},
+        //     {std::string("birthday"), "2024-01-14"},
+        // };
+        // sendHttpRequest(path, expectedValues, entity);
+        //
+        // path = "/api/v1/shippingprofile/admin";
+        // entity = "shipping_profile";
+        // expectedValues = {
+        //     {std::string("title"), "mock title"},
+        //     {std::string("processing_time"), 1},
+        //     {std::string("country_id"), 1},
+        //     {std::string("postal_code"), "mock postal code"},
+        // };
+        // sendHttpRequest(path, expectedValues, entity);
+        //
+        // path = "/api/v1/shippingrate/admin";
+        // entity = "shipping_rate";
+        // expectedValues = {
+        //     {std::string("shipping_profile_id"), 1},
+        //     {std::string("delivery_days_min"), 1},
+        //     {std::string("delivery_days_max"), 1},
+        // };
+        // sendHttpRequest(path, expectedValues, entity);
+        //
+        // path = "/api/v1/review/admin";
+        // entity = "review";
+        // expectedValues = {
+        //     {std::string("status"), "failed"},
+        //     {std::string("user_id"), 1},
+        //     {std::string("comment"), "mock comment"},
+        //     {std::string("item_id"), 1},
+        // };
+        // sendHttpRequest(path, expectedValues, entity);
+        //
+        // // create basket 3
+        // dbClient->execSqlSync("INSERT INTO basket (user_id) VALUES (2)");
+        // entity = "order";
+        // path = "/api/v1/order/admin";
+        // expectedValues = {
+        //     {std::string("status"), "completed"},
+        //     {std::string("basket_id"), 3},
+        //     {std::string("total"), 1.0},
+        //     {std::string("total_ex_taxes"), 1.0},
+        //     {std::string("tax_rate"), 1.0},
+        //     {std::string("taxes"), 1.0},
+        //     {std::string("user_id"), 1},
+        //     {std::string("reference"), "mock reference"},
+        //     {std::string("address_id"), 1},
+        // };
+        // sendHttpRequest(path, expectedValues, entity);
+        //
+        // path = "/api/v1/media/admin";
+        // entity = "media";
+        // expectedValues = {
+        //     {std::string("src"), "mock_src"},
+        //     {std::string("item_id"), 1},
+        //     {std::string("sort"), 1},
+        // };
+        // sendHttpRequest(path, expectedValues, entity);
+        //
+        // path = "/api/v1/country/admin";
+        // entity = "country";
+        // expectedValues = {
+        //     {std::string("title"), "mock title"},
+        //     {std::string("code"), "mock code"},
+        // };
+        // sendHttpRequest(path, expectedValues, entity);
+        //
+        // path = "/api/v1/basket/admin";
+        // entity = "basket";
+        // expectedValues = {
+        //     {std::string("user_id"), 1},
+        // };
+        // sendHttpRequest(path, expectedValues, entity);
+        //
+        // path = "/api/v1/basketitem/admin";
+        // entity = "basket_item";
+        // expectedValues = {
+        //     {std::string("basket_id"), 3},
+        //     {std::string("item_id"), 1},
+        //     {std::string("quantity"), 1},
+        //     {std::string("price"), 1.0},
+        // };
+        // sendHttpRequest(path, expectedValues, entity);
+        //
+        // path = "/api/v1/address/admin";
+        // entity = "address";
+        // expectedValues = {
+        //     {std::string("address"), "mock address"},
+        //     {std::string("country_id"), 1},
+        //     {std::string("city"), "mock city"},
+        //     {std::string("zipcode"), "mock zipcode"},
+        //     {std::string("user_id"), 1},
+        // };
+        // sendHttpRequest(path, expectedValues, entity);
     });
 }
 

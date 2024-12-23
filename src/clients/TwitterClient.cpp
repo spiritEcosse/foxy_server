@@ -3,7 +3,6 @@
 #include <cpr/cpr.h>
 #include "fmt/format.h"
 #include <string>
-#include "TransparentStringHash.h"
 #include <drogon/drogon.h>
 #include <models/Tweet.h>
 #include "cuuid.h"

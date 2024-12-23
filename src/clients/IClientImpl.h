@@ -3,7 +3,6 @@
 #include "FileTransferInfo.h"
 #include <string>
 #include <cpr/cpr.h>
-#include "TransparentStringHash.h"
 
 namespace api::v1 {
     class IClientImpl : public BaseClass {
