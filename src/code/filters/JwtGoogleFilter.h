@@ -1,7 +1,6 @@
 #pragma once
 
 #include <drogon/drogon.h>
-#include <JWT.h>
 
 namespace api::v1::filters {
     class JwtGoogleFilter final : public drogon::HttpFilter<JwtGoogleFilter> {

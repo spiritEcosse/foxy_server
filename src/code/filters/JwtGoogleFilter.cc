@@ -1,5 +1,6 @@
 #include "JwtGoogleFilter.h"
 #include "env.h"
+#include <JWT.h>
 
 using namespace drogon;
 using namespace api::v1::filters;

@@ -4,7 +4,7 @@
 #include "fmt/format.h"
 #include <string>
 #include <drogon/drogon.h>
-#include <models/Tweet.h>
+#include <Tweet.h>
 #include "cuuid.h"
 
 namespace api::v1 {

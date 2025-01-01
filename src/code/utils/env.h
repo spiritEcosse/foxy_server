@@ -20,10 +20,6 @@
 #error ENVIRONMENT must be defined at compile-time
 #endif
 
-#ifndef SENTRY_DSN
-#error SENTRY_DSN must be defined at compile-time
-#endif
-
 #ifndef CONFIG_APP_PATH
 #error CONFIG_APP_PATH must be defined at compile-time
 #endif

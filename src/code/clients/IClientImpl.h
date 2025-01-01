@@ -1,8 +1,10 @@
 #pragma once
 
-#include "FileTransferInfo.h"
+#include "BaseClass.h"
+
 #include <string>
 #include <cpr/cpr.h>
+#include <json/value.h>
 
 namespace api::v1 {
     class IClientImpl : public BaseClass {

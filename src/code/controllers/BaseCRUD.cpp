@@ -250,10 +250,10 @@ void BaseCRUD<T, R>::executeSqlQuery(
             this->handleSqlResult(r, _callbackPtr);
         };
     }
-    auto dbClient = drogon::app().getFastDbClient("default");
+    const auto dbClient = drogon::app().getFastDbClient("default");
     *dbClient << query >> [callbackPtr, handler](const Result &r) {
         if(r.affectedRows() == 0) {
-            auto resp = drogon::HttpResponse::newHttpResponse();
+            const auto resp = drogon::HttpResponse::newHttpResponse();
             resp->setStatusCode(drogon::HttpStatusCode::k404NotFound);
             (*callbackPtr)(resp);
         } else {

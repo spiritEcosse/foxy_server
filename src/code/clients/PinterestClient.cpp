@@ -1,5 +1,5 @@
 #include "PinterestClient.h"
-#include "models/Pin.h"
+#include "Pin.h"
 
 namespace api::v1 {
     std::string PinterestClient::apiUploadMedia = fmt::format("{}/v5/media", PINTEREST_API_HOST);

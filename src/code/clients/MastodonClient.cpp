@@ -4,8 +4,8 @@
 #include <drogon/drogon.h>
 #include <fmt/core.h>
 #include <cpr/cpr.h>
-#include "models/Tweet.h"  // must be because of it : ClientType::clientName
-#include "models/Pin.h"  // must be because of it : ClientType::clientName
+#include "Tweet.h"  // must be because of it : ClientType::clientName
+#include "Pin.h"  // must be because of it : ClientType::clientName
 #include <algorithm>
 
 namespace api::v1 {

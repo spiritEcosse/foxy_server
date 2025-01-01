@@ -7,7 +7,6 @@ set(ENV_VARS
         FOXY_HTTP_PORT
         APP_CLOUD_NAME
         CONFIG_APP_PATH
-        SENTRY_DSN
         ENVIRONMENT
         APP_BUCKET_HOST
         TWITTER_API_KEY
@@ -24,3 +23,8 @@ foreach (VAR IN LISTS ENV_VARS)
     endif ()
     target_compile_definitions(${PROJECT_NAME} PUBLIC -D${VAR}="${${VAR}}")
 endforeach ()
+
+if (DEFINED ENV{SENTRY_DSN})
+    set(SENTRY_DSN "$ENV{SENTRY_DSN}")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DSENTRY_DSN="${SENTRY_DSN}")
+endif ()

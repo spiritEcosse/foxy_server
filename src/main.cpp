@@ -1,6 +1,8 @@
 #include "drogon/drogon.h"
 #include "env.h"
+#if defined(SENTRY_DSN)
 #include <sentry.h>
+#endif
 #include <fmt/format.h>
 #include "sentryHelper.h"
 #include "backward-cpp/backward.hpp"
@@ -24,19 +26,19 @@ int main() {
     std::signal(SIGTRAP, handleSignal);
 
     try {
-        if(strcmp(ENVIRONMENT, "dev") != 0) {
-            sentry_options_t *options = sentry_options_new();
-            sentry_options_set_dsn(options, SENTRY_DSN);
-            // This is also the default-path. For further information and recommendations:
-            // https://docs.sentry.io/platforms/native/configuration/options/#database-path
-            //        sentry_options_set_database_path(options, ".sentry-native");
-            sentry_options_set_handler_path(
-                options,
-                fmt::format("{}/_deps/sentry-build/crashpad_build/handler/crashpad_handler", CMAKE_BINARY_DIR).c_str());
-            sentry_options_set_release(options, "faithfishart-server@0.0.1");
-            sentry_options_set_debug(options, 1);
-            sentry_init(options);
-        }
+#if defined(SENTRY_DSN)
+        sentry_options_t *options = sentry_options_new();
+        sentry_options_set_dsn(options, SENTRY_DSN);
+        // This is also the default-path. For further information and recommendations:
+        // https://docs.sentry.io/platforms/native/configuration/options/#database-path
+        //        sentry_options_set_database_path(options, ".sentry-native");
+        sentry_options_set_handler_path(
+            options,
+            fmt::format("{}/_deps/sentry-build/crashpad_build/handler/crashpad_handler", CMAKE_BINARY_DIR).c_str());
+        sentry_options_set_release(options, "faithfishart-server@0.0.1");
+        sentry_options_set_debug(options, 1);
+        sentry_init(options);
+#endif
 
         app().loadConfigFile(CONFIG_APP_PATH);
         app().registerHandler("/",
@@ -49,6 +51,7 @@ int main() {
                                       std::move(callback));
                                   (*callbackPtr)(resp);
                               });
+#if defined(SENTRY_DSN)
         app().registerHandler("/sentry",
                               [](const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
                                   sentryHelper("It works!", "custom");
@@ -60,6 +63,8 @@ int main() {
                                       std::move(callback));
                                   (*callbackPtr)(resp);
                               });
+#endif
+
         app().registerHandler("/test?username={name}",
                               []([[maybe_unused]] const HttpRequestPtr &req,
                                  std::function<void(const HttpResponsePtr &)> &&callback,
@@ -79,12 +84,13 @@ int main() {
             }
         });
         app().setThreadNum(std::thread::hardware_concurrency() + 2);
-        const std::string host = (strcmp(ENVIRONMENT, "dev") == 0) ? "127.0.0.1" : "0.0.0.0";
-        app().addListener(host, static_cast<uint16_t>(std::stoi(FOXY_HTTP_PORT))).run();
+        std::string host = (strcmp(ENVIRONMENT, "dev") == 0) ? "127.0.0.1" : "0.0.0.0";
+        app().addListener(std::move(host), static_cast<uint16_t>(std::stoi(FOXY_HTTP_PORT))).run();
 
-        if(strcmp(ENVIRONMENT, "dev") != 0) {
-            sentry_close();
-        }
+#if defined(SENTRY_DSN)
+        sentry_close();
+#endif
+
     } catch(...) {
         backward::StackTrace st;
         st.load_here(32);  // Capture the stack trace with a maximum of 32 frames

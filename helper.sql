@@ -2,8 +2,6 @@ DO
 $$
     BEGIN
 
-        DROP TABLE "review", "order", "address", "basket_item", "basket", "user", "media", "item", "page",
-            "shipping_rate", "shipping_profile", "countries_ips", "country", "tag", "social_media";
 
         CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 

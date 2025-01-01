@@ -7,8 +7,8 @@
 #include <vector>
 #include "Request.h"
 #include "TagModel.h"
-#include "models/Pin.h"
-#include "models/Tweet.h"
+#include "Pin.h"
+#include "Tweet.h"
 #include "MastodonClient.h"
 #include <execution>
 

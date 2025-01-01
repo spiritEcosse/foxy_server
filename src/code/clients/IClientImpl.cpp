@@ -3,16 +3,11 @@
 #include <string>
 #include <random>
 #include <openssl/buffer.h>
-#include <sstream>
-#include <iomanip>
 #include <openssl/hmac.h>
 #include <map>
 #include <drogon/drogon.h>
-#include <fstream>
 #include "HttpException.h"
 #include <functional>
-#include <memory>
-#include <uuid/uuid.h>
 
 namespace api::v1 {
     bool IClientImpl::fieldIsMember(const std::string_view& field,

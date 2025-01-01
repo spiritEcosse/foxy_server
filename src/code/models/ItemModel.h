@@ -29,6 +29,7 @@ namespace api::v1 {
                 allFields.try_emplace(shippingProfileId.getFieldName(), std::cref(shippingProfileId));
                 allFields.try_emplace(slug.getFieldName(), std::cref(slug));
                 allFields.try_emplace(price.getFieldName(), std::cref(price));
+                allFields.try_emplace(enabled.getFieldName(), std::cref(enabled));
             }
         };
 

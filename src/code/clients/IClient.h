@@ -1,4 +1,5 @@
 #pragma once
+#include "FileTransferInfo.h"
 #include "IClientImpl.h"
 
 namespace api::v1 {

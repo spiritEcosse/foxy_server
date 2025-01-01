@@ -46,22 +46,23 @@ include(3rdparty)
 # start src
 file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS src/*.cc src/*.cpp /src/*.h src/*.hpp)
 add_executable(foxy_server ${RESOURCES}
-        src/clients/models/SocialMediaType.inl)
+        src/code/clients/models/SocialMediaType.inl)
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 # end src
 
-include_directories(${CMAKE_SOURCE_DIR}/src/orm)
-include_directories(${CMAKE_SOURCE_DIR}/src/utils/db)
-include_directories(${CMAKE_SOURCE_DIR}/src/utils)
-include_directories(${CMAKE_SOURCE_DIR}/src/models)
-include_directories(${CMAKE_SOURCE_DIR}/src/utils/jwt)
-include_directories(${CMAKE_SOURCE_DIR}/src/utils/exceptions)
-include_directories(${CMAKE_SOURCE_DIR}/src/utils/request)
-include_directories(${CMAKE_SOURCE_DIR}/src/controllers)
-include_directories(${CMAKE_SOURCE_DIR}/src/clients)
-include_directories(${CMAKE_SOURCE_DIR}/src/auth)
-include_directories(${CMAKE_SOURCE_DIR}/src/filters)
-include_directories(${CMAKE_SOURCE_DIR}/src/sentry_catcher)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/orm)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/utils/db)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/utils)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/models)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/utils/jwt)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/utils/exceptions)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/utils/request)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/controllers)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/clients)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/clients/models)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/auth)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/filters)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/sentry_catcher)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/envs.cmake)
 
@@ -82,7 +83,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${UUID_LIBRARY})
 # start drogon
 CPMAddPackage(
         NAME drogon
-        VERSION v1.9.4
+        VERSION v1.9.8
         GITHUB_REPOSITORY drogonframework/drogon
         GIT_TAG v1.9.4
         OPTIONS "BUILD_TESTING OFF"
@@ -133,18 +134,20 @@ endif ()
 #target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBBFD_FOUND} ${LIBUNWIND_FOUND} ${OAUTH_FOUND})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBBFD_FOUND} ${LIBUNWIND_FOUND})
 
-# start sentry
-set(SENTRY_BACKEND crashpad)
+if (DEFINED SENTRY_DSN)
+    # start sentry
+    set(SENTRY_BACKEND crashpad)
 
-CPMAddPackage(
-        NAME sentry
-        VERSION 0.7.10
-        GITHUB_REPOSITORY getsentry/sentry-native
-        GIT_TAG 0.7.10
-        OPTIONS "SENTRY_BACKEND=${SENTRY_BACKEND}"
-)
-target_link_libraries(${PROJECT_NAME} PRIVATE sentry)
-# end sentry
+    CPMAddPackage(
+            NAME sentry
+            VERSION 0.7.10
+            GITHUB_REPOSITORY getsentry/sentry-native
+            GIT_TAG 0.7.10
+            OPTIONS "SENTRY_BACKEND=${SENTRY_BACKEND}"
+    )
+    target_link_libraries(${PROJECT_NAME} PRIVATE sentry)
+    # end sentry
+endif ()
 
 # Start Formatting
 CPMAddPackage(
@@ -167,13 +170,7 @@ if (ENVIRONMENT STREQUAL "dev")
     target_link_libraries(${PROJECT_NAME} PRIVATE -fsanitize=address)
 endif ()
 
-file(GLOB_RECURSE ALL_CODE_FILES
-        ${PROJECT_SOURCE_DIR}/src/*.cc
-        ${PROJECT_SOURCE_DIR}/src/*.cpp
-        ${PROJECT_SOURCE_DIR}/src/*.h
-        ${PROJECT_SOURCE_DIR}/src/*.inl
-        ${PROJECT_SOURCE_DIR}/tests/*.cc
-        ${PROJECT_SOURCE_DIR}/tests/*.h)
+file(GLOB_RECURSE ALL_CODE_FILES ${PROJECT_SOURCE_DIR}/**/*)
 
 clang_format(${PROJECT_NAME} ${ALL_CODE_FILES})
 
@@ -208,6 +205,7 @@ if (ENABLE_TESTS)
             "INSTALL_GTEST OFF"
             "gtest_force_shared_crt ON"
     )
+    set(GTEST_PARALLEL TRUE)
     # End adding gtest
     enable_testing()
     add_subdirectory(tests)

@@ -1,7 +1,7 @@
 #include "IClient.h"
 
-#include "models/Tweet.h"
-#include "models/Pin.h"
+#include "Tweet.h"
+#include "Pin.h"
 
 namespace api::v1 {
     template<typename ClientType, typename PostType>
