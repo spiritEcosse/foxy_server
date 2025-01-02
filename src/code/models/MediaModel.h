@@ -27,6 +27,7 @@ namespace api::v1 {
                 allFields.try_emplace(itemId.getFieldName(), std::cref(itemId));
                 allFields.try_emplace(sort.getFieldName(), std::cref(sort));
                 allFields.try_emplace(type.getFieldName(), std::cref(type));
+                allFields.try_emplace(contentType.getFieldName(), std::cref(contentType));
             }
         };
 

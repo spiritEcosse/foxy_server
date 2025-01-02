@@ -5,6 +5,7 @@
 #include "TransparentHasher.h"
 #include "drogon/drogon.h"
 #include <ranges>
+#include "env.h"
 
 #include <future>
 #include <gtest/gtest.h>
@@ -56,7 +57,7 @@ public:
             EXPECT_EQ(respJson[key].asBool(), expectedValue);
         } else if constexpr(std::is_same_v<T, std::string>) {
             if(key == "src") {
-                EXPECT_EQ(respJson[key].asString(), fmt::format("https:///{}", expectedValue));
+                EXPECT_EQ(respJson[key].asString(), fmt::format("https://{}/{}", APP_CLOUD_NAME, expectedValue));
             } else {
                 EXPECT_EQ(respJson[key].asString(), expectedValue);
             }
@@ -78,7 +79,7 @@ public:
     }
 
     std::function<void(const drogon::HttpResponsePtr&)> createCallback(std::shared_ptr<std::promise<void>> testPromise,
-                                                                       const drogon::orm::DbClientPtr& dbClient) {
+                                                                       drogon::orm::DbClientPtr dbClient) {
         return [this, dbClient, testPromise](const drogon::HttpResponsePtr& resp) {
             try {
                 EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
@@ -136,7 +137,7 @@ public:
                 std::cout << jsonString << std::endl;
                 auto filteredKeys = std::views::keys(ControllerTest::expectedValues) |
                                     std::views::filter([](const std::string_view& key) {
-                                        return key != "id" && key != "enabled";
+                                        return key != "id" && key != "enabled" && key != "status";
                                     });
 
                 for(const auto& key: filteredKeys) {

@@ -44,9 +44,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty" "${CMAKE_BI
 include(3rdparty)
 
 # start src
-file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS src/*.cc src/*.cpp /src/*.h src/*.hpp)
-add_executable(foxy_server ${RESOURCES}
-        src/code/clients/models/SocialMediaType.inl)
+file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS src/*.*)
+add_executable(foxy_server ${RESOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 # end src
 
@@ -149,14 +148,12 @@ if (DEFINED SENTRY_DSN)
     # end sentry
 endif ()
 
-# Start Formatting
 CPMAddPackage(
         NAME cmake-scripts
         VERSION 24.08.1
         GITHUB_REPOSITORY StableCoder/cmake-scripts
         GIT_TAG 24.08.1
 )
-include(formatting)
 include(sanitizers)
 if (ENVIRONMENT STREQUAL "dev")
     # Address + Leak sanitizers
@@ -170,15 +167,12 @@ if (ENVIRONMENT STREQUAL "dev")
     target_link_libraries(${PROJECT_NAME} PRIVATE -fsanitize=address)
 endif ()
 
-file(GLOB_RECURSE ALL_CODE_FILES ${PROJECT_SOURCE_DIR}/**/*)
-
-clang_format(${PROJECT_NAME} ${ALL_CODE_FILES})
-
+# Start Formatting
+include(formatting)
+clang_format(clang-format ${RESOURCES} tests/*.*)
 file(GLOB_RECURSE CMAKE_FILES ${PROJECT_SOURCE_DIR}/src/CMakeLists.txt
         ${PROJECT_SOURCE_DIR}/tests/CMakeLists.txt)
-
 cmake_format(cmake-format ${CMAKE_FILES} CMakeLists.txt)
-
 # End Formatting
 
 # Start adding fmt
