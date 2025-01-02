@@ -12,13 +12,13 @@ public:
     static FieldsMap expectedValues;
 };
 
-FieldsMap PageControllerTest::expectedValues =  {
-        {"description", "mock description"},
-        {"meta_description", "mock meta description"},
-        {"canonical_url", "mock canonical url"},
-        {"slug", "mock-slug"},
-        {"title", "mock title"},
-        {"enabled", true},
+FieldsMap PageControllerTest::expectedValues = {
+    {"description", "mock description"},
+    {"meta_description", "mock meta description"},
+    {"canonical_url", "mock canonical url"},
+    {"slug", "mock-slug"},
+    {"title", "mock title"},
+    {"enabled", true},
 };
 
 TEST_F(PageControllerTest, Create200) {
