@@ -13,7 +13,7 @@ public:
 };
 
 FieldsMap BasketControllerTest::expectedValues = {
-         {"user_id", 1},
+    {"user_id", 1},
 };
 
 TEST_F(BasketControllerTest, Create200) {

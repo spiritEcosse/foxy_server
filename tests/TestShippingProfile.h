@@ -13,10 +13,10 @@ public:
 };
 
 FieldsMap ShippingProfileControllerTest::expectedValues = {
-         {"title", "mock title"},
-         {"processing_time", 1},
-         {"country_id", 1},
-         {"postal_code", "mock postal code"},
+    {"title", "mock title"},
+    {"processing_time", 1},
+    {"country_id", 1},
+    {"postal_code", "mock postal code"},
 };
 
 TEST_F(ShippingProfileControllerTest, Create200) {

@@ -13,9 +13,9 @@ public:
 };
 
 FieldsMap ShippingRateControllerTest::expectedValues = {
-         {"shipping_profile_id", 1},
-         {"delivery_days_min", 1},
-         {"delivery_days_max", 1},
+    {"shipping_profile_id", 1},
+    {"delivery_days_min", 1},
+    {"delivery_days_max", 1},
 };
 
 TEST_F(ShippingRateControllerTest, Create200) {
