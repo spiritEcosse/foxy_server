@@ -7,8 +7,8 @@
 
 class AddressControllerTest : public BaseTestClass<AddressControllerTest, api::v1::Address> {
 public:
-    static constexpr drogon::HttpMethod method = drogon::Post;
     static FieldsMap expectedValues;
+    static FieldsMap updatedValues;
 };
 
 FieldsMap AddressControllerTest::expectedValues = {
@@ -18,6 +18,8 @@ FieldsMap AddressControllerTest::expectedValues = {
     {"zipcode", "mock zipcode"},
     {"user_id", 1},
 };
+
+FieldsMap AddressControllerTest::updatedValues = {};
 
 TEST_F(AddressControllerTest, Create200) {
     testCreate200();
@@ -33,4 +35,8 @@ TEST_F(AddressControllerTest, RequiredFields400) {
 
 TEST_F(AddressControllerTest, Delete204) {
     testDelete204();
+}
+
+TEST_F(AddressControllerTest, Update200) {
+    testUpdate200();
 }

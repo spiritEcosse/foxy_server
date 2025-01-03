@@ -7,8 +7,8 @@
 
 class MediaControllerTest : public BaseTestClass<MediaControllerTest, api::v1::Media> {
 public:
-    static constexpr drogon::HttpMethod method = drogon::Post;
     static FieldsMap expectedValues;
+    static FieldsMap updatedValues;
 };
 
 FieldsMap MediaControllerTest::expectedValues = {
@@ -18,6 +18,7 @@ FieldsMap MediaControllerTest::expectedValues = {
     {"content_type", "video/mp4"},
     {"type", "video"},
 };
+FieldsMap MediaControllerTest::updatedValues = {};
 
 TEST_F(MediaControllerTest, Create200) {
     testCreate200();
@@ -33,4 +34,8 @@ TEST_F(MediaControllerTest, RequiredFields400) {
 
 TEST_F(MediaControllerTest, Delete204) {
     testDelete204();
+}
+
+TEST_F(MediaControllerTest, Update200) {
+    testUpdate200();
 }

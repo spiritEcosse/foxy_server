@@ -4,12 +4,11 @@
 #include "User.h"
 
 #include <gtest/gtest.h>
-#include <drogon/drogon.h>
 
 class UserControllerTest : public BaseTestClass<UserControllerTest, api::v1::User> {
 public:
-    static constexpr drogon::HttpMethod method = drogon::Post;
     static FieldsMap expectedValues;
+    static FieldsMap updatedValues;
 };
 
 FieldsMap UserControllerTest::expectedValues = {
@@ -18,6 +17,7 @@ FieldsMap UserControllerTest::expectedValues = {
     {"last_name", "mock last name"},
     {"birthday", "2024-01-14"},
 };
+FieldsMap UserControllerTest::updatedValues = {};
 
 TEST_F(UserControllerTest, Create200) {
     testCreate200();
@@ -33,4 +33,8 @@ TEST_F(UserControllerTest, RequiredFields400) {
 
 TEST_F(UserControllerTest, Delete204) {
     testDelete204();
+}
+
+TEST_F(UserControllerTest, Update200) {
+    testUpdate200();
 }

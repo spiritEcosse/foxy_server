@@ -7,8 +7,8 @@
 
 class OrderControllerTest : public BaseTestClass<OrderControllerTest, api::v1::Order> {
 public:
-    static constexpr drogon::HttpMethod method = drogon::Post;
     static FieldsMap expectedValues;
+    static FieldsMap updatedValues;
 };
 
 FieldsMap OrderControllerTest::expectedValues = {
@@ -21,6 +21,7 @@ FieldsMap OrderControllerTest::expectedValues = {
     {"user_id", 1},
     {"address_id", 1},
 };
+FieldsMap OrderControllerTest::updatedValues = {};
 
 TEST_F(OrderControllerTest, Create200) {
     testCreate200();
@@ -36,4 +37,8 @@ TEST_F(OrderControllerTest, RequiredFields400) {
 
 TEST_F(OrderControllerTest, Delete204) {
     testDelete204();
+}
+
+TEST_F(OrderControllerTest, Update200) {
+    testUpdate200();
 }

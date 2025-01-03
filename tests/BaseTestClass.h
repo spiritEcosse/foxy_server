@@ -20,8 +20,7 @@ class BaseTestClass : public api::v1::BaseClass, public testing::Test {
 public:
     void SetUp() override {
         req = drogon::HttpRequest::newHttpRequest();
-        req->setMethod(ControllerTest::method);
-        req->setBody(createItemBody());
+        req->setBody(body());
         req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
         reqPtr = std::make_shared<drogon::HttpRequestPtr>(req);
     }
@@ -35,7 +34,7 @@ public:
     std::shared_ptr<drogon::HttpRequestPtr> reqPtr;
     Controller controller;
 
-    static std::string createItemBody() {
+    static std::string body() {
         Json::Value jsonValue;
 
         for(const auto& [key, value]: ControllerTest::expectedValues) {
@@ -47,6 +46,37 @@ public:
         }
         const Json::StreamWriterBuilder writer;
         return writeString(writer, jsonValue);
+    }
+
+    static std::string updatedBody() {
+        // Create a mutable copy of the expected values
+        ControllerTest::updatedValues = ControllerTest::expectedValues;
+        Json::Value jsonValue;
+
+        for(auto& [key, value]: ControllerTest::updatedValues) {
+            std::visit(
+                [&]<typename T0>(const T0& arg) {
+                    using T = std::decay_t<T0>;
+                    if constexpr(std::is_same_v<T, int>) {
+                        value = std::variant<int, bool, std::string, double>(2);
+                    } else if constexpr(std::is_same_v<T, bool>) {
+                        value = std::variant<int, bool, std::string, double>(false);
+                    } else if constexpr(std::is_same_v<T, std::string>) {
+                        value = std::variant<int, bool, std::string, double>(std::string("new string"));
+                    } else if constexpr(std::is_same_v<T, double>) {
+                        value = std::variant<int, bool, std::string, double>(123.45);
+                    }
+                    // Update the JSON value after updating the variant
+                    std::visit(
+                        [&](const auto& updated_arg) {
+                            jsonValue[key] = updated_arg;
+                        },
+                        value);
+                },
+                value);
+        }
+        const Json::StreamWriterBuilder writer;
+        return Json::writeString(writer, jsonValue);
     }
 
     template<typename T>
@@ -76,6 +106,31 @@ public:
                 checkJsonValue(respJson, key, arg);
             },
             expectedValue);
+    }
+
+    std::function<void(const drogon::HttpResponsePtr&)> updateCallback(std::shared_ptr<std::promise<void>> testPromise,
+                                                                       drogon::orm::DbClientPtr dbClient) {
+        return [this, dbClient, testPromise](const drogon::HttpResponsePtr& resp) {
+            try {
+                EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
+                EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
+
+                const auto responseJson = resp->getJsonObject();
+                const Json::StreamWriterBuilder builder;
+                const std::string jsonString = writeString(builder, *responseJson);
+                std::cout << jsonString << std::endl;
+                if(resp->getStatusCode() == drogon::k200OK) {
+                    for(const auto& [key, value]: ControllerTest::updatedValues) {
+                        this->checkJsonValueVariant(*responseJson, key, value);
+                    }
+                }
+                *dbClient << "ROLLBACK;";
+                testPromise->set_value();
+            } catch(const std::exception& e) {
+                testPromise->set_exception(std::current_exception());
+                LOG_ERROR << e.what();
+            }
+        };
     }
 
     std::function<void(const drogon::HttpResponsePtr&)> createCallback(std::shared_ptr<std::promise<void>> testPromise,
@@ -208,6 +263,17 @@ public:
                 const auto dbClient = drogon::app().getFastDbClient("default");
                 *dbClient << "BEGIN";
                 controller.deleteItem(*reqPtr, deleteItemCallback(promise, dbClient), "1");
+            });
+        }).get();
+    }
+
+    void testUpdate200() {
+        runAsyncTest<void>([this](auto promise) {
+            drogon::app().getLoop()->queueInLoop([this, promise]() {
+                req->setBody(updatedBody());
+                const auto dbClient = drogon::app().getFastDbClient("default");
+                *dbClient << "BEGIN";
+                controller.updateItem(*reqPtr, updateCallback(promise, dbClient), "1");
             });
         }).get();
     }

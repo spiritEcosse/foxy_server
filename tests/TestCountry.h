@@ -7,14 +7,15 @@
 
 class CountryControllerTest : public BaseTestClass<CountryControllerTest, api::v1::Country> {
 public:
-    static constexpr drogon::HttpMethod method = drogon::Post;
     static FieldsMap expectedValues;
+    static FieldsMap updatedValues;
 };
 
 FieldsMap CountryControllerTest::expectedValues = {
     {"title", "mock title"},
     {"code", "mock code"},
 };
+FieldsMap CountryControllerTest::updatedValues = {};
 
 TEST_F(CountryControllerTest, Create200) {
     testCreate200();
@@ -30,4 +31,8 @@ TEST_F(CountryControllerTest, RequiredFields400) {
 
 TEST_F(CountryControllerTest, Delete204) {
     testDelete204();
+}
+
+TEST_F(CountryControllerTest, Update200) {
+    testUpdate200();
 }

@@ -4,12 +4,11 @@
 #include "FinancialDetails.h"
 
 #include <gtest/gtest.h>
-#include <drogon/drogon.h>
 
 class FinancialDetailsControllerTest : public BaseTestClass<FinancialDetailsControllerTest, api::v1::FinancialDetails> {
 public:
-    static constexpr drogon::HttpMethod method = drogon::Post;
     static FieldsMap expectedValues;
+    static FieldsMap updatedValues;
 };
 
 FieldsMap FinancialDetailsControllerTest::expectedValues = {
@@ -21,6 +20,7 @@ FieldsMap FinancialDetailsControllerTest::expectedValues = {
     {"title", "mock title"},
     {"enabled", true},
 };
+FieldsMap FinancialDetailsControllerTest::updatedValues = {};
 
 TEST_F(FinancialDetailsControllerTest, Create200) {
     testCreate200();
@@ -32,4 +32,12 @@ TEST_F(FinancialDetailsControllerTest, EmptyBody400) {
 
 TEST_F(FinancialDetailsControllerTest, RequiredFields400) {
     testRequiredFields400();
+}
+
+TEST_F(FinancialDetailsControllerTest, Delete204) {
+    testDelete204();
+}
+
+TEST_F(FinancialDetailsControllerTest, Update200) {
+    testUpdate200();
 }

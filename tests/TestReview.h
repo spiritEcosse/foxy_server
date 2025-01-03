@@ -7,8 +7,8 @@
 
 class ReviewControllerTest : public BaseTestClass<ReviewControllerTest, api::v1::Review> {
 public:
-    static constexpr drogon::HttpMethod method = drogon::Post;
     static FieldsMap expectedValues;
+    static FieldsMap updatedValues;
 };
 
 FieldsMap ReviewControllerTest::expectedValues = {
@@ -17,6 +17,7 @@ FieldsMap ReviewControllerTest::expectedValues = {
     {"comment", "mock comment"},
     {"item_id", 1},
 };
+FieldsMap ReviewControllerTest::updatedValues = {};
 
 TEST_F(ReviewControllerTest, Create200) {
     testCreate200();
@@ -32,4 +33,8 @@ TEST_F(ReviewControllerTest, RequiredFields400) {
 
 TEST_F(ReviewControllerTest, Delete204) {
     testDelete204();
+}
+
+TEST_F(ReviewControllerTest, Update200) {
+    testUpdate200();
 }

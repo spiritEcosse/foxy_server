@@ -4,12 +4,11 @@
 #include "Item.h"
 
 #include <gtest/gtest.h>
-#include <drogon/drogon.h>
 
 class ItemControllerTest : public BaseTestClass<ItemControllerTest, api::v1::Item> {
 public:
-    static constexpr drogon::HttpMethod method = drogon::Post;
     static FieldsMap expectedValues;
+    static FieldsMap updatedValues;
 };
 
 FieldsMap ItemControllerTest::expectedValues = {
@@ -21,6 +20,7 @@ FieldsMap ItemControllerTest::expectedValues = {
     {"title", "mock title"},
     {"enabled", true},
 };
+FieldsMap ItemControllerTest::updatedValues = {};
 
 TEST_F(ItemControllerTest, Create200) {
     testCreate200();
@@ -36,4 +36,8 @@ TEST_F(ItemControllerTest, RequiredFields400) {
 
 TEST_F(ItemControllerTest, Delete204) {
     testDelete204();
+}
+
+TEST_F(ItemControllerTest, Update200) {
+    testUpdate200();
 }

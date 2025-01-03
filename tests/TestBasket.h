@@ -4,17 +4,18 @@
 #include "Basket.h"
 
 #include <gtest/gtest.h>
-#include <drogon/drogon.h>
 
 class BasketControllerTest : public BaseTestClass<BasketControllerTest, api::v1::Basket> {
 public:
-    static constexpr drogon::HttpMethod method = drogon::Post;
     static FieldsMap expectedValues;
+    static FieldsMap updatedValues;
 };
 
 FieldsMap BasketControllerTest::expectedValues = {
     {"user_id", 1},
 };
+
+FieldsMap BasketControllerTest::updatedValues = {};
 
 TEST_F(BasketControllerTest, Create200) {
     testCreate200();
@@ -30,4 +31,8 @@ TEST_F(BasketControllerTest, RequiredFields400) {
 
 TEST_F(BasketControllerTest, Delete204) {
     testDelete204();
+}
+
+TEST_F(BasketControllerTest, Update200) {
+    testUpdate200();
 }

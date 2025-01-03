@@ -4,12 +4,11 @@
 #include "ShippingRate.h"
 
 #include <gtest/gtest.h>
-#include <drogon/drogon.h>
 
 class ShippingRateControllerTest : public BaseTestClass<ShippingRateControllerTest, api::v1::ShippingRate> {
 public:
-    static constexpr drogon::HttpMethod method = drogon::Post;
     static FieldsMap expectedValues;
+    static FieldsMap updatedValues;
 };
 
 FieldsMap ShippingRateControllerTest::expectedValues = {
@@ -17,6 +16,7 @@ FieldsMap ShippingRateControllerTest::expectedValues = {
     {"delivery_days_min", 1},
     {"delivery_days_max", 1},
 };
+FieldsMap ShippingRateControllerTest::updatedValues = {};
 
 TEST_F(ShippingRateControllerTest, Create200) {
     testCreate200();
@@ -32,4 +32,8 @@ TEST_F(ShippingRateControllerTest, RequiredFields400) {
 
 TEST_F(ShippingRateControllerTest, Delete204) {
     testDelete204();
+}
+
+TEST_F(ShippingRateControllerTest, Update200) {
+    testUpdate200();
 }
