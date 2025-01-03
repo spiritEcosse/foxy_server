@@ -164,7 +164,6 @@ if (ENVIRONMENT STREQUAL "dev")
 
     # Memory + Undefined Behavior sanitizers
     #    add_sanitizer_support(memory undefined)
-    target_link_libraries(${PROJECT_NAME} PRIVATE -fsanitize=address)
 endif ()
 
 # Start Formatting
