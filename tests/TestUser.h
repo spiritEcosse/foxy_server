@@ -9,6 +9,7 @@ class UserControllerTest : public BaseTestClass<UserControllerTest, api::v1::Use
 public:
     static FieldsMap expectedValues;
     static FieldsMap updatedValues;
+    static FieldsMap getOneValues;
 };
 
 FieldsMap UserControllerTest::expectedValues = {
@@ -18,6 +19,7 @@ FieldsMap UserControllerTest::expectedValues = {
     {"birthday", "2024-01-14"},
 };
 FieldsMap UserControllerTest::updatedValues = {};
+FieldsMap UserControllerTest::getOneValues = {};
 
 TEST_F(UserControllerTest, Create200) {
     testCreate200();

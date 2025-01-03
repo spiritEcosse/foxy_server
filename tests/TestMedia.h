@@ -9,6 +9,7 @@ class MediaControllerTest : public BaseTestClass<MediaControllerTest, api::v1::M
 public:
     static FieldsMap expectedValues;
     static FieldsMap updatedValues;
+    static FieldsMap getOneValues;
 };
 
 FieldsMap MediaControllerTest::expectedValues = {
@@ -19,6 +20,7 @@ FieldsMap MediaControllerTest::expectedValues = {
     {"type", "video"},
 };
 FieldsMap MediaControllerTest::updatedValues = {};
+FieldsMap MediaControllerTest::getOneValues = {};
 
 TEST_F(MediaControllerTest, Create200) {
     testCreate200();

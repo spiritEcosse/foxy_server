@@ -9,6 +9,7 @@ class CountryControllerTest : public BaseTestClass<CountryControllerTest, api::v
 public:
     static FieldsMap expectedValues;
     static FieldsMap updatedValues;
+    static FieldsMap getOneValues;
 };
 
 FieldsMap CountryControllerTest::expectedValues = {
@@ -16,6 +17,7 @@ FieldsMap CountryControllerTest::expectedValues = {
     {"code", "mock code"},
 };
 FieldsMap CountryControllerTest::updatedValues = {};
+FieldsMap CountryControllerTest::getOneValues = {};
 
 TEST_F(CountryControllerTest, Create200) {
     testCreate200();

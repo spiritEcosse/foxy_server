@@ -9,6 +9,7 @@ class BasketControllerTest : public BaseTestClass<BasketControllerTest, api::v1:
 public:
     static FieldsMap expectedValues;
     static FieldsMap updatedValues;
+    static FieldsMap getOneValues;
 };
 
 FieldsMap BasketControllerTest::expectedValues = {
@@ -16,6 +17,7 @@ FieldsMap BasketControllerTest::expectedValues = {
 };
 
 FieldsMap BasketControllerTest::updatedValues = {};
+FieldsMap BasketControllerTest::getOneValues = {};
 
 TEST_F(BasketControllerTest, Create200) {
     testCreate200();

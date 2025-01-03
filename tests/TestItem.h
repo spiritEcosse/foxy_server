@@ -9,6 +9,7 @@ class ItemControllerTest : public BaseTestClass<ItemControllerTest, api::v1::Ite
 public:
     static FieldsMap expectedValues;
     static FieldsMap updatedValues;
+    static FieldsMap getOneValues;
 };
 
 FieldsMap ItemControllerTest::expectedValues = {
@@ -21,6 +22,7 @@ FieldsMap ItemControllerTest::expectedValues = {
     {"enabled", true},
 };
 FieldsMap ItemControllerTest::updatedValues = {};
+FieldsMap ItemControllerTest::getOneValues = {};
 
 TEST_F(ItemControllerTest, Create200) {
     testCreate200();
@@ -40,4 +42,8 @@ TEST_F(ItemControllerTest, Delete204) {
 
 TEST_F(ItemControllerTest, Update200) {
     testUpdate200();
+}
+
+TEST_F(ItemControllerTest, GetOne200) {
+    getOne200();
 }

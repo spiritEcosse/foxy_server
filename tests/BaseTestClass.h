@@ -133,6 +133,30 @@ public:
         };
     }
 
+    std::function<void(const drogon::HttpResponsePtr&)>
+    getOneCallback(std::shared_ptr<std::promise<void>> testPromise) {
+        return [this, testPromise](const drogon::HttpResponsePtr& resp) {
+            try {
+                EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
+                EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
+
+                const auto responseJson = resp->getJsonObject();
+                const Json::StreamWriterBuilder builder;
+                const std::string jsonString = writeString(builder, *responseJson);
+                std::cout << jsonString << std::endl;
+                if(resp->getStatusCode() == drogon::k200OK) {
+                    for(const auto& [key, value]: ControllerTest::getOneValues) {
+                        this->checkJsonValueVariant(*responseJson, key, value);
+                    }
+                }
+                testPromise->set_value();
+            } catch(const std::exception& e) {
+                testPromise->set_exception(std::current_exception());
+                LOG_ERROR << e.what();
+            }
+        };
+    }
+
     std::function<void(const drogon::HttpResponsePtr&)> createCallback(std::shared_ptr<std::promise<void>> testPromise,
                                                                        drogon::orm::DbClientPtr dbClient) {
         return [this, dbClient, testPromise](const drogon::HttpResponsePtr& resp) {
@@ -274,6 +298,14 @@ public:
                 const auto dbClient = drogon::app().getFastDbClient("default");
                 *dbClient << "BEGIN";
                 controller.updateItem(*reqPtr, updateCallback(promise, dbClient), "1");
+            });
+        }).get();
+    }
+
+    void getOne200() {
+        runAsyncTest<void>([this](auto promise) {
+            drogon::app().getLoop()->queueInLoop([this, promise]() {
+                controller.getOne(*reqPtr, getOneCallback(promise), "1");
             });
         }).get();
     }

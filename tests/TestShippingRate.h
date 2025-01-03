@@ -9,6 +9,7 @@ class ShippingRateControllerTest : public BaseTestClass<ShippingRateControllerTe
 public:
     static FieldsMap expectedValues;
     static FieldsMap updatedValues;
+    static FieldsMap getOneValues;
 };
 
 FieldsMap ShippingRateControllerTest::expectedValues = {
@@ -17,6 +18,7 @@ FieldsMap ShippingRateControllerTest::expectedValues = {
     {"delivery_days_max", 1},
 };
 FieldsMap ShippingRateControllerTest::updatedValues = {};
+FieldsMap ShippingRateControllerTest::getOneValues = {};
 
 TEST_F(ShippingRateControllerTest, Create200) {
     testCreate200();

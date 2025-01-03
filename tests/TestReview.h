@@ -9,6 +9,7 @@ class ReviewControllerTest : public BaseTestClass<ReviewControllerTest, api::v1:
 public:
     static FieldsMap expectedValues;
     static FieldsMap updatedValues;
+    static FieldsMap getOneValues;
 };
 
 FieldsMap ReviewControllerTest::expectedValues = {
@@ -18,6 +19,7 @@ FieldsMap ReviewControllerTest::expectedValues = {
     {"item_id", 1},
 };
 FieldsMap ReviewControllerTest::updatedValues = {};
+FieldsMap ReviewControllerTest::getOneValues = {};
 
 TEST_F(ReviewControllerTest, Create200) {
     testCreate200();

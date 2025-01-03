@@ -9,6 +9,7 @@ class AddressControllerTest : public BaseTestClass<AddressControllerTest, api::v
 public:
     static FieldsMap expectedValues;
     static FieldsMap updatedValues;
+    static FieldsMap getOneValues;
 };
 
 FieldsMap AddressControllerTest::expectedValues = {
@@ -18,8 +19,8 @@ FieldsMap AddressControllerTest::expectedValues = {
     {"zipcode", "mock zipcode"},
     {"user_id", 1},
 };
-
 FieldsMap AddressControllerTest::updatedValues = {};
+FieldsMap AddressControllerTest::getOneValues = {};
 
 TEST_F(AddressControllerTest, Create200) {
     testCreate200();

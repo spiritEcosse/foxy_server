@@ -9,6 +9,7 @@ class FinancialDetailsControllerTest : public BaseTestClass<FinancialDetailsCont
 public:
     static FieldsMap expectedValues;
     static FieldsMap updatedValues;
+    static FieldsMap getOneValues;
 };
 
 FieldsMap FinancialDetailsControllerTest::expectedValues = {
@@ -21,6 +22,7 @@ FieldsMap FinancialDetailsControllerTest::expectedValues = {
     {"enabled", true},
 };
 FieldsMap FinancialDetailsControllerTest::updatedValues = {};
+FieldsMap FinancialDetailsControllerTest::getOneValues = {};
 
 TEST_F(FinancialDetailsControllerTest, Create200) {
     testCreate200();

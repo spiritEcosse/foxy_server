@@ -1,0 +1,29 @@
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set environment variables
+        env:
+          APP_CLOUD_NAME: test
+          APP_BUCKET_HOST: test
+          FOXY_ADMIN: test
+          ENVIRONMENT: dev
+          CONFIG_APP_PATH: dev
+          FOXY_HTTP_PORT: dev
+          PINTEREST_ACCESS_TOKEN: dev
+          PINTEREST_API_HOST: dev
+          TWITTER_API_KEY: dev
+          TWITTER_API_SECRET: dev
+          TWITTER_ACCESS_TOKEN: dev
+          TWITTER_ACCESS_TOKEN_SECRET: dev
+          TWITTER_BEARER_TOKEN: dev
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: cpp
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v2
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2

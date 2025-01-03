@@ -9,6 +9,7 @@ class OrderControllerTest : public BaseTestClass<OrderControllerTest, api::v1::O
 public:
     static FieldsMap expectedValues;
     static FieldsMap updatedValues;
+    static FieldsMap getOneValues;
 };
 
 FieldsMap OrderControllerTest::expectedValues = {
@@ -22,6 +23,7 @@ FieldsMap OrderControllerTest::expectedValues = {
     {"address_id", 1},
 };
 FieldsMap OrderControllerTest::updatedValues = {};
+FieldsMap OrderControllerTest::getOneValues = {};
 
 TEST_F(OrderControllerTest, Create200) {
     testCreate200();

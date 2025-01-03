@@ -9,6 +9,7 @@ class PageControllerTest : public BaseTestClass<PageControllerTest, api::v1::Pag
 public:
     static FieldsMap expectedValues;
     static FieldsMap updatedValues;
+    static FieldsMap getOneValues;
 };
 
 FieldsMap PageControllerTest::expectedValues = {
@@ -20,6 +21,7 @@ FieldsMap PageControllerTest::expectedValues = {
     {"enabled", true},
 };
 FieldsMap PageControllerTest::updatedValues = {};
+FieldsMap PageControllerTest::getOneValues = {};
 
 TEST_F(PageControllerTest, Create200) {
     testCreate200();

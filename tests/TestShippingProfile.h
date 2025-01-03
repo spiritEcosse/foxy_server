@@ -9,6 +9,7 @@ class ShippingProfileControllerTest : public BaseTestClass<ShippingProfileContro
 public:
     static FieldsMap expectedValues;
     static FieldsMap updatedValues;
+    static FieldsMap getOneValues;
 };
 
 FieldsMap ShippingProfileControllerTest::expectedValues = {
@@ -18,6 +19,7 @@ FieldsMap ShippingProfileControllerTest::expectedValues = {
     {"postal_code", "mock postal code"},
 };
 FieldsMap ShippingProfileControllerTest::updatedValues = {};
+FieldsMap ShippingProfileControllerTest::getOneValues = {};
 
 TEST_F(ShippingProfileControllerTest, Create200) {
     testCreate200();

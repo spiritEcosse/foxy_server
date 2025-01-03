@@ -9,10 +9,12 @@ class SocialMediaControllerTest : public BaseTestClass<SocialMediaControllerTest
 public:
     static FieldsMap expectedValues;
     static FieldsMap updatedValues;
+    static FieldsMap getOneValues;
 };
 
 FieldsMap SocialMediaControllerTest::expectedValues = {{"item_id", 1}, {"title", "Pinterest"}};
 FieldsMap SocialMediaControllerTest::updatedValues = {};
+FieldsMap SocialMediaControllerTest::getOneValues = {};
 
 TEST_F(SocialMediaControllerTest, Create200) {
     testCreate200();
