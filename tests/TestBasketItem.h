@@ -27,3 +27,7 @@ TEST_F(BasketItemControllerTest, EmptyBody400) {
 TEST_F(BasketItemControllerTest, RequiredFields400) {
     testRequiredFields400();
 }
+
+TEST_F(BasketItemControllerTest, Delete204) {
+    testDelete204();
+}

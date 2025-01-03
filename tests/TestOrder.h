@@ -33,3 +33,7 @@ TEST_F(OrderControllerTest, EmptyBody400) {
 TEST_F(OrderControllerTest, RequiredFields400) {
     testRequiredFields400();
 }
+
+TEST_F(OrderControllerTest, Delete204) {
+    testDelete204();
+}

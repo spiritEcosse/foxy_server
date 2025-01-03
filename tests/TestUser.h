@@ -30,3 +30,7 @@ TEST_F(UserControllerTest, EmptyBody400) {
 TEST_F(UserControllerTest, RequiredFields400) {
     testRequiredFields400();
 }
+
+TEST_F(UserControllerTest, Delete204) {
+    testDelete204();
+}

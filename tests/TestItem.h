@@ -33,3 +33,7 @@ TEST_F(ItemControllerTest, EmptyBody400) {
 TEST_F(ItemControllerTest, RequiredFields400) {
     testRequiredFields400();
 }
+
+TEST_F(ItemControllerTest, Delete204) {
+    testDelete204();
+}

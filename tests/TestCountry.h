@@ -27,3 +27,7 @@ TEST_F(CountryControllerTest, EmptyBody400) {
 TEST_F(CountryControllerTest, RequiredFields400) {
     testRequiredFields400();
 }
+
+TEST_F(CountryControllerTest, Delete204) {
+    testDelete204();
+}

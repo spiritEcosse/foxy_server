@@ -30,3 +30,7 @@ TEST_F(AddressControllerTest, EmptyBody400) {
 TEST_F(AddressControllerTest, RequiredFields400) {
     testRequiredFields400();
 }
+
+TEST_F(AddressControllerTest, Delete204) {
+    testDelete204();
+}

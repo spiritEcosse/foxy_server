@@ -30,3 +30,7 @@ TEST_F(MediaControllerTest, EmptyBody400) {
 TEST_F(MediaControllerTest, RequiredFields400) {
     testRequiredFields400();
 }
+
+TEST_F(MediaControllerTest, Delete204) {
+    testDelete204();
+}

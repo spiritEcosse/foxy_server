@@ -98,7 +98,7 @@ public:
                 testPromise->set_value();
             } catch(const std::exception& e) {
                 testPromise->set_exception(std::current_exception());
-                std::cerr << "Rollback failed: " << e.what() << std::endl;
+                LOG_ERROR << e.what();
             }
         };
     }
@@ -150,6 +150,22 @@ public:
         };
     }
 
+    std::function<void(const drogon::HttpResponsePtr&)>
+    deleteItemCallback(std::shared_ptr<std::promise<void>> testPromise, drogon::orm::DbClientPtr dbClient) const {
+        return [this, testPromise, dbClient](const drogon::HttpResponsePtr& resp) {
+            try {
+                EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
+                EXPECT_EQ(resp->getStatusCode(), drogon::k204NoContent);
+
+                *dbClient << "ROLLBACK;";
+                testPromise->set_value();
+            } catch(const std::exception& e) {
+                testPromise->set_exception(std::current_exception());
+                LOG_ERROR << e.what();
+            }
+        };
+    }
+
     template<typename T>
     std::future<T> runAsyncTest(std::function<void(std::shared_ptr<std::promise<T>>)> asyncOperation) {
         auto promise = std::make_shared<std::promise<T>>();
@@ -182,6 +198,16 @@ public:
         runAsyncTest<void>([this](auto promise) {
             drogon::app().getLoop()->queueInLoop([this, promise]() {
                 controller.createItem(*reqPtr, requiredFieldsCallback(promise));
+            });
+        }).get();
+    }
+
+    void testDelete204() {
+        runAsyncTest<void>([this](auto promise) {
+            drogon::app().getLoop()->queueInLoop([this, promise]() {
+                const auto dbClient = drogon::app().getFastDbClient("default");
+                *dbClient << "BEGIN";
+                controller.deleteItem(*reqPtr, deleteItemCallback(promise, dbClient), "1");
             });
         }).get();
     }

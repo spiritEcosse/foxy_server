@@ -29,3 +29,7 @@ TEST_F(ReviewControllerTest, EmptyBody400) {
 TEST_F(ReviewControllerTest, RequiredFields400) {
     testRequiredFields400();
 }
+
+TEST_F(ReviewControllerTest, Delete204) {
+    testDelete204();
+}

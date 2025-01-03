@@ -24,3 +24,7 @@ TEST_F(SocialMediaControllerTest, EmptyBody400) {
 TEST_F(SocialMediaControllerTest, RequiredFields400) {
     testRequiredFields400();
 }
+
+TEST_F(SocialMediaControllerTest, Delete204) {
+    testDelete204();
+}

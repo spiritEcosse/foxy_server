@@ -30,3 +30,7 @@ TEST_F(ShippingProfileControllerTest, EmptyBody400) {
 TEST_F(ShippingProfileControllerTest, RequiredFields400) {
     testRequiredFields400();
 }
+
+TEST_F(ShippingProfileControllerTest, Delete204) {
+    testDelete204();
+}
