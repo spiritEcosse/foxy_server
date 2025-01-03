@@ -51,6 +51,7 @@ $$
         INSERT INTO "basket" (user_id)
         VALUES (1),
                (2),
+               (2),
                (2);
 
 -- Mock data for basket_item

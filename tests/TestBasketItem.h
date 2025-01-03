@@ -6,19 +6,16 @@
 #include <gtest/gtest.h>
 
 class BasketItemControllerTest : public BaseTestClass<BasketItemControllerTest, api::v1::BasketItem> {
-public:
-    static FieldsMap expectedValues;
-    static FieldsMap updatedValues;
-    static FieldsMap getOneValues;
-};
+    void SetUp() override {
+        expectedValues["basket_id"] = 3;
+        expectedValues["item_id"] = 1;
 
-FieldsMap BasketItemControllerTest::expectedValues = {
-    {"basket_id", 3},
-    {"item_id", 1},
-};
+        updatedValues["basket_id"] = 4;
+        updatedValues["item_id"] = 2;
 
-FieldsMap BasketItemControllerTest::updatedValues = {};
-FieldsMap BasketItemControllerTest::getOneValues = {};
+        BaseTestClass::SetUp();
+    }
+};
 
 TEST_F(BasketItemControllerTest, Create200) {
     testCreate200();

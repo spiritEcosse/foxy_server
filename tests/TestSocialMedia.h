@@ -6,15 +6,16 @@
 #include <gtest/gtest.h>
 
 class SocialMediaControllerTest : public BaseTestClass<SocialMediaControllerTest, api::v1::SocialMedia> {
-public:
-    static FieldsMap expectedValues;
-    static FieldsMap updatedValues;
-    static FieldsMap getOneValues;
-};
+    void SetUp() override {
+        expectedValues["item_id"] = 1;
+        expectedValues["title"] = "Pinterest";
 
-FieldsMap SocialMediaControllerTest::expectedValues = {{"item_id", 1}, {"title", "Pinterest"}};
-FieldsMap SocialMediaControllerTest::updatedValues = {};
-FieldsMap SocialMediaControllerTest::getOneValues = {};
+        updatedValues["title"] = "Twitter";
+        updatedValues["item_id"] = 2;
+
+        BaseTestClass::SetUp();
+    }
+};
 
 TEST_F(SocialMediaControllerTest, Create200) {
     testCreate200();

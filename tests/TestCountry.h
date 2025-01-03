@@ -6,18 +6,16 @@
 #include <gtest/gtest.h>
 
 class CountryControllerTest : public BaseTestClass<CountryControllerTest, api::v1::Country> {
-public:
-    static FieldsMap expectedValues;
-    static FieldsMap updatedValues;
-    static FieldsMap getOneValues;
-};
+    void SetUp() override {
+        expectedValues["title"] = "mock title";
+        expectedValues["code"] = "mock code";
 
-FieldsMap CountryControllerTest::expectedValues = {
-    {"title", "mock title"},
-    {"code", "mock code"},
+        updatedValues["title"] = "new mock title";
+        updatedValues["code"] = "new mock code";
+
+        BaseTestClass::SetUp();
+    }
 };
-FieldsMap CountryControllerTest::updatedValues = {};
-FieldsMap CountryControllerTest::getOneValues = {};
 
 TEST_F(CountryControllerTest, Create200) {
     testCreate200();

@@ -6,22 +6,23 @@
 #include <gtest/gtest.h>
 
 class PageControllerTest : public BaseTestClass<PageControllerTest, api::v1::Page> {
-public:
-    static FieldsMap expectedValues;
-    static FieldsMap updatedValues;
-    static FieldsMap getOneValues;
-};
+    void SetUp() override {
+        expectedValues["description"] = "mock description";
+        expectedValues["meta_description"] = "mock meta description";
+        expectedValues["canonical_url"] = "mock canonical url";
+        expectedValues["slug"] = "mock-slug";
+        expectedValues["title"] = "mock title";
+        expectedValues["enabled"] = true;
 
-FieldsMap PageControllerTest::expectedValues = {
-    {"description", "mock description"},
-    {"meta_description", "mock meta description"},
-    {"canonical_url", "mock canonical url"},
-    {"slug", "mock-slug"},
-    {"title", "mock title"},
-    {"enabled", true},
+        updatedValues["description"] = "new mock description";
+        updatedValues["meta_description"] = "new mock meta description";
+        updatedValues["canonical_url"] = "new mock canonical url";
+        updatedValues["slug"] = "new-mock-slug";
+        updatedValues["title"] = "new mock title";
+        updatedValues["enabled"] = false;
+        BaseTestClass::SetUp();
+    }
 };
-FieldsMap PageControllerTest::updatedValues = {};
-FieldsMap PageControllerTest::getOneValues = {};
 
 TEST_F(PageControllerTest, Create200) {
     testCreate200();

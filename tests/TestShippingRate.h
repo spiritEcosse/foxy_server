@@ -6,19 +6,17 @@
 #include <gtest/gtest.h>
 
 class ShippingRateControllerTest : public BaseTestClass<ShippingRateControllerTest, api::v1::ShippingRate> {
-public:
-    static FieldsMap expectedValues;
-    static FieldsMap updatedValues;
-    static FieldsMap getOneValues;
-};
+    void SetUp() override {
+        expectedValues["shipping_profile_id"] = 1;
+        expectedValues["delivery_days_min"] = 1;
+        expectedValues["delivery_days_max"] = 1;
 
-FieldsMap ShippingRateControllerTest::expectedValues = {
-    {"shipping_profile_id", 1},
-    {"delivery_days_min", 1},
-    {"delivery_days_max", 1},
+        updatedValues["shipping_profile_id"] = 2;
+        updatedValues["delivery_days_min"] = 2;
+        updatedValues["delivery_days_max"] = 2;
+        BaseTestClass::SetUp();
+    }
 };
-FieldsMap ShippingRateControllerTest::updatedValues = {};
-FieldsMap ShippingRateControllerTest::getOneValues = {};
 
 TEST_F(ShippingRateControllerTest, Create200) {
     testCreate200();

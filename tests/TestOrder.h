@@ -6,24 +6,28 @@
 #include <gtest/gtest.h>
 
 class OrderControllerTest : public BaseTestClass<OrderControllerTest, api::v1::Order> {
-public:
-    static FieldsMap expectedValues;
-    static FieldsMap updatedValues;
-    static FieldsMap getOneValues;
-};
+    void SetUp() override {
+        expectedValues["status"] = "Ordered";
+        expectedValues["basket_id"] = 3;
+        expectedValues["total"] = 1.0;
+        expectedValues["total_ex_taxes"] = 1.0;
+        expectedValues["tax_rate"] = 1.0;
+        expectedValues["taxes"] = 1.0;
+        expectedValues["user_id"] = 1;
+        expectedValues["address_id"] = 1;
 
-FieldsMap OrderControllerTest::expectedValues = {
-    {"status", "Ordered"},
-    {"basket_id", 3},
-    {"total", 1.0},
-    {"total_ex_taxes", 1.0},
-    {"tax_rate", 1.0},
-    {"taxes", 1.0},
-    {"user_id", 1},
-    {"address_id", 1},
+        updatedValues["status"] = "Shipped";
+        updatedValues["basket_id"] = 4;
+        updatedValues["total"] = 2.0;
+        updatedValues["total_ex_taxes"] = 2.0;
+        updatedValues["tax_rate"] = 2.0;
+        updatedValues["taxes"] = 2.0;
+        updatedValues["user_id"] = 2;
+        updatedValues["address_id"] = 2;
+
+        BaseTestClass::SetUp();
+    }
 };
-FieldsMap OrderControllerTest::updatedValues = {};
-FieldsMap OrderControllerTest::getOneValues = {};
 
 TEST_F(OrderControllerTest, Create200) {
     testCreate200();

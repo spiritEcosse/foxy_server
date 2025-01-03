@@ -6,23 +6,25 @@
 #include <gtest/gtest.h>
 
 class FinancialDetailsControllerTest : public BaseTestClass<FinancialDetailsControllerTest, api::v1::FinancialDetails> {
-public:
-    static FieldsMap expectedValues;
-    static FieldsMap updatedValues;
-    static FieldsMap getOneValues;
-};
+    void SetUp() override {
+        expectedValues["description"] = "mock description";
+        expectedValues["meta_description"] = "mock meta description";
+        expectedValues["price"] = 100.0;
+        expectedValues["shipping_profile_id"] = 1;
+        expectedValues["slug"] = "mock-slug";
+        expectedValues["title"] = "mock title";
+        expectedValues["enabled"] = true;
 
-FieldsMap FinancialDetailsControllerTest::expectedValues = {
-    {"description", "mock description"},
-    {"meta_description", "mock meta description"},
-    {"price", 100.0},
-    {"shipping_profile_id", 1},
-    {"slug", "mock-slug"},
-    {"title", "mock title"},
-    {"enabled", true},
+        updatedValues["description"] = "new mock description";
+        updatedValues["meta_description"] = "new mock meta description";
+        updatedValues["price"] = 200.0;
+        updatedValues["shipping_profile_id"] = 2;
+        updatedValues["slug"] = "new-mock-slug";
+        updatedValues["title"] = "new mock title";
+        updatedValues["enabled"] = false;
+        BaseTestClass::SetUp();
+    }
 };
-FieldsMap FinancialDetailsControllerTest::updatedValues = {};
-FieldsMap FinancialDetailsControllerTest::getOneValues = {};
 
 TEST_F(FinancialDetailsControllerTest, Create200) {
     testCreate200();

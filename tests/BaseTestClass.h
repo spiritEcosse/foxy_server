@@ -2,7 +2,6 @@
 
 #include "BaseClass.h"
 #include "drogon/HttpRequest.h"
-#include "TransparentHasher.h"
 #include "drogon/drogon.h"
 #include <ranges>
 #include "env.h"
@@ -10,10 +9,6 @@
 #include <future>
 #include <gtest/gtest.h>
 #include "fmt/core.h"
-
-using VariantFields = std::variant<int, bool, std::string, double>;
-using FieldsMap =
-    decltype(std::unordered_map<std::string, VariantFields, api::v1::TransparentHasher, std::equal_to<>>());
 
 template<class ControllerTest, class Controller>
 class BaseTestClass : public api::v1::BaseClass, public testing::Test {
@@ -33,79 +28,24 @@ public:
     std::shared_ptr<drogon::HttpRequest> req;
     std::shared_ptr<drogon::HttpRequestPtr> reqPtr;
     Controller controller;
+    Json::Value expectedValues = {};
+    Json::Value updatedValues = {};
+    Json::Value getOneValues = {};
 
-    static std::string body() {
-        Json::Value jsonValue;
-
-        for(const auto& [key, value]: ControllerTest::expectedValues) {
-            std::visit(
-                [&](const auto& arg) {
-                    jsonValue[key] = arg;
-                },
-                value);
-        }
-        const Json::StreamWriterBuilder writer;
-        return writeString(writer, jsonValue);
+    std::string body() const {
+        return expectedValues.toStyledString();
     }
 
-    static std::string updatedBody() {
-        // Create a mutable copy of the expected values
-        ControllerTest::updatedValues = ControllerTest::expectedValues;
-        Json::Value jsonValue;
-
-        for(auto& [key, value]: ControllerTest::updatedValues) {
-            std::visit(
-                [&]<typename T0>(const T0& arg) {
-                    using T = std::decay_t<T0>;
-                    if constexpr(std::is_same_v<T, int>) {
-                        value = std::variant<int, bool, std::string, double>(2);
-                    } else if constexpr(std::is_same_v<T, bool>) {
-                        value = std::variant<int, bool, std::string, double>(false);
-                    } else if constexpr(std::is_same_v<T, std::string>) {
-                        value = std::variant<int, bool, std::string, double>(std::string("new string"));
-                    } else if constexpr(std::is_same_v<T, double>) {
-                        value = std::variant<int, bool, std::string, double>(123.45);
-                    }
-                    // Update the JSON value after updating the variant
-                    std::visit(
-                        [&](const auto& updated_arg) {
-                            jsonValue[key] = updated_arg;
-                        },
-                        value);
-                },
-                value);
-        }
-        const Json::StreamWriterBuilder writer;
-        return Json::writeString(writer, jsonValue);
+    std::string updatedBody() const {
+        return updatedValues.toStyledString();
     }
 
-    template<typename T>
-    void checkJsonValue(const Json::Value& respJson, const std::string& key, const T& expectedValue) const {
-        if constexpr(std::is_same_v<T, int>) {
-            EXPECT_EQ(respJson[key].asInt(), expectedValue);
-        } else if constexpr(std::is_same_v<T, bool>) {
-            EXPECT_EQ(respJson[key].asBool(), expectedValue);
-        } else if constexpr(std::is_same_v<T, std::string>) {
-            if(key == "src") {
-                EXPECT_EQ(respJson[key].asString(), fmt::format("https://{}/{}", APP_CLOUD_NAME, expectedValue));
-            } else {
-                EXPECT_EQ(respJson[key].asString(), expectedValue);
-            }
-        } else if constexpr(std::is_same_v<T, double>) {
-            EXPECT_EQ(respJson[key].asDouble(), expectedValue);
+    static void checkJsonValue(const Json::Value& respJson, const std::string& key, const Json::Value& expectedValue) {
+        if(key == "src") {
+            EXPECT_EQ(respJson[key].asString(), fmt::format("https://{}/{}", APP_CLOUD_NAME, expectedValue.asString()));
         } else {
-            // Handle unexpected types or throw an exception
-            FAIL();
+            EXPECT_EQ(respJson[key], expectedValue);
         }
-    }
-
-    void
-    checkJsonValueVariant(const Json::Value& respJson, const std::string& key, const VariantFields& expectedValue) {
-        std::visit(
-            [&](const auto& arg) {
-                checkJsonValue(respJson, key, arg);
-            },
-            expectedValue);
     }
 
     std::function<void(const drogon::HttpResponsePtr&)> updateCallback(std::shared_ptr<std::promise<void>> testPromise,
@@ -120,8 +60,9 @@ public:
                 const std::string jsonString = writeString(builder, *responseJson);
                 std::cout << jsonString << std::endl;
                 if(resp->getStatusCode() == drogon::k200OK) {
-                    for(const auto& [key, value]: ControllerTest::updatedValues) {
-                        this->checkJsonValueVariant(*responseJson, key, value);
+                    for(const auto& key: updatedValues.getMemberNames()) {
+                        const Json::Value& value = updatedValues[key];
+                        this->checkJsonValue(*responseJson, key, value);
                     }
                 }
                 *dbClient << "ROLLBACK;";
@@ -145,8 +86,9 @@ public:
                 const std::string jsonString = writeString(builder, *responseJson);
                 std::cout << jsonString << std::endl;
                 if(resp->getStatusCode() == drogon::k200OK) {
-                    for(const auto& [key, value]: ControllerTest::getOneValues) {
-                        this->checkJsonValueVariant(*responseJson, key, value);
+                    for(const auto& key: getOneValues.getMemberNames()) {
+                        const Json::Value& value = getOneValues[key];
+                        this->checkJsonValue(*responseJson, key, value);
                     }
                 }
                 testPromise->set_value();
@@ -169,8 +111,9 @@ public:
                 const std::string jsonString = writeString(builder, *responseJson);
                 std::cout << jsonString << std::endl;
                 if(resp->getStatusCode() == drogon::k201Created) {
-                    for(const auto& [key, value]: ControllerTest::expectedValues) {
-                        this->checkJsonValueVariant(*responseJson, key, value);
+                    for(const auto& key: expectedValues.getMemberNames()) {
+                        const Json::Value& value = expectedValues[key];
+                        this->checkJsonValue(*responseJson, key, value);
                     }
                 }
                 *dbClient << "ROLLBACK;";
@@ -214,11 +157,9 @@ public:
                 const Json::StreamWriterBuilder builder;
                 const std::string jsonString = writeString(builder, *responseJson);
                 std::cout << jsonString << std::endl;
-                auto filteredKeys = std::views::keys(ControllerTest::expectedValues) |
-                                    std::views::filter([](const std::string_view& key) {
+                auto filteredKeys = expectedValues.getMemberNames() | std::views::filter([](const std::string& key) {
                                         return key != "id" && key != "enabled" && key != "status";
                                     });
-
                 for(const auto& key: filteredKeys) {
                     EXPECT_EQ(responseJson->operator[](key).asString(), fmt::format("{} is required", key));
                 }

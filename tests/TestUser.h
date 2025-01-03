@@ -6,20 +6,19 @@
 #include <gtest/gtest.h>
 
 class UserControllerTest : public BaseTestClass<UserControllerTest, api::v1::User> {
-public:
-    static FieldsMap expectedValues;
-    static FieldsMap updatedValues;
-    static FieldsMap getOneValues;
-};
+    void SetUp() override {
+        expectedValues["email"] = "mock email";
+        expectedValues["first_name"] = "mock first name";
+        expectedValues["last_name"] = "mock last name";
+        expectedValues["birthday"] = "2024-01-14";
 
-FieldsMap UserControllerTest::expectedValues = {
-    {"email", "mock email"},
-    {"first_name", "mock first name"},
-    {"last_name", "mock last name"},
-    {"birthday", "2024-01-14"},
+        updatedValues["email"] = "new mock email";
+        updatedValues["first_name"] = "new mock first name";
+        updatedValues["last_name"] = "new mock last name";
+        updatedValues["birthday"] = "2024-01-14";
+        BaseTestClass::SetUp();
+    }
 };
-FieldsMap UserControllerTest::updatedValues = {};
-FieldsMap UserControllerTest::getOneValues = {};
 
 TEST_F(UserControllerTest, Create200) {
     testCreate200();

@@ -6,20 +6,19 @@
 #include <gtest/gtest.h>
 
 class ShippingProfileControllerTest : public BaseTestClass<ShippingProfileControllerTest, api::v1::ShippingProfile> {
-public:
-    static FieldsMap expectedValues;
-    static FieldsMap updatedValues;
-    static FieldsMap getOneValues;
-};
+    void SetUp() override {
+        expectedValues["title"] = "mock title";
+        expectedValues["processing_time"] = 1;
+        expectedValues["country_id"] = 1;
+        expectedValues["postal_code"] = "mock postal code";
 
-FieldsMap ShippingProfileControllerTest::expectedValues = {
-    {"title", "mock title"},
-    {"processing_time", 1},
-    {"country_id", 1},
-    {"postal_code", "mock postal code"},
+        updatedValues["title"] = "new mock title";
+        updatedValues["processing_time"] = 2;
+        updatedValues["country_id"] = 2;
+        updatedValues["postal_code"] = "new mock postal code";
+        BaseTestClass::SetUp();
+    }
 };
-FieldsMap ShippingProfileControllerTest::updatedValues = {};
-FieldsMap ShippingProfileControllerTest::getOneValues = {};
 
 TEST_F(ShippingProfileControllerTest, Create200) {
     testCreate200();

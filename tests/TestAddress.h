@@ -6,21 +6,22 @@
 #include <gtest/gtest.h>
 
 class AddressControllerTest : public BaseTestClass<AddressControllerTest, api::v1::Address> {
-public:
-    static FieldsMap expectedValues;
-    static FieldsMap updatedValues;
-    static FieldsMap getOneValues;
-};
+    void SetUp() override {
+        expectedValues["address"] = "mock address";
+        expectedValues["country_id"] = 1;
+        expectedValues["city"] = "mock city";
+        expectedValues["zipcode"] = "mock zipcode";
+        expectedValues["user_id"] = 1;
 
-FieldsMap AddressControllerTest::expectedValues = {
-    {"address", "mock address"},
-    {"country_id", 1},
-    {"city", "mock city"},
-    {"zipcode", "mock zipcode"},
-    {"user_id", 1},
+        updatedValues["address"] = "new mock address";
+        updatedValues["country_id"] = 2;
+        updatedValues["city"] = "new mock city";
+        updatedValues["zipcode"] = "new mock zipcode";
+        updatedValues["user_id"] = 2;
+
+        BaseTestClass::SetUp();
+    }
 };
-FieldsMap AddressControllerTest::updatedValues = {};
-FieldsMap AddressControllerTest::getOneValues = {};
 
 TEST_F(AddressControllerTest, Create200) {
     testCreate200();

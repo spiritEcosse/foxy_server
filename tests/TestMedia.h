@@ -6,21 +6,22 @@
 #include <gtest/gtest.h>
 
 class MediaControllerTest : public BaseTestClass<MediaControllerTest, api::v1::Media> {
-public:
-    static FieldsMap expectedValues;
-    static FieldsMap updatedValues;
-    static FieldsMap getOneValues;
-};
+    void SetUp() override {
+        expectedValues["src"] = "mock_src";
+        expectedValues["item_id"] = 1;
+        expectedValues["sort"] = 1;
+        expectedValues["content_type"] = "video/mp4";
+        expectedValues["type"] = "video";
 
-FieldsMap MediaControllerTest::expectedValues = {
-    {"src", "mock_src"},
-    {"item_id", 1},
-    {"sort", 1},
-    {"content_type", "video/mp4"},
-    {"type", "video"},
+        updatedValues["src"] = "new mock_src";
+        updatedValues["item_id"] = 2;
+        updatedValues["sort"] = 2;
+        updatedValues["content_type"] = "image/png";
+        updatedValues["type"] = "image";
+
+        BaseTestClass::SetUp();
+    }
 };
-FieldsMap MediaControllerTest::updatedValues = {};
-FieldsMap MediaControllerTest::getOneValues = {};
 
 TEST_F(MediaControllerTest, Create200) {
     testCreate200();

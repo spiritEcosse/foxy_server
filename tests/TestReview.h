@@ -6,20 +6,20 @@
 #include <gtest/gtest.h>
 
 class ReviewControllerTest : public BaseTestClass<ReviewControllerTest, api::v1::Review> {
-public:
-    static FieldsMap expectedValues;
-    static FieldsMap updatedValues;
-    static FieldsMap getOneValues;
-};
+    void SetUp() override {
+        expectedValues["status"] = "failed";
+        expectedValues["user_id"] = 1;
+        expectedValues["comment"] = "mock comment";
+        expectedValues["item_id"] = 1;
 
-FieldsMap ReviewControllerTest::expectedValues = {
-    {"status", "failed"},
-    {"user_id", 1},
-    {"comment", "mock comment"},
-    {"item_id", 1},
+        updatedValues["status"] = "success";
+        updatedValues["user_id"] = 2;
+        updatedValues["comment"] = "new mock comment";
+        updatedValues["item_id"] = 2;
+
+        BaseTestClass::SetUp();
+    }
 };
-FieldsMap ReviewControllerTest::updatedValues = {};
-FieldsMap ReviewControllerTest::getOneValues = {};
 
 TEST_F(ReviewControllerTest, Create200) {
     testCreate200();
