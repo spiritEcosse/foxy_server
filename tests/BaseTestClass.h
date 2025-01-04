@@ -32,11 +32,11 @@ public:
     Json::Value updatedValues = {};
     Json::Value getOneValues = {};
 
-    std::string body() const {
+    [[nodiscard]] std::string body() const {
         return expectedValues.toStyledString();
     }
 
-    std::string updatedBody() const {
+    [[nodiscard]] std::string updatedBody() const {
         return updatedValues.toStyledString();
     }
 
@@ -48,8 +48,8 @@ public:
         }
     }
 
-    std::function<void(const drogon::HttpResponsePtr&)> updateCallback(std::shared_ptr<std::promise<void>> testPromise,
-                                                                       drogon::orm::DbClientPtr dbClient) {
+    std::function<void(const drogon::HttpResponsePtr&)>
+    updateCallback(const std::shared_ptr<std::promise<void>>& testPromise, const drogon::orm::DbClientPtr& dbClient) {
         return [this, dbClient, testPromise](const drogon::HttpResponsePtr& resp) {
             try {
                 EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
@@ -75,7 +75,7 @@ public:
     }
 
     std::function<void(const drogon::HttpResponsePtr&)>
-    getOneCallback(std::shared_ptr<std::promise<void>> testPromise) {
+    getOneCallback(const std::shared_ptr<std::promise<void>>& testPromise) {
         return [this, testPromise](const drogon::HttpResponsePtr& resp) {
             try {
                 EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
@@ -99,8 +99,8 @@ public:
         };
     }
 
-    std::function<void(const drogon::HttpResponsePtr&)> createCallback(std::shared_ptr<std::promise<void>> testPromise,
-                                                                       drogon::orm::DbClientPtr dbClient) {
+    std::function<void(const drogon::HttpResponsePtr&)>
+    createCallback(const std::shared_ptr<std::promise<void>>& testPromise, const drogon::orm::DbClientPtr& dbClient) {
         return [this, dbClient, testPromise](const drogon::HttpResponsePtr& resp) {
             try {
                 EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
@@ -126,7 +126,7 @@ public:
     }
 
     static std::function<void(const drogon::HttpResponsePtr&)>
-    emptyBodyCallback(std::shared_ptr<std::promise<void>> testPromise) {
+    emptyBodyCallback(const std::shared_ptr<std::promise<void>>& testPromise) {
         return [testPromise](const drogon::HttpResponsePtr& resp) {
             try {
                 EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
@@ -146,8 +146,8 @@ public:
         };
     }
 
-    std::function<void(const drogon::HttpResponsePtr&)>
-    requiredFieldsCallback(std::shared_ptr<std::promise<void>> testPromise) const {
+    [[nodiscard]] std::function<void(const drogon::HttpResponsePtr&)>
+    requiredFieldsCallback(const std::shared_ptr<std::promise<void>>& testPromise) const {
         return [this, testPromise](const drogon::HttpResponsePtr& resp) {
             try {
                 EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
@@ -170,8 +170,9 @@ public:
         };
     }
 
-    std::function<void(const drogon::HttpResponsePtr&)>
-    deleteItemCallback(std::shared_ptr<std::promise<void>> testPromise, drogon::orm::DbClientPtr dbClient) const {
+    [[nodiscard]] std::function<void(const drogon::HttpResponsePtr&)>
+    deleteItemCallback(const std::shared_ptr<std::promise<void>>& testPromise,
+                       const drogon::orm::DbClientPtr& dbClient) const {
         return [this, testPromise, dbClient](const drogon::HttpResponsePtr& resp) {
             try {
                 EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
