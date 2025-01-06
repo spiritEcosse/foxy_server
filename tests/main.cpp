@@ -11,6 +11,7 @@
 #include "TestBasket.h"
 #include "TestCountry.h"
 #include "TestSocialMedia.h"
+#include "TestFinancialDetails.h"
 #include "TestOrder.h"
 
 #include <future>
@@ -44,7 +45,7 @@ public:
         if(appRunning.exchange(false)) {  // Atomically check and set
             drogon::app().getLoop()->queueInLoop([]() {
                 drogon::app().quit();
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                std::this_thread::sleep_for(std::chrono::milliseconds(30));
             });
             appThread.join();
         }

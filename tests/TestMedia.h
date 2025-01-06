@@ -30,6 +30,34 @@ class MediaControllerTest : public BaseTestClass<MediaControllerTest, api::v1::M
         getOneValues["src"] = "media1.png";
         getOneValues["type"] = "image";
     }
+
+    void setupGetListValues() override {
+        getListValues["_page"] = 1;
+        getListValues["total"] = 2;
+
+        Json::Value data = Json::arrayValue;
+
+        Json::Value entry1;
+        entry1["content_type"] = "image/png";
+        entry1["id"] = 2;
+        entry1["item_id"] = 2;
+        entry1["sort"] = 2;
+        entry1["src"] = "media2.png";
+        entry1["type"] = "image";
+
+        Json::Value entry2;
+        entry2["content_type"] = "image/png";
+        entry2["id"] = 1;
+        entry2["item_id"] = 1;
+        entry2["sort"] = 1;
+        entry2["src"] = "media1.png";
+        entry2["type"] = "image";
+
+        data.append(entry1);
+        data.append(entry2);
+
+        getListValues["data"] = data;
+    }
 };
 
 TEST_F(MediaControllerTest, Create200) {
@@ -54,4 +82,8 @@ TEST_F(MediaControllerTest, Update200) {
 
 TEST_F(MediaControllerTest, GetOne200) {
     getOne200();
+}
+
+TEST_F(MediaControllerTest, GetList200) {
+    getList200();
 }

@@ -192,10 +192,10 @@ namespace api::v1 {
 
         typename T::Field field;
         const auto orderIt = params.find("order");
-        auto it = field.allFields.find(orderIt->second);
-        const auto &orderField = (orderIt != params.end() && it != field.allFields.end())
-                                     ? std::cref(field.allFields.at(orderIt->second))
-                                     : std::cref(field.updatedAt);
+        const auto orderValue = orderIt != params.end() ? orderIt->second : "";
+        auto it = field.allFields.find(orderValue);
+        const auto &orderField =
+            (it != field.allFields.end()) ? std::cref(field.allFields.at(orderValue)) : std::cref(field.updatedAt);
 
         const auto directionIt = params.find("direction");
         bool isAsc = directionIt != params.end() && directionIt->second == "asc";

@@ -25,6 +25,32 @@ class ShippingRateControllerTest : public BaseTestClass<ShippingRateControllerTe
         getOneValues["id"] = 1;
         getOneValues["shipping_profile_id"] = 1;
     }
+
+    void setupGetListValues() override {
+        getListValues["_page"] = 1;
+        getListValues["total"] = 2;
+
+        Json::Value data = Json::arrayValue;
+
+        Json::Value entry1;
+        entry1["country_id"] = 2;
+        entry1["id"] = 2;
+        entry1["delivery_days_max"] = 6;
+        entry1["delivery_days_min"] = 2;
+        entry1["shipping_profile_id"] = 2;
+
+        Json::Value entry2;
+        entry2["country_id"] = 1;
+        entry2["id"] = 1;
+        entry2["delivery_days_max"] = 5;
+        entry2["delivery_days_min"] = 1;
+        entry2["shipping_profile_id"] = 1;
+
+        data.append(entry1);
+        data.append(entry2);
+
+        getListValues["data"] = data;
+    }
 };
 
 TEST_F(ShippingRateControllerTest, Create200) {
@@ -49,4 +75,8 @@ TEST_F(ShippingRateControllerTest, Update200) {
 
 TEST_F(ShippingRateControllerTest, GetOne200) {
     getOne200();
+}
+
+TEST_F(ShippingRateControllerTest, GetList200) {
+    getList200();
 }

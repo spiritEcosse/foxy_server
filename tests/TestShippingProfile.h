@@ -28,6 +28,34 @@ class ShippingProfileControllerTest : public BaseTestClass<ShippingProfileContro
         getOneValues["shipping_upgrade_cost"] = 10.0;
         getOneValues["title"] = "Profile1";
     }
+
+    void setupGetListValues() override {
+        getListValues["_page"] = 1;
+        getListValues["total"] = 2;
+
+        Json::Value data = Json::arrayValue;
+
+        Json::Value entry1;
+        entry1["country_id"] = 2;
+        entry1["id"] = 2;
+        entry1["postal_code"] = "67890";
+        entry1["processing_time"] = 3;
+        entry1["shipping_upgrade_cost"] = 15.0;
+        entry1["title"] = "Profile2";
+
+        Json::Value entry2;
+        entry2["country_id"] = 1;
+        entry2["id"] = 1;
+        entry2["postal_code"] = "12345";
+        entry2["processing_time"] = 2;
+        entry2["shipping_upgrade_cost"] = 10.0;
+        entry2["title"] = "Profile1";
+
+        data.append(entry1);
+        data.append(entry2);
+
+        getListValues["data"] = data;
+    }
 };
 
 TEST_F(ShippingProfileControllerTest, Create200) {
@@ -52,4 +80,8 @@ TEST_F(ShippingProfileControllerTest, Update200) {
 
 TEST_F(ShippingProfileControllerTest, GetOne200) {
     getOne200();
+}
+
+TEST_F(ShippingProfileControllerTest, GetList200) {
+    getList200();
 }

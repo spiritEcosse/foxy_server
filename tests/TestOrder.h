@@ -56,6 +56,106 @@ class OrderControllerTest : public BaseTestClass<OrderControllerTest, api::v1::O
         // Add the items array to the main getOneValues
         getOneValues["items"] = items;
     }
+
+    void setupGetListValues() override {
+        getListValues["_page"] = 1;
+        getListValues["total"] = 2;
+        Json::Value data = Json::arrayValue;
+
+        {
+            Json::Value item;
+            item["address"]["address"] = "Address2";
+            item["address"]["city"] = "City2";
+            item["address"]["country"]["code"] = "C2";
+            item["address"]["country"]["id"] = 2;
+            item["address"]["country"]["title"] = "Country2";
+            item["address"]["country_id"] = 2;
+            item["address"]["id"] = 2;
+            item["address"]["user_id"] = 2;
+            item["address"]["zipcode"] = "67890";
+            item["address_id"] = 2;
+            item["basket_id"] = 2;
+
+            Json::Value basketItem;
+            basketItem["basket_id"] = 2;
+            basketItem["id"] = 2;
+            basketItem["item"]["description"] = "Description2";
+            basketItem["item"]["enabled"] = false;
+            basketItem["item"]["id"] = 2;
+            basketItem["item"]["meta_description"] = "Meta2";
+            basketItem["item"]["price"] = 200.0;
+            basketItem["item"]["shipping_profile_id"] = 2;
+            basketItem["item"]["slug"] = "item2";
+            basketItem["item"]["src"] = "media2.png";
+            basketItem["item"]["title"] = "Item2";
+            basketItem["item_id"] = 2;
+            basketItem["price"] = 200.0;
+            basketItem["quantity"] = 2;
+
+            item["basket_items"].append(basketItem);
+            item["id"] = 2;
+            item["returned"] = false;
+            item["status"] = "Processing";
+            item["tax_rate"] = 0.1;
+            item["taxes"] = 20.0;
+            item["total"] = 200.0;
+            item["total_ex_taxes"] = 180.0;
+            item["user"]["first_name"] = "User";
+            item["user"]["id"] = 2;
+            item["user"]["last_name"] = "Two";
+            item["user_id"] = 2;
+
+            data.append(item);
+        }
+
+        {
+            Json::Value item;
+            item["address"]["address"] = "Address1";
+            item["address"]["city"] = "City1";
+            item["address"]["country"]["code"] = "C1";
+            item["address"]["country"]["id"] = 1;
+            item["address"]["country"]["title"] = "Country1";
+            item["address"]["country_id"] = 1;
+            item["address"]["id"] = 1;
+            item["address"]["user_id"] = 1;
+            item["address"]["zipcode"] = "12345";
+            item["address_id"] = 1;
+            item["basket_id"] = 1;
+
+            Json::Value basketItem;
+            basketItem["basket_id"] = 1;
+            basketItem["id"] = 1;
+            basketItem["item"]["description"] = "Description1";
+            basketItem["item"]["enabled"] = true;
+            basketItem["item"]["id"] = 1;
+            basketItem["item"]["meta_description"] = "Meta1";
+            basketItem["item"]["price"] = 100.0;
+            basketItem["item"]["shipping_profile_id"] = 1;
+            basketItem["item"]["slug"] = "item1";
+            basketItem["item"]["src"] = "media1.png";
+            basketItem["item"]["title"] = "Item1";
+            basketItem["item_id"] = 1;
+            basketItem["price"] = 100.0;
+            basketItem["quantity"] = 1;
+
+            item["basket_items"].append(basketItem);
+            item["id"] = 1;
+            item["returned"] = false;
+            item["status"] = "Completed";
+            item["tax_rate"] = 0.1;
+            item["taxes"] = 10.0;
+            item["total"] = 100.0;
+            item["total_ex_taxes"] = 90.0;
+            item["user"]["first_name"] = "User";
+            item["user"]["id"] = 1;
+            item["user"]["last_name"] = "One";
+            item["user_id"] = 1;
+
+            data.append(item);
+        }
+
+        getListValues["data"] = data;
+    }
 };
 
 TEST_F(OrderControllerTest, Create200) {
@@ -80,4 +180,8 @@ TEST_F(OrderControllerTest, Update200) {
 
 TEST_F(OrderControllerTest, GetOne200) {
     getOne200();
+}
+
+TEST_F(OrderControllerTest, GetList200) {
+    getList200();
 }

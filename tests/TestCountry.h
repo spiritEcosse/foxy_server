@@ -21,6 +21,28 @@ class CountryControllerTest : public BaseTestClass<CountryControllerTest, api::v
         getOneValues["code"] = "C1";
         getOneValues["id"] = 1;
     }
+
+    void setupGetListValues() override {
+        getListValues["_page"] = 1;
+        getListValues["total"] = 2;
+
+        Json::Value data = Json::arrayValue;
+
+        Json::Value entry1;
+        entry1["code"] = "C2";
+        entry1["id"] = 2;
+        entry1["title"] = "Country2";
+
+        Json::Value entry2;
+        entry2["code"] = "C1";
+        entry2["id"] = 1;
+        entry2["title"] = "Country1";
+
+        data.append(entry1);
+        data.append(entry2);
+
+        getListValues["data"] = data;
+    }
 };
 
 TEST_F(CountryControllerTest, Create200) {
@@ -45,4 +67,8 @@ TEST_F(CountryControllerTest, Update200) {
 
 TEST_F(CountryControllerTest, GetOne200) {
     getOne200();
+}
+
+TEST_F(CountryControllerTest, GetList200) {
+    getList200();
 }

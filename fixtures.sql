@@ -64,6 +64,11 @@ $$
         VALUES ('Completed', 1, 100.00, 90.00, 0.10, 10.00, 1, 1, false),
                ('Processing', 2, 200.00, 180.00, 0.10, 20.00, 2, 2, false);
 
+-- Mock data for financial_details
+        INSERT INTO "financial_details" (tax_rate, gateway, gateway_merchant_id, merchant_id, merchant_name)
+        VALUES (15.00, 'PayPal', 'merchant123', 'merchant001', 'Merchant One'),
+               (10.00, 'Stripe', 'merchant456', 'merchant002', 'Merchant Two');
+
 -- Mock data for countries_ips
         INSERT INTO countries_ips (start_range, end_range, country_code, country_name, country_id)
         VALUES (1, 100, 'US', 'United States of America', 1),

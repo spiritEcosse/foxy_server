@@ -33,6 +33,41 @@ class PageControllerTest : public BaseTestClass<PageControllerTest, api::v1::Pag
         getOneValues["id"] = 1;
         getOneValues["canonical_url"] = "www.example.com/page1";
     }
+
+    void setupGetListValues() override {
+        getListValues["_page"] = 1;
+        getListValues["total"] = 2;
+        Json::Value data = Json::arrayValue;
+
+        // TODO: must not be here since it disabled
+        {
+            Json::Value item;
+            item["description"] = "Description2";
+            item["enabled"] = false;
+            item["id"] = 2;
+            item["meta_description"] = "Meta2";
+            item["slug"] = "page2";
+            item["title"] = "Page2";
+            item["canonical_url"] = "www.example.com/page2";  // Example value
+
+            data.append(item);
+        }
+
+        {
+            Json::Value item;
+            item["description"] = "Description1";
+            item["enabled"] = true;
+            item["id"] = 1;
+            item["meta_description"] = "Meta1";
+            item["slug"] = "page1";
+            item["canonical_url"] = "www.example.com/page1";  // Example value
+            item["title"] = "Page1";
+
+            data.append(item);
+        }
+
+        getListValues["data"] = data;
+    }
 };
 
 TEST_F(PageControllerTest, Create200) {
@@ -57,4 +92,8 @@ TEST_F(PageControllerTest, Update200) {
 
 TEST_F(PageControllerTest, GetOne200) {
     getOne200();
+}
+
+TEST_F(PageControllerTest, GetList200) {
+    getList200();
 }

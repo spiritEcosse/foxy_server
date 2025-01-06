@@ -30,6 +30,12 @@ public:
     Json::Value expectedValues = {};
     Json::Value updatedValues = {};
     Json::Value getOneValues = {};
+    Json::Value getListValues = {};
+
+    virtual void setupExpectedValues() = 0;
+    virtual void setupUpdatedValues() = 0;
+    virtual void setupGetOneValues() = 0;
+    virtual void setupGetListValues() = 0;
 
     static void
     checkJsonValue(const Json::Value& respJson, const Json::Value& expectedValue, const std::string& keyPath = "") {
@@ -102,6 +108,28 @@ public:
                 std::cout << jsonString << std::endl;
                 if(resp->getStatusCode() == drogon::k200OK) {
                     this->checkJsonValue(*responseJson, getOneValues);
+                }
+                testPromise->set_value();
+            } catch(const std::exception& e) {
+                testPromise->set_exception(std::current_exception());
+                LOG_ERROR << e.what();
+            }
+        };
+    }
+
+    std::function<void(const drogon::HttpResponsePtr&)>
+    getListCallback(const std::shared_ptr<std::promise<void>>& testPromise) {
+        return [this, testPromise](const drogon::HttpResponsePtr& resp) {
+            try {
+                EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
+                EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
+
+                const auto responseJson = resp->getJsonObject();
+                const Json::StreamWriterBuilder builder;
+                const std::string jsonString = writeString(builder, *responseJson);
+                std::cout << jsonString << std::endl;
+                if(resp->getStatusCode() == drogon::k200OK) {
+                    this->checkJsonValue(*responseJson, getListValues);
                 }
                 testPromise->set_value();
             } catch(const std::exception& e) {
@@ -204,10 +232,6 @@ public:
         return future;
     }
 
-    virtual void setupExpectedValues() = 0;
-    virtual void setupUpdatedValues() = 0;
-    virtual void setupGetOneValues() = 0;
-
     void testCreate200() {
         setupExpectedValues();
         req->setBody(expectedValues.toStyledString());
@@ -269,6 +293,16 @@ public:
         runAsyncTest<void>([this](auto promise) {
             drogon::app().getLoop()->queueInLoop([this, promise]() {
                 controller.getOne(*reqPtr, getOneCallback(promise), "1");
+            });
+        }).get();
+    }
+
+    void getList200() {
+        setupGetListValues();
+
+        runAsyncTest<void>([this](auto promise) {
+            drogon::app().getLoop()->queueInLoop([this, promise]() {
+                controller.getList(*reqPtr, getListCallback(promise));
             });
         }).get();
     }

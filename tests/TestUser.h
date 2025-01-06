@@ -29,6 +29,36 @@ class UserControllerTest : public BaseTestClass<UserControllerTest, api::v1::Use
         getOneValues["is_admin"] = false;
         getOneValues["last_name"] = "One";
     }
+
+    void setupGetListValues() override {
+        getListValues["_page"] = 1;
+        getListValues["total"] = 2;
+
+        Json::Value data = Json::arrayValue;
+
+        Json::Value entry1;
+        entry1["birthday"] = "2000-02-02";
+        entry1["email"] = "user2@example.com";
+        entry1["first_name"] = "User";
+        entry1["has_newsletter"] = false;
+        entry1["id"] = 2;
+        entry1["is_admin"] = false;
+        entry1["last_name"] = "Two";
+
+        Json::Value entry2;
+        entry2["birthday"] = "2000-01-01";
+        entry2["email"] = "user1@example.com";
+        entry2["first_name"] = "User";
+        entry2["has_newsletter"] = true;
+        entry2["id"] = 1;
+        entry2["is_admin"] = false;
+        entry2["last_name"] = "One";
+
+        data.append(entry1);
+        data.append(entry2);
+
+        getListValues["data"] = data;
+    }
 };
 
 TEST_F(UserControllerTest, Create200) {
@@ -53,4 +83,8 @@ TEST_F(UserControllerTest, Update200) {
 
 TEST_F(UserControllerTest, GetOne200) {
     getOne200();
+}
+
+TEST_F(UserControllerTest, GetList200) {
+    getList200();
 }

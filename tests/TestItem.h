@@ -49,9 +49,32 @@ class ItemControllerTest : public BaseTestClass<ItemControllerTest, api::v1::Ite
         media.append(mediaEntry);
         getOneValues["media"] = media;
     }
+
+    void setupGetListValues() override {
+        Json::Value data = Json::arrayValue;
+
+        Json::Value item;
+        item["description"] = "Description1";
+        item["enabled"] = true;
+        item["id"] = 1;
+        item["meta_description"] = "Meta1";
+        item["price"] = 100.0;
+        item["shipping_profile_id"] = 1;
+        item["slug"] = "item1";
+        item["src"] = "media1.png";
+        item["src_video"] = Json::nullValue;
+        item["title"] = "Item1";
+
+        data.append(item);
+
+        getListValues["_page"] = 1;
+        getListValues["total"] = 1;
+        getListValues["data"] = data;
+    }
 };
 
 TEST_F(ItemControllerTest, Create200) {
+
     testCreate200();
 }
 
@@ -73,4 +96,8 @@ TEST_F(ItemControllerTest, Update200) {
 
 TEST_F(ItemControllerTest, GetOne200) {
     getOne200();
+}
+
+TEST_F(ItemControllerTest, GetList200) {
+    getList200();
 }

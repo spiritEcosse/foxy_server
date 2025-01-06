@@ -27,6 +27,32 @@ class ReviewControllerTest : public BaseTestClass<ReviewControllerTest, api::v1:
         getOneValues["item_id"] = 1;
         getOneValues["status"] = "Approved";
     }
+
+    void setupGetListValues() override {
+        getListValues["_page"] = 1;
+        getListValues["total"] = 2;
+
+        Json::Value data = Json::arrayValue;
+
+        Json::Value entry1;
+        entry1["comment"] = "Good quality.";
+        entry1["id"] = 2;
+        entry1["item_id"] = 2;
+        entry1["status"] = "Pending";
+        entry1["user_id"] = 2;
+
+        Json::Value entry2;
+        entry2["comment"] = "Great product!";
+        entry2["id"] = 1;
+        entry2["item_id"] = 1;
+        entry2["status"] = "Approved";
+        entry2["user_id"] = 1;
+
+        data.append(entry1);
+        data.append(entry2);
+
+        getListValues["data"] = data;
+    }
 };
 
 TEST_F(ReviewControllerTest, Create200) {
@@ -51,4 +77,8 @@ TEST_F(ReviewControllerTest, Update200) {
 
 TEST_F(ReviewControllerTest, GetOne200) {
     getOne200();
+}
+
+TEST_F(ReviewControllerTest, GetList200) {
+    getList200();
 }
