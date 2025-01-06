@@ -72,7 +72,11 @@ namespace api::v1 {
                 sql += buildOnlyFields();
                 sql += buildFunctions();
             } else {
-                sql += fmt::format(" json_build_object({}) ", _jsonFields);
+                std::string functions = buildFunctions();
+                if(!functions.empty()) {
+                    functions = fmt::format(", {}", std::move(functions));
+                }
+                sql += fmt::format(" json_build_object({} {}) ", _jsonFields, addExtraQuotes(functions));
             }
             sql += fmt::format(" FROM \"{}\" ", tableName);
             sql += generateJoinSQL(joinInfo.joinTable, joinInfo.joinCondition, "INNER");

@@ -6,7 +6,7 @@
 #include <gtest/gtest.h>
 
 class ItemControllerTest : public BaseTestClass<ItemControllerTest, api::v1::Item> {
-    void SetUp() override {
+    void setupExpectedValues() override {
         expectedValues["description"] = "mock description";
         expectedValues["meta_description"] = "mock meta description";
         expectedValues["price"] = 100.0;
@@ -14,7 +14,9 @@ class ItemControllerTest : public BaseTestClass<ItemControllerTest, api::v1::Ite
         expectedValues["slug"] = "mock-slug";
         expectedValues["title"] = "mock title";
         expectedValues["enabled"] = true;
+    }
 
+    void setupUpdatedValues() override {
         updatedValues["description"] = "new mock description";
         updatedValues["meta_description"] = "new mock meta description";
         updatedValues["price"] = 200.0;
@@ -22,7 +24,30 @@ class ItemControllerTest : public BaseTestClass<ItemControllerTest, api::v1::Ite
         updatedValues["slug"] = "new-mock-slug";
         updatedValues["title"] = "new mock title";
         updatedValues["enabled"] = false;
-        BaseTestClass::SetUp();
+    }
+
+    void setupGetOneValues() override {
+        getOneValues["description"] = "Description1";
+        getOneValues["meta_description"] = "Meta1";
+        getOneValues["slug"] = "item1";
+        getOneValues["title"] = "Item1";
+        getOneValues["enabled"] = true;
+        getOneValues["id"] = 1;
+        getOneValues["shipping_profile_id"] = 1;
+        getOneValues["price"] = 100.0;
+
+        // Set up the "media" array
+        Json::Value media = Json::arrayValue;
+        Json::Value mediaEntry;
+        mediaEntry["content_type"] = "image/png";
+        mediaEntry["id"] = 1;
+        mediaEntry["item_id"] = 1;
+        mediaEntry["sort"] = 1;
+        mediaEntry["src"] = "media1.png";
+        mediaEntry["type"] = "image";
+
+        media.append(mediaEntry);
+        getOneValues["media"] = media;
     }
 };
 

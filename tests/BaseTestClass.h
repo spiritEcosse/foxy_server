@@ -15,7 +15,6 @@ class BaseTestClass : public api::v1::BaseClass, public testing::Test {
 public:
     void SetUp() override {
         req = drogon::HttpRequest::newHttpRequest();
-        req->setBody(body());
         req->setContentTypeCode(drogon::CT_APPLICATION_JSON);
         reqPtr = std::make_shared<drogon::HttpRequestPtr>(req);
     }
@@ -32,19 +31,38 @@ public:
     Json::Value updatedValues = {};
     Json::Value getOneValues = {};
 
-    [[nodiscard]] std::string body() const {
-        return expectedValues.toStyledString();
-    }
+    static void
+    checkJsonValue(const Json::Value& respJson, const Json::Value& expectedValue, const std::string& keyPath = "") {
+        // Helper function to build key paths for error messages
+        auto buildKeyPath = [&](const std::string& subKey) {
+            return keyPath.empty() ? subKey : keyPath + "." + subKey;
+        };
 
-    [[nodiscard]] std::string updatedBody() const {
-        return updatedValues.toStyledString();
-    }
+        // Check for type mismatch
+        ASSERT_EQ(respJson.type(), expectedValue.type()) << "Type mismatch at key path: " << keyPath;
 
-    static void checkJsonValue(const Json::Value& respJson, const std::string& key, const Json::Value& expectedValue) {
-        if(key == "src") {
-            EXPECT_EQ(respJson[key].asString(), fmt::format("https://{}/{}", APP_CLOUD_NAME, expectedValue.asString()));
+        if(respJson.isObject()) {
+            // Check all keys in the expected object
+            for(const auto& subKey: expectedValue.getMemberNames()) {
+                ASSERT_TRUE(respJson.isMember(subKey))
+                    << "Missing key '" << buildKeyPath(subKey) << "' in the actual JSON.";
+                checkJsonValue(respJson[subKey], expectedValue[subKey], buildKeyPath(subKey));
+            }
+        } else if(respJson.isArray()) {
+            // Check array size
+            ASSERT_EQ(respJson.size(), expectedValue.size()) << "Array size mismatch at key path: " << keyPath;
+
+            // Check each element in the array
+            for(Json::ArrayIndex i = 0; i < respJson.size(); ++i) {
+                checkJsonValue(respJson[i], expectedValue[i], buildKeyPath("[" + std::to_string(i) + "]"));
+            }
+        } else if(keyPath.ends_with("src")) {
+            // Special handling for "src"
+            EXPECT_EQ(respJson.asString(), fmt::format("https://{}/{}", APP_CLOUD_NAME, expectedValue.asString()))
+                << "Mismatch at key path: " << keyPath;
         } else {
-            EXPECT_EQ(respJson[key], expectedValue);
+            // Direct value comparison
+            EXPECT_EQ(respJson, expectedValue) << "Value mismatch at key path: " << keyPath;
         }
     }
 
@@ -60,10 +78,7 @@ public:
                 const std::string jsonString = writeString(builder, *responseJson);
                 std::cout << jsonString << std::endl;
                 if(resp->getStatusCode() == drogon::k200OK) {
-                    for(const auto& key: updatedValues.getMemberNames()) {
-                        const Json::Value& value = updatedValues[key];
-                        this->checkJsonValue(*responseJson, key, value);
-                    }
+                    this->checkJsonValue(*responseJson, updatedValues);
                 }
                 *dbClient << "ROLLBACK;";
                 testPromise->set_value();
@@ -86,10 +101,7 @@ public:
                 const std::string jsonString = writeString(builder, *responseJson);
                 std::cout << jsonString << std::endl;
                 if(resp->getStatusCode() == drogon::k200OK) {
-                    for(const auto& key: getOneValues.getMemberNames()) {
-                        const Json::Value& value = getOneValues[key];
-                        this->checkJsonValue(*responseJson, key, value);
-                    }
+                    this->checkJsonValue(*responseJson, getOneValues);
                 }
                 testPromise->set_value();
             } catch(const std::exception& e) {
@@ -111,10 +123,7 @@ public:
                 const std::string jsonString = writeString(builder, *responseJson);
                 std::cout << jsonString << std::endl;
                 if(resp->getStatusCode() == drogon::k201Created) {
-                    for(const auto& key: expectedValues.getMemberNames()) {
-                        const Json::Value& value = expectedValues[key];
-                        this->checkJsonValue(*responseJson, key, value);
-                    }
+                    this->checkJsonValue(*responseJson, expectedValues);
                 }
                 *dbClient << "ROLLBACK;";
                 testPromise->set_value();
@@ -195,7 +204,14 @@ public:
         return future;
     }
 
+    virtual void setupExpectedValues() = 0;
+    virtual void setupUpdatedValues() = 0;
+    virtual void setupGetOneValues() = 0;
+
     void testCreate200() {
+        setupExpectedValues();
+        req->setBody(expectedValues.toStyledString());
+
         runAsyncTest<void>([this](auto promise) {
             drogon::app().getLoop()->queueInLoop([this, promise]() {
                 const auto dbClient = drogon::app().getFastDbClient("default");
@@ -206,7 +222,6 @@ public:
     }
 
     void testEmptyBody400() {
-        req->setBody(std::string());
         runAsyncTest<void>([this](auto promise) {
             drogon::app().getLoop()->queueInLoop([this, promise]() {
                 controller.createItem(*reqPtr, emptyBodyCallback(promise));
@@ -215,7 +230,9 @@ public:
     }
 
     void testRequiredFields400() {
+        setupExpectedValues();
         req->setBody(std::string("{}"));
+
         runAsyncTest<void>([this](auto promise) {
             drogon::app().getLoop()->queueInLoop([this, promise]() {
                 controller.createItem(*reqPtr, requiredFieldsCallback(promise));
@@ -234,9 +251,11 @@ public:
     }
 
     void testUpdate200() {
+        setupUpdatedValues();
+        req->setBody(updatedValues.toStyledString());
+
         runAsyncTest<void>([this](auto promise) {
             drogon::app().getLoop()->queueInLoop([this, promise]() {
-                req->setBody(updatedBody());
                 const auto dbClient = drogon::app().getFastDbClient("default");
                 *dbClient << "BEGIN";
                 controller.updateItem(*reqPtr, updateCallback(promise, dbClient), "1");
@@ -245,6 +264,8 @@ public:
     }
 
     void getOne200() {
+        setupGetOneValues();
+
         runAsyncTest<void>([this](auto promise) {
             drogon::app().getLoop()->queueInLoop([this, promise]() {
                 controller.getOne(*reqPtr, getOneCallback(promise), "1");

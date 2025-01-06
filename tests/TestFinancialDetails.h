@@ -6,7 +6,7 @@
 #include <gtest/gtest.h>
 
 class FinancialDetailsControllerTest : public BaseTestClass<FinancialDetailsControllerTest, api::v1::FinancialDetails> {
-    void SetUp() override {
+    void setupExpectedValues() override {
         expectedValues["description"] = "mock description";
         expectedValues["meta_description"] = "mock meta description";
         expectedValues["price"] = 100.0;
@@ -14,7 +14,9 @@ class FinancialDetailsControllerTest : public BaseTestClass<FinancialDetailsCont
         expectedValues["slug"] = "mock-slug";
         expectedValues["title"] = "mock title";
         expectedValues["enabled"] = true;
+    }
 
+    void setupUpdatedValues() override {
         updatedValues["description"] = "new mock description";
         updatedValues["meta_description"] = "new mock meta description";
         updatedValues["price"] = 200.0;
@@ -22,7 +24,11 @@ class FinancialDetailsControllerTest : public BaseTestClass<FinancialDetailsCont
         updatedValues["slug"] = "new-mock-slug";
         updatedValues["title"] = "new mock title";
         updatedValues["enabled"] = false;
-        BaseTestClass::SetUp();
+    }
+
+    void setupGetOneValues() override {
+        getOneValues["title"] = "Country1";
+        getOneValues["code"] = "C1";
     }
 };
 
@@ -44,4 +50,8 @@ TEST_F(FinancialDetailsControllerTest, Delete204) {
 
 TEST_F(FinancialDetailsControllerTest, Update200) {
     testUpdate200();
+}
+
+TEST_F(FinancialDetailsControllerTest, GetOne200) {
+    getOne200();
 }

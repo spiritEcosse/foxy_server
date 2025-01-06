@@ -76,18 +76,15 @@ OrderModel::sqlSelectList(const int page, int limit, const std::map<std::string,
 std::string OrderModel::sqlSelectOne(const std::string &field,
                                      const std::string &value,
                                      [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
-    QuerySet qsBasketItem(ItemModel::tableName, 0, std::string("_items"));
+    QuerySet qsBasketItem(ItemModel::tableName, 0, ItemModel::tableName, false);
     qsBasketItem.join(BasketItemModel())
-        .join(OrderModel())
-        .filter(field, value)
-        .only(std::cref(ItemModel::Field::title),
-              std::cref(BaseModel<ItemModel>::Field::id),
-              std::cref(BasketItemModel::Field::quantity),
-              std::cref(BasketItemModel::Field::price));
+        .filter(BasketItemModel::Field::itemId.getFullFieldName(), BaseModel::Field::id.getFullFieldName(), false)
+        .functions(Function(fmt::format("json_agg(json_build_object({}))", ItemModel().fieldsJsonObject())));
 
-    QuerySet qsOrder(tableName, "_order", true);
+    QuerySet qsOrder(tableName, tableName, true, true);
     qsOrder.filter(field, value)
         .jsonFields(addExtraQuotes(OrderModel().fieldsJsonObject()))
-        .order_by(std::make_pair(std::cref(BaseModel::Field::id), false));
-    return QuerySet::buildQuery(std::move(qsOrder), std::move(qsBasketItem));
+        .functions(Function(fmt::format(R"( 'items', COALESCE(({}), '[]'::json))", qsBasketItem.buildSelect())));
+
+    return qsOrder.buildSelectOne();
 }

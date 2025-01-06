@@ -78,17 +78,15 @@ std::string ItemModel::sqlSelectList(const int page,
 std::string ItemModel::sqlSelectOne(const std::string &field,
                                     const std::string &value,
                                     [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
-    QuerySet qsItem(tableName, "_item", true, true);
-    qsItem.filter(field, std::string(value)).jsonFields(addExtraQuotes(fieldsJsonObject()));
+    QuerySet qsMedia(MediaModel::tableName, 0, MediaModel::tableName, false);
+    qsMedia.filter(MediaModel::Field::itemId.getFullFieldName(), BaseModel::Field::id.getFullFieldName(), false)
+        .functions(Function(
+            fmt::format("json_agg(json_build_object({}) ORDER BY media.sort ASC)", MediaModel().fieldsJsonObject())));
 
-    QuerySet qsMedia(MediaModel::tableName, 0, std::string("_media"));
-    std::string itemField = field;
-    if(field == BaseModel::Field::id.getFullFieldName())
-        itemField = MediaModel::Field::itemId.getFullFieldName();
-    qsMedia.join(ItemModel())
-        .filter(itemField, std::string(value))
-        .order_by(std::make_pair(std::cref(MediaModel::Field::sort), true))
-        .only(allSetFields())
-        .functions(Function(fmt::format("format_src(media.src, '{}') as src", APP_CLOUD_NAME)));
-    return QuerySet::buildQuery(std::move(qsMedia), std::move(qsItem));
+    QuerySet qsItem(tableName, tableName, true, true);
+    qsItem.filter(field, value)
+        .jsonFields(addExtraQuotes(fieldsJsonObject()))
+        .functions(Function(fmt::format(R"( 'media', COALESCE(({}), '[]'::json))", qsMedia.buildSelect())));
+
+    return qsItem.buildSelectOne();
 }

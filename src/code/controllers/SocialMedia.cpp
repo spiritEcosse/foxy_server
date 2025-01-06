@@ -101,7 +101,7 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
 
     const auto callbackPtr =
         std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
-    auto dbClient = drogon::app().getFastDbClient("default");
+    auto dbClient = drogon::app().getFastDbClient("default");  // TODO: remove this line after test
     QuerySet qs(ItemModel::tableName, limit, "items", false);
     qs.only(std::cref(ItemModel::Field::title),
             std::cref(BaseModel<ItemModel>::Field::id),

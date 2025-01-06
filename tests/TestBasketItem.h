@@ -6,14 +6,22 @@
 #include <gtest/gtest.h>
 
 class BasketItemControllerTest : public BaseTestClass<BasketItemControllerTest, api::v1::BasketItem> {
-    void SetUp() override {
+    void setupExpectedValues() override {
         expectedValues["basket_id"] = 3;
         expectedValues["item_id"] = 1;
+    }
 
+    void setupUpdatedValues() override {
         updatedValues["basket_id"] = 4;
         updatedValues["item_id"] = 2;
+    }
 
-        BaseTestClass::SetUp();
+    void setupGetOneValues() override {
+        getOneValues["basket_id"] = 1;
+        getOneValues["quantity"] = 1;
+        getOneValues["item_id"] = 1;
+        getOneValues["price"] = 100.00;
+        getOneValues["id"] = 1;
     }
 };
 
@@ -35,4 +43,8 @@ TEST_F(BasketItemControllerTest, Delete204) {
 
 TEST_F(BasketItemControllerTest, Update200) {
     testUpdate200();
+}
+
+TEST_F(BasketItemControllerTest, GetOne200) {
+    getOne200();
 }
