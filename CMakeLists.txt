@@ -43,6 +43,15 @@ endif ()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty" "${CMAKE_BINARY_DIR}/_deps/cmake-scripts-src/")
 include(3rdparty)
 
+CPMAddPackage(
+        NAME cmake-scripts
+        VERSION 24.08.1
+        GITHUB_REPOSITORY StableCoder/cmake-scripts
+        GIT_TAG 24.08.1
+)
+#include(code-coverage)
+#add_code_coverage_all_targets(EXCLUDE tests/* _deps/*) # Adds the 'ccov-all' target set and sets it to exclude all files in test/ folders.
+
 # start src
 file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS src/*.*)
 add_executable(foxy_server ${RESOURCES})
@@ -148,12 +157,7 @@ if (DEFINED SENTRY_DSN)
     # end sentry
 endif ()
 
-CPMAddPackage(
-        NAME cmake-scripts
-        VERSION 24.08.1
-        GITHUB_REPOSITORY StableCoder/cmake-scripts
-        GIT_TAG 24.08.1
-)
+
 include(sanitizers)
 if (ENVIRONMENT STREQUAL "dev")
     # Address + Leak sanitizers
@@ -165,6 +169,8 @@ if (ENVIRONMENT STREQUAL "dev")
     # Memory + Undefined Behavior sanitizers
     #    add_sanitizer_support(memory undefined)
 endif ()
+
+#target_code_coverage(${PROJECT_NAME} AUTO ALL EXCLUDE tests/* _deps/*) # As an executable target, adds to the 'ccov' and ccov-all' targets, and the reports will exclude the non-covered.cpp file, and any files in a test/ folder.
 
 # Start Formatting
 include(formatting)

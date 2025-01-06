@@ -49,3 +49,4 @@ TAGS
 *.backup
 *.bak
 *.orig
+/cmake-build-debug-coverage/
