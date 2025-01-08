@@ -82,3 +82,7 @@ TEST_F(ReviewControllerTest, GetOne200) {
 TEST_F(ReviewControllerTest, GetList200) {
     getList200();
 }
+
+TEST_F(ReviewControllerTest, GetOne404) {
+    getOne404();
+}

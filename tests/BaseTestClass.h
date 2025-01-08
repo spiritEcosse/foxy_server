@@ -96,17 +96,18 @@ public:
     }
 
     std::function<void(const drogon::HttpResponsePtr&)>
-    getOneCallback(const std::shared_ptr<std::promise<void>>& testPromise) {
-        return [this, testPromise](const drogon::HttpResponsePtr& resp) {
+    getOneCallback(const std::shared_ptr<std::promise<void>>& testPromise,
+                   const drogon::HttpStatusCode statusCode = drogon::k200OK) {
+        return [this, testPromise, statusCode](const drogon::HttpResponsePtr& resp) {
             try {
-                EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
-                EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
+                EXPECT_EQ(resp->getStatusCode(), statusCode);
 
-                const auto responseJson = resp->getJsonObject();
-                const Json::StreamWriterBuilder builder;
-                const std::string jsonString = writeString(builder, *responseJson);
-                std::cout << jsonString << std::endl;
                 if(resp->getStatusCode() == drogon::k200OK) {
+                    const auto responseJson = resp->getJsonObject();
+                    const Json::StreamWriterBuilder builder;
+                    const std::string jsonString = writeString(builder, *responseJson);
+                    std::cout << jsonString << std::endl;
+                    EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
                     this->checkJsonValue(*responseJson, getOneValues);
                 }
                 testPromise->set_value();
@@ -297,12 +298,32 @@ public:
         }).get();
     }
 
+    void getOne404() {
+        setupGetOneValues();
+
+        runAsyncTest<void>([this](auto promise) {
+            drogon::app().getLoop()->queueInLoop([this, promise]() {
+                controller.getOne(*reqPtr, getOneCallback(promise, drogon::k404NotFound), "10000");
+            });
+        }).get();
+    }
+
     void getList200() {
         setupGetListValues();
 
         runAsyncTest<void>([this](auto promise) {
             drogon::app().getLoop()->queueInLoop([this, promise]() {
                 controller.getList(*reqPtr, getListCallback(promise));
+            });
+        }).get();
+    }
+
+    void getOneAdmin200() {
+        setupGetListValues();
+
+        runAsyncTest<void>([this](auto promise) {
+            drogon::app().getLoop()->queueInLoop([this, promise]() {
+                controller.getOneAdmin(*reqPtr, getOneCallback(promise), "1");
             });
         }).get();
     }

@@ -85,3 +85,7 @@ TEST_F(ShippingProfileControllerTest, GetOne200) {
 TEST_F(ShippingProfileControllerTest, GetList200) {
     getList200();
 }
+
+TEST_F(ShippingProfileControllerTest, GetOne404) {
+    getOne404();
+}

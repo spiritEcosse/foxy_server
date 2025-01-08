@@ -76,3 +76,7 @@ TEST_F(BasketControllerTest, GetOne200) {
 TEST_F(BasketControllerTest, GetList200) {
     getList200();
 }
+
+TEST_F(BasketControllerTest, GetOne404) {
+    getOne404();
+}

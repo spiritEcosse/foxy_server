@@ -97,3 +97,7 @@ TEST_F(PageControllerTest, GetOne200) {
 TEST_F(PageControllerTest, GetList200) {
     getList200();
 }
+
+TEST_F(PageControllerTest, GetOne404) {
+    getOne404();
+}

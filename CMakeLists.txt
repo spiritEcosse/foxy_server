@@ -162,6 +162,7 @@ include(sanitizers)
 if (ENVIRONMENT STREQUAL "dev")
     # Address + Leak sanitizers
     add_sanitizer_support(address leak undefined)
+    target_link_libraries(${PROJECT_NAME} PRIVATE -fsanitize=address)
 
     # Thread + Undefined Behavior sanitizers
     #    add_sanitizer_support(thread undefined)

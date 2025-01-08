@@ -80,3 +80,7 @@ TEST_F(ShippingRateControllerTest, GetOne200) {
 TEST_F(ShippingRateControllerTest, GetList200) {
     getList200();
 }
+
+TEST_F(ShippingRateControllerTest, GetOne404) {
+    getOne404();
+}

@@ -97,3 +97,7 @@ TEST_F(AddressControllerTest, GetOne200) {
 TEST_F(AddressControllerTest, GetList200) {
     getList200();
 }
+
+TEST_F(AddressControllerTest, GetOne404) {
+    getOne404();
+}

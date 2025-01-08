@@ -101,3 +101,11 @@ TEST_F(ItemControllerTest, GetOne200) {
 TEST_F(ItemControllerTest, GetList200) {
     getList200();
 }
+
+TEST_F(ItemControllerTest, GetOne404) {
+    getOne404();
+}
+
+TEST_F(ItemControllerTest, GetOneAdmin200) {
+    getOneAdmin200();
+}

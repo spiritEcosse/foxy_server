@@ -88,3 +88,7 @@ TEST_F(FinancialDetailsControllerTest, GetOne200) {
 TEST_F(FinancialDetailsControllerTest, GetList200) {
     getList200();
 }
+
+TEST_F(FinancialDetailsControllerTest, GetOne404) {
+    getOne404();
+}

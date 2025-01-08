@@ -185,3 +185,7 @@ TEST_F(OrderControllerTest, GetOne200) {
 TEST_F(OrderControllerTest, GetList200) {
     getList200();
 }
+
+TEST_F(OrderControllerTest, GetOne404) {
+    getOne404();
+}

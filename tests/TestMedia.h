@@ -87,3 +87,7 @@ TEST_F(MediaControllerTest, GetOne200) {
 TEST_F(MediaControllerTest, GetList200) {
     getList200();
 }
+
+TEST_F(MediaControllerTest, GetOne404) {
+    getOne404();
+}

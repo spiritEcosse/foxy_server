@@ -88,3 +88,7 @@ TEST_F(UserControllerTest, GetOne200) {
 TEST_F(UserControllerTest, GetList200) {
     getList200();
 }
+
+TEST_F(UserControllerTest, GetOne404) {
+    getOne404();
+}

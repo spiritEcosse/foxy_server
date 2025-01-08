@@ -72,3 +72,7 @@ TEST_F(CountryControllerTest, GetOne200) {
 TEST_F(CountryControllerTest, GetList200) {
     getList200();
 }
+
+TEST_F(CountryControllerTest, GetOne404) {
+    getOne404();
+}

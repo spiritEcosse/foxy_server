@@ -78,3 +78,7 @@ TEST_F(SocialMediaControllerTest, GetOne200) {
 TEST_F(SocialMediaControllerTest, GetList200) {
     getList200();
 }
+
+TEST_F(SocialMediaControllerTest, GetOne404) {
+    getOne404();
+}
