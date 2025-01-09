@@ -8,6 +8,7 @@
 #include "BaseField.h"
 #include "Function.h"
 #include <fmt/core.h>
+#include <trantor/utils/Logger.h>
 
 namespace api::v1 {
     using FieldOrFunction = std::variant<std::reference_wrapper<const BaseField>, Function>;
@@ -69,8 +70,13 @@ namespace api::v1 {
                 sql += " do_and_check('SELECT ";
             }
             if(_jsonFields.empty()) {
-                sql += buildOnlyFields();
-                sql += buildFunctions();
+                const std::string only = buildOnlyFields();
+                sql += only;
+                std::string functions = buildFunctions();
+                if(!functions.empty() && !only.empty()) {
+                    functions = fmt::format(", {}", std::move(functions));
+                }
+                sql += functions;
             } else {
                 std::string functions = buildFunctions();
                 if(!functions.empty()) {
@@ -104,8 +110,13 @@ namespace api::v1 {
                 sql.pop_back();
                 sql += ") ";
             }
-            sql += buildOnlyFields();
-            sql += buildFunctions();
+            const std::string only = buildOnlyFields();
+            sql += only;
+            std::string functions = buildFunctions();
+            if(!functions.empty() && !only.empty()) {
+                functions = fmt::format(", {}", std::move(functions));
+            }
+            sql += functions;
             sql += fmt::format(" FROM \"{}\" ", tableName);
             sql += generateJoinSQL(joinInfo.joinTable, joinInfo.joinCondition, "INNER");
             sql += generateJoinSQL(joinInfo.leftJoinTable, joinInfo.leftJoinCondition, "LEFT");
@@ -312,9 +323,6 @@ namespace api::v1 {
 
         [[nodiscard]] std::string buildFunctions() const {
             std::string sql;
-            if(!orderInfo.orderFields.empty() && !functionsSet.empty()) {
-                sql += ", ";
-            }
             for(const auto &function: functionsSet) {
                 sql += fmt::format("{}, ", function.toStr());
             }

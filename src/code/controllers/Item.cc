@@ -72,21 +72,29 @@ void Item::getOneAdmin(const drogon::HttpRequestPtr &req,
         return;
     }
 
-    QuerySet qsItem(ItemModel::tableName, "_item", true, true);
+    // Media subquery with JSON aggregation
+    QuerySet qsMedia(MediaModel::tableName, 0, MediaModel::tableName, false);
+    qsMedia
+        .filter(MediaModel::Field::itemId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName(), false)
+        .functions(Function(
+            fmt::format("json_agg(json_build_object({}) ORDER BY media.sort ASC)", MediaModel().fieldsJsonObject())));
+
+    // Tags subquery with JSON aggregation
+    QuerySet qsTags(TagModel::tableName, 0, TagModel::tableName, false);
+    qsTags.filter(TagModel::Field::itemId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName(), false)
+        .functions(Function(
+            fmt::format("json_agg(json_build_object({}) ORDER BY updated_at DESC)", TagModel().fieldsJsonObject())));
+
+    // Main item query with both media and tags as JSON arrays
+    QuerySet qsItem(ItemModel::tableName, ItemModel::tableName, true, true);
     qsItem.filter(BaseModel<ItemModel>::Field::id.getFullFieldName(), stringId)
-        .jsonFields(addExtraQuotes(ItemModel().fieldsJsonObject()));
+        .jsonFields(addExtraQuotes(ItemModel().fieldsJsonObject()))
+        .functions(Function(fmt::format(R"(
+        'media', COALESCE(({0}), '[]'::json),
+        'tags', COALESCE(({1}), '[]'::json)
+    )",
+                                        qsMedia.buildSelect(),
+                                        qsTags.buildSelect())));
 
-    QuerySet qsMedia(MediaModel::tableName, 0, std::string("_media"));
-    QuerySet qsTag(TagModel::tableName, 0, std::string("_tag"));
-    qsMedia.join(ItemModel())
-        .filter(BaseModel<ItemModel>::Field::id.getFullFieldName(), stringId)
-        .order_by(std::make_pair(std::cref(MediaModel::Field::sort), true))
-        .only(MediaModel::allSetFields())
-        .functions(Function(fmt::format("format_src(media.src, '{}') as src", APP_CLOUD_NAME)));
-    qsTag.join(ItemModel())
-        .filter(TagModel::Field::itemId.getFullFieldName(), std::string(stringId))
-        .order_by(std::make_pair(std::cref(BaseModel<TagModel>::Field::updatedAt), false))
-        .only(TagModel::allSetFields());
-
-    executeSqlQuery(callbackPtr, QuerySet::buildQuery(std::move(qsMedia), std::move(qsItem), std::move(qsTag)));
+    executeSqlQuery(callbackPtr, qsItem.buildSelectOne());
 }

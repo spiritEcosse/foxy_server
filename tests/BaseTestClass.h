@@ -31,11 +31,15 @@ public:
     Json::Value updatedValues = {};
     Json::Value getOneValues = {};
     Json::Value getListValues = {};
+    Json::Value getOneAdminValues = {};
 
     virtual void setupExpectedValues() = 0;
     virtual void setupUpdatedValues() = 0;
     virtual void setupGetOneValues() = 0;
     virtual void setupGetListValues() = 0;
+    virtual void setupGetOneAdmin() {
+        // getOneAdmin is optional method, does not exist for all models
+    };
 
     static void
     checkJsonValue(const Json::Value& respJson, const Json::Value& expectedValue, const std::string& keyPath = "") {
@@ -109,6 +113,29 @@ public:
                     std::cout << jsonString << std::endl;
                     EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
                     this->checkJsonValue(*responseJson, getOneValues);
+                }
+                testPromise->set_value();
+            } catch(const std::exception& e) {
+                testPromise->set_exception(std::current_exception());
+                LOG_ERROR << e.what();
+            }
+        };
+    }
+
+    std::function<void(const drogon::HttpResponsePtr&)>
+    getOneAdminCallback(const std::shared_ptr<std::promise<void>>& testPromise,
+                        const drogon::HttpStatusCode statusCode = drogon::k200OK) {
+        return [this, testPromise, statusCode](const drogon::HttpResponsePtr& resp) {
+            try {
+                EXPECT_EQ(resp->getStatusCode(), statusCode);
+
+                if(resp->getStatusCode() == drogon::k200OK) {
+                    const auto responseJson = resp->getJsonObject();
+                    const Json::StreamWriterBuilder builder;
+                    const std::string jsonString = writeString(builder, *responseJson);
+                    std::cout << jsonString << std::endl;
+                    EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
+                    this->checkJsonValue(*responseJson, getOneAdminValues);
                 }
                 testPromise->set_value();
             } catch(const std::exception& e) {
@@ -319,11 +346,11 @@ public:
     }
 
     void getOneAdmin200() {
-        setupGetListValues();
+        setupGetOneAdmin();
 
         runAsyncTest<void>([this](auto promise) {
             drogon::app().getLoop()->queueInLoop([this, promise]() {
-                controller.getOneAdmin(*reqPtr, getOneCallback(promise), "1");
+                controller.getOneAdmin(*reqPtr, getOneAdminCallback(promise), "1");
             });
         }).get();
     }

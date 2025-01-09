@@ -71,6 +71,39 @@ class ItemControllerTest : public BaseTestClass<ItemControllerTest, api::v1::Ite
         getListValues["total"] = 1;
         getListValues["data"] = data;
     }
+
+    void setupGetOneAdmin() override {
+        getOneAdminValues["description"] = "Description1";
+        getOneAdminValues["enabled"] = true;
+        getOneAdminValues["id"] = 1;
+        getOneAdminValues["meta_description"] = "Meta1";
+        getOneAdminValues["price"] = 100.0;
+        getOneAdminValues["shipping_profile_id"] = 1;
+        getOneAdminValues["slug"] = "item1";
+        getOneAdminValues["title"] = "Item1";
+
+        Json::Value tagItem;
+        tagItem["id"] = 1;
+        tagItem["title"] = "Tag1";
+        Json::Value socialMedia = Json::arrayValue;
+        socialMedia.append("Facebook");
+        tagItem["social_media"] = socialMedia;
+
+        Json::Value tags = Json::arrayValue;
+        tags.append(tagItem);
+        getOneAdminValues["tags"] = tags;
+
+        Json::Value mediaItem;
+        mediaItem["id"] = 1;
+        mediaItem["type"] = "image";
+        mediaItem["src"] = "media1.png";
+        mediaItem["content_type"] = "image/png";
+        mediaItem["sort"] = 1;
+
+        Json::Value media = Json::arrayValue;
+        media.append(mediaItem);
+        getOneAdminValues["media"] = media;
+    }
 };
 
 TEST_F(ItemControllerTest, Create200) {

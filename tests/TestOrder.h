@@ -156,6 +156,128 @@ class OrderControllerTest : public BaseTestClass<OrderControllerTest, api::v1::O
 
         getListValues["data"] = data;
     }
+
+    void setupOrderDetails() {
+        // Setup address and country
+        Json::Value country;
+        country["code"] = "C1";
+        country["id"] = 1;
+        country["title"] = "Country1";
+
+        Json::Value address;
+        address["address"] = "Address1";
+        address["city"] = "City1";
+        address["country"] = country;
+        address["country_id"] = 1;
+        address["id"] = 1;
+        address["user_id"] = 1;
+        address["zipcode"] = "12345";
+
+        getOneAdminValues["_address"] = address;
+
+        // Setup items array
+        Json::Value item;
+        item["id"] = 1;
+        item["price"] = 100.0;
+        item["quantity"] = 1;
+        item["title"] = "Item1";
+
+        Json::Value items = Json::arrayValue;
+        items.append(item);
+        getOneAdminValues["items"] = items;
+
+        // Setup order details
+        getOneAdminValues["address_id"] = 1;
+        getOneAdminValues["basket_id"] = 1;
+        getOneAdminValues["id"] = 1;
+        getOneAdminValues["returned"] = false;
+        getOneAdminValues["status"] = "Completed";
+        getOneAdminValues["tax_rate"] = 0.10000000000000001;
+        getOneAdminValues["taxes"] = 10.0;
+        getOneAdminValues["total"] = 100.0;
+        getOneAdminValues["total_ex_taxes"] = 90.0;
+        getOneAdminValues["user_id"] = 1;
+
+        // Setup user details
+        Json::Value user;
+        user["birthday"] = "2000-01-01";
+        user["email"] = "user1@example.com";
+        user["first_name"] = "User";
+        user["has_newsletter"] = true;
+        user["id"] = 1;
+        user["is_admin"] = false;
+        user["last_name"] = "One";
+
+        getOneAdminValues["user"] = user;
+    }
+
+    void setupGetOneAdmin() override {
+        // Base order fields
+        getOneAdminValues["address_id"] = 1;
+        getOneAdminValues["basket_id"] = 1;
+        getOneAdminValues["id"] = 1;
+        getOneAdminValues["returned"] = false;
+        getOneAdminValues["status"] = "Completed";
+        getOneAdminValues["tax_rate"] = 0.10000000000000001;
+        getOneAdminValues["taxes"] = 10.0;
+        getOneAdminValues["total"] = 100.0;
+        getOneAdminValues["total_ex_taxes"] = 90.0;
+        getOneAdminValues["user_id"] = 1;
+
+        // Setup user object
+        Json::Value user;
+        user["birthday"] = "2000-01-01";
+        user["email"] = "user1@example.com";
+        user["first_name"] = "User";
+        user["has_newsletter"] = true;
+        user["id"] = 1;
+        user["is_admin"] = false;
+        user["last_name"] = "One";
+        getOneAdminValues["user"] = user;
+
+        // Setup country object
+        Json::Value country;
+        country["code"] = "C1";
+        country["id"] = 1;
+        country["title"] = "Country1";
+
+        // Setup address object with nested country
+        Json::Value address;
+        address["address"] = "Address1";
+        address["city"] = "City1";
+        address["country"] = country;
+        address["country_id"] = 1;
+        address["id"] = 1;
+        address["user_id"] = 1;
+        address["zipcode"] = "12345";
+        getOneAdminValues["address"] = address;
+
+        // Setup item details
+        Json::Value itemDetails;
+        itemDetails["description"] = "Description1";
+        itemDetails["enabled"] = true;
+        itemDetails["id"] = 1;
+        itemDetails["meta_description"] = "Meta1";
+        itemDetails["price"] = 100.0;
+        itemDetails["shipping_profile_id"] = 1;
+        itemDetails["slug"] = "item1";
+        itemDetails["src"] = "media1.png";
+        itemDetails["title"] = "Item1";
+
+        // Setup basket item with nested item details
+        Json::Value basketItem;
+        basketItem["basket_id"] = 1;
+        basketItem["id"] = 1;
+        basketItem["item"] = itemDetails;
+        basketItem["item_id"] = 1;
+        basketItem["price"] = 100.0;
+        basketItem["quantity"] = 1;
+
+        // Create items array and append basket item
+        Json::Value items = Json::arrayValue;
+        items.append(basketItem);
+        getOneAdminValues["items"] = items;
+    }
 };
 
 TEST_F(OrderControllerTest, Create200) {
@@ -188,4 +310,8 @@ TEST_F(OrderControllerTest, GetList200) {
 
 TEST_F(OrderControllerTest, GetOne404) {
     getOne404();
+}
+
+TEST_F(OrderControllerTest, GetOneAdmin200) {
+    getOneAdmin200();
 }

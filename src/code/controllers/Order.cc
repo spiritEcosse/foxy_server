@@ -12,41 +12,52 @@ using namespace api::v1;
 void Order::getOneAdmin(const drogon::HttpRequestPtr &req,
                         std::function<void(const drogon::HttpResponsePtr &)> &&callback,
                         const std::string &stringId) const {
-    auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
+    const auto callbackPtr =
+        std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
 
-    bool isInt = canBeInt(stringId);
-    if(auto resp = check404(req, !isInt)) {
+    const bool isInt = canBeInt(stringId);
+    if(const auto resp = check404(req, !isInt)) {
         (*callbackPtr)(resp);
         return;
     }
 
-    QuerySet qsUser(UserModel::tableName, "_user");
-    qsUser.join(OrderModel())
-        .filter(BaseModel<OrderModel>::Field::id.getFullFieldName(), stringId)
+    // User subquery with JSON aggregation
+    QuerySet qsUser(UserModel::tableName, 0, UserModel::tableName, false);
+    qsUser
+        .filter(BaseModel<UserModel>::Field::id.getFullFieldName(), OrderModel::Field::userId.getFullFieldName(), false)
         .jsonFields(UserModel().fieldsJsonObject());
 
-    QuerySet qsAddress(AddressModel::tableName, "_address");
-    qsAddress.join(OrderModel())
-        .filter(BaseModel<OrderModel>::Field::id.getFullFieldName(), stringId)
+    // Address subquery with JSON aggregation
+    QuerySet qsAddress(AddressModel::tableName, 0, AddressModel::tableName, false);
+    qsAddress
+        .filter(BaseModel<AddressModel>::Field::id.getFullFieldName(),
+                OrderModel::Field::addressId.getFullFieldName(),
+                false)
         .jsonFields(AddressModel().fieldsJsonObject());
 
-    QuerySet qsBasketItem(ItemModel::tableName, 0, std::string("_items"));
-    qsBasketItem.join(BasketItemModel())
-        .join(OrderModel())
-        .filter(BaseModel<OrderModel>::Field::id.getFullFieldName(), stringId)
-        .only(std::cref(ItemModel::Field::title),
-              std::cref(BaseModel<ItemModel>::Field::id),
-              std::cref(BasketItemModel::Field::quantity),
-              std::cref(BasketItemModel::Field::price));
+    // Basket items subquery with JSON aggregation
+    QuerySet qsItems(ItemModel::tableName, 0, ItemModel::tableName, false);
+    qsItems.join(BasketItemModel())
+        .filter(BasketItemModel::Field::basketId.getFullFieldName(),
+                OrderModel::Field::basketId.getFullFieldName(),
+                false)
+        .functions(Function(fmt::format("json_agg(json_build_object({}))", BasketItemModel().fieldsJsonObject())));
 
-    QuerySet qsOrder(OrderModel::tableName, "_order", true);
+    // Main order query combining all JSON objects
+    QuerySet qsOrder(OrderModel::tableName, OrderModel::tableName, true, true);
     qsOrder.filter(BaseModel<OrderModel>::Field::id.getFullFieldName(), stringId)
         .jsonFields(addExtraQuotes(OrderModel().fieldsJsonObject()))
+        .functions(Function(fmt::format(R"(
+             'items', COALESCE(({}),'[]'::json),
+             'user', ({}),
+             'address', ({})
+         )",
+                                        qsItems.buildSelect(),
+                                        qsUser.buildSelectOne(),
+                                        qsAddress.buildSelectOne())))
         .order_by(std::make_pair(std::cref(BaseModel<OrderModel>::Field::id), false));
 
-    executeSqlQuery(
-        callbackPtr,
-        QuerySet::buildQuery(std::move(qsOrder), std::move(qsBasketItem), std::move(qsAddress), std::move(qsUser)));
+    executeSqlQuery(callbackPtr, qsOrder.buildSelectOne());
 }
 
 void Order::getListAdmin(const drogon::HttpRequestPtr &req,
