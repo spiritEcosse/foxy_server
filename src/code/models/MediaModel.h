@@ -16,11 +16,11 @@ namespace api::v1 {
         static const inline std::string tableName = "media";
 
         struct Field : public BaseModel::Field {
-            static inline auto src = BaseField("src", tableName);
-            static inline auto itemId = BaseField("item_id", tableName);
-            static inline auto sort = BaseField("sort", tableName);
-            static inline auto type = BaseField("type", tableName);
-            static inline auto contentType = BaseField("content_type", tableName);
+            static inline const auto src = BaseField("src", tableName);
+            static inline const auto itemId = BaseField("item_id", tableName);
+            static inline const auto sort = BaseField("sort", tableName);
+            static inline const auto type = BaseField("type", tableName);
+            static inline const auto contentType = BaseField("content_type", tableName);
 
             Field() : BaseModel::Field() {
                 allFields.try_emplace(src.getFieldName(), std::cref(src));

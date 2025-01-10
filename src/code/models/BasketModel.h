@@ -13,8 +13,8 @@ namespace api::v1 {
         static const inline std::string tableName = "basket";
 
         struct Field : public BaseModel::Field {
-            static inline auto userId = BaseField("user_id", tableName);
-            static inline auto inUse = BaseField("in_use", tableName);
+            static inline const auto userId = BaseField("user_id", tableName);
+            static inline const auto inUse = BaseField("in_use", tableName);
 
             Field() : BaseModel::Field() {
                 allFields.try_emplace(userId.getFieldName(), std::cref(userId));

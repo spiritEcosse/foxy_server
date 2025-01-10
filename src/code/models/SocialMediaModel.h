@@ -10,9 +10,9 @@ namespace api::v1 {
         static const inline std::string tableName = "social_media";
 
         struct Field : BaseModel::Field {
-            static inline auto title = BaseField("title", tableName);
-            static inline auto externalId = BaseField("external_id", tableName);
-            static inline auto itemId = BaseField("item_id", tableName);
+            static inline const auto title = BaseField("title", tableName);
+            static inline const auto externalId = BaseField("external_id", tableName);
+            static inline const auto itemId = BaseField("item_id", tableName);
 
             Field() : BaseModel::Field() {
                 allFields.try_emplace(title.getFieldName(), std::cref(title));

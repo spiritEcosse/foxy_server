@@ -11,11 +11,11 @@ namespace api::v1 {
         static const inline std::string tableName = "address";
 
         struct Field : BaseModel::Field {
-            static inline auto address = BaseField("address", tableName);
-            static inline auto city = BaseField("city", tableName);
-            static inline auto zipcode = BaseField("zipcode", tableName);
-            static inline auto userId = BaseField("user_id", tableName);
-            static inline auto countryId = BaseField("country_id", tableName);
+            static inline const auto address = BaseField("address", tableName);
+            static inline const auto city = BaseField("city", tableName);
+            static inline const auto zipcode = BaseField("zipcode", tableName);
+            static inline const auto userId = BaseField("user_id", tableName);
+            static inline const auto countryId = BaseField("country_id", tableName);
 
             Field() : BaseModel::Field() {
                 allFields.try_emplace(address.getFieldName(), std::cref(address));

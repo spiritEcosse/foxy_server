@@ -13,10 +13,10 @@ namespace api::v1 {
         static const inline std::string tableName = "shipping_rate";
 
         struct Field : BaseModel::Field {
-            static inline auto countryId = BaseField("country_id", tableName);
-            static inline auto shippingProfileId = BaseField("shipping_profile_id", tableName);
-            static inline auto deliveryDaysMin = BaseField("delivery_days_min", tableName);
-            static inline auto deliveryDaysMax = BaseField("delivery_days_max", tableName);
+            static inline const auto countryId = BaseField("country_id", tableName);
+            static inline const auto shippingProfileId = BaseField("shipping_profile_id", tableName);
+            static inline const auto deliveryDaysMin = BaseField("delivery_days_min", tableName);
+            static inline const auto deliveryDaysMax = BaseField("delivery_days_max", tableName);
 
             Field() : BaseModel::Field() {
                 allFields.try_emplace(countryId.getFieldName(), std::cref(countryId));

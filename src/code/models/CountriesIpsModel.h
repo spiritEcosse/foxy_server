@@ -12,11 +12,11 @@ namespace api::v1 {
         static const inline std::string tableName = "countries_ips";
 
         struct Field : public BaseModel::Field {
-            static inline auto startRange = BaseField("start_range", tableName);
-            static inline auto endRange = BaseField("end_range", tableName);
-            static inline auto countryCode = BaseField("country_code", tableName);
-            static inline auto countryName = BaseField("country_name", tableName);
-            static inline auto countryId = BaseField("country_id", tableName);
+            static inline const auto startRange = BaseField("start_range", tableName);
+            static inline const auto endRange = BaseField("end_range", tableName);
+            static inline const auto countryCode = BaseField("country_code", tableName);
+            static inline const auto countryName = BaseField("country_name", tableName);
+            static inline const auto countryId = BaseField("country_id", tableName);
 
             Field() : BaseModel::Field() {
                 allFields.try_emplace(startRange.getFieldName(), std::cref(startRange));

@@ -11,11 +11,11 @@ namespace api::v1 {
         static const inline std::string tableName = "financial_details";
 
         struct Field : BaseModel::Field {
-            static inline auto taxRate = BaseField("tax_rate", tableName);
-            static inline auto gateway = BaseField("gateway", tableName);
-            static inline auto gatewayMerchantId = BaseField("gateway_merchant_id", tableName);
-            static inline auto merchantId = BaseField("merchant_id", tableName);
-            static inline auto merchantName = BaseField("merchant_name", tableName);
+            static inline const auto taxRate = BaseField("tax_rate", tableName);
+            static inline const auto gateway = BaseField("gateway", tableName);
+            static inline const auto gatewayMerchantId = BaseField("gateway_merchant_id", tableName);
+            static inline const auto merchantId = BaseField("merchant_id", tableName);
+            static inline const auto merchantName = BaseField("merchant_name", tableName);
 
             Field() : BaseModel::Field() {
                 allFields.try_emplace(taxRate.getFieldName(), std::cref(taxRate));

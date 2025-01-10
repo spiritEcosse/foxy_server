@@ -12,10 +12,10 @@ namespace api::v1 {
         static const inline std::string tableName = "review";
 
         struct Field : public BaseModel::Field {
-            static inline auto status = BaseField("status", tableName);
-            static inline auto userId = BaseField("user_id", tableName);
-            static inline auto itemId = BaseField("item_id", tableName);
-            static inline auto comment = BaseField("comment", tableName);
+            static inline const auto status = BaseField("status", tableName);
+            static inline const auto userId = BaseField("user_id", tableName);
+            static inline const auto itemId = BaseField("item_id", tableName);
+            static inline const auto comment = BaseField("comment", tableName);
 
             Field() : BaseModel::Field() {
                 allFields.try_emplace(status.getFieldName(), std::cref(status));

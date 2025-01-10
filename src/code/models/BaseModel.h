@@ -12,9 +12,9 @@ namespace api::v1 {
         static const inline std::string tableName;
 
         struct Field {
-            static inline auto id = BaseField("id", T::tableName);
-            static inline auto createdAt = BaseField("created_at", T::tableName);
-            static inline auto updatedAt = BaseField("updated_at", T::tableName);
+            static inline const auto id = BaseField("id", T::tableName);
+            static inline const auto createdAt = BaseField("created_at", T::tableName);
+            static inline const auto updatedAt = BaseField("updated_at", T::tableName);
             std::map<std::string, std::reference_wrapper<const BaseField>, std::less<>> allFields = {
                 {id.getFieldName(), std::cref(id)},
                 {createdAt.getFieldName(), std::cref(createdAt)},

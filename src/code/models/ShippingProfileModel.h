@@ -14,11 +14,11 @@ namespace api::v1 {
         static const inline std::string tableName = "shipping_profile";
 
         struct Field : BaseModel::Field {
-            static inline auto title = BaseField("title", tableName);
-            static inline auto processingTime = BaseField("processing_time", tableName);
-            static inline auto countryId = BaseField("country_id", tableName);
-            static inline auto postalCode = BaseField("postal_code", tableName);
-            static inline auto shippingUpgradeCost = BaseField("shipping_upgrade_cost", tableName);
+            static inline const auto title = BaseField("title", tableName);
+            static inline const auto processingTime = BaseField("processing_time", tableName);
+            static inline const auto countryId = BaseField("country_id", tableName);
+            static inline const auto postalCode = BaseField("postal_code", tableName);
+            static inline const auto shippingUpgradeCost = BaseField("shipping_upgrade_cost", tableName);
 
             Field() : BaseModel::Field() {
                 allFields.try_emplace(title.getFieldName(), std::cref(title));

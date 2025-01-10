@@ -13,12 +13,12 @@ namespace api::v1 {
         static const inline std::string tableName = "user";
 
         struct Field : public BaseModel::Field {
-            static inline auto email = BaseField("email", tableName);
-            static inline auto firstName = BaseField("first_name", tableName);
-            static inline auto lastName = BaseField("last_name", tableName);
-            static inline auto birthday = BaseField("birthday", tableName);
-            static inline auto hasNewsletter = BaseField("has_newsletter", tableName);
-            static inline auto isAdmin = BaseField("is_admin", tableName);
+            static inline const auto email = BaseField("email", tableName);
+            static inline const auto firstName = BaseField("first_name", tableName);
+            static inline const auto lastName = BaseField("last_name", tableName);
+            static inline const auto birthday = BaseField("birthday", tableName);
+            static inline const auto hasNewsletter = BaseField("has_newsletter", tableName);
+            static inline const auto isAdmin = BaseField("is_admin", tableName);
 
             Field() : BaseModel::Field() {
                 allFields.try_emplace(email.getFieldName(), std::cref(email));

@@ -14,10 +14,10 @@ namespace api::v1 {
         static const inline std::string tableName = "basket_item";
 
         struct Field : public BaseModel::Field {
-            static inline auto basketId = BaseField("basket_id", tableName);
-            static inline auto itemId = BaseField("item_id", tableName);
-            static inline auto quantity = BaseField("quantity", tableName);
-            static inline auto price = BaseField("price", tableName);
+            static inline const auto basketId = BaseField("basket_id", tableName);
+            static inline const auto itemId = BaseField("item_id", tableName);
+            static inline const auto quantity = BaseField("quantity", tableName);
+            static inline const auto price = BaseField("price", tableName);
 
             Field() : BaseModel::Field() {
                 allFields.try_emplace(basketId.getFieldName(), std::cref(basketId));

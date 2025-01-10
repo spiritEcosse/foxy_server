@@ -25,16 +25,16 @@ namespace api::v1 {
         static const inline std::string tableName = "order";
 
         struct Field : BaseModel::Field {
-            static inline auto status = BaseField("status", tableName);
-            static inline auto basketId = BaseField("basket_id", tableName);
-            static inline auto total = BaseField("total", tableName);
-            static inline auto totalExTaxes = BaseField("total_ex_taxes", tableName);
-            static inline auto taxRate = BaseField("tax_rate", tableName);
-            static inline auto taxes = BaseField("taxes", tableName);
-            static inline auto userId = BaseField("user_id", tableName);
-            static inline auto reference = BaseField("reference", tableName);
-            static inline auto addressId = BaseField("address_id", tableName);
-            static inline auto returned = BaseField("returned", tableName);
+            static inline const auto status = BaseField("status", tableName);
+            static inline const auto basketId = BaseField("basket_id", tableName);
+            static inline const auto total = BaseField("total", tableName);
+            static inline const auto totalExTaxes = BaseField("total_ex_taxes", tableName);
+            static inline const auto taxRate = BaseField("tax_rate", tableName);
+            static inline const auto taxes = BaseField("taxes", tableName);
+            static inline const auto userId = BaseField("user_id", tableName);
+            static inline const auto reference = BaseField("reference", tableName);
+            static inline const auto addressId = BaseField("address_id", tableName);
+            static inline const auto returned = BaseField("returned", tableName);
 
             Field() : BaseModel::Field() {
                 allFields.try_emplace(status.getFieldName(), std::cref(status));
