@@ -105,7 +105,7 @@ template<class T, class R>
 void BaseCRUD<T, R>::getItems(const drogon::HttpRequestPtr &req,
                               std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr,
                               std::function<void(std::vector<T>)> successCallback) const {
-    if(auto resp = checkBody(req); resp) {
+    if(const auto resp = checkBody(req); resp) {
         (*callbackPtr)(resp);
         return;
     }
@@ -115,7 +115,7 @@ void BaseCRUD<T, R>::getItems(const drogon::HttpRequestPtr &req,
     if(itemsJson.empty()) {
         Json::Value jsonResponse;
         jsonResponse["error"] = "Empty items";
-        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
+        const auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
         resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
         (*callbackPtr)(resp);
         return;
@@ -124,15 +124,23 @@ void BaseCRUD<T, R>::getItems(const drogon::HttpRequestPtr &req,
     std::vector<T> items;
     int index = 1;
     Json::Value jsonResponseError;
-    std::ranges::for_each(itemsJson, [&items, &index, &jsonResponseError, &req](const auto &item) {
-        if(item[T::Field::id.getFieldName()].asInt() == 0 && req->method() == drogon::Put) {
+
+    std::ranges::for_each(itemsJson, [&items, &index, &jsonResponseError, &req](const auto &jsonItem) {
+        if(jsonItem[T::Field::id.getFieldName()].asInt() == 0 && req->method() == drogon::Put) {
             jsonResponseError[std::to_string(index)] = "id is required";
+        } else {
+            if(T item(std::move(jsonItem)); !item.missingFields.empty()) {
+                jsonResponseError[std::to_string(index)] = item.missingFields;
+            } else {
+                items.emplace_back(std::move(item));
+            }
         }
-        items.emplace_back(std::move(item));
+
         ++index;
     });
+
     if(!jsonResponseError.empty()) {
-        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponseError));
+        const auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(jsonResponseError));
         resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
         (*callbackPtr)(resp);
         return;

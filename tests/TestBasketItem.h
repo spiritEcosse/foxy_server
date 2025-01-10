@@ -98,13 +98,25 @@ TEST_F(BasketItemControllerTest, Update200) {
 }
 
 TEST_F(BasketItemControllerTest, GetOne200) {
-    getOne200();
+    testGetOne200();
 }
 
 TEST_F(BasketItemControllerTest, GetList200) {
-    getList200();
+    testGetList200();
 }
 
 TEST_F(BasketItemControllerTest, GetOne404) {
-    getOne404();
+    testGetOne404();
+}
+
+TEST_F(BasketItemControllerTest, testDeleteItems) {
+    testDeleteItems();
+}
+
+TEST_F(BasketItemControllerTest, testCreateItems) {
+    testCreateItems();
+}
+
+TEST_F(BasketItemControllerTest, testUpdateItems) {
+    testUpdateItems();
 }

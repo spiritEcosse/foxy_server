@@ -91,13 +91,25 @@ TEST_F(AddressControllerTest, Update200) {
 }
 
 TEST_F(AddressControllerTest, GetOne200) {
-    getOne200();
+    testGetOne200();
 }
 
 TEST_F(AddressControllerTest, GetList200) {
-    getList200();
+    testGetList200();
 }
 
 TEST_F(AddressControllerTest, GetOne404) {
-    getOne404();
+    testGetOne404();
+}
+
+TEST_F(AddressControllerTest, testDeleteItems) {
+    testDeleteItems();
+}
+
+TEST_F(AddressControllerTest, testCreateItems) {
+    testCreateItems();
+}
+
+TEST_F(AddressControllerTest, testUpdateItems) {
+    testUpdateItems();
 }

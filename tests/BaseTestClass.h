@@ -190,6 +190,64 @@ public:
         };
     }
 
+    std::function<void(const drogon::HttpResponsePtr&)>
+    createItemsCallback(const std::shared_ptr<std::promise<void>>& testPromise,
+                        const drogon::orm::DbClientPtr& dbClient) {
+        return [this, dbClient, testPromise](const drogon::HttpResponsePtr& resp) {
+            try {
+                EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
+                EXPECT_EQ(resp->getStatusCode(), drogon::k201Created);
+
+                const auto responseJson = resp->getJsonObject();
+                const Json::StreamWriterBuilder builder;
+                const std::string jsonString = writeString(builder, *responseJson);
+                std::cout << jsonString << std::endl;
+
+                if(resp->getStatusCode() == drogon::k201Created) {
+                    Json::Value data;
+                    Json::Value items = Json::arrayValue;
+                    items.append(expectedValues);
+                    data["items"] = items;
+                    this->checkJsonValue(*responseJson, data);
+                }
+                *dbClient << "ROLLBACK;";
+                testPromise->set_value();
+            } catch(const std::exception& e) {
+                testPromise->set_exception(std::current_exception());
+                LOG_ERROR << e.what();
+            }
+        };
+    }
+
+    std::function<void(const drogon::HttpResponsePtr&)>
+    updateItemsCallback(const std::shared_ptr<std::promise<void>>& testPromise,
+                        const drogon::orm::DbClientPtr& dbClient) {
+        return [this, dbClient, testPromise](const drogon::HttpResponsePtr& resp) {
+            try {
+                EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
+                EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
+
+                const auto responseJson = resp->getJsonObject();
+                const Json::StreamWriterBuilder builder;
+                const std::string jsonString = writeString(builder, *responseJson);
+                std::cout << jsonString << std::endl;
+
+                if(resp->getStatusCode() == drogon::k200OK) {
+                    Json::Value data;
+                    Json::Value items = Json::arrayValue;
+                    items.append(updatedValues);
+                    data["items"] = items;
+                    this->checkJsonValue(*responseJson, data);
+                }
+                *dbClient << "ROLLBACK;";
+                testPromise->set_value();
+            } catch(const std::exception& e) {
+                testPromise->set_exception(std::current_exception());
+                LOG_ERROR << e.what();
+            }
+        };
+    }
+
     static std::function<void(const drogon::HttpResponsePtr&)>
     emptyBodyCallback(const std::shared_ptr<std::promise<void>>& testPromise) {
         return [testPromise](const drogon::HttpResponsePtr& resp) {
@@ -315,7 +373,7 @@ public:
         }).get();
     }
 
-    void getOne200() {
+    void testGetOne200() {
         setupGetOneValues();
 
         runAsyncTest<void>([this](auto promise) {
@@ -325,7 +383,7 @@ public:
         }).get();
     }
 
-    void getOne404() {
+    void testGetOne404() {
         setupGetOneValues();
 
         runAsyncTest<void>([this](auto promise) {
@@ -335,7 +393,7 @@ public:
         }).get();
     }
 
-    void getList200() {
+    void testGetList200() {
         setupGetListValues();
 
         runAsyncTest<void>([this](auto promise) {
@@ -345,12 +403,67 @@ public:
         }).get();
     }
 
-    void getOneAdmin200() {
+    void testGetOneAdmin200() {
         setupGetOneAdmin();
 
         runAsyncTest<void>([this](auto promise) {
             drogon::app().getLoop()->queueInLoop([this, promise]() {
                 controller.getOneAdmin(*reqPtr, getOneAdminCallback(promise), "1");
+            });
+        }).get();
+    }
+
+    void testDeleteItems() {
+        Json::Value deletedValues;
+        Json::Value items = Json::arrayValue;
+        items.append(1);
+        items.append(2);
+        deletedValues["items"] = items;
+        req->setBody(deletedValues.toStyledString());
+
+        runAsyncTest<void>([this](auto promise) {
+            drogon::app().getLoop()->queueInLoop([this, promise]() {
+                const auto dbClient = drogon::app().getFastDbClient("default");
+                *dbClient << "BEGIN";
+
+                controller.deleteItems(*reqPtr, deleteItemCallback(promise, dbClient));
+            });
+        }).get();
+    }
+
+    void testCreateItems() {
+        Json::Value data;
+        Json::Value items = Json::arrayValue;
+        setupExpectedValues();
+        items.append(expectedValues);
+        data["items"] = items;
+        req->setBody(data.toStyledString());
+
+        runAsyncTest<void>([this](auto promise) {
+            drogon::app().getLoop()->queueInLoop([this, promise]() {
+                const auto dbClient = drogon::app().getFastDbClient("default");
+                *dbClient << "BEGIN";
+
+                controller.createItems(*reqPtr, createItemsCallback(promise, dbClient));
+            });
+        }).get();
+    }
+
+    void testUpdateItems() {
+        Json::Value data;
+        Json::Value items = Json::arrayValue;
+        setupUpdatedValues();
+        updatedValues["id"] = 1;
+        items.append(updatedValues);
+        data["items"] = items;
+        req->setBody(data.toStyledString());
+
+        runAsyncTest<void>([this](auto promise) {
+            drogon::app().getLoop()->queueInLoop([this, promise]() {
+                const auto dbClient = drogon::app().getFastDbClient("default");
+                *dbClient << "BEGIN";
+
+                controller.updateItems(*reqPtr, updateItemsCallback(promise, dbClient));
             });
         }).get();
     }

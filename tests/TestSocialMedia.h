@@ -72,13 +72,25 @@ TEST_F(SocialMediaControllerTest, Update200) {
 }
 
 TEST_F(SocialMediaControllerTest, GetOne200) {
-    getOne200();
+    testGetOne200();
 }
 
 TEST_F(SocialMediaControllerTest, GetList200) {
-    getList200();
+    testGetList200();
 }
 
 TEST_F(SocialMediaControllerTest, GetOne404) {
-    getOne404();
+    testGetOne404();
+}
+
+TEST_F(SocialMediaControllerTest, testDeleteItems) {
+    testDeleteItems();
+}
+
+TEST_F(SocialMediaControllerTest, testCreateItems) {
+    testCreateItems();
+}
+
+TEST_F(SocialMediaControllerTest, testUpdateItems) {
+    testUpdateItems();
 }

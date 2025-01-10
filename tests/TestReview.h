@@ -76,13 +76,25 @@ TEST_F(ReviewControllerTest, Update200) {
 }
 
 TEST_F(ReviewControllerTest, GetOne200) {
-    getOne200();
+    testGetOne200();
 }
 
 TEST_F(ReviewControllerTest, GetList200) {
-    getList200();
+    testGetList200();
 }
 
 TEST_F(ReviewControllerTest, GetOne404) {
-    getOne404();
+    testGetOne404();
+}
+
+TEST_F(ReviewControllerTest, testDeleteItems) {
+    testDeleteItems();
+}
+
+TEST_F(ReviewControllerTest, testCreateItems) {
+    testCreateItems();
+}
+
+TEST_F(ReviewControllerTest, testUpdateItems) {
+    testUpdateItems();
 }

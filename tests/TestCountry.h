@@ -66,13 +66,25 @@ TEST_F(CountryControllerTest, Update200) {
 }
 
 TEST_F(CountryControllerTest, GetOne200) {
-    getOne200();
+    testGetOne200();
 }
 
 TEST_F(CountryControllerTest, GetList200) {
-    getList200();
+    testGetList200();
 }
 
 TEST_F(CountryControllerTest, GetOne404) {
-    getOne404();
+    testGetOne404();
+}
+
+TEST_F(CountryControllerTest, testDeleteItems) {
+    testDeleteItems();
+}
+
+TEST_F(CountryControllerTest, testCreateItems) {
+    testCreateItems();
+}
+
+TEST_F(CountryControllerTest, testUpdateItems) {
+    testUpdateItems();
 }

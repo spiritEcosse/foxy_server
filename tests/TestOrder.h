@@ -301,17 +301,29 @@ TEST_F(OrderControllerTest, Update200) {
 }
 
 TEST_F(OrderControllerTest, GetOne200) {
-    getOne200();
+    testGetOne200();
 }
 
 TEST_F(OrderControllerTest, GetList200) {
-    getList200();
+    testGetList200();
 }
 
 TEST_F(OrderControllerTest, GetOne404) {
-    getOne404();
+    testGetOne404();
 }
 
 TEST_F(OrderControllerTest, GetOneAdmin200) {
-    getOneAdmin200();
+    testGetOneAdmin200();
+}
+
+TEST_F(OrderControllerTest, testDeleteItems) {
+    testDeleteItems();
+}
+
+TEST_F(OrderControllerTest, testCreateItems) {
+    testCreateItems();
+}
+
+TEST_F(OrderControllerTest, testUpdateItems) {
+    testUpdateItems();
 }

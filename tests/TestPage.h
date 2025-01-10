@@ -91,13 +91,25 @@ TEST_F(PageControllerTest, Update200) {
 }
 
 TEST_F(PageControllerTest, GetOne200) {
-    getOne200();
+    testGetOne200();
 }
 
 TEST_F(PageControllerTest, GetList200) {
-    getList200();
+    testGetList200();
 }
 
 TEST_F(PageControllerTest, GetOne404) {
-    getOne404();
+    testGetOne404();
+}
+
+TEST_F(PageControllerTest, testDeleteItems) {
+    testDeleteItems();
+}
+
+TEST_F(PageControllerTest, testCreateItems) {
+    testCreateItems();
+}
+
+TEST_F(PageControllerTest, testUpdateItems) {
+    testUpdateItems();
 }

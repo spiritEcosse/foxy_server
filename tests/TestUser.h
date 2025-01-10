@@ -82,13 +82,25 @@ TEST_F(UserControllerTest, Update200) {
 }
 
 TEST_F(UserControllerTest, GetOne200) {
-    getOne200();
+    testGetOne200();
 }
 
 TEST_F(UserControllerTest, GetList200) {
-    getList200();
+    testGetList200();
 }
 
 TEST_F(UserControllerTest, GetOne404) {
-    getOne404();
+    testGetOne404();
+}
+
+TEST_F(UserControllerTest, testDeleteItems) {
+    testDeleteItems();
+}
+
+TEST_F(UserControllerTest, testCreateItems) {
+    testCreateItems();
+}
+
+TEST_F(UserControllerTest, testUpdateItems) {
+    testUpdateItems();
 }

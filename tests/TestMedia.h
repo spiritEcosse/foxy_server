@@ -81,13 +81,25 @@ TEST_F(MediaControllerTest, Update200) {
 }
 
 TEST_F(MediaControllerTest, GetOne200) {
-    getOne200();
+    testGetOne200();
 }
 
 TEST_F(MediaControllerTest, GetList200) {
-    getList200();
+    testGetList200();
 }
 
 TEST_F(MediaControllerTest, GetOne404) {
-    getOne404();
+    testGetOne404();
+}
+
+TEST_F(MediaControllerTest, testDeleteItems) {
+    testDeleteItems();
+}
+
+TEST_F(MediaControllerTest, testCreateItems) {
+    testCreateItems();
+}
+
+TEST_F(MediaControllerTest, testUpdateItems) {
+    testUpdateItems();
 }

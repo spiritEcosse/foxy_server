@@ -79,13 +79,25 @@ TEST_F(ShippingProfileControllerTest, Update200) {
 }
 
 TEST_F(ShippingProfileControllerTest, GetOne200) {
-    getOne200();
+    testGetOne200();
 }
 
 TEST_F(ShippingProfileControllerTest, GetList200) {
-    getList200();
+    testGetList200();
 }
 
 TEST_F(ShippingProfileControllerTest, GetOne404) {
-    getOne404();
+    testGetOne404();
+}
+
+TEST_F(ShippingProfileControllerTest, testDeleteItems) {
+    testDeleteItems();
+}
+
+TEST_F(ShippingProfileControllerTest, testCreateItems) {
+    testCreateItems();
+}
+
+TEST_F(ShippingProfileControllerTest, testUpdateItems) {
+    testUpdateItems();
 }

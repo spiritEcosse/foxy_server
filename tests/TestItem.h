@@ -128,17 +128,29 @@ TEST_F(ItemControllerTest, Update200) {
 }
 
 TEST_F(ItemControllerTest, GetOne200) {
-    getOne200();
+    testGetOne200();
 }
 
 TEST_F(ItemControllerTest, GetList200) {
-    getList200();
+    testGetList200();
 }
 
 TEST_F(ItemControllerTest, GetOne404) {
-    getOne404();
+    testGetOne404();
 }
 
 TEST_F(ItemControllerTest, GetOneAdmin200) {
-    getOneAdmin200();
+    testGetOneAdmin200();
+}
+
+TEST_F(ItemControllerTest, testDeleteItems) {
+    testDeleteItems();
+}
+
+TEST_F(ItemControllerTest, testCreateItems) {
+    testCreateItems();
+}
+
+TEST_F(ItemControllerTest, testUpdateItems) {
+    testUpdateItems();
 }

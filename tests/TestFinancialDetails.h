@@ -82,13 +82,25 @@ TEST_F(FinancialDetailsControllerTest, Update200) {
 }
 
 TEST_F(FinancialDetailsControllerTest, GetOne200) {
-    getOne200();
+    testGetOne200();
 }
 
 TEST_F(FinancialDetailsControllerTest, GetList200) {
-    getList200();
+    testGetList200();
 }
 
 TEST_F(FinancialDetailsControllerTest, GetOne404) {
-    getOne404();
+    testGetOne404();
+}
+
+TEST_F(FinancialDetailsControllerTest, testDeleteItems) {
+    testDeleteItems();
+}
+
+TEST_F(FinancialDetailsControllerTest, testCreateItems) {
+    testCreateItems();
+}
+
+TEST_F(FinancialDetailsControllerTest, testUpdateItems) {
+    testUpdateItems();
 }
