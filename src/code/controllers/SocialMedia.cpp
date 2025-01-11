@@ -109,7 +109,6 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
             std::cref(ItemModel::Field::description))
         .join(MediaModel())
         .group_by(std::cref(BaseModel<ItemModel>::Field::id))
-        .filter(BaseModel<ItemModel>::Field::id.getFullFieldName(), std::string("93"))
         .functions(Function(fmt::format(", json_agg("
                                         "json_build_object('type', {0}, 'url', CASE "
                                         "WHEN {0}::text LIKE 'video' THEN format_src({1}, '{3}') "
