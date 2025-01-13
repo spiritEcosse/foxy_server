@@ -1,6 +1,8 @@
 #include "drogon/drogon.h"
 #include "env.h"
+#if defined(SENTRY_DSN)
 #include <sentry.h>
+#endif
 #include <fmt/format.h>
 #include "sentryHelper.h"
 #include "backward-cpp/backward.hpp"
@@ -24,58 +26,21 @@ int main() {
     std::signal(SIGTRAP, handleSignal);
 
     try {
-        std::string env;
+#if defined(SENTRY_DSN)
+        sentry_options_t *options = sentry_options_new();
+        sentry_options_set_dsn(options, SENTRY_DSN);
+        // This is also the default-path. For further information and recommendations:
+        // https://docs.sentry.io/platforms/native/configuration/options/#database-path
+        //        sentry_options_set_database_path(options, ".sentry-native");
+        sentry_options_set_handler_path(
+            options,
+            fmt::format("{}/_deps/sentry-build/crashpad_build/handler/crashpad_handler", CMAKE_BINARY_DIR).c_str());
+        sentry_options_set_release(options, "faithfishart-server@0.0.1");
+        sentry_options_set_debug(options, 1);
+        sentry_init(options);
+#endif
 
-        if(!getenv("ENV", env)) {
-            throw std::invalid_argument("ENV is not set");
-        }
-
-        std::string sentry_dsn;
-
-        if(env != "dev") {
-            if(!getenv("SENTRY_DSN", sentry_dsn)) {
-                throw std::invalid_argument("SENTRY_DSN is not set");
-            }
-
-            sentry_options_t *options = sentry_options_new();
-            sentry_options_set_dsn(options, sentry_dsn.c_str());
-            // This is also the default-path. For further information and recommendations:
-            // https://docs.sentry.io/platforms/native/configuration/options/#database-path
-            //        sentry_options_set_database_path(options, ".sentry-native");
-            sentry_options_set_handler_path(
-                options,
-                fmt::format("{}/_deps/sentry-build/crashpad_build/handler/crashpad_handler", CMAKE_BINARY_DIR).c_str());
-            sentry_options_set_release(options, "faithfishart-server@0.0.1");
-            sentry_options_set_debug(options, 1);
-            sentry_init(options);
-        }
-
-        std::string config_app_path;
-        if(!getenv("CONFIG_APP_PATH", config_app_path)) {
-            throw std::invalid_argument("CONFIG_APP_PATH is not set");
-        }
-
-        std::string foxy_client;
-
-        if(!getenv("FOXY_CLIENT", foxy_client)) {
-            throw std::invalid_argument("FOXY_CLIENT is not set");
-        }
-
-        std::string app_bucket_host;
-        getenv("APP_BUCKET_HOST", app_bucket_host);
-        if(app_bucket_host.empty()) {
-            throw std::invalid_argument("APP_BUCKET_HOST is not set");
-        }
-
-        if(std::string app_cloud_name; !getenv("APP_CLOUD_NAME", app_cloud_name)) {
-            throw std::invalid_argument("APP_CLOUD_NAME is not set");
-        }
-
-        std::string foxy_admin;
-        if(!getenv("FOXY_ADMIN", foxy_admin)) {
-            throw std::invalid_argument("FOXY_ADMIN is not set");
-        }
-        drogon::app().loadConfigFile(config_app_path);
+        app().loadConfigFile(CONFIG_APP_PATH);
         app().registerHandler("/",
                               [](const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
                                   Json::Value json;
@@ -86,6 +51,7 @@ int main() {
                                       std::move(callback));
                                   (*callbackPtr)(resp);
                               });
+#if defined(SENTRY_DSN)
         app().registerHandler("/sentry",
                               [](const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
                                   sentryHelper("It works!", "custom");
@@ -97,6 +63,8 @@ int main() {
                                       std::move(callback));
                                   (*callbackPtr)(resp);
                               });
+#endif
+
         app().registerHandler("/test?username={name}",
                               []([[maybe_unused]] const HttpRequestPtr &req,
                                  std::function<void(const HttpResponsePtr &)> &&callback,
@@ -109,24 +77,20 @@ int main() {
                                       std::move(callback));
                                   (*callbackPtr)(resp);
                               });
-        app().registerPostHandlingAdvice([foxy_client, foxy_admin]([[maybe_unused]] const drogon::HttpRequestPtr &req,
-                                                                   const drogon::HttpResponsePtr &resp) {
+        app().registerPostHandlingAdvice([]([[maybe_unused]] const HttpRequestPtr &req, const HttpResponsePtr &resp) {
             auto origin = req->getHeader("Origin");
-            if(origin == foxy_client || origin == foxy_admin) {
+            if(origin == FOXY_CLIENT || origin == FOXY_ADMIN) {
                 resp->addHeader("Access-Control-Allow-Origin", origin);
             }
         });
         app().setThreadNum(std::thread::hardware_concurrency() + 2);
-        std::string http_port;
-        if(!getenv("FOXY_HTTP_PORT", http_port)) {
-            throw std::invalid_argument("FOXY_HTTP_PORT is not set");
-        }
-        std::string host = env == "dev" ? "127.0.0.1" : "0.0.0.0";
-        app().addListener(host, static_cast<uint16_t>(std::stoi(http_port))).run();
+        std::string host = (strcmp(ENVIRONMENT, "dev") == 0) ? "127.0.0.1" : "0.0.0.0";
+        app().addListener(std::move(host), static_cast<uint16_t>(std::stoi(FOXY_HTTP_PORT))).run();
 
-        if(env != "dev") {
-            sentry_close();
-        }
+#if defined(SENTRY_DSN)
+        sentry_close();
+#endif
+
     } catch(...) {
         backward::StackTrace st;
         st.load_here(32);  // Capture the stack trace with a maximum of 32 frames

@@ -2,8 +2,6 @@ DO
 $$
     BEGIN
 
-        --         DROP TABLE IF EXISTS "review", "order", "address", "basket_item", "basket", "user", "media", "item", "page",
---             "shipping_rate", "shipping_profile", "countries_ips", "country";
 
         CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -86,8 +84,20 @@ $$
             FOREIGN KEY (shipping_profile_id) REFERENCES shipping_profile (id) ON DELETE CASCADE
         );
 
-        CREATE TYPE social_media_type AS ENUM (
-            'Facebook', 'Twitter', 'Instagram', 'Pinterest', 'Quora', 'YouTube', 'Pinterest', 'LinkedIn', 'TikTok', 'Snapchat');
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'social_media_type') THEN
+            CREATE TYPE social_media_type AS ENUM
+                (
+                    'Facebook',
+                    'Twitter',
+                    'Instagram',
+                    'Pinterest',
+                    'Quora',
+                    'YouTube',
+                    'LinkedIn',
+                    'TikTok',
+                    'Snapchat'
+                    );
+        END IF;
 
         CREATE TABLE IF NOT EXISTS tag
         (
@@ -159,17 +169,24 @@ $$
             FOREIGN KEY (item_id) REFERENCES item (id) ON DELETE CASCADE
         );
 
-        CREATE TYPE media_type AS ENUM ('video', 'image');
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'media_type') THEN
+            CREATE TYPE media_type AS ENUM
+                (
+                    'video',
+                    'image'
+                    );
+        END IF;
 
         CREATE TABLE IF NOT EXISTS media
         (
-            id         SERIAL PRIMARY KEY,
-            src        VARCHAR(255) NOT NULL,
-            type       media_type   NOT NULL,
-            item_id    INT          NOT NULL,
-            sort       INT                   DEFAULT 1,
-            created_at TIMESTAMP    NOT NULL DEFAULT NOW(),
-            updated_at TIMESTAMP    NOT NULL DEFAULT NOW(),
+            id           SERIAL PRIMARY KEY,
+            src          VARCHAR(255) NOT NULL,
+            type         media_type   NOT NULL,
+            item_id      INT          NOT NULL,
+            sort         INT                   DEFAULT 1,
+            content_type VARCHAR(20)  NOT NULL,
+            created_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
+            updated_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
             FOREIGN KEY (item_id) REFERENCES item (id) ON DELETE CASCADE
         );
 
@@ -210,9 +227,12 @@ $$
             UNIQUE (item_id, basket_id)
         );
 
-        CREATE UNIQUE INDEX idx_basket_item_unique ON "basket_item" (item_id, basket_id);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_basket_item_unique ON "basket_item" (item_id, basket_id);
 
-        CREATE TYPE order_status_type AS ENUM ('Ordered', 'Processing', 'Shipped', 'Delivered', 'Returned', 'Cancelled', 'Refunded');
+        IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'order_status_type') THEN
+            CREATE TYPE order_status_type AS ENUM
+                ('Completed', 'Ordered', 'Processing', 'Shipped', 'Delivered', 'Returned', 'Cancelled', 'Refunded');
+        END IF;
 
         CREATE TABLE IF NOT EXISTS "order"
         (
