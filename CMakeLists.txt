@@ -6,7 +6,7 @@ cmake_policy(SET CMP0115 NEW)
 
 set(BUILD_EXAMPLES OFF)
 set(BUILD_CTL OFF)
-#set(BUILD_TESTING OFF)
+set(BUILD_TESTING OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -43,24 +43,36 @@ endif ()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty" "${CMAKE_BINARY_DIR}/_deps/cmake-scripts-src/")
 include(3rdparty)
 
+CPMAddPackage(
+        NAME cmake-scripts
+        VERSION 24.08.1
+        GITHUB_REPOSITORY StableCoder/cmake-scripts
+        GIT_TAG 24.08.1
+)
+#include(code-coverage)
+#add_code_coverage_all_targets(EXCLUDE tests/* _deps/*) # Adds the 'ccov-all' target set and sets it to exclude all files in test/ folders.
+
 # start src
-file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS src/*.cc src/*.cpp /src/*.h src/*.hpp)
+file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS src/*.*)
 add_executable(foxy_server ${RESOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
 # end src
 
-include_directories(${CMAKE_SOURCE_DIR}/src/orm)
-include_directories(${CMAKE_SOURCE_DIR}/src/utils/db)
-include_directories(${CMAKE_SOURCE_DIR}/src/utils)
-include_directories(${CMAKE_SOURCE_DIR}/src/models)
-include_directories(${CMAKE_SOURCE_DIR}/src/utils/jwt)
-include_directories(${CMAKE_SOURCE_DIR}/src/utils/exceptions)
-include_directories(${CMAKE_SOURCE_DIR}/src/utils/request)
-include_directories(${CMAKE_SOURCE_DIR}/src/controllers)
-include_directories(${CMAKE_SOURCE_DIR}/src/clients)
-include_directories(${CMAKE_SOURCE_DIR}/src/auth)
-include_directories(${CMAKE_SOURCE_DIR}/src/filters)
-include_directories(${CMAKE_SOURCE_DIR}/src/sentry_catcher)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/orm)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/utils/db)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/utils)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/models)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/utils/jwt)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/utils/exceptions)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/utils/request)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/controllers)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/clients)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/clients/models)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/auth)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/filters)
+include_directories(${CMAKE_SOURCE_DIR}/src/code/sentry_catcher)
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/envs.cmake)
 
 #Start adding libuuid
 CPMAddPackage(
@@ -79,7 +91,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${UUID_LIBRARY})
 # start drogon
 CPMAddPackage(
         NAME drogon
-        VERSION v1.9.4
+        VERSION v1.9.8
         GITHUB_REPOSITORY drogonframework/drogon
         GIT_TAG v1.9.4
         OPTIONS "BUILD_TESTING OFF"
@@ -88,15 +100,15 @@ CPMAddPackage(
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon)
 # end drogon
 
-# Start adding libcurl
+# Start adding cpr
 CPMAddPackage(
-        NAME libcurl
-        VERSION 8.8.0
-        GITHUB_REPOSITORY curl/curl
-        GIT_TAG curl-8_8_0
+        NAME cpr
+        VERSION 1.11.0
+        GITHUB_REPOSITORY libcpr/cpr
+        GIT_TAG 1.11.0
 )
-target_link_libraries(${PROJECT_NAME} PRIVATE libcurl)
-# End adding libcurl
+target_link_libraries(${PROJECT_NAME} PRIVATE cpr)
+# End adding cpr
 
 # Find zlib library
 find_library(ZLIB_LIBRARY NAMES z)
@@ -130,39 +142,43 @@ endif ()
 #target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBBFD_FOUND} ${LIBUNWIND_FOUND} ${OAUTH_FOUND})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBBFD_FOUND} ${LIBUNWIND_FOUND})
 
-# start sentry
-set(SENTRY_BACKEND crashpad)
+if (DEFINED SENTRY_DSN)
+    # start sentry
+    set(SENTRY_BACKEND crashpad)
 
-CPMAddPackage(
-        NAME sentry
-        VERSION 0.7.10
-        GITHUB_REPOSITORY getsentry/sentry-native
-        GIT_TAG 0.7.10
-        OPTIONS "SENTRY_BACKEND=${SENTRY_BACKEND}"
-)
-target_link_libraries(${PROJECT_NAME} PRIVATE sentry)
-# end sentry
+    CPMAddPackage(
+            NAME sentry
+            VERSION 0.7.10
+            GITHUB_REPOSITORY getsentry/sentry-native
+            GIT_TAG 0.7.10
+            OPTIONS "SENTRY_BACKEND=${SENTRY_BACKEND}"
+    )
+    target_link_libraries(${PROJECT_NAME} PRIVATE sentry)
+    # end sentry
+endif ()
+
+
+include(sanitizers)
+if (ENVIRONMENT STREQUAL "dev")
+    # Address + Leak sanitizers
+    add_sanitizer_support(address leak undefined)
+    target_link_libraries(${PROJECT_NAME} PRIVATE -fsanitize=address)
+
+    # Thread + Undefined Behavior sanitizers
+    #    add_sanitizer_support(thread undefined)
+
+    # Memory + Undefined Behavior sanitizers
+    #    add_sanitizer_support(memory undefined)
+endif ()
+
+#target_code_coverage(${PROJECT_NAME} AUTO ALL EXCLUDE tests/* _deps/*) # As an executable target, adds to the 'ccov' and ccov-all' targets, and the reports will exclude the non-covered.cpp file, and any files in a test/ folder.
 
 # Start Formatting
-CPMAddPackage(
-        NAME cmake-scripts
-        VERSION 23.09
-        GITHUB_REPOSITORY StableCoder/cmake-scripts
-        GIT_TAG 23.09
-)
 include(formatting)
-
-file(GLOB_RECURSE ALL_CODE_FILES ${PROJECT_SOURCE_DIR}/src/*.cc ${PROJECT_SOURCE_DIR}/src/*.cpp
-        ${PROJECT_SOURCE_DIR}/src/*.h ${PROJECT_SOURCE_DIR}/tests/*.cc
-        ${PROJECT_SOURCE_DIR}/tests/*.h)
-
-clang_format(format ${ALL_CODE_FILES})
-
+clang_format(clang-format ${RESOURCES} tests/*.*)
 file(GLOB_RECURSE CMAKE_FILES ${PROJECT_SOURCE_DIR}/src/CMakeLists.txt
         ${PROJECT_SOURCE_DIR}/tests/CMakeLists.txt)
-
 cmake_format(cmake-format ${CMAKE_FILES} CMakeLists.txt)
-
 # End Formatting
 
 # Start adding fmt
@@ -175,9 +191,24 @@ CPMAddPackage(
 target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
 # End adding fmt
 
-# Tests
-if (BUILD_TESTING)
+option(ENABLE_TESTS "Enable testing support" OFF)
+
+if (ENABLE_TESTS)
+    message(STATUS "Testing is enabled.")
+    # Start adding gtest
+    CPMAddPackage(
+            NAME googletest
+            GITHUB_REPOSITORY google/googletest
+            GIT_TAG v1.15.2
+            VERSION 1.15.2
+            OPTIONS
+            "INSTALL_GTEST OFF"
+            "gtest_force_shared_crt ON"
+    )
+    set(GTEST_PARALLEL TRUE)
+    # End adding gtest
     enable_testing()
     add_subdirectory(tests)
+else ()
+    message(STATUS "Testing is disabled.")
 endif ()
-# End Tests
