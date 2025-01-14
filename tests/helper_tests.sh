@@ -15,20 +15,19 @@ FIXTURES_SQL_FILE="../fixtures.sql"
 # Database connection parameters - replace with your actual values
 DB_NAME="foxy_tests"
 DB_USER="foxy"
-DB_PASSWORD="foxy"
+export PGPASSWORD=foxy
 if [[ -z ${DB_HOST+x} ]]; then
     DB_HOST="localhost"
+fi
+if [[ -z ${DB_PORT+x} ]]; then
+    DB_PORT="5432"
 fi
 
 # Function to execute SQL command with error handling
 execute_sql() {
     local command=$1
     echo -e "${YELLOW}Executing: $command${NC}"
-    if psql -h $DB_HOST -U $DB_USER -d $DB_NAME -c "$command"; then
-        echo -e "${GREEN}Command executed successfully${NC}"
-    else
-        echo -e "${RED}Error executing command${NC}"
-    fi
+    psql -h $DB_HOST -U $DB_USER -p $DB_PORT -d $DB_NAME -c "$command"
 }
 
 # Main script
@@ -46,25 +45,19 @@ execute_sql "$DROP_COMMAND"
 # 2. Execute helper.sql
 echo -e "\nExecuting helper.sql..."
 if [ -f "$HELPER_SQL_FILE" ]; then
-    if psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f "$HELPER_SQL_FILE"; then
-        echo -e "${GREEN}$HELPER_SQL_FILE executed successfully${NC}"
-    else
-        echo -e "${RED}Error executing $HELPER_SQL_FILE${NC}"
-    fi
+    psql -h $DB_HOST -U $DB_USER -p $DB_PORT -d $DB_NAME -f "$HELPER_SQL_FILE"
 else
     echo -e "${RED}$HELPER_SQL_FILE file not found${NC}"
+    return 1
 fi
 
 # 3. Execute fixtures.sql
 echo -e "\nExecuting fixtures.sql..."
 if [ -f "$FIXTURES_SQL_FILE" ]; then
-    if psql -h $DB_HOST -U $DB_USER -d $DB_NAME -f "$FIXTURES_SQL_FILE"; then
-        echo -e "${GREEN}$FIXTURES_SQL_FILE executed successfully${NC}"
-    else
-        echo -e "${RED}Error executing $FIXTURES_SQL_FILE${NC}"
-    fi
+    psql -h $DB_HOST -U $DB_USER -p $DB_PORT -d $DB_NAME -f "$FIXTURES_SQL_FILE"
 else
     echo -e "${RED}$FIXTURES_SQL_FILE file not found${NC}"
+    return 1
 fi
 
 echo -e "${GREEN}Database setup completed successfully${NC}"
