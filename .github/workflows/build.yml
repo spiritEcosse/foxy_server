@@ -2,10 +2,6 @@ env:
   BUILD_FOLDER: "/home/ubuntu/ubuntu_x86_64"
   SRC: "/home/ubuntu/ubuntu_x86_64_src"
   FORCE_REBUILD_IMAGE: ${{ vars.FORCE_REBUILD_IMAGE }}
-  DB_HOST: foxy_db
-  DB_NAME: foxy_tests
-  DB_USER: foxy
-  DB_PASSWORD: foxy
 
 on:
   push:
@@ -61,10 +57,6 @@ jobs:
           --health-retries=5
 
     steps:
-      - name: Run tests
-        run: |
-          psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -c "SELECT 1;"
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -107,6 +99,7 @@ jobs:
         if: steps.build_image.outputs.exists == 'true' || steps.check_image.outputs.exists == 'true'
         run: >
           docker run --rm --privileged
+          --add-host=host.docker.internal:host-gateway
           -e APP_CLOUD_NAME="${{ vars.APP_CLOUD_NAME }}"
           -e APP_BUCKET_HOST="${{ vars.APP_BUCKET_HOST }}"
           -e CMAKE_BUILD_TYPE="${{ vars.CMAKE_BUILD_TYPE }}"
@@ -133,7 +126,7 @@ jobs:
           -e KEY_PATH="${{ vars.KEY_PATH }}"
           -e CERT_PATH="${{ vars.CERT_PATH }}"
           -e BUILD_FOLDER="${{ env.BUILD_FOLDER }}"
-          -e DB_HOST="${{ env.DB_HOST }}"
+          -e DB_HOST="host.docker.internal"
           -e SRC="${{ env.SRC }}"
           -v $PWD:"${{ env.SRC }}"
           -v ~/build:"${{ env.BUILD_FOLDER }}" ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} /bin/bash -c "
