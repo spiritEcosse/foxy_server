@@ -1,8 +1,11 @@
 FROM ubuntu:22.04
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl sudo ca-certificates && \
+    apt-get install -y --no-install-recommends curl sudo ca-certificates tzdata && \
     rm -rf /var/lib/apt/lists/*
+
+ENV TZ=UTC
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 ARG LLVM_TAG
 
