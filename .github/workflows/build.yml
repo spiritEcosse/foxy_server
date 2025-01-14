@@ -2,6 +2,7 @@ env:
   BUILD_FOLDER: "/home/ubuntu/ubuntu_x86_64"
   SRC: "/home/ubuntu/ubuntu_x86_64_src"
   FORCE_REBUILD_IMAGE: ${{ vars.FORCE_REBUILD_IMAGE }}
+  DB_HOST: postgres
 
 on:
   push:
@@ -55,9 +56,6 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
-
-    env:
-      DB_HOST: postgres
 
     steps:
       - name: Checkout repository
@@ -128,6 +126,7 @@ jobs:
           -e KEY_PATH="${{ vars.KEY_PATH }}"
           -e CERT_PATH="${{ vars.CERT_PATH }}"
           -e BUILD_FOLDER="${{ env.BUILD_FOLDER }}"
+          -e DB_HOST="${{ env.DB_HOST }}"
           -e SRC="${{ env.SRC }}"
           -v $PWD:"${{ env.SRC }}"
           -v ~/build:"${{ env.BUILD_FOLDER }}" ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} /bin/bash -c "
