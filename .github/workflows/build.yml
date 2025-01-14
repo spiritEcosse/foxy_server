@@ -2,7 +2,7 @@ env:
   BUILD_FOLDER: "/home/ubuntu/ubuntu_x86_64"
   SRC: "/home/ubuntu/ubuntu_x86_64_src"
   FORCE_REBUILD_IMAGE: ${{ vars.FORCE_REBUILD_IMAGE }}
-  DB_HOST: foxy_db
+  DB_HOST: localhost
   DB_NAME: foxy_tests
   DB_USER: foxy
   DB_PASSWORD: foxy
