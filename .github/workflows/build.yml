@@ -41,6 +41,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_DB: foxy_tests
+          POSTGRES_USER: foxy
+          POSTGRES_PASSWORD: foxy
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U foxy"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

@@ -298,6 +298,10 @@ $$
         CREATE INDEX IF NOT EXISTS idx_item_updated_at ON item (updated_at);
         CREATE INDEX IF NOT EXISTS idx_item_enabled ON item (enabled);
         CREATE INDEX IF NOT EXISTS idx_order_status ON "order" (status);
+        CREATE INDEX IF NOT EXISTS idx_item_id ON social_media (item_id);
+        CREATE INDEX IF NOT EXISTS idx_item_id_media ON media (item_id);
+        CREATE INDEX IF NOT EXISTS idx_item_id_tag ON tag (item_id);
+        CREATE INDEX IF NOT EXISTS idx_item_media ON media (item_id, type);
 
         DROP TRIGGER IF EXISTS set_timestamp ON "item";
         CREATE TRIGGER set_timestamp
