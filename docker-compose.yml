@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  foxy_server:
+    build:
+      context: .
+    image: ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME:-latest}
+    environment:
+      - APP_CLOUD_NAME=${APP_CLOUD_NAME}
+      - APP_BUCKET_HOST=${APP_BUCKET_HOST}
+      - CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+      - FOXY_ADMIN=${FOXY_ADMIN}
+      - CONFIG_APP_PATH=${CONFIG_APP_PATH}
+      - FOXY_HTTP_PORT=${FOXY_HTTP_PORT}
+      - ENVIRONMENT=${ENVIRONMENT}
+      - PINTEREST_API_HOST=${PINTEREST_API_HOST}
+      - PINTEREST_ACCESS_TOKEN=${PINTEREST_ACCESS_TOKEN}
+      - PINTEREST_BOARD_ID=${PINTEREST_BOARD_ID}
+      - FOXY_CLIENT=${FOXY_CLIENT}
+      - SERVER_HOST=${SERVER_HOST}
+      - SERVER_USER=${SERVER_USER}
+      - SERVER_PASSWORD=${SERVER_PASSWORD}
+      - SERVER_PSQL_DBNAME=${SERVER_PSQL_DBNAME}
+      - SERVER_PSQL_USER=${SERVER_PSQL_USER}
+      - SERVER_PSQL_PASSWORD=${SERVER_PSQL_PASSWORD}
+      - TWITTER_ACCESS_TOKEN=${TWITTER_ACCESS_TOKEN}
+      - TWITTER_ACCESS_TOKEN_SECRET=${TWITTER_ACCESS_TOKEN_SECRET}
+      - TWITTER_API_KEY=${TWITTER_API_KEY}
+      - TWITTER_API_SECRET=${TWITTER_API_SECRET}
+      - TWITTER_BEARER_TOKEN=${TWITTER_BEARER_TOKEN}
+      - KEY_PATH=${KEY_PATH}
+      - CERT_PATH=${CERT_PATH}
+      - BUILD_FOLDER=${BUILD_FOLDER:-/home/ubuntu/ubuntu_x86_64}
+      - SRC=${SRC:-/home/ubuntu/ubuntu_x86_64_src}
+      - DB_HOST=foxy_db
+    volumes:
+      - ./:${SRC:-/home/ubuntu/ubuntu_x86_64_src}
+    depends_on:
+      foxy_db:
+        condition: service_healthy
+
+  foxy_db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_DB=foxy_tests
+      - POSTGRES_USER=foxy
+      - POSTGRES_PASSWORD=foxy
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U foxy -d foxy_tests" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
