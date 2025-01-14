@@ -1,6 +1,8 @@
 #!/bin/bash
 set -ex
 
+PS4='Line ${LINENO}: '
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -24,10 +26,8 @@ execute_sql() {
     echo -e "${YELLOW}Executing: $command${NC}"
     if psql -h $DB_HOST -U $DB_USER -d $DB_NAME -c "$command"; then
         echo -e "${GREEN}Command executed successfully${NC}"
-        return 0
     else
         echo -e "${RED}Error executing command${NC}"
-        return 1
     fi
 }
 
@@ -50,11 +50,9 @@ if [ -f "$HELPER_SQL_FILE" ]; then
         echo -e "${GREEN}$HELPER_SQL_FILE executed successfully${NC}"
     else
         echo -e "${RED}Error executing $HELPER_SQL_FILE${NC}"
-        exit 1
     fi
 else
     echo -e "${RED}$HELPER_SQL_FILE file not found${NC}"
-    exit 1
 fi
 
 # 3. Execute fixtures.sql
@@ -64,11 +62,9 @@ if [ -f "$FIXTURES_SQL_FILE" ]; then
         echo -e "${GREEN}$FIXTURES_SQL_FILE executed successfully${NC}"
     else
         echo -e "${RED}Error executing $FIXTURES_SQL_FILE${NC}"
-        exit 1
     fi
 else
     echo -e "${RED}$FIXTURES_SQL_FILE file not found${NC}"
-    exit 1
 fi
 
 echo -e "${GREEN}Database setup completed successfully${NC}"
