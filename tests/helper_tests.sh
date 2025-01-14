@@ -13,7 +13,9 @@ FIXTURES_SQL_FILE="../fixtures.sql"
 DB_NAME="foxy_tests"
 DB_USER="foxy"
 DB_PASSWORD="foxy"
-DB_HOST="localhost"
+if [[ -z ${DB_HOST+x} ]]; then
+    DB_HOST="localhost"
+fi
 
 # Function to execute SQL command with error handling
 execute_sql() {
