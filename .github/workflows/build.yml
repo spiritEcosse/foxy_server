@@ -61,6 +61,17 @@ jobs:
           --health-retries=5
 
     steps:
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          for i in {1..10}; do
+            if psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -c '\q'; then
+              echo "PostgreSQL is ready!"
+              break
+            fi
+            echo "Waiting for PostgreSQL..."
+            sleep 5
+          done
+
       - name: Run tests
         run: |
           psql -h "$DB_HOST" -U "$DB_USER" -d "$DB_NAME" -c "SELECT 1;"
