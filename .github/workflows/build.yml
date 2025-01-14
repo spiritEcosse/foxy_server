@@ -111,7 +111,6 @@ jobs:
           -e PINTEREST_ACCESS_TOKEN="${{ secrets.PINTEREST_ACCESS_TOKEN }}"
           -e PINTEREST_BOARD_ID="${{ vars.PINTEREST_BOARD_ID }}"
           -e FOXY_CLIENT="${{ vars.FOXY_CLIENT }}"
-          -e SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
           -e SERVER_HOST="${{ secrets.SERVER_HOST }}"
           -e SERVER_USER="${{ secrets.SERVER_USER }}"
           -e SERVER_PASSWORD="${{ secrets.SERVER_PASSWORD }}"
@@ -130,7 +129,7 @@ jobs:
           -e SRC="${{ env.SRC }}"
           -v $PWD:"${{ env.SRC }}"
           -v ~/build:"${{ env.BUILD_FOLDER }}" ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} /bin/bash -c "
-            curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='$CONTENT'
+          curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='$CONTENT'
           "
 
       - name: Archive build directory
