@@ -143,7 +143,7 @@ endif ()
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBBFD_FOUND} ${LIBUNWIND_FOUND})
 
 if (DEFINED SENTRY_DSN)
-    # start sentry
+    # start adding sentry
     set(SENTRY_BACKEND crashpad)
 
     CPMAddPackage(
