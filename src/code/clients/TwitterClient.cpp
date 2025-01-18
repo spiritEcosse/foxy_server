@@ -22,7 +22,7 @@ namespace api::v1 {
     bool TwitterClient::uploadMediaImage(const Tweet* tweet) const {
         // If no images, return true (no images to upload)
         if(tweet->images.empty())
-            return false;
+            return true;
 
         // Create a MultiPerform object
         cpr::MultiPerform multiplePerform;
@@ -52,7 +52,7 @@ namespace api::v1 {
     bool TwitterClient::uploadMediaVideo(const Tweet* tweet) const {
         // If no videos, return true (no videos to upload)
         if(tweet->videos.empty())
-            return false;
+            return true;
 
         cpr::MultiPerform multiplePerform;
 

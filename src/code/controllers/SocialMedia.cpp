@@ -24,6 +24,7 @@ void SocialMedia::handleRow(const auto &row) const {
     auto media = row[4].template as<Json::Value>();
     auto netsJson = row[5].template as<Json::Value>();
     auto tags = row[6].template as<Json::Value>();
+    std::cout << "id: " << itemId << std::endl;
 
     std::set<std::string, std::less<>> target = {std::string(TwitterClient::clientName),
                                                  std::string(PinterestClient::clientName)};
@@ -49,12 +50,12 @@ void SocialMedia::handleRow(const auto &row) const {
         return diffNets.contains(TwitterClient::clientName) &&
                Tweet(itemId, title, slug, "", clientDownloadMedia.media, tags).post();
     });
-    std::future<bool> pinPost = std::async(std::launch::async, [&]() {
-        return diffNets.contains(PinterestClient::clientName) &&
-               Pin(itemId, title, slug, description, clientDownloadMedia.media, tags).post();
-    });
+    // std::future<bool> pinPost = std::async(std::launch::async, [&]() {
+    //     return diffNets.contains(PinterestClient::clientName) &&
+    //            Pin(itemId, title, slug, description, clientDownloadMedia.media, tags).post();
+    // });
     tweetPost.get();
-    pinPost.get();
+    // pinPost.get();
 }
 
 void SocialMedia::handleSqlResultPublish(const drogon::orm::Result &r) const {
@@ -108,8 +109,13 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
             std::cref(ItemModel::Field::slug),
             std::cref(ItemModel::Field::description))
         .join(MediaModel())
+        .left_join(SocialMediaModel())
+        .filter(BaseModel<SocialMediaModel>::Field::id.getFullFieldName(),
+                std::string("NULL"),
+                false,
+                std::string("IS"))
         .group_by(std::cref(BaseModel<ItemModel>::Field::id))
-        .functions(Function(fmt::format(", json_agg("
+        .functions(Function(fmt::format("json_agg("
                                         "json_build_object('type', {0}, 'url', CASE "
                                         "WHEN {0}::text LIKE 'video' THEN format_src({1}, '{3}') "
                                         "ELSE format_src({1}, '{2}') "

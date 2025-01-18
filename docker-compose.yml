@@ -16,6 +16,7 @@ services:
       - PINTEREST_API_HOST=${PINTEREST_API_HOST}
       - PINTEREST_ACCESS_TOKEN=${PINTEREST_ACCESS_TOKEN}
       - PINTEREST_BOARD_ID=${PINTEREST_BOARD_ID}
+      - SENTRY_DSN=${SENTRY_DSN}
       - FOXY_CLIENT=${FOXY_CLIENT}
       - SERVER_HOST=${SERVER_HOST}
       - SERVER_USER=${SERVER_USER}
@@ -35,6 +36,7 @@ services:
       - DB_HOST=foxy_db
     volumes:
       - ./:${SRC:-/home/ubuntu/ubuntu_x86_64_src}
+      - build_data:${BUILD_FOLDER:-/home/ubuntu/ubuntu_x86_64}
     depends_on:
       foxy_db:
         condition: service_healthy
@@ -53,3 +55,5 @@ services:
       timeout: 5s
       retries: 5
 
+volumes:
+  build_data:
