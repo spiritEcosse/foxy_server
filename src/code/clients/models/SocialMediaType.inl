@@ -3,6 +3,7 @@
 #include "PinterestClient.h"  // must be because of it : ClientType::clientName
 #include "SocialMediaModel.h"
 #include "TwitterClient.h"  // must be because of it : ClientType::clientName
+#include "YouTubeClient.h"  // must be because of it : ClientType::clientName
 #include "sentryHelper.h"
 #include "env.h"
 #include <ranges>

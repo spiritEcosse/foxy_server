@@ -10,6 +10,8 @@
 #include "Pin.h"
 #include "Tweet.h"
 #include "MastodonClient.h"
+#include "YouTube.h"
+
 #include <execution>
 
 #include <string>
@@ -46,15 +48,21 @@ void SocialMedia::handleRow(const auto &row) const {
     if(!clientDownloadMedia.downloadMedia())
         return;
 
-    std::future<bool> tweetPost = std::async(std::launch::async, [&]() {
-        return diffNets.contains(TwitterClient::clientName) &&
-               Tweet(itemId, title, slug, "", clientDownloadMedia.media, tags).post();
-    });
+    // std::future<bool> tweetPost = std::async(std::launch::async, [&]() {
+    //     return diffNets.contains(TwitterClient::clientName) &&
+    //            Tweet(itemId, title, slug, "", clientDownloadMedia.media, tags).post();
+    // });
     // std::future<bool> pinPost = std::async(std::launch::async, [&]() {
     //     return diffNets.contains(PinterestClient::clientName) &&
     //            Pin(itemId, title, slug, description, clientDownloadMedia.media, tags).post();
     // });
-    tweetPost.get();
+    std::future<bool> youtubePost =
+        std::async(std::launch::async, [&diffNets, &clientDownloadMedia, itemId, &title, &slug, &description, &tags]() {
+            return diffNets.contains(PinterestClient::clientName) &&
+                   YouTube(itemId, title, slug, description, clientDownloadMedia.media, tags).post();
+        });
+    youtubePost.get();
+    // tweetPost.get();
     // pinPost.get();
 }
 

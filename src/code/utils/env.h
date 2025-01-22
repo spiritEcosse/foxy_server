@@ -8,6 +8,10 @@
 #error APP_BUCKET_HOST must be defined at compile-time
 #endif
 
+#ifndef YOUTUBE_KEY
+#error YOUTUBE_KEY must be defined at compile-time
+#endif
+
 #ifndef FOXY_CLIENT
 #error FOXY_CLIENT must be defined at compile-time
 #endif

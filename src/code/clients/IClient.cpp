@@ -2,6 +2,7 @@
 
 #include "Tweet.h"
 #include "Pin.h"
+#include "YouTube.h"
 
 namespace api::v1 {
     template<typename ClientType, typename PostType>
@@ -39,4 +40,5 @@ namespace api::v1 {
 
     template class IClient<PinterestClient, Pin>;
     template class IClient<TwitterClient, Tweet>;
+    template class IClient<YouTubeClient, YouTube>;
 }

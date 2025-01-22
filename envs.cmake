@@ -8,6 +8,7 @@ set(ENV_VARS
         APP_CLOUD_NAME
         CONFIG_APP_PATH
         ENVIRONMENT
+        YOUTUBE_KEY
         APP_BUCKET_HOST
         TWITTER_API_KEY
         TWITTER_API_SECRET
