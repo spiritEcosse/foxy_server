@@ -3,33 +3,27 @@
 
 namespace api::v1 {
     std::string YouTubeClient::auth() const {
-        return fmt::format("Bearer {}", key);
+        return fmt::format("Bearer {}", accessToken);
     }
 
     bool YouTubeClient::uploadVideo(YouTube* post) const {
-        // Prepare the video file for upload
-        // Step 1: Initiate the upload
         const auto initResponse = Post(cpr::Url{apiUploadMedia},
+                                       getHttpHeaders(),
                                        cpr::Body{post->toJson()},
                                        cpr::Parameters{{"uploadType", "resumable"}, {"part", "snippet,status"}});
-
-        // print initResponse
-        std::cout << initResponse.text << std::endl;
 
         if(!checkResponses(std::vector{initResponse}))
             return false;
 
         cpr::Url uploadUrl;
-        // Get the upload URL from the response
         if(const auto location_iter = initResponse.header.find("Location");
            location_iter != initResponse.header.end()) {
             uploadUrl = location_iter->second;
         } else {
-            std::cerr << "Location header not found.\n";
+            sentryHelper(std::runtime_error("Location header not found."), "IClientImpl::checkResponses");
             return false;
         }
 
-        // Step 2: Upload the video file
         const auto uploadResponse =
             Put(cpr::Url{uploadUrl},
                 cpr::Header{{"Authorization", auth()}, {"Content-Type", post->video->getContentType()}},

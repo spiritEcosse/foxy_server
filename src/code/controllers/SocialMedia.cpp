@@ -118,6 +118,7 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
             std::cref(ItemModel::Field::description))
         .join(MediaModel())
         .left_join(SocialMediaModel())
+        .filter(BaseModel<ItemModel>::Field::id.getFullFieldName(), std::string("93"))
         .filter(BaseModel<SocialMediaModel>::Field::id.getFullFieldName(),
                 std::string("NULL"),
                 false,
