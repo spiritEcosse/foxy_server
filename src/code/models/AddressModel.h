@@ -18,11 +18,8 @@ namespace api::v1 {
             static inline const auto countryId = BaseField("country_id", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(address.getFieldName(), std::cref(address));
-                allFields.try_emplace(city.getFieldName(), std::cref(city));
-                allFields.try_emplace(zipcode.getFieldName(), std::cref(zipcode));
-                allFields.try_emplace(userId.getFieldName(), std::cref(userId));
-                allFields.try_emplace(countryId.getFieldName(), std::cref(countryId));
+                constexpr std::array fields{&address, &city, &zipcode, &userId, &countryId};
+                registerFields(fields);
             }
         };
 
@@ -50,6 +47,6 @@ namespace api::v1 {
         [[nodiscard]] static std::string
         sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params);
         [[nodiscard]] std::string fieldsJsonObject() override;
-        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
+        [[nodiscard]] JoinMap joinMap() const override;
     };
 }

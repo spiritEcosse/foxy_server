@@ -3,15 +3,12 @@
 
 using namespace api::v1;
 
-std::map<std::string, std::pair<std::string, std::string>, std::less<>> SocialMediaModel::joinMap() const {
-    return {
-        {ItemModel::tableName, {Field::itemId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName()}}};
+BaseModelImpl::JoinMap SocialMediaModel::joinMap() const {
+    return {{ItemModel::tableName, {&Field::itemId, &BaseModel<ItemModel>::Field::id}}};
 }
 
 BaseModel<SocialMediaModel>::SetMapFieldTypes SocialMediaModel::getObjectValues() const {
-    return {{std::cref(Field::title), title},
-            {std::cref(Field::externalId), externalId},
-            {std::cref(Field::itemId), itemId}};
+    return {{&Field::title, title}, {&Field::externalId, externalId}, {&Field::itemId, itemId}};
 }
 
 std::string SocialMediaModel::fieldsJsonObject() {
@@ -31,7 +28,7 @@ std::string SocialMediaModel::sqlSelectList(const int page,
     qs.join(SocialMediaModel())
         .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
         .only(allSetFields())
-        .order_by(std::make_pair(std::cref(BaseModel::Field::updatedAt), false))
+        .order_by(std::make_pair(&BaseModel::Field::updatedAt, false))
         .functions(Function(fmt::format("format_social_url({}, {}::TEXT) as social_url",
                                         Field::externalId.getFullFieldName(),
                                         Field::title.getFullFieldName())));

@@ -18,9 +18,8 @@ namespace api::v1 {
             static inline const auto itemId = BaseField("item_id", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(title.getFieldName(), std::cref(title));
-                allFields.try_emplace(socialMedia.getFieldName(), std::cref(socialMedia));
-                allFields.try_emplace(itemId.getFieldName(), std::cref(itemId));
+                constexpr std::array fields{&title, &socialMedia, &itemId};
+                registerFields(fields);
             }
         };
 
@@ -43,6 +42,6 @@ namespace api::v1 {
         }
 
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
-        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
+        [[nodiscard]] JoinMap joinMap() const override;
     };
 }

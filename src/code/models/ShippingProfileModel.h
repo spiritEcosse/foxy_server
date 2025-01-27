@@ -21,11 +21,8 @@ namespace api::v1 {
             static inline const auto shippingUpgradeCost = BaseField("shipping_upgrade_cost", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(title.getFieldName(), std::cref(title));
-                allFields.try_emplace(processingTime.getFieldName(), std::cref(processingTime));
-                allFields.try_emplace(countryId.getFieldName(), std::cref(countryId));
-                allFields.try_emplace(postalCode.getFieldName(), std::cref(postalCode));
-                allFields.try_emplace(shippingUpgradeCost.getFieldName(), std::cref(shippingUpgradeCost));
+                constexpr std::array fields{&title, &processingTime, &countryId, &postalCode, &shippingUpgradeCost};
+                registerFields(fields);
             }
         };
 
@@ -49,6 +46,6 @@ namespace api::v1 {
         }
 
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
-        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
+        [[nodiscard]] JoinMap joinMap() const override;
     };
 }

@@ -21,12 +21,8 @@ namespace api::v1 {
             static inline const auto isAdmin = BaseField("is_admin", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(email.getFieldName(), std::cref(email));
-                allFields.try_emplace(firstName.getFieldName(), std::cref(firstName));
-                allFields.try_emplace(lastName.getFieldName(), std::cref(lastName));
-                allFields.try_emplace(birthday.getFieldName(), std::cref(birthday));
-                allFields.try_emplace(hasNewsletter.getFieldName(), std::cref(hasNewsletter));
-                allFields.try_emplace(isAdmin.getFieldName(), std::cref(isAdmin));
+                constexpr std::array fields{&email, &firstName, &lastName, &birthday, &hasNewsletter, &isAdmin};
+                registerFields(fields);
             }
         };
 
@@ -69,6 +65,6 @@ namespace api::v1 {
 
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
         [[nodiscard]] std::string sqlGetOrCreateUser();
-        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
+        [[nodiscard]] JoinMap joinMap() const override;
     };
 }

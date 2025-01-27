@@ -6,12 +6,21 @@
 #include <chrono>
 #include "decimal.h"
 #include "QuerySet.h"
+#include "TransparentStringHash.h"
+
+#include <unordered_map>
 
 namespace api::v1 {
 
     class BaseModelImpl : public BaseClass {
     public:
         using BaseClass::BaseClass;
+        using AllFields =
+            decltype(std::unordered_map<std::string, const BaseField *, TransparentStringHash, std::equal_to<>>());
+        using JoinMap = decltype(std::unordered_map<std::string,
+                                                    std::pair<const BaseClass *, const BaseClass *>,
+                                                    TransparentStringHash,
+                                                    std::equal_to<>>());
 
     protected:
         struct ModelFieldHasher {
@@ -20,7 +29,7 @@ namespace api::v1 {
 
         template<class V>
         void validateField(const std::string &fieldName, const V &value, Json::Value &fields) const;
-        [[nodiscard]] virtual std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const;
+        [[nodiscard]] virtual JoinMap joinMap() const;
         [[nodiscard]] static std::string timePointToString(std::chrono::system_clock::time_point tp);
     };
 

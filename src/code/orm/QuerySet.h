@@ -7,29 +7,36 @@
 #include "StringUtils.h"
 #include "BaseField.h"
 #include "Function.h"
+#include "WhereClause.h"
+#include <ranges>
 #include <fmt/core.h>
-#include <trantor/utils/Logger.h>
 
 namespace api::v1 {
-    using FieldOrFunction = std::variant<std::reference_wrapper<const BaseField>, Function>;
+
+    using FieldOrFunction = std::variant<const BaseField *, Function>;
 
     namespace detail {
+        // Primary template
         template<typename T>
-        std::string getFullFieldName(const T &obj);
+        std::string getFullFieldName(const T &obj) {
+            return obj.getFullFieldName();
+        }
 
+        // Specialization for Function
         template<>
         inline std::string getFullFieldName(const Function &obj) {
             return obj.getFullFieldName();
         }
 
+        // Specialization for BaseField pointer
         template<>
-        inline std::string getFullFieldName(const std::reference_wrapper<const BaseField> &obj) {
-            return obj.get().getFullFieldName();
+        inline std::string getFullFieldName(const BaseField *const &obj) {
+            return obj->getFullFieldName();
         }
 
+        // Variant specialization
         template<>
-        inline std::string
-        getFullFieldName(const std::variant<std::reference_wrapper<const BaseField>, Function> &obj) {
+        inline std::string getFullFieldName(const std::variant<const BaseField *, Function> &obj) {
             return std::visit(
                 [](const auto &value) {
                     return getFullFieldName(value);
@@ -45,18 +52,13 @@ namespace api::v1 {
         std::vector<std::string> leftJoinCondition;
     };
 
-    struct FilterInfo {
-        std::vector<std::tuple<std::string, std::string, std::string, std::string, bool>> filters;
-        std::vector<std::tuple<std::string, std::string, std::string, std::string, bool>> groupFilters;
-    };
-
     struct OrderInfo {
-        std::vector<std::pair<std::variant<std::reference_wrapper<const BaseField>, Function>, bool>> orderFields;
+        std::vector<std::pair<std::variant<const BaseField *, Function>, bool>> orderFields;
         std::string orderBy;
     };
 
     struct DistinctInfo {
-        std::vector<std::reference_wrapper<const BaseField>> distinctFields;
+        std::vector<const BaseField *> distinctFields;
         std::string distinctOn;
     };
 
@@ -65,80 +67,43 @@ namespace api::v1 {
         using BaseClass::BaseClass;
 
         [[nodiscard]] std::string buildSelectOne() const {
-            std::string sql = "SELECT ";
-            if(_doAndCheck) {
-                sql += " do_and_check('SELECT ";
-            }
-            if(_jsonFields.empty()) {
-                const std::string only = buildOnlyFields();
-                sql += only;
-                std::string functions = buildFunctions();
-                if(!functions.empty() && !only.empty()) {
-                    functions = fmt::format(", {}", std::move(functions));
-                }
-                sql += functions;
-            } else {
-                std::string functions = buildFunctions();
-                if(!functions.empty()) {
-                    functions = fmt::format(", {}", std::move(functions));
-                }
-                sql += fmt::format(" json_build_object({} {}) ", _jsonFields, addExtraQuotes(functions));
-            }
-            sql += fmt::format(" FROM \"{}\" ", tableName);
-            sql += generateJoinSQL(joinInfo.joinTable, joinInfo.joinCondition, "INNER");
-            sql += generateJoinSQL(joinInfo.leftJoinTable, joinInfo.leftJoinCondition, "LEFT");
-            sql += filter_impl();
-            sql += " LIMIT 1 ";
-            if(_doAndCheck) {
-                sql += "')";
-            }
-            return sql;
+            return fmt::format("{}{} FROM \"{}\" {}{} LIMIT 1{}",
+                               _doAndCheck ? "SELECT do_and_check('SELECT " : "SELECT ",
+                               _jsonFields.empty()
+                                   ? fmt::format("{}{}", buildOnlyFields(), buildFunctions())
+                                   : fmt::format("json_build_object({} {})", _jsonFields, buildFunctions()),
+                               tableName,
+                               generateJoinSQL(joinInfo.joinTable, joinInfo.joinCondition, "INNER"),
+                               fmt::format("{}{}",
+                                           generateJoinSQL(joinInfo.leftJoinTable, joinInfo.leftJoinCondition, "LEFT"),
+                                           filter_impl()),
+                               _doAndCheck ? "')" : "");
         }
 
         [[nodiscard]] std::string buildSelect() const {
-            if(_one) {
+            if(_one)
                 return buildSelectOne();
-            }
-            std::string sql;
-            sql += " SELECT ";
 
-            if(!distinctInfo.distinctFields.empty()) {
-                sql += "DISTINCT ON (";
-                for(const auto &field: distinctInfo.distinctFields) {
-                    sql += field.get().getFullFieldName() + ",";
-                }
-                sql.pop_back();
-                sql += ") ";
-            }
-            const std::string only = buildOnlyFields();
-            sql += only;
-            std::string functions = buildFunctions();
-            if(!functions.empty() && !only.empty()) {
-                functions = fmt::format(", {}", std::move(functions));
-            }
-            sql += functions;
-            sql += fmt::format(" FROM \"{}\" ", tableName);
-            sql += generateJoinSQL(joinInfo.joinTable, joinInfo.joinCondition, "INNER");
-            sql += generateJoinSQL(joinInfo.leftJoinTable, joinInfo.leftJoinCondition, "LEFT");
-            sql += filter_impl();
-            sql += generateGroupBySQL(groupByFields);
-            if(!orderInfo.orderFields.empty()) {
-                sql += " ORDER BY ";
-                for(const auto &[field, asc]: orderInfo.orderFields) {
-                    sql += fmt::format("{} {}", detail::getFullFieldName(field), asc ? "ASC" : "DESC") + ",";
-                }
-                sql.pop_back();  // Remove the last comma
-            }
-            sql += limit_impl();
-            return sql;
+            return fmt::format("{} SELECT {} {} {} FROM \"{}\" {} {} {} {} {} {}",
+                               buildOtherQueries(),
+                               createDistinctClause(),
+                               buildOnlyFields(),
+                               buildFunctions(),
+                               tableName,
+                               generateJoinSQL(joinInfo.joinTable, joinInfo.joinCondition, "INNER"),
+                               generateJoinSQL(joinInfo.leftJoinTable, joinInfo.leftJoinCondition, "LEFT"),
+                               filter_impl(),
+                               generateGroupBySQL(),
+                               buildOrderFields(),
+                               limit_impl());
         }
 
         explicit BaseQuerySet(const std::string_view &tableName,
                               int limit,
                               std::string alias,
-                              bool returnInMain = true) :
-            tableName(tableName), _limit(limit), _alias(std::move(alias)), _doAndCheck(false),
-            _returnInMain(returnInMain) {}
+                              bool returnInMain = true,
+                              const bool join = false) :
+            tableName(tableName), _limit(limit), _alias(std::move(alias)), _returnInMain(returnInMain), _join(join) {}
 
         explicit BaseQuerySet(const std::string_view &tableName,
                               const std::string_view &alias,
@@ -147,20 +112,22 @@ namespace api::v1 {
             tableName(tableName), _alias(alias), _one(true), _doAndCheck(doAndCheck), _returnInMain(returnInMain) {}
 
         std::string tableName;
-        FilterInfo filterInfo;
+        std::vector<WhereClause> filters;
         JoinInfo joinInfo;
         OrderInfo orderInfo;
         DistinctInfo distinctInfo;
         std::string _jsonFields;
-        std::vector<std::reference_wrapper<const BaseField>> onlyFields;
+        std::vector<const BaseField *> onlyFields;
         std::vector<Function> functionsSet;
-        std::vector<std::reference_wrapper<const BaseField>> groupByFields;
+        std::vector<BaseQuerySet> otherQueries;
+        std::vector<const BaseField *> groupByFields;
         int _limit{};
-        std::string _offset;
+        int _offset{};
         std::string _alias;
         bool _one{};
         bool _doAndCheck{};
         bool _returnInMain{};
+        bool _join{};
 
         template<typename T>
         void group_by_impl(const T &t) {
@@ -197,12 +164,35 @@ namespace api::v1 {
         }
 
         [[nodiscard]] std::string buildOnlyFields() const {
-            std::string sql;
+            return format("{}",
+                          fmt::join(onlyFields | std::views::transform([](const auto &field) {
+                                        return field->getFullFieldName();
+                                    }),
+                                    ", "));
+        }
 
-            for(const auto &field: onlyFields) {
-                sql += fmt::format("{}, ", field.get().getFullFieldName());
+        [[nodiscard]] std::string buildOrderFields() const {
+            if(orderInfo.orderFields.empty()) {
+                return "";
             }
-            return removeLastComma(sql);
+            return format(" ORDER BY {}",
+                          fmt::join(orderInfo.orderFields | std::views::transform([](const auto &pair) {
+                                        return fmt::format("{} {}",
+                                                           detail::getFullFieldName(pair.first),
+                                                           pair.second ? "ASC" : "DESC");
+                                    }),
+                                    ", "));
+        }
+
+        [[nodiscard]] std::string createDistinctClause() const {
+            if(distinctInfo.distinctFields.empty()) {
+                return "";
+            }
+            return format("DISTINCT ON ({}) ",
+                          fmt::join(distinctInfo.distinctFields | std::views::transform([](const auto &field) {
+                                        return field->getFullFieldName();
+                                    }),
+                                    ", "));
         }
 
         template<typename T>
@@ -250,27 +240,6 @@ namespace api::v1 {
         }
 
         template<typename T>
-        void filter_impl(T t) {
-            std::string field = std::get<0>(t);
-            std::string op = std::get<1>(t);
-            std::string value = std::get<2>(t);
-            bool escape = std::get<3>(t);
-            std::string conjunction = std::get<4>(t);
-            filterInfo.filters.emplace_back(field, op, value, conjunction, escape);
-        }
-
-        template<typename T, typename... Args>
-        void filter_impl(T t, Args... args) {
-            std::string field = std::get<0>(t);
-            std::string op = std::get<1>(t);
-            std::string value = std::get<2>(t);
-            bool escape = std::get<3>(t);
-            std::string conjunction = std::get<4>(t);
-            filterInfo.filters.emplace_back(field, op, value, conjunction, escape);
-            filter_impl(args...);
-        }
-
-        template<typename T>
         void order_by_impl(const T &t) {
             orderInfo.orderFields.emplace_back(t.first, t.second);
         }
@@ -310,70 +279,63 @@ namespace api::v1 {
             return sql;
         }
 
-        static std::string generateGroupBySQL(const std::vector<std::reference_wrapper<const BaseField>> &fields) {
-            std::string sql;
-            if(!fields.empty()) {
-                sql += " GROUP BY ";
-                for(const auto &field: fields) {
-                    sql += fmt::format("{}, ", field.get().getFullFieldName());
-                }
+        [[nodiscard]] std::string generateGroupBySQL() const {
+            if(groupByFields.empty()) {
+                return "";
             }
-            return removeLastComma(sql);
+
+            return format("GROUP BY {}",
+                          fmt::join(groupByFields | std::views::transform([](const auto &field) {
+                                        return field->getFullFieldName();
+                                    }),
+                                    ", "));
+        }
+
+        [[nodiscard]] std::string buildOtherQueries() const {
+            if(otherQueries.empty()) {
+                return "";
+            }
+
+            return format("WITH {}",
+                          fmt::join(otherQueries | std::views::transform([](const auto &query) {
+                                        return fmt::format("{} AS ({})", query.buildSelect(), query._alias);
+                                    }),
+                                    ", "));
         }
 
         [[nodiscard]] std::string buildFunctions() const {
-            std::string sql;
-            for(const auto &function: functionsSet) {
-                sql += fmt::format("{}, ", function.toStr());
+            if(functionsSet.empty()) {
+                return "";
             }
-            return removeLastComma(sql);
+
+            return format("{}{}",
+                          onlyFields.empty() && _jsonFields.empty() ? "" : ", ",
+                          fmt::join(functionsSet | std::views::transform([](const auto &function) {
+                                        return function.toStr();
+                                    }),
+                                    ", "));
         }
 
         [[nodiscard]] std::string limit_impl() const {
-            std::string sql;
-            if(_limit) {
-                sql += fmt::format(" LIMIT {}", std::to_string(_limit));
-                if(!_offset.empty()) {
-                    sql += fmt::format(" OFFSET {}", _offset);
-                }
+            if(!_limit) {
+                return "";
             }
-            return sql;
+
+            return _offset ? fmt::format(" LIMIT {} OFFSET {}", _limit, _offset) : fmt::format(" LIMIT {}", _limit);
         }
 
         [[nodiscard]] std::string filter_impl() const {
-            if(filterInfo.filters.empty()) {
+            if(filters.empty()) {
                 return "";
             }
-            std::string query = " WHERE ";
 
-            if(!filterInfo.groupFilters.empty())
-                query += " ( ";
-            for(const auto &[field, op, value, conjunction, escape]: filterInfo.groupFilters) {
-                if(escape) {
-                    query += fmt::format(" {} {} '{}' {} ", field, op, value, conjunction);
-                } else {
-                    query += fmt::format(" {} {} {} {} ", field, op, value, conjunction);
-                }
-            }
-            if(!filterInfo.groupFilters.empty()) {
-                query += " ) ";
-                if(!filterInfo.filters.empty()) {
-                    query += " AND ";
-                }
-            }
-            for(const auto &[field, op, value, conjunction, escape]: filterInfo.filters) {
-                if(escape) {
-                    query += fmt::format(" {} {} '{}' {} ", field, op, value, conjunction);
-                } else {
-                    query += fmt::format(" {} {} {} {} ", field, op, value, conjunction);
-                }
-            }
-            query = std::string(query.substr(0, query.size() - 4));
+            auto transformed = filters | std::views::transform([](const WhereClause &filter) {
+                                   return filter.serialize();
+                               });
 
-            if(_doAndCheck) {
-                query = addExtraQuotes(query);
-            }
-            return query;
+            std::vector serialized(transformed.begin(), transformed.end());
+            std::string query = fmt::format(" WHERE {} ", fmt::join(serialized, " "));
+            return _doAndCheck ? addExtraQuotes(query) : query;
         }
 
         template<class T, bool isLeftJoin>
@@ -409,7 +371,8 @@ namespace api::v1 {
         QuerySet(const std::string_view &tableName,
                  const int limit,
                  std::string alias,
-                 const bool returnInMain = true) : BaseQuerySet(tableName, limit, std::move(alias), returnInMain) {}
+                 const bool returnInMain = true,
+                 const bool join = false) : BaseQuerySet(tableName, limit, std::move(alias), returnInMain, join) {}
 
         QuerySet(const std::string_view &tableName,
                  const std::string_view &alias,
@@ -426,40 +389,24 @@ namespace api::v1 {
             return *this;
         }
 
-        template<typename... Args>
-        QuerySet &filter(Args... args) {
-            filter_impl(args...);
-            return *this;
-        }
-
-        QuerySet &filter(const std::string &field,
-                         const std::string &value,
-                         bool escape = true,
-                         const std::string &op = "=",
-                         const std::string &conjunction = "AND") {
-            filterInfo.filters.emplace_back(field, op, value, conjunction, escape);
-            return *this;
-        }
-
-        QuerySet &filter(std::string &&field,
-                         std::string &&value,
-                         bool escape = true,
-                         std::string &&op = "=",
-                         std::string &&conjunction = "AND") {
-            filterInfo.filters.emplace_back(std::move(field),
-                                            std::move(op),
-                                            std::move(value),
-                                            std::move(conjunction),
-                                            escape);
+        QuerySet &filter(const BaseField *field, const std::string &value, const Operator op = Operator::EQUALS) {
+            filters.emplace_back(field, value, op);
             return *this;
         }
 
         QuerySet &
-        filter(const std::vector<std::tuple<std::string, std::string, std::string, bool, std::string>> &conditions) {
-            for(const auto &condition: conditions) {
-                const auto &[field, op, value, escape, conjunction] = condition;
-                filterInfo.groupFilters.emplace_back(field, op, value, conjunction, escape);
-            }
+        filter(const BaseField *field, const std::optional<bool> value, const Operator op = Operator::EQUALS) {
+            filters.emplace_back(field, value, op);
+            return *this;
+        }
+
+        QuerySet &filter(const BaseField *field1, const BaseField *field2) {
+            filters.emplace_back(field1, field2);
+            return *this;
+        }
+
+        QuerySet &filter(WhereClause whereClause) {
+            filters.push_back(std::move(whereClause));
             return *this;
         }
 
@@ -493,14 +440,14 @@ namespace api::v1 {
             return *this;
         }
 
-        QuerySet &only(const std::vector<std::reference_wrapper<const BaseField>> &fields) {
+        QuerySet &only(const std::vector<const BaseField *> &fields) {
             for(const auto &field: fields) {
                 only(field);
             }
             return *this;
         }
 
-        QuerySet &only(const std::reference_wrapper<const BaseField> &field) {
+        QuerySet &only(const BaseField *field) {
             onlyFields.emplace_back(field);
             return *this;
         }
@@ -526,12 +473,22 @@ namespace api::v1 {
             return *this;
         }
 
+        QuerySet &count(const BaseField *field) {
+            functions(Function(fmt::format("count({})::integer", field->getFullFieldName())));
+            return *this;
+        }
+
         template<typename... Args>
         static std::string buildQuery(Args &&...args) {
             std::string query = removeLastComma(fmt::format("WITH {}", addQuery_impl(args...)));
             return fmt::format(" {} SELECT json_build_object({}) as result",
                                query,
                                removeLastComma(addQueryMain_impl(std::forward<Args>(args)...)));
+        }
+
+        [[nodiscard]] QuerySet &addDynamoDbCte(QuerySet cte) {
+            otherQueries.push_back(std::move(cte));
+            return *this;
         }
     };
 }

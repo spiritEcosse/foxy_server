@@ -21,12 +21,8 @@ namespace api::v1 {
             static inline const auto enabled = BaseField("enabled", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(title.getFieldName(), std::cref(title));
-                allFields.try_emplace(description.getFieldName(), std::cref(description));
-                allFields.try_emplace(metaDescription.getFieldName(), std::cref(metaDescription));
-                allFields.try_emplace(slug.getFieldName(), std::cref(slug));
-                allFields.try_emplace(canonicalUrl.getFieldName(), std::cref(canonicalUrl));
-                allFields.try_emplace(enabled.getFieldName(), std::cref(enabled));
+                constexpr std::array fields{&title, &description, &metaDescription, &slug, &canonicalUrl, &enabled};
+                registerFields(fields);
             }
         };
 

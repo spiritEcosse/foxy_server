@@ -3,7 +3,7 @@
 #include <unordered_map>
 
 namespace api::v1 {
-    struct TransparentHasher {
+    struct TransparentStringHash {
         using is_transparent = void;  // This makes the hasher transparent (required for heterogeneous lookup)
 
         size_t operator()(std::string_view key) const noexcept {
@@ -20,5 +20,6 @@ namespace api::v1 {
         }
     };
 
-    using TransparentMap = decltype(std::unordered_map<std::string, std::string, TransparentHasher, std::equal_to<>>());
+    using TransparentMap =
+        decltype(std::unordered_map<std::string, std::string, TransparentStringHash, std::equal_to<>>());
 }

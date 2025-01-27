@@ -3,13 +3,12 @@
 
 using namespace api::v1;
 
-std::map<std::string, std::pair<std::string, std::string>, std::less<>> CountryModel::joinMap() const {
+BaseModelImpl::JoinMap CountryModel::joinMap() const {
     return {
-        {AddressModel::tableName,
-         {BaseModel::Field::id.getFullFieldName(), AddressModel::Field::countryId.getFullFieldName()}},
+        {AddressModel::tableName, {&BaseModel::Field::id, &AddressModel::Field::countryId}},
     };
 }
 
 BaseModel<CountryModel>::SetMapFieldTypes CountryModel::getObjectValues() const {
-    return {{std::cref(Field::title), title}, {std::cref(Field::code), code}};
+    return {{&Field::title, title}, {&Field::code, code}};
 }

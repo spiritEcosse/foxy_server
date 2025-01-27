@@ -19,10 +19,8 @@ namespace api::v1 {
             static inline const auto deliveryDaysMax = BaseField("delivery_days_max", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(countryId.getFieldName(), std::cref(countryId));
-                allFields.try_emplace(shippingProfileId.getFieldName(), std::cref(shippingProfileId));
-                allFields.try_emplace(deliveryDaysMin.getFieldName(), std::cref(deliveryDaysMin));
-                allFields.try_emplace(deliveryDaysMax.getFieldName(), std::cref(deliveryDaysMax));
+                constexpr std::array fields{&countryId, &shippingProfileId, &deliveryDaysMin, &deliveryDaysMax};
+                registerFields(fields);
             }
         };
 
@@ -44,7 +42,7 @@ namespace api::v1 {
 
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
         [[nodiscard]] static std::string
-        getShippingRateByItem(const std::string &field,
+        getShippingRateByItem(const BaseField *field,
                               const std::string &value,
                               const std::map<std::string, std::string, std::less<>> &params = {});
     };

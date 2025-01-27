@@ -37,16 +37,17 @@ namespace api::v1 {
             static inline const auto returned = BaseField("returned", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(status.getFieldName(), std::cref(status));
-                allFields.try_emplace(basketId.getFieldName(), std::cref(basketId));
-                allFields.try_emplace(total.getFieldName(), std::cref(total));
-                allFields.try_emplace(totalExTaxes.getFieldName(), std::cref(totalExTaxes));
-                allFields.try_emplace(taxRate.getFieldName(), std::cref(taxRate));
-                allFields.try_emplace(taxes.getFieldName(), std::cref(taxes));
-                allFields.try_emplace(userId.getFieldName(), std::cref(userId));
-                allFields.try_emplace(reference.getFieldName(), std::cref(reference));
-                allFields.try_emplace(addressId.getFieldName(), std::cref(addressId));
-                allFields.try_emplace(returned.getFieldName(), std::cref(returned));
+                constexpr std::array fields{&status,
+                                            &basketId,
+                                            &total,
+                                            &totalExTaxes,
+                                            &taxRate,
+                                            &taxes,
+                                            &userId,
+                                            &reference,
+                                            &addressId,
+                                            &returned};
+                registerFields(fields);
             }
         };
 
@@ -87,9 +88,9 @@ namespace api::v1 {
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
         [[nodiscard]] static std::string
         sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params);
-        [[nodiscard]] std::string sqlSelectOne(const std::string &field,
+        [[nodiscard]] std::string sqlSelectOne(const BaseField *field,
                                                const std::string &value,
                                                const std::map<std::string, std::string, std::less<>> &params) override;
-        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
+        [[nodiscard]] JoinMap joinMap() const override;
     };
 }

@@ -4,20 +4,19 @@
 
 using namespace api::v1;
 
-std::map<std::string, std::pair<std::string, std::string>, std::less<>> UserModel::joinMap() const {
+BaseModelImpl::JoinMap UserModel::joinMap() const {
     return {
-        {OrderModel::tableName,
-         {BaseModel::Field::id.getFullFieldName(), OrderModel::Field::userId.getFullFieldName()}},
+        {OrderModel::tableName, {&BaseModel::Field::id, &OrderModel::Field::userId}},
     };
 }
 
 BaseModel<UserModel>::SetMapFieldTypes UserModel::getObjectValues() const {
-    return {{std::cref(Field::email), email},
-            {std::cref(Field::firstName), firstName},
-            {std::cref(Field::lastName), lastName},
-            {std::cref(Field::birthday), birthday},
-            {std::cref(Field::hasNewsletter), hasNewsletter},
-            {std::cref(Field::isAdmin), isAdmin}};
+    return {{&Field::email, email},
+            {&Field::firstName, firstName},
+            {&Field::lastName, lastName},
+            {&Field::birthday, birthday},
+            {&Field::hasNewsletter, hasNewsletter},
+            {&Field::isAdmin, isAdmin}};
 }
 
 std::string UserModel::sqlGetOrCreateUser() {

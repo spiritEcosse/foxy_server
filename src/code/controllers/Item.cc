@@ -21,20 +21,20 @@ void Item::getListAdmin(const drogon::HttpRequestPtr &req,
 
     QuerySet qs(ItemModel::tableName, limit, "data");
     auto mediaSort = MediaModel::Field::sort.getFullFieldName();
-    const auto &orderByItemField = std::cref(BaseModel<ItemModel>::Field::updatedAt);
-    const auto &itemID = std::cref(BaseModel<ItemModel>::Field::id);
+    const auto &orderByItemField = &BaseModel<ItemModel>::Field::updatedAt;
+    const auto &itemID = &BaseModel<ItemModel>::Field::id;
     auto mediaItemID = MediaModel::Field::itemId.getFullFieldName();
     qs.distinct(orderByItemField, itemID)
         .left_join(MediaModel())
-        .filter(mediaSort, std::string("NULL"), false, std::string("IS"), std::string("OR"))
-        .filter(mediaSort,
-                std::string(fmt::format("(SELECT MIN({}) FROM {} WHERE {} = {})",
-                                        mediaSort,
-                                        MediaModel::tableName,
-                                        BaseModel<ItemModel>::Field::id.getFullFieldName(),
-                                        mediaItemID)),
-                false)
-        .order_by(std::make_pair(std::cref(orderByItemField), false), std::make_pair(std::cref(itemID), false))
+        // .filter(mediaSort, std::string("NULL"), false, std::string("IS"), std::string("OR"))
+        // .filter(mediaSort,
+        //         std::string(fmt::format("(SELECT MIN({}) FROM {} WHERE {} = {})",
+        //                                 mediaSort,
+        //                                 MediaModel::tableName,
+        //                                 BaseModel<ItemModel>::Field::id.getFullFieldName(),
+        //                                 mediaItemID)),
+        //         false)
+        .order_by(std::make_pair(&orderByItemField, false), std::make_pair(&itemID, false))
         .only(ItemModel::allSetFields())
         .functions(Function(fmt::format("format_src(media.src, '{}') as src", APP_CLOUD_NAME)))
         .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit));

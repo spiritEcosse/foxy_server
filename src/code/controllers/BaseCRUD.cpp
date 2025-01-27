@@ -220,9 +220,7 @@ void BaseCRUD<T, R>::getOne([[maybe_unused]] const drogon::HttpRequestPtr &req,
         return;
     }
 
-    std::string filterKey = T::Field::id.getFullFieldName();
-    const std::string query = T().sqlSelectOne(filterKey, stringId, {});
-
+    const std::string query = T().sqlSelectOne(&T::Field::id, stringId, {});
     executeSqlQuery(callbackPtr, query);
 }
 

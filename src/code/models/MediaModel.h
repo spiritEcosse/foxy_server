@@ -23,11 +23,8 @@ namespace api::v1 {
             static inline const auto contentType = BaseField("content_type", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(src.getFieldName(), std::cref(src));
-                allFields.try_emplace(itemId.getFieldName(), std::cref(itemId));
-                allFields.try_emplace(sort.getFieldName(), std::cref(sort));
-                allFields.try_emplace(type.getFieldName(), std::cref(type));
-                allFields.try_emplace(contentType.getFieldName(), std::cref(contentType));
+                constexpr std::array fields{&src, &itemId, &sort, &type, &contentType};
+                registerFields(fields);
             }
         };
 
@@ -53,7 +50,7 @@ namespace api::v1 {
 
         [[nodiscard]] std::string fieldsJsonObject() override;
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
-        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
+        [[nodiscard]] JoinMap joinMap() const override;
         [[nodiscard]] static std::string
         sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params);
     };

@@ -5,17 +5,16 @@
 
 using namespace api::v1;
 
-std::map<std::string, std::pair<std::string, std::string>, std::less<>> BasketItemModel::joinMap() const {
-    return {
-        {ItemModel::tableName, {Field::itemId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName()}},
-        {OrderModel::tableName, {Field::basketId.getFullFieldName(), OrderModel::Field::basketId.getFullFieldName()}}};
+BaseModelImpl::JoinMap BasketItemModel::joinMap() const {
+    return {{ItemModel::tableName, {&Field::itemId, &BaseModel<ItemModel>::Field::id}},
+            {OrderModel::tableName, {&Field::basketId, &OrderModel::Field::basketId}}};
 }
 
 BaseModel<BasketItemModel>::SetMapFieldTypes BasketItemModel::getObjectValues() const {
-    return {{std::cref(Field::basketId), std::cref(basketId)},
-            {std::cref(Field::itemId), std::cref(itemId)},
-            {std::cref(Field::quantity), std::cref(quantity)},
-            {std::cref(Field::price), std::cref(price)}};
+    return {{&Field::basketId, basketId},
+            {&Field::itemId, itemId},
+            {&Field::quantity, quantity},
+            {&Field::price, price}};
 }
 
 std::string BasketItemModel::sqlSelectList(const int page,
@@ -29,11 +28,8 @@ std::string BasketItemModel::sqlSelectList(const int page,
         .jsonFields(
             fmt::format("{}, 'src', format_src(media.src, '{}')", ItemModel().fieldsJsonObject(), APP_CLOUD_NAME))
         .join(MediaModel())
-        .filter(BaseModel<ItemModel>::Field::id.getFullFieldName(),
-                Field::itemId.getFullFieldName(),
-                false,
-                std::string("="))
-        .order_by(std::make_pair(std::cref(MediaModel::Field::sort), true));
+        .filter(&BaseModel<ItemModel>::Field::id, &Field::itemId)
+        .order_by(std::make_pair(&MediaModel::Field::sort, true));
 
     QuerySet qs(tableName, limit, "data");
     qs.only(allSetFields())
@@ -48,12 +44,9 @@ std::string BasketItemModel::fieldsJsonObject() {
     std::string str = BaseModel::fieldsJsonObject();
     QuerySet qs(ItemModel::tableName, "item", false, false);
     qs.jsonFields(fmt::format("{}, 'src', format_src(media.src, '{}')", ItemModel().fieldsJsonObject(), APP_CLOUD_NAME))
-        .filter(BaseModel<ItemModel>::Field::id.getFullFieldName(),
-                Field::itemId.getFullFieldName(),
-                false,
-                std::string("="))
+        .filter(&BaseModel<ItemModel>::Field::id, &Field::itemId)
         .join(MediaModel())
-        .order_by(std::make_pair(std::cref(MediaModel::Field::sort), true));
+        .order_by(std::make_pair(&MediaModel::Field::sort, true));
     std::string sql = qs.buildSelect();
     str += fmt::format(", 'item', ({})", sql);
     return str;

@@ -8,7 +8,7 @@ namespace api::v1 {
     std::string BaseModelImpl::timePointToString(std::chrono::system_clock::time_point tp) {
         auto time_t = std::chrono::system_clock::to_time_t(tp);
 
-        struct tm local_time {};
+        struct tm local_time{};
 
         localtime_r(&time_t, &local_time);
 
@@ -22,7 +22,7 @@ namespace api::v1 {
         return fmt::format("{}.{}", time_string, milliseconds.count());
     }
 
-    std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseModelImpl::joinMap() const {
+    std::map<std::string, std::pair<const BaseClass *, const BaseClass *>, std::less<>> BaseModelImpl::joinMap() const {
         return {};
     }
 

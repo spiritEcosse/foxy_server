@@ -19,11 +19,8 @@ namespace api::v1 {
             static inline const auto countryId = BaseField("country_id", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(startRange.getFieldName(), std::cref(startRange));
-                allFields.try_emplace(endRange.getFieldName(), std::cref(endRange));
-                allFields.try_emplace(countryCode.getFieldName(), std::cref(countryCode));
-                allFields.try_emplace(countryName.getFieldName(), std::cref(countryName));
-                allFields.try_emplace(countryId.getFieldName(), std::cref(countryId));
+                constexpr std::array fields{&startRange, &endRange, &countryCode, &countryName, &countryId};
+                registerFields(fields);
             }
         };
 

@@ -17,8 +17,8 @@ namespace api::v1 {
             static inline const auto inUse = BaseField("in_use", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(userId.getFieldName(), std::cref(userId));
-                allFields.try_emplace(inUse.getFieldName(), std::cref(inUse));
+                constexpr std::array fields{&userId, &inUse};
+                registerFields(fields);
             }
         };
 

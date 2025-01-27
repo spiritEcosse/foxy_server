@@ -3,16 +3,14 @@
 
 using namespace api::v1;
 
-std::map<std::string, std::pair<std::string, std::string>, std::less<>> ShippingProfileModel::joinMap() const {
-    return {
-        {ShippingRateModel::tableName,
-         {BaseModel::Field::id.getFullFieldName(), ShippingRateModel::Field::shippingProfileId.getFullFieldName()}}};
+BaseModelImpl::JoinMap ShippingProfileModel::joinMap() const {
+    return {{ShippingRateModel::tableName, {&BaseModel::Field::id, &ShippingRateModel::Field::shippingProfileId}}};
 }
 
 BaseModel<ShippingProfileModel>::SetMapFieldTypes ShippingProfileModel::getObjectValues() const {
-    return {{std::cref(Field::title), title},
-            {std::cref(Field::processingTime), processingTime},
-            {std::cref(Field::countryId), countryId},
-            {std::cref(Field::postalCode), postalCode},
-            {std::cref(Field::shippingUpgradeCost), shippingUpgradeCost}};
+    return {{&Field::title, title},
+            {&Field::processingTime, processingTime},
+            {&Field::countryId, countryId},
+            {&Field::postalCode, postalCode},
+            {&Field::shippingUpgradeCost, shippingUpgradeCost}};
 }

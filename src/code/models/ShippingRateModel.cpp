@@ -6,22 +6,13 @@
 using namespace api::v1;
 
 BaseModel<ShippingRateModel>::SetMapFieldTypes ShippingRateModel::getObjectValues() const {
-    SetMapFieldTypes baseValues = {};
-
-    if(countryId) {
-        baseValues.emplace_back(std::cref(Field::countryId), countryId);
-    } else {
-        baseValues.emplace_back(std::cref(Field::countryId), "Null");
-    }
-
-    baseValues.emplace_back(std::cref(Field::shippingProfileId), shippingProfileId);
-    baseValues.emplace_back(std::cref(Field::deliveryDaysMin), deliveryDaysMin);
-    baseValues.emplace_back(std::cref(Field::deliveryDaysMax), deliveryDaysMax);
-
-    return baseValues;
+    return {{&Field::countryId, countryId ? countryId : std::nullopt},
+            {&Field::shippingProfileId, shippingProfileId},
+            {&Field::deliveryDaysMin, deliveryDaysMin},
+            {&Field::deliveryDaysMax, deliveryDaysMax}};
 }
 
-std::string ShippingRateModel::getShippingRateByItem(const std::string &field,
+std::string ShippingRateModel::getShippingRateByItem(const BaseField *field,
                                                      const std::string &value,
                                                      const std::map<std::string, std::string, std::less<>> &params) {
     std::string app_cloud_name;
@@ -29,26 +20,19 @@ std::string ShippingRateModel::getShippingRateByItem(const std::string &field,
     const auto clientIp = it->second;
 
     QuerySet qsCountry(CountriesIpsModel::tableName, "one_country_id", false, false);
-    qsCountry
-        .filter(CountriesIpsModel::Field::startRange.getFullFieldName(),
-                clientIp,
-                true,
-                std::string("<="),
-                std::string("AND"))
-        .filter(CountriesIpsModel::Field::endRange.getFullFieldName(), clientIp, true, std::string(">="))
-        .only(std::cref(CountriesIpsModel::Field::countryId));
+    qsCountry.filter(&CountriesIpsModel::Field::startRange, clientIp, Operator::LESS_OR_EQUAL)
+        .filter(&CountriesIpsModel::Field::endRange, clientIp, Operator::GREATER_OR_EQUAL)
+        .only(&CountriesIpsModel::Field::countryId);
 
+    const auto countryIdIsNull = WhereClause(&Field::countryId, std::nullopt, Operator::IS);
+    const auto countryIdIsValue = WhereClause(
+        &Field::countryId,
+        fmt::format("(SELECT {} FROM {})", CountriesIpsModel::Field::countryId.getFieldName(), qsCountry.alias()));
     QuerySet qsShipping(tableName, "shipping", false);
     qsShipping.join(ShippingProfileModel())
         .join(ItemModel())
-        .filter(
-            {{Field::countryId.getFullFieldName(),
-              "=",
-              fmt::format("(SELECT {} FROM {})", CountriesIpsModel::Field::countryId.getFieldName(), qsCountry.alias()),
-              false,
-              "OR"},
-             {Field::countryId.getFullFieldName(), "IS", "NULL", false, ""}})
-        .filter(field, std::string(value), true, std::string("="))
+        .filter(countryIdIsNull | countryIdIsValue)
+        .filter(field, value)
         .jsonFields(fmt::format("'{0}', {1} + {2}, '{3}', {4} + {2}",
                                 Field::deliveryDaysMax.getFieldName(),
                                 Field::deliveryDaysMax.getFullFieldName(),

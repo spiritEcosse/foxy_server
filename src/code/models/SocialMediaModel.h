@@ -15,9 +15,8 @@ namespace api::v1 {
             static inline const auto itemId = BaseField("item_id", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(title.getFieldName(), std::cref(title));
-                allFields.try_emplace(externalId.getFieldName(), std::cref(externalId));
-                allFields.try_emplace(itemId.getFieldName(), std::cref(itemId));
+                constexpr std::array fields{&title, &externalId, &itemId};
+                registerFields(fields);
             }
         };
 
@@ -39,7 +38,7 @@ namespace api::v1 {
         }
 
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
-        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
+        [[nodiscard]] JoinMap joinMap() const override;
         [[nodiscard]] std::string fieldsJsonObject() override;
         [[nodiscard]] static std::string
         sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params);

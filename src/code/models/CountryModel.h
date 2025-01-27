@@ -16,8 +16,8 @@ namespace api::v1 {
             static inline const auto code = BaseField("code", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(title.getFieldName(), std::cref(title));
-                allFields.try_emplace(code.getFieldName(), std::cref(code));
+                constexpr std::array fields{&title, &code};
+                registerFields(fields);
             }
         };
 
@@ -33,6 +33,6 @@ namespace api::v1 {
         }
 
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
-        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
+        [[nodiscard]] JoinMap joinMap() const override;
     };
 }

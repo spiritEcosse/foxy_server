@@ -23,13 +23,9 @@ namespace api::v1 {
             static inline const auto price = BaseField("price", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(title.getFieldName(), std::cref(title));
-                allFields.try_emplace(description.getFieldName(), std::cref(description));
-                allFields.try_emplace(metaDescription.getFieldName(), std::cref(metaDescription));
-                allFields.try_emplace(shippingProfileId.getFieldName(), std::cref(shippingProfileId));
-                allFields.try_emplace(slug.getFieldName(), std::cref(slug));
-                allFields.try_emplace(price.getFieldName(), std::cref(price));
-                allFields.try_emplace(enabled.getFieldName(), std::cref(enabled));
+                constexpr std::array
+                    fields{&title, &description, &metaDescription, &shippingProfileId, &slug, &price, &enabled};
+                registerFields(fields);
             }
         };
 
@@ -66,9 +62,9 @@ namespace api::v1 {
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
         [[nodiscard]] static std::string
         sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params);
-        [[nodiscard]] std::string sqlSelectOne(const std::string &field,
+        [[nodiscard]] std::string sqlSelectOne(const BaseField *field,
                                                const std::string &value,
                                                const std::map<std::string, std::string, std::less<>> &params) override;
-        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
+        [[nodiscard]] JoinMap joinMap() const override;
     };
 }

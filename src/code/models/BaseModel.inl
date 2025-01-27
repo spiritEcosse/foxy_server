@@ -92,7 +92,7 @@ namespace api::v1 {
     }
 
     template<class T>
-    void BaseModel<T>::sqlUpdateSingle(const T &item, ModelFieldKeyHash &uniqueColumns) {
+    void BaseModel<T>::sqlUpdateSingle(const T &item, TransparentMap &uniqueColumns) {
         std::string sql;
 
         for(const auto &[key, value]: item.getObjectValues()) {
@@ -125,10 +125,10 @@ namespace api::v1 {
                         data = arg;
                     }
                     if(data != "Null") {
-                        uniqueColumns[key.get().getFieldName()].append(
+                        uniqueColumns[key->getFieldName()].append(
                             fmt::format(R"( WHEN {} = {} THEN '{}' )", T::Field::id.getFullFieldName(), item.id, data));
                     } else {
-                        uniqueColumns[key.get().getFieldName()].append(
+                        uniqueColumns[key->getFieldName()].append(
                             fmt::format(R"( WHEN {} = {} THEN {} )", T::Field::id.getFullFieldName(), item.id, data));
                     }
                 },
@@ -147,7 +147,7 @@ namespace api::v1 {
     std::string BaseModel<T>::sqlUpdateMultiple(const std::vector<T> &items) {
         std::string sql = fmt::format(R"(UPDATE "{}" SET )", T::tableName);
         std::string ids;
-        ModelFieldKeyHash uniqueColumns;
+        TransparentMap uniqueColumns;
 
         for(const auto &item: items) {
             sqlUpdateSingle(item, uniqueColumns);
@@ -168,15 +168,15 @@ namespace api::v1 {
     std::string BaseModel<T>::fieldsToString() {
         std::stringstream ss;
         for(const auto &[key, value]: T().getObjectValues()) {
-            ss << key.get().getFieldName() << ", ";
+            ss << key->getFieldName() << ", ";
         }
         return ss.str().substr(0, ss.str().size() - 2);
     }
 
     template<class T>
-    std::vector<std::reference_wrapper<const BaseField>> BaseModel<T>::allSetFields() {
+    std::vector<const BaseField *> BaseModel<T>::allSetFields() {
         const typename T::Field field;
-        std::vector<std::reference_wrapper<const BaseField>> fields;
+        std::vector<const BaseField *> fields;
         fields.reserve(field.allFields.size());
         for(const auto &fieldNames = field.allFields; const auto &[fieldName, baseField]: fieldNames) {
             fields.emplace_back(baseField);
@@ -194,8 +194,7 @@ namespace api::v1 {
         const auto orderIt = params.find("order");
         const auto orderValue = orderIt != params.end() ? orderIt->second : "";
         auto it = field.allFields.find(orderValue);
-        const auto &orderField =
-            (it != field.allFields.end()) ? std::cref(field.allFields.at(orderValue)) : std::cref(field.updatedAt);
+        const auto &orderField = (it != field.allFields.end()) ? &field.allFields.at(orderValue) : &field.updatedAt;
 
         const auto directionIt = params.find("direction");
         bool isAsc = directionIt != params.end() && directionIt->second == "asc";
@@ -203,7 +202,7 @@ namespace api::v1 {
         QuerySet qs(T::tableName, limit, "data");
         qs.offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
             .only(allSetFields())
-            .order_by(std::make_pair(orderField, isAsc), std::make_pair(std::cref(T::Field::id), false));
+            .order_by(std::make_pair(orderField, isAsc), std::make_pair(&T::Field::id, false));
         applyFilters(qs, qsCount, params);
         return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
     }
@@ -227,14 +226,14 @@ namespace api::v1 {
         std::string str;
         const typename T::Field field;
         for(const auto &fieldNames = field.allFields; const auto &[fieldName, baseField]: fieldNames) {
-            str += fmt::format("'{}', {}, ", fieldName, baseField.get().getFullFieldName());
+            str += fmt::format("'{}', {}, ", fieldName, baseField->getFullFieldName());
         }
         return str.substr(0, str.size() - 2);
     }
 
     template<class T>
     std::string
-    BaseModel<T>::sqlSelectOne(const std::string &field,
+    BaseModel<T>::sqlSelectOne(const BaseField *field,
                                const std::string &value,
                                [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
         QuerySet qs(T::tableName, T::tableName, true);
@@ -250,8 +249,8 @@ namespace api::v1 {
         for(const auto &[key, value]: params) {
             auto it = field.allFields.find(key);
             if(it != field.allFields.end()) {
-                qs.filter(it->second.get().getFullFieldName(), value);
-                qsCount.filter(it->second.get().getFullFieldName(), value);
+                qs.filter(it->second->getFullFieldName(), value);
+                qsCount.filter(it->second->getFullFieldName(), value);
             }
         }
     }
