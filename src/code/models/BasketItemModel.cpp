@@ -28,7 +28,7 @@ std::string BasketItemModel::sqlSelectList(const int page,
         .jsonFields(
             fmt::format("{}, 'src', format_src(media.src, '{}')", ItemModel().fieldsJsonObject(), APP_CLOUD_NAME))
         .join(MediaModel())
-        .filter(&BaseModel<ItemModel>::Field::id, &Field::itemId)
+        .join(BasketItemModel())
         .order_by(&MediaModel::Field::sort);
 
     QuerySet qs(tableName, limit, "data");
@@ -44,10 +44,8 @@ std::string BasketItemModel::fieldsJsonObject() {
     std::string str = BaseModel::fieldsJsonObject();
     QuerySet qs(ItemModel::tableName, "item", false, false);
     qs.jsonFields(fmt::format("{}, 'src', format_src(media.src, '{}')", ItemModel().fieldsJsonObject(), APP_CLOUD_NAME))
-        .filter(&BaseModel<ItemModel>::Field::id, &Field::itemId)
+        .join(BasketItemModel())
         .join(MediaModel())
         .order_by(&MediaModel::Field::sort);
-    std::string sql = qs.buildSelect();
-    str += fmt::format(", 'item', ({})", sql);
-    return str;
+    return fmt::format(", 'item', ({})", qs.buildSelect());
 }
