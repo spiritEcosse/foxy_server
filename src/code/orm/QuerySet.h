@@ -122,7 +122,7 @@ namespace api::v1 {
         std::vector<BaseQuerySet> otherQueries;
         std::vector<const BaseField *> groupByFields;
         int _limit{};
-        int _offset{};
+        std::string _offset;
         std::string _alias;
         bool _one{};
         bool _doAndCheck{};
@@ -130,14 +130,14 @@ namespace api::v1 {
         bool _join{};
 
         template<typename T>
-        void group_by_impl(const T &t) {
-            groupByFields.emplace_back(t);
+        void group_by_impl(T &&t) {
+            groupByFields.emplace_back(std::forward<T>(t));
         }
 
         template<typename T, typename... Args>
-        void group_by_impl(const T &t, Args... args) {
-            groupByFields.emplace_back(t);
-            group_by_impl(args...);
+        void group_by_impl(T &&t, Args &&...args) {
+            groupByFields.emplace_back(std::forward<T>(t));
+            group_by_impl(std::forward<Args>(args)...);
         }
 
         [[nodiscard]] std::string aliasQueryMain() const {
@@ -240,15 +240,15 @@ namespace api::v1 {
         }
 
         template<typename T>
-        void order_by_impl(const T &t) {
-            orderInfo.orderFields.emplace_back(t.first, t.second);
+        void order_by_impl(T &&field, bool ascending = true) {
+            orderInfo.orderFields.emplace_back(std::forward<T>(field), ascending);
         }
 
+        // Recursive case: handle multiple fields and their orders
         template<typename T, typename... Args>
-        void order_by_impl(const T &t, const Args &...args) {
-            orderInfo.orderFields.emplace_back(t.first, t.second);
-            // Recursively call order_by_impl with the rest of the arguments
-            order_by_impl(args...);
+        void order_by_impl(T &&field, bool ascending, Args &&...args) {
+            orderInfo.orderFields.emplace_back(std::forward<T>(field), ascending);
+            order_by_impl(std::forward<Args>(args)...);
         }
 
         template<typename T>
@@ -321,7 +321,8 @@ namespace api::v1 {
                 return "";
             }
 
-            return _offset ? fmt::format(" LIMIT {} OFFSET {}", _limit, _offset) : fmt::format(" LIMIT {}", _limit);
+            return !_offset.empty() ? fmt::format(" LIMIT {} OFFSET {}", _limit, _offset)
+                                    : fmt::format(" LIMIT {}", _limit);
         }
 
         [[nodiscard]] std::string filter_impl() const {
@@ -353,13 +354,18 @@ namespace api::v1 {
                 const auto &[joinFieldFirstTable, joinFieldSecondField] = it->second;
                 auto &joinTable = isLeftJoin ? joinInfo.leftJoinTable : joinInfo.joinTable;
                 auto &joinCondition = isLeftJoin ? joinInfo.leftJoinCondition : joinInfo.joinCondition;
+
+                // Using the proper field name accessors
+                std::string firstTableFullField = joinFieldFirstTable->getFullFieldName();
+                std::string firstTableName = joinFieldFirstTable->getTableName();
+                std::string firstFieldName = joinFieldFirstTable->getFieldName();
+
                 joinTable.emplace_back(std::move(model.tableName), alias);
-                joinCondition.emplace_back(std::move(
-                    fmt::format(R"({}.{} = {} {})",
-                                alias.empty() ? joinFieldFirstTable.substr(0, joinFieldFirstTable.find('.')) : alias,
-                                joinFieldFirstTable.substr(joinFieldFirstTable.find('.') + 1),
-                                joinFieldSecondField,
-                                std::move(addConditions))));
+                joinCondition.emplace_back(std::move(fmt::format(R"({}."{}" = {} {})",
+                                                                 alias.empty() ? firstTableName : alias,
+                                                                 firstFieldName,
+                                                                 joinFieldSecondField->getFullFieldName(),
+                                                                 std::move(addConditions))));
             }
         }
     };
@@ -384,8 +390,8 @@ namespace api::v1 {
         }
 
         template<typename... Args>
-        QuerySet &group_by(const Args &...args) {
-            group_by_impl(args...);
+        QuerySet &group_by(Args &&...args) {
+            group_by_impl(std::forward<Args>(args)...);
             return *this;
         }
 
@@ -411,8 +417,8 @@ namespace api::v1 {
         }
 
         template<typename... Args>
-        QuerySet &order_by(const Args &...args) {
-            order_by_impl(args...);
+        QuerySet &order_by(Args &&...args) {
+            order_by_impl(std::forward<Args>(args)...);
             return *this;
         }
 

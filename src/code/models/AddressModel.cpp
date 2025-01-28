@@ -26,7 +26,7 @@ namespace api::v1 {
         qs.join(CountryModel())
             .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
             .only(allSetFields())
-            .order_by(std::make_pair(&BaseModel::Field::updatedAt, false))
+            .order_by(&BaseModel::Field::updatedAt, false)
             .functions(Function(fmt::format(R"(json_build_object({}) AS country)", CountryModel().fieldsJsonObject())));
         applyFilters(qs, qsCount, params);
         return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));

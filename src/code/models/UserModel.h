@@ -29,7 +29,7 @@ namespace api::v1 {
         std::string email;
         std::string firstName;
         std::string lastName;
-        std::string birthday = "Null";
+        std::string birthday;
         bool hasNewsletter{};
         bool isAdmin{};
 

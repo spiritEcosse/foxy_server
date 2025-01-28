@@ -27,38 +27,45 @@ namespace api::v1 {
     }
 
     template<class T>
+    template<typename U>
+    std::string BaseModel<T>::variantToSqlString(const U &arg) {
+        using Type = std::decay_t<decltype(arg)>;
+        if constexpr(std::is_same_v<Type, std::nullopt_t>) {
+            return "Null";
+        } else if constexpr(std::is_same_v<Type, std::chrono::system_clock::time_point>) {
+            return timePointToString(arg);
+        } else if constexpr(std::is_same_v<Type, std::string>) {
+            return addExtraQuotes(arg);
+        } else if constexpr(std::is_same_v<Type, int>) {
+            return std::to_string(arg);
+        } else if constexpr(std::is_same_v<Type, bool>) {
+            return arg ? "true" : "false";
+        } else if constexpr(std::is_same_v<Type, dec::decimal<2>>) {
+            std::stringstream ss;
+            ss << arg;
+            return ss.str();
+        } else if constexpr(std::is_same_v<Type, std::vector<std::string>>) {
+            std::string data = "{";
+            for(const auto &str: arg) {
+                data.append(addExtraQuotes(str)).append(",");
+            }
+            if(!arg.empty()) {
+                data.pop_back();  // Remove trailing comma
+            }
+            data.append("}");
+            return data;
+        } else {
+            return std::string(arg);
+        }
+    }
+
+    template<class T>
     std::string BaseModel<T>::sqlInsertSingle(const T &item) {
         std::string sql = " (";
         for(const auto &[key, value]: item.getObjectValues()) {
             std::visit(
-                [&sql](const auto &arg) {
-                    std::string data;
-                    using Type = std::decay_t<decltype(arg)>;
-                    if constexpr(std::is_same_v<Type, std::chrono::system_clock::time_point>) {
-                        data = timePointToString(arg);
-                    } else if constexpr(std::is_same_v<Type, std::string>) {
-                        data = addExtraQuotes(arg);
-                    } else if constexpr(std::is_same_v<Type, int>) {
-                        data = std::to_string(arg);
-                    } else if constexpr(std::is_same_v<Type, bool>) {
-                        data = arg ? "true" : "false";
-                    } else if constexpr(std::is_same_v<Type, dec::decimal<2>>) {
-                        std::stringstream ss;
-                        ss << arg;
-                        data = ss.str();
-                    } else if constexpr(std::is_same_v<Type, std::vector<std::string>>) {
-                        data = "{";  // Start array representation in SQL
-                        for(const auto &str: arg) {
-                            data.append(addExtraQuotes(str)).append(",");
-                        }
-                        if(!arg.empty()) {
-                            data.pop_back();  // Remove trailing comma
-                        }
-                        data.append("}");  // End array representation in SQL
-                    } else {
-                        data = arg;
-                    }
-                    if(data != "Null") {
+                [&sql, this](const auto &arg) {
+                    if(const std::string data = variantToSqlString(arg); data != "Null") {
                         sql.append("'").append(data).append("',");
                     } else {
                         sql.append(data).append(",");
@@ -69,6 +76,23 @@ namespace api::v1 {
         sql.pop_back();
         sql.append(")");
         return sql;
+    }
+
+    template<class T>
+    void BaseModel<T>::sqlUpdateSingle(const T &item, TransparentMap &uniqueColumns) {
+        for(const auto &[key, value]: item.getObjectValues()) {
+            std::visit(
+                [&item, &uniqueColumns, &key, this](const auto &arg) {
+                    if(const std::string data = variantToSqlString(arg); data != "Null") {
+                        uniqueColumns[key->getFieldName()].append(
+                            fmt::format(R"( WHEN {} = {} THEN '{}' )", T::Field::id.getFullFieldName(), item.id, data));
+                    } else {
+                        uniqueColumns[key->getFieldName()].append(
+                            fmt::format(R"( WHEN {} = {} THEN {} )", T::Field::id.getFullFieldName(), item.id, data));
+                    }
+                },
+                value);
+        }
     }
 
     template<class T>
@@ -89,51 +113,6 @@ namespace api::v1 {
         sql.pop_back();
         sql.append(" RETURNING json_build_object(" + fieldsJsonObject() + ")");
         return sql;
-    }
-
-    template<class T>
-    void BaseModel<T>::sqlUpdateSingle(const T &item, TransparentMap &uniqueColumns) {
-        std::string sql;
-
-        for(const auto &[key, value]: item.getObjectValues()) {
-            std::visit(
-                [&item, &uniqueColumns, &key](const auto &arg) {
-                    std::string data;
-                    using Type = std::decay_t<decltype(arg)>;
-                    if constexpr(std::is_same_v<Type, std::chrono::system_clock::time_point>) {
-                        data = timePointToString(arg);
-                    } else if constexpr(std::is_same_v<Type, std::string>) {
-                        data = addExtraQuotes(arg);
-                    } else if constexpr(std::is_same_v<Type, int>) {
-                        data = std::to_string(arg);
-                    } else if constexpr(std::is_same_v<Type, bool>) {
-                        data = arg ? "true" : "false";
-                    } else if constexpr(std::is_same_v<Type, dec::decimal<2>>) {
-                        std::stringstream ss;
-                        ss << arg;
-                        data = ss.str();
-                    } else if constexpr(std::is_same_v<Type, std::vector<std::string>>) {
-                        data = "{";  // No single quotes here, we add them later when building SQL
-                        for(const auto &str: arg) {
-                            data.append(addExtraQuotes(str)).append(",");
-                        }
-                        if(!arg.empty()) {
-                            data.pop_back();  // Remove trailing comma
-                        }
-                        data.append("}");  // End array representation
-                    } else {
-                        data = arg;
-                    }
-                    if(data != "Null") {
-                        uniqueColumns[key->getFieldName()].append(
-                            fmt::format(R"( WHEN {} = {} THEN '{}' )", T::Field::id.getFullFieldName(), item.id, data));
-                    } else {
-                        uniqueColumns[key->getFieldName()].append(
-                            fmt::format(R"( WHEN {} = {} THEN {} )", T::Field::id.getFullFieldName(), item.id, data));
-                    }
-                },
-                value);
-        }
     }
 
     template<class T>
@@ -194,7 +173,7 @@ namespace api::v1 {
         const auto orderIt = params.find("order");
         const auto orderValue = orderIt != params.end() ? orderIt->second : "";
         auto it = field.allFields.find(orderValue);
-        const auto &orderField = (it != field.allFields.end()) ? &field.allFields.at(orderValue) : &field.updatedAt;
+        const auto &orderField = (it != field.allFields.end()) ? field.allFields.at(orderValue) : &field.updatedAt;
 
         const auto directionIt = params.find("direction");
         bool isAsc = directionIt != params.end() && directionIt->second == "asc";
@@ -202,7 +181,8 @@ namespace api::v1 {
         QuerySet qs(T::tableName, limit, "data");
         qs.offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
             .only(allSetFields())
-            .order_by(std::make_pair(orderField, isAsc), std::make_pair(&T::Field::id, false));
+            .order_by(orderField, isAsc)
+            .order_by(&T::Field::id, false);
         applyFilters(qs, qsCount, params);
         return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
     }
@@ -249,8 +229,8 @@ namespace api::v1 {
         for(const auto &[key, value]: params) {
             auto it = field.allFields.find(key);
             if(it != field.allFields.end()) {
-                qs.filter(it->second->getFullFieldName(), value);
-                qsCount.filter(it->second->getFullFieldName(), value);
+                qs.filter(it->second, value);
+                qsCount.filter(it->second, value);
             }
         }
     }

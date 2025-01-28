@@ -13,7 +13,7 @@ namespace api::v1 {
 
         static const inline std::string tableName = "basket_item";
 
-        struct Field : public BaseModel::Field {
+        struct Field : BaseModel::Field {
             static inline const auto basketId = BaseField("basket_id", tableName);
             static inline const auto itemId = BaseField("item_id", tableName);
             static inline const auto quantity = BaseField("quantity", tableName);

@@ -42,7 +42,7 @@ MediaModel::sqlSelectList(int page, int limit, const std::map<std::string, std::
     const auto orderIt = params.find("order");
     const auto orderValue = orderIt != params.end() ? orderIt->second : "";
     const auto it = field.allFields.find(orderValue);
-    const auto &orderField = (it != field.allFields.end()) ? &field.allFields.at(orderValue) : &field.updatedAt;
+    const auto &orderField = (it != field.allFields.end()) ? field.allFields.at(orderValue) : &field.updatedAt;
 
     const auto directionIt = params.find("direction");
     bool isAsc = directionIt != params.end() && directionIt->second == "asc";
@@ -51,7 +51,8 @@ MediaModel::sqlSelectList(int page, int limit, const std::map<std::string, std::
     qs.offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
         .only(allSetFields())
         .functions(Function(fmt::format("format_src(media.src, '{}') as src", APP_CLOUD_NAME)))
-        .order_by(std::make_pair(orderField, isAsc), std::make_pair(Field::id, false));
+        .order_by(orderField, isAsc)
+        .order_by(&Field::id, false);
     applyFilters(qs, qsCount, params);
     return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
 }

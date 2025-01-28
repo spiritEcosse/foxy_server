@@ -35,17 +35,17 @@ namespace api::v1 {
 
         explicit BaseModel(const Json::Value &json);
 
-        using MapFieldTypes = std::pair<const BaseField *,
-                                        std::variant<int,
-                                                     bool,
-                                                     std::vector<std::string>,
-                                                     std::string,
-                                                     std::nullopt_t,
-                                                     std::chrono::system_clock::time_point,
-                                                     dec::decimal<2>>>;
-        using SetMapFieldTypes = std::vector<MapFieldTypes>;
+        using ValueVariant = std::variant<int,
+                                          bool,
+                                          std::vector<std::string>,
+                                          std::string,
+                                          std::nullopt_t,
+                                          std::chrono::time_point<std::chrono::system_clock>,
+                                          dec::decimal<2>>;
+        using SetMapFieldTypes = std::vector<std::pair<const BaseField *, ValueVariant>>;
         [[nodiscard]] virtual std::string sqlInsertMultiple(const std::vector<T> &items);
         [[nodiscard]] virtual std::string sqlInsertSingle(const T &item);
+        [[nodiscard]] std::string variantToSqlString(const auto &arg);
         [[nodiscard]] virtual std::string sqlInsert(const T &item);
         [[nodiscard]] virtual std::string sqlUpdateMultiple(const std::vector<T> &items);
         [[nodiscard]] static QuerySet qsCount();

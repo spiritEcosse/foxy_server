@@ -49,7 +49,7 @@ void Order::getOneAdmin(const drogon::HttpRequestPtr &req,
                                         qsItems.buildSelect(),
                                         qsUser.buildSelectOne(),
                                         qsAddress.buildSelectOne())))
-        .order_by(std::make_pair(&BaseModel<OrderModel>::Field::id, false));
+        .order_by(&BaseModel<OrderModel>::Field::id, false);
 
     executeSqlQuery(callbackPtr, qsOrder.buildSelectOne());
 }
@@ -70,9 +70,9 @@ void Order::getListAdmin(const drogon::HttpRequestPtr &req,
         .only(OrderModel::allSetFields())
         .functions(Function(
             fmt::format(R"(COUNT({}) as count_items)", BaseModel<BasketItemModel>::Field::id.getFullFieldName())))
-        .order_by(std::make_pair(&BaseModel<OrderModel>::Field::updatedAt, false),
-                  std::make_pair(&BaseModel<OrderModel>::Field::id, false))
-        .group_by(BaseModel<OrderModel>::Field::id, BaseModel<OrderModel>::Field::updatedAt);
+        .order_by(&BaseModel<OrderModel>::Field::updatedAt, false)
+        .order_by(&BaseModel<OrderModel>::Field::id, false)
+        .group_by(&BaseModel<OrderModel>::Field::id, &BaseModel<OrderModel>::Field::updatedAt);
     const auto params = BaseCRUD().convertSafeStringMapToStdMap(req->getParameters());
     OrderModel::applyFilters(qs, qsCount, params);
     executeSqlQuery(callbackPtr, QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs)));

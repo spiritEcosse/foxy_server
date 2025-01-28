@@ -17,7 +17,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(CMAKE_BUILD_RPATH "${CMAKE_LLVM_LIB_DIR}")
 endif ()
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 get_cmake_property(_variableNames VARIABLES)

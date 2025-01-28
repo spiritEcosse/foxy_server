@@ -56,7 +56,8 @@ std::string ItemModel::sqlSelectList(const int page,
         //                                 MediaModel::tableName,
         //                                 BaseModel::Field::id.getFullFieldName(),
         //                                 mediaItemID)))
-        .order_by(std::make_pair(orderByItem, false), std::make_pair(itemID, false))
+        .order_by(orderByItem, false)
+        .order_by(itemID, false)
         .only(allSetFields())
         .functions(Function(fmt::format("format_src({}.src, '{}') as src", media_image, APP_CLOUD_NAME)))
         .functions(Function(fmt::format("format_src({}.src, '{}') as src_video", media_video, APP_BUCKET_HOST)))

@@ -18,7 +18,7 @@ namespace api::v1 {
         using AllFields =
             decltype(std::unordered_map<std::string, const BaseField *, TransparentStringHash, std::equal_to<>>());
         using JoinMap = decltype(std::unordered_map<std::string,
-                                                    std::pair<const BaseClass *, const BaseClass *>,
+                                                    std::pair<const BaseField *, const BaseField *>,
                                                     TransparentStringHash,
                                                     std::equal_to<>>());
 

@@ -22,7 +22,7 @@ namespace api::v1 {
         return fmt::format("{}.{}", time_string, milliseconds.count());
     }
 
-    std::map<std::string, std::pair<const BaseClass *, const BaseClass *>, std::less<>> BaseModelImpl::joinMap() const {
+    BaseModelImpl::JoinMap BaseModelImpl::joinMap() const {
         return {};
     }
 

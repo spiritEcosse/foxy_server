@@ -34,7 +34,8 @@ void Item::getListAdmin(const drogon::HttpRequestPtr &req,
         //                                 BaseModel<ItemModel>::Field::id.getFullFieldName(),
         //                                 mediaItemID)),
         //         false)
-        .order_by(std::make_pair(&orderByItemField, false), std::make_pair(&itemID, false))
+        .order_by(orderByItemField, false)
+        .order_by(itemID, false)
         .only(ItemModel::allSetFields())
         .functions(Function(fmt::format("format_src(media.src, '{}') as src", APP_CLOUD_NAME)))
         .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit));
@@ -53,8 +54,7 @@ void Item::getOne(const drogon::HttpRequestPtr &req,
         return;
     }
 
-    const std::string filterKey =
-        isInt ? BaseModel<ItemModel>::Field::id.getFullFieldName() : ItemModel::Field::slug.getFullFieldName();
+    const auto &filterKey = isInt ? &BaseModel<ItemModel>::Field::id : &ItemModel::Field::slug;
     const std::string query = ItemModel().sqlSelectOne(filterKey, stringId, {});
 
     executeSqlQuery(callbackPtr, query);
@@ -74,20 +74,19 @@ void Item::getOneAdmin(const drogon::HttpRequestPtr &req,
 
     // Media subquery with JSON aggregation
     QuerySet qsMedia(MediaModel::tableName, 0, MediaModel::tableName, false);
-    qsMedia
-        .filter(MediaModel::Field::itemId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName(), false)
+    qsMedia.filter(&MediaModel::Field::itemId, &BaseModel<ItemModel>::Field::id)
         .functions(Function(
             fmt::format("json_agg(json_build_object({}) ORDER BY media.sort ASC)", MediaModel().fieldsJsonObject())));
 
     // Tags subquery with JSON aggregation
     QuerySet qsTags(TagModel::tableName, 0, TagModel::tableName, false);
-    qsTags.filter(TagModel::Field::itemId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName(), false)
+    qsTags.filter(&TagModel::Field::itemId, &BaseModel<ItemModel>::Field::id)
         .functions(Function(
             fmt::format("json_agg(json_build_object({}) ORDER BY updated_at DESC)", TagModel().fieldsJsonObject())));
 
     // Main item query with both media and tags as JSON arrays
     QuerySet qsItem(ItemModel::tableName, ItemModel::tableName, true, true);
-    qsItem.filter(BaseModel<ItemModel>::Field::id.getFullFieldName(), stringId)
+    qsItem.filter(&BaseModel<ItemModel>::Field::id, stringId)
         .jsonFields(addExtraQuotes(ItemModel().fieldsJsonObject()))
         .functions(Function(fmt::format(R"(
         'media', COALESCE(({0}), '[]'::json),

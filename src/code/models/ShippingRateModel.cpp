@@ -6,10 +6,11 @@
 using namespace api::v1;
 
 BaseModel<ShippingRateModel>::SetMapFieldTypes ShippingRateModel::getObjectValues() const {
-    return {{&Field::countryId, countryId ? countryId : std::nullopt},
-            {&Field::shippingProfileId, shippingProfileId},
-            {&Field::deliveryDaysMin, deliveryDaysMin},
-            {&Field::deliveryDaysMax, deliveryDaysMax}};
+    ValueVariant countryIdValue = countryId == 0 ? ValueVariant{std::nullopt} : ValueVariant{countryId};
+    return SetMapFieldTypes{{&Field::countryId, countryIdValue},
+                            {&Field::shippingProfileId, ValueVariant{shippingProfileId}},
+                            {&Field::deliveryDaysMin, ValueVariant{deliveryDaysMin}},
+                            {&Field::deliveryDaysMax, ValueVariant{deliveryDaysMax}}};
 }
 
 std::string ShippingRateModel::getShippingRateByItem(const BaseField *field,

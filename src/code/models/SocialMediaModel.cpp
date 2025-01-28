@@ -28,7 +28,7 @@ std::string SocialMediaModel::sqlSelectList(const int page,
     qs.join(SocialMediaModel())
         .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
         .only(allSetFields())
-        .order_by(std::make_pair(&BaseModel::Field::updatedAt, false))
+        .order_by(&BaseModel::Field::updatedAt, false)
         .functions(Function(fmt::format("format_social_url({}, {}::TEXT) as social_url",
                                         Field::externalId.getFullFieldName(),
                                         Field::title.getFullFieldName())));
