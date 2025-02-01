@@ -99,25 +99,25 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
                           std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
     const int limit = getInt(req->getParameter("limit"), 1);
 
-    QuerySet qsTag(TagModel::tableName, 0, std::string("_tag"), false);
+    QuerySet<TagModel> qsTag(0, std::string("_tag"), false);
     qsTag.functions(Function(fmt::format("json_agg(json_build_object({}))", TagModel().fieldsJsonObject())))
         .filter(&TagModel::Field::itemId, &BaseModel<ItemModel>::Field::id);
 
-    QuerySet qsSocialMedia(SocialMediaModel::tableName, 0, std::string("_social_media"), false);
+    QuerySet<SocialMediaModel> qsSocialMedia(0, std::string("_social_media"), false);
     qsSocialMedia.functions(Function(fmt::format("json_agg({})", SocialMediaModel::Field::title.getFullFieldName())))
         .filter(&SocialMediaModel::Field::itemId, &BaseModel<ItemModel>::Field::id);
 
-    QuerySet qsItemCte(ItemModel::tableName, 0, std::string("item_cte"), false, true);
-    qsItemCte.left_join(SocialMediaModel()).count(&SocialMediaModel::Field::title);
+    QuerySet<ItemModel> qsItemCte(0, std::string("item_cte"), false, true);
+    qsItemCte.left_join<SocialMediaModel>().count(&SocialMediaModel::Field::title);
 
     const auto callbackPtr =
         std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
-    QuerySet qs(ItemModel::tableName, limit, "items", false);
+    QuerySet<ItemModel> qs(limit, "items", false);
     qs.only(&ItemModel::Field::title,
             &BaseModel<ItemModel>::Field::id,
             &ItemModel::Field::slug,
             &ItemModel::Field::description)
-        .join(MediaModel())
+        .join<MediaModel>()
         .addDynamoDbCte(std::move(qsItemCte))
         .filter(&BaseModel<ItemModel>::Field::id, std::string("93"))
         .group_by(&BaseModel<ItemModel>::Field::id)

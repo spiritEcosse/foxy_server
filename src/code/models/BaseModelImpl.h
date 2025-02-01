@@ -29,7 +29,6 @@ namespace api::v1 {
 
         template<class V>
         void validateField(const std::string &fieldName, const V &value, Json::Value &fields) const;
-        [[nodiscard]] virtual JoinMap joinMap() const;
         [[nodiscard]] static std::string timePointToString(std::chrono::system_clock::time_point tp);
     };
 

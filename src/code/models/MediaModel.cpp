@@ -5,7 +5,7 @@
 
 using namespace api::v1;
 
-BaseModelImpl::JoinMap MediaModel::joinMap() const {
+BaseModelImpl::JoinMap MediaModel::joinMap() {
     return {
         {ItemModel::tableName, {&Field::itemId, &BaseModel<ItemModel>::Field::id}},
     };
@@ -17,6 +17,16 @@ BaseModel<MediaModel>::SetMapFieldTypes MediaModel::getObjectValues() const {
             {&Field::sort, sort},
             {&Field::contentType, contentType},
             {&Field::type, type}};
+}
+
+QuerySet<MediaModel> MediaModel::qsMediaMinSort() {
+    QuerySet<MediaModel> qs(0, tableName, false);
+    qs.functions(Function(std::format("ROW_NUMBER() OVER (PARTITION BY {}, {} ORDER BY {} ASC) AS row_num",
+                                      Field::itemId.getFullFieldName(),
+                                      Field::type.getFullFieldName(),
+                                      Field::sort.getFullFieldName())))
+        .only(allSetFields());
+    return qs;
 }
 
 std::string MediaModel::fieldsJsonObject() {
@@ -35,24 +45,24 @@ std::string MediaModel::fieldsJsonObject() {
 
 std::string
 MediaModel::sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params) {
-    QuerySet qsCount = MediaModel::qsCount();
-    QuerySet qsPage = MediaModel::qsPage(page, limit);
+    auto qsCount = MediaModel::qsCount();
+    auto qsPage = MediaModel::qsPage(page, limit);
 
     Field field;
     const auto orderIt = params.find("order");
     const auto orderValue = orderIt != params.end() ? orderIt->second : "";
     const auto it = field.allFields.find(orderValue);
-    const auto &orderField = (it != field.allFields.end()) ? field.allFields.at(orderValue) : &field.updatedAt;
+    const auto &orderField = (it != field.allFields.end()) ? field.allFields.at(orderValue) : &Field::updatedAt;
 
     const auto directionIt = params.find("direction");
-    bool isAsc = directionIt != params.end() && directionIt->second == "asc";
+    const bool isAsc = directionIt != params.end() && directionIt->second == "asc";
 
-    QuerySet qs(tableName, limit, "data");
+    QuerySet<MediaModel> qs(limit, "data");
     qs.offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
         .only(allSetFields())
         .functions(Function(fmt::format("format_src(media.src, '{}') as src", APP_CLOUD_NAME)))
         .order_by(orderField, isAsc)
         .order_by(&Field::id, false);
     applyFilters(qs, qsCount, params);
-    return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
+    return BuildComplexQueries::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
 }

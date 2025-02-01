@@ -3,7 +3,7 @@
 
 using namespace api::v1;
 
-BaseModelImpl::JoinMap CountryModel::joinMap() const {
+BaseModelImpl::JoinMap CountryModel::joinMap() {
     return {
         {AddressModel::tableName, {&BaseModel::Field::id, &AddressModel::Field::countryId}},
     };

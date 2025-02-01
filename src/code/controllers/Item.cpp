@@ -15,31 +15,21 @@ void Item::getListAdmin(const drogon::HttpRequestPtr &req,
         std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
     const int page = getInt(req->getParameter("page"), 1);
     int limit = getInt(req->getParameter("limit"), 25);
+    auto qsPage = ItemModel::qsPage(page, limit);
 
-    QuerySet qsCount = ItemModel::qsCount();
-    QuerySet qsPage = ItemModel::qsPage(page, limit);
-
-    QuerySet qs(ItemModel::tableName, limit, "data");
-    auto mediaSort = MediaModel::Field::sort.getFullFieldName();
+    QuerySet<ItemModel> qs(limit, "data");
     const auto &orderByItemField = &BaseModel<ItemModel>::Field::updatedAt;
     const auto &itemID = &BaseModel<ItemModel>::Field::id;
-    auto mediaItemID = MediaModel::Field::itemId.getFullFieldName();
-    qs.distinct(orderByItemField, itemID)
-        .left_join(MediaModel())
-        // .filter(mediaSort, std::string("NULL"), false, std::string("IS"), std::string("OR"))
-        // .filter(mediaSort,
-        //         std::string(fmt::format("(SELECT MIN({}) FROM {} WHERE {} = {})",
-        //                                 mediaSort,
-        //                                 MediaModel::tableName,
-        //                                 BaseModel<ItemModel>::Field::id.getFullFieldName(),
-        //                                 mediaItemID)),
-        //         false)
+    qs.left_join<MediaModel>(std::string("image_media"),
+                             fmt::format("AND {0}.type = 'image' AND {0}.row_num = 1", MediaModel::tableName))
         .order_by(orderByItemField, false)
         .order_by(itemID, false)
+        .addDynamoDbCte(MediaModel::qsMediaMinSort())
         .only(ItemModel::allSetFields())
-        .functions(Function(fmt::format("format_src(media.src, '{}') as src", APP_CLOUD_NAME)))
+        .functions(Function(fmt::format("format_src(image_media.src, '{}') as src", APP_CLOUD_NAME)))
         .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit));
-    executeSqlQuery(callbackPtr, QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs)));
+    executeSqlQuery(callbackPtr,
+                    BuildComplexQueries::buildQuery(ItemModel::qsCount(), std::move(qsPage), std::move(qs)));
 }
 
 void Item::getOne(const drogon::HttpRequestPtr &req,
@@ -73,27 +63,27 @@ void Item::getOneAdmin(const drogon::HttpRequestPtr &req,
     }
 
     // Media subquery with JSON aggregation
-    QuerySet qsMedia(MediaModel::tableName, 0, MediaModel::tableName, false);
+    QuerySet<MediaModel> qsMedia(0, MediaModel::tableName, false);
     qsMedia.filter(&MediaModel::Field::itemId, &BaseModel<ItemModel>::Field::id)
         .functions(Function(
             fmt::format("json_agg(json_build_object({}) ORDER BY media.sort ASC)", MediaModel().fieldsJsonObject())));
 
     // Tags subquery with JSON aggregation
-    QuerySet qsTags(TagModel::tableName, 0, TagModel::tableName, false);
+    QuerySet<TagModel> qsTags(0, TagModel::tableName, false);
     qsTags.filter(&TagModel::Field::itemId, &BaseModel<ItemModel>::Field::id)
         .functions(Function(
             fmt::format("json_agg(json_build_object({}) ORDER BY updated_at DESC)", TagModel().fieldsJsonObject())));
 
     // Main item query with both media and tags as JSON arrays
-    QuerySet qsItem(ItemModel::tableName, ItemModel::tableName, true, true);
+    QuerySet<ItemModel> qsItem(ItemModel::tableName, true, true);
     qsItem.filter(&BaseModel<ItemModel>::Field::id, stringId)
         .jsonFields(addExtraQuotes(ItemModel().fieldsJsonObject()))
-        .functions(Function(fmt::format(R"(
+        .functions(Function(addExtraQuotes(fmt::format(R"(
         'media', COALESCE(({0}), '[]'::json),
         'tags', COALESCE(({1}), '[]'::json)
     )",
-                                        qsMedia.buildSelect(),
-                                        qsTags.buildSelect())));
+                                                       qsMedia.buildSelect(),
+                                                       qsTags.buildSelect()))));
 
     executeSqlQuery(callbackPtr, qsItem.buildSelectOne());
 }

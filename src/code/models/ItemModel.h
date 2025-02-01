@@ -57,7 +57,7 @@ namespace api::v1 {
             validateField(Field::price.getFieldName(), price, missingFields);
         }
 
-        [[nodiscard]] static QuerySet qsCount();
+        [[nodiscard]] static QuerySet<ItemModel> qsCount();
 
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
         [[nodiscard]] static std::string
@@ -65,6 +65,6 @@ namespace api::v1 {
         [[nodiscard]] std::string sqlSelectOne(const BaseField *field,
                                                const std::string &value,
                                                const std::map<std::string, std::string, std::less<>> &params) override;
-        [[nodiscard]] JoinMap joinMap() const override;
+        [[nodiscard]] static JoinMap joinMap();
     };
 }

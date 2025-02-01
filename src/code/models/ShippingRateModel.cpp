@@ -20,7 +20,7 @@ std::string ShippingRateModel::getShippingRateByItem(const BaseField *field,
     const auto it = params.find("client_ip");
     const auto clientIp = it->second;
 
-    QuerySet qsCountry(CountriesIpsModel::tableName, "one_country_id", false, false);
+    QuerySet<CountriesIpsModel> qsCountry("one_country_id", false, false);
     qsCountry.filter(&CountriesIpsModel::Field::startRange, clientIp, Operator::LESS_OR_EQUAL)
         .filter(&CountriesIpsModel::Field::endRange, clientIp, Operator::GREATER_OR_EQUAL)
         .only(&CountriesIpsModel::Field::countryId);
@@ -29,9 +29,9 @@ std::string ShippingRateModel::getShippingRateByItem(const BaseField *field,
     const auto countryIdIsValue = WhereClause(
         &Field::countryId,
         fmt::format("(SELECT {} FROM {})", CountriesIpsModel::Field::countryId.getFieldName(), qsCountry.alias()));
-    QuerySet qsShipping(tableName, "shipping", false);
-    qsShipping.join(ShippingProfileModel())
-        .join(ItemModel())
+    QuerySet<ShippingRateModel> qsShipping("shipping", false);
+    qsShipping.join<ShippingProfileModel>()
+        .join<ItemModel>()
         .filter(countryIdIsNull | countryIdIsValue)
         .filter(field, value)
         .jsonFields(fmt::format("'{0}', {1} + {2}, '{3}', {4} + {2}",
@@ -40,5 +40,5 @@ std::string ShippingRateModel::getShippingRateByItem(const BaseField *field,
                                 ShippingProfileModel::Field::processingTime.getFullFieldName(),
                                 Field::deliveryDaysMin.getFieldName(),
                                 Field::deliveryDaysMin.getFullFieldName()));
-    return QuerySet::buildQuery(std::move(qsCountry), std::move(qsShipping));
+    return BuildComplexQueries::buildQuery(std::move(qsCountry), std::move(qsShipping));
 }

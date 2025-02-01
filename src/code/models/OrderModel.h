@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <chrono>
 #include <drogon/drogon.h>
 #include "BaseModel.h"
 #include "BasketModel.h"
@@ -91,6 +90,7 @@ namespace api::v1 {
         [[nodiscard]] std::string sqlSelectOne(const BaseField *field,
                                                const std::string &value,
                                                const std::map<std::string, std::string, std::less<>> &params) override;
-        [[nodiscard]] JoinMap joinMap() const override;
+
+        [[nodiscard]] static JoinMap joinMap();
     };
 }

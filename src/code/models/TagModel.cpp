@@ -4,7 +4,7 @@
 
 using namespace api::v1;
 
-BaseModelImpl::JoinMap TagModel::joinMap() const {
+BaseModelImpl::JoinMap TagModel::joinMap() {
     return {
         {ItemModel::tableName, {&Field::itemId, &BaseModel<ItemModel>::Field::id}},
     };

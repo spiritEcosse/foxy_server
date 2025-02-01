@@ -26,6 +26,10 @@ namespace api::v1 {
                     allFields.try_emplace(field->getFieldName(), field);
                 });
             }
+
+            static auto makeField(const char *name) {
+                return BaseField(name, T::tableName);
+            }
         };
 
         Json::Value missingFields;
@@ -48,8 +52,8 @@ namespace api::v1 {
         [[nodiscard]] std::string variantToSqlString(const auto &arg);
         [[nodiscard]] virtual std::string sqlInsert(const T &item);
         [[nodiscard]] virtual std::string sqlUpdateMultiple(const std::vector<T> &items);
-        [[nodiscard]] static QuerySet qsCount();
-        [[nodiscard]] static QuerySet qsPage(int page, int limit);
+        [[nodiscard]] static QuerySet<T> qsCount();
+        [[nodiscard]] static QuerySet<T> qsPage(int page, int limit);
         virtual void sqlUpdateSingle(const T &item, TransparentMap &uniqueColumns);
         [[nodiscard]] virtual std::string sqlUpdate(T &&item);
         [[nodiscard]] static std::string
@@ -63,8 +67,9 @@ namespace api::v1 {
         [[nodiscard]] virtual std::string sqlDeleteMultiple(const std::vector<int> &ids);
 
         [[nodiscard]] static std::vector<const BaseField *> allSetFields();
-        static void
-        applyFilters(QuerySet &qs, QuerySet &qsCount, const std::map<std::string, std::string, std::less<>> &params);
+        static void applyFilters(QuerySet<T> &qs,
+                                 QuerySet<T> &qsCount,
+                                 const std::map<std::string, std::string, std::less<>> &params);
     };
 }
 

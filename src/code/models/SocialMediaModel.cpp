@@ -3,7 +3,7 @@
 
 using namespace api::v1;
 
-BaseModelImpl::JoinMap SocialMediaModel::joinMap() const {
+BaseModelImpl::JoinMap SocialMediaModel::joinMap() {
     return {{ItemModel::tableName, {&Field::itemId, &BaseModel<ItemModel>::Field::id}}};
 }
 
@@ -22,10 +22,10 @@ std::string SocialMediaModel::fieldsJsonObject() {
 std::string SocialMediaModel::sqlSelectList(const int page,
                                             int limit,
                                             const std::map<std::string, std::string, std::less<>> &params) {
-    QuerySet qsCount = SocialMediaModel::qsCount();
-    QuerySet qsPage = SocialMediaModel::qsPage(page, limit);
-    QuerySet qs(tableName, limit, "data");
-    qs.join(SocialMediaModel())
+    auto qsCount = SocialMediaModel::qsCount();
+    auto qsPage = SocialMediaModel::qsPage(page, limit);
+    QuerySet<SocialMediaModel> qs(limit, "data");
+    qs.join<SocialMediaModel>()
         .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
         .only(allSetFields())
         .order_by(&BaseModel::Field::updatedAt, false)
@@ -33,5 +33,5 @@ std::string SocialMediaModel::sqlSelectList(const int page,
                                         Field::externalId.getFullFieldName(),
                                         Field::title.getFullFieldName())));
     applyFilters(qs, qsCount, params);
-    return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
+    return BuildComplexQueries::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
 }

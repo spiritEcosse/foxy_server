@@ -51,7 +51,7 @@ void Auth::googleLoginAdmin(const drogon::HttpRequestPtr &request,
         return (*callbackPtr)(resp);
     }
 
-    QuerySet qsUser(UserModel::tableName, "_user");
+    QuerySet<UserModel> qsUser("_user");
     qsUser.filter(&UserModel::Field::email, item.email)
         .jsonFields(UserModel().fieldsJsonObject())
         .filter(&UserModel::Field::isAdmin, true);

@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 
 namespace api::v1 {
 
@@ -166,8 +167,8 @@ namespace api::v1 {
     template<class T>
     std::string
     BaseModel<T>::sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params) {
-        QuerySet qsCount = T::qsCount();
-        QuerySet qsPage = T::qsPage(page, limit);
+        auto qsCount = T::qsCount();
+        auto qsPage = T::qsPage(page, limit);
 
         typename T::Field field;
         const auto orderIt = params.find("order");
@@ -178,27 +179,28 @@ namespace api::v1 {
         const auto directionIt = params.find("direction");
         bool isAsc = directionIt != params.end() && directionIt->second == "asc";
 
-        QuerySet qs(T::tableName, limit, "data");
+        QuerySet<T> qs(limit, "data");
         qs.offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
             .only(allSetFields())
             .order_by(orderField, isAsc)
             .order_by(&T::Field::id, false);
         applyFilters(qs, qsCount, params);
-        return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
+        return BuildComplexQueries::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
     }
 
     template<class T>
-    QuerySet BaseModel<T>::qsCount() {
-        QuerySet qsCount(T::tableName, "total", false, true);
-        return std::move(qsCount.functions(Function("count(*)::integer")));
+    QuerySet<T> BaseModel<T>::qsCount() {
+        QuerySet<T> qsCount("total", false, true);
+        qsCount.functions(Function("count(*)::integer"));
+        return qsCount;
     }
 
     template<class T>
-    QuerySet BaseModel<T>::qsPage(int page, int limit) {
-        const QuerySet qsCount = T::qsCount();
-        QuerySet qsPage(T::tableName, "_page", false, true);
-        return std::move(qsPage.functions(
-            Function(fmt::format("GetValidPage({}, {}, (SELECT * FROM {}))", page, limit, qsCount.alias()))));
+    QuerySet<T> BaseModel<T>::qsPage(int page, int limit) {
+        QuerySet<T> qs("_page", false, true);
+        qs.functions(
+            Function(fmt::format("GetValidPage({}, {}, (SELECT * FROM {}))", page, limit, T::qsCount().alias())));
+        return qs;
     }
 
     template<class T>
@@ -206,7 +208,7 @@ namespace api::v1 {
         std::string str;
         const typename T::Field field;
         for(const auto &fieldNames = field.allFields; const auto &[fieldName, baseField]: fieldNames) {
-            str += fmt::format("'{}', {}, ", fieldName, baseField->getFullFieldName());
+            str += fmt::format(R"('{}', {}, )", fieldName, baseField->getFullFieldName());
         }
         return str.substr(0, str.size() - 2);
     }
@@ -216,14 +218,15 @@ namespace api::v1 {
     BaseModel<T>::sqlSelectOne(const BaseField *field,
                                const std::string &value,
                                [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
-        QuerySet qs(T::tableName, T::tableName, true);
-        qs.jsonFields(addExtraQuotes(fieldsJsonObject())).filter(field, std::string(value));
-        return qs.buildSelect();
+        return QuerySet<T>(T::tableName, true)
+            .jsonFields(addExtraQuotes(fieldsJsonObject()))
+            .filter(field, value)
+            .buildSelect();
     }
 
     template<class T>
-    void BaseModel<T>::applyFilters(QuerySet &qs,
-                                    QuerySet &qsCount,
+    void BaseModel<T>::applyFilters(QuerySet<T> &qs,
+                                    QuerySet<T> &qsCount,
                                     const std::map<std::string, std::string, std::less<>> &params) {
         typename T::Field field;
         for(const auto &[key, value]: params) {

@@ -5,7 +5,7 @@
 
 using namespace api::v1;
 
-BaseModelImpl::JoinMap BasketItemModel::joinMap() const {
+BaseModelImpl::JoinMap BasketItemModel::joinMap() {
     return {{ItemModel::tableName, {&Field::itemId, &BaseModel<ItemModel>::Field::id}},
             {OrderModel::tableName, {&Field::basketId, &OrderModel::Field::basketId}}};
 }
@@ -20,32 +20,31 @@ BaseModel<BasketItemModel>::SetMapFieldTypes BasketItemModel::getObjectValues() 
 std::string BasketItemModel::sqlSelectList(const int page,
                                            int limit,
                                            const std::map<std::string, std::string, std::less<>> &params) {
-    QuerySet qsCount = BasketItemModel::qsCount();
-    QuerySet qsPage = BasketItemModel::qsPage(page, limit);
+    auto qsCount = BasketItemModel::qsCount();
+    auto qsPage = BasketItemModel::qsPage(page, limit);
 
-    QuerySet qsItem(ItemModel::tableName, "_item", false, false);
+    QuerySet<ItemModel> qsItem("_item", false, false);
     qsItem
         .jsonFields(
             fmt::format("{}, 'src', format_src(media.src, '{}')", ItemModel().fieldsJsonObject(), APP_CLOUD_NAME))
-        .join(MediaModel())
-        .join(BasketItemModel())
+        .join<MediaModel>()
+        .filter(&BaseModel<ItemModel>::Field::id, &Field::itemId)
         .order_by(&MediaModel::Field::sort);
 
-    QuerySet qs(tableName, limit, "data");
+    QuerySet<BasketItemModel> qs(limit, "data");
     qs.only(allSetFields())
-        .join(ItemModel())
+        .join<ItemModel>()
         .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
         .functions(Function(fmt::format(R"(({}) AS item)", qsItem.buildSelect())));
     applyFilters(qs, qsCount, params);
-    return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
+    return BuildComplexQueries::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
 }
 
 std::string BasketItemModel::fieldsJsonObject() {
-    std::string str = BaseModel::fieldsJsonObject();
-    QuerySet qs(ItemModel::tableName, "item", false, false);
+    QuerySet<ItemModel> qs("item", false, false);
     qs.jsonFields(fmt::format("{}, 'src', format_src(media.src, '{}')", ItemModel().fieldsJsonObject(), APP_CLOUD_NAME))
-        .join(BasketItemModel())
-        .join(MediaModel())
+        .filter(&BaseModel<ItemModel>::Field::id, &Field::itemId)
+        .join<MediaModel>()
         .order_by(&MediaModel::Field::sort);
-    return fmt::format(", 'item', ({})", qs.buildSelect());
+    return fmt::format("{}, 'item', ({})", BaseModel::fieldsJsonObject(), qs.buildSelect());
 }

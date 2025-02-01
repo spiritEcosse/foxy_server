@@ -42,6 +42,6 @@ namespace api::v1 {
         }
 
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
-        [[nodiscard]] JoinMap joinMap() const override;
+        [[nodiscard]] static JoinMap joinMap();
     };
 }

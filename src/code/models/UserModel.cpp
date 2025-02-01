@@ -4,7 +4,7 @@
 
 using namespace api::v1;
 
-BaseModelImpl::JoinMap UserModel::joinMap() const {
+BaseModelImpl::JoinMap UserModel::joinMap() {
     return {
         {OrderModel::tableName, {&BaseModel::Field::id, &OrderModel::Field::userId}},
     };

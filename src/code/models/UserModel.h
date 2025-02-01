@@ -12,13 +12,13 @@ namespace api::v1 {
 
         static const inline std::string tableName = "user";
 
-        struct Field : public BaseModel::Field {
-            static inline const auto email = BaseField("email", tableName);
-            static inline const auto firstName = BaseField("first_name", tableName);
-            static inline const auto lastName = BaseField("last_name", tableName);
-            static inline const auto birthday = BaseField("birthday", tableName);
-            static inline const auto hasNewsletter = BaseField("has_newsletter", tableName);
-            static inline const auto isAdmin = BaseField("is_admin", tableName);
+        struct Field : BaseModel::Field {
+            static inline const auto email = makeField("email");
+            static inline const auto firstName = makeField("first_name");
+            static inline const auto lastName = makeField("last_name");
+            static inline const auto birthday = makeField("birthday");
+            static inline const auto hasNewsletter = makeField("has_newsletter");
+            static inline const auto isAdmin = makeField("is_admin");
 
             Field() : BaseModel::Field() {
                 constexpr std::array fields{&email, &firstName, &lastName, &birthday, &hasNewsletter, &isAdmin};
@@ -65,6 +65,6 @@ namespace api::v1 {
 
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
         [[nodiscard]] std::string sqlGetOrCreateUser();
-        [[nodiscard]] JoinMap joinMap() const override;
+        [[nodiscard]] static JoinMap joinMap();
     };
 }

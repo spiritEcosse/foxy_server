@@ -42,9 +42,10 @@ namespace api::v1 {
         }
 
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
-        [[nodiscard]] JoinMap joinMap() const override;
         [[nodiscard]] std::string fieldsJsonObject() override;
         [[nodiscard]] static std::string
         sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params);
+
+        [[nodiscard]] static JoinMap joinMap();
     };
 }

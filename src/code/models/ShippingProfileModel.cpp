@@ -3,7 +3,7 @@
 
 using namespace api::v1;
 
-BaseModelImpl::JoinMap ShippingProfileModel::joinMap() const {
+BaseModelImpl::JoinMap ShippingProfileModel::joinMap() {
     return {{ShippingRateModel::tableName, {&BaseModel::Field::id, &ShippingRateModel::Field::shippingProfileId}}};
 }
 
