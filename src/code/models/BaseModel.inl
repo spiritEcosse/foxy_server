@@ -51,7 +51,7 @@ namespace api::v1 {
                 data.append(addExtraQuotes(str)).append(",");
             }
             if(!arg.empty()) {
-                data.pop_back();  // Remove trailing comma
+                data.pop_back();
             }
             data.append("}");
             return data;
@@ -216,11 +216,11 @@ namespace api::v1 {
     template<class T>
     std::string
     BaseModel<T>::sqlSelectOne(const BaseField *field,
-                               const std::string &value,
+                               std::string &&value,
                                [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
         return QuerySet<T>(T::tableName, true)
             .jsonFields(addExtraQuotes(fieldsJsonObject()))
-            .filter(field, value)
+            .filter(field, std::move(value))
             .buildSelect();
     }
 
@@ -238,4 +238,4 @@ namespace api::v1 {
         }
     }
 
-}  // namespace api::v1
+}

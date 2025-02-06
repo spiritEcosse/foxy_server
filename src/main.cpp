@@ -13,12 +13,10 @@ using namespace drogon;
 
 [[noreturn]] void handleSignal(int signal) {
     std::cerr << "Caught signal " << signal << std::endl;
-    // Add your cleanup code or logging here
-    // Capture and print the stack trace
     backward::StackTrace st;
-    st.load_here(32);  // You can adjust the number of frames captured
+    st.load_here(32);
     backward::Printer p;
-    p.print(st, std::cerr);  // Print the stack trace to stderr
+    p.print(st, std::cerr);
     std::exit(signal);
 }
 
@@ -29,9 +27,6 @@ int main() {
 #if defined(SENTRY_DSN)
         sentry_options_t *options = sentry_options_new();
         sentry_options_set_dsn(options, SENTRY_DSN);
-        // This is also the default-path. For further information and recommendations:
-        // https://docs.sentry.io/platforms/native/configuration/options/#database-path
-        //        sentry_options_set_database_path(options, ".sentry-native");
         sentry_options_set_handler_path(
             options,
             fmt::format("{}/_deps/sentry-build/crashpad_build/handler/crashpad_handler", CMAKE_BINARY_DIR).c_str());
@@ -93,9 +88,9 @@ int main() {
 
     } catch(...) {
         backward::StackTrace st;
-        st.load_here(32);  // Capture the stack trace with a maximum of 32 frames
+        st.load_here(32);
         backward::Printer p;
-        p.print(st, std::cerr);  // Print the stack trace to stderr
+        p.print(st, std::cerr);
     }
     return 0;
 }

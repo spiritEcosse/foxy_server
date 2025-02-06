@@ -20,7 +20,6 @@ namespace api::v1 {
                 return false;
             media->setResponse<PostType>(jsonResponse);
             media->setExternalId<PostType>(jsonResponse[std::string(ClientType::field_media_id)].asString());
-            std::cout << media->getExternalId<PostType>() << " : " << media->getFileName() << std::endl;
             ++i;
         }
         return true;

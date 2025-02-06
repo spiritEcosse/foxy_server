@@ -32,8 +32,8 @@ namespace api::v1 {
                    drogon::Options,
                    "api::v1::filters::JwtGoogleFilter");
         METHOD_LIST_END
-        virtual void getShippingRateByItem(const drogon::HttpRequestPtr &req,
-                                           std::function<void(const drogon::HttpResponsePtr &)> &&callback,
-                                           const std::string &) const;
+        void getShippingRateByItem(const drogon::HttpRequestPtr &req,
+                                   std::function<void(const drogon::HttpResponsePtr &)> &&callback,
+                                   std::string &&) const;
     };
 }

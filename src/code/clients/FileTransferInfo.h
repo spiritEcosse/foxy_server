@@ -11,7 +11,7 @@
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
 
-constexpr size_t MAX_FILE_SIZE = 20 * 1024 * 1024;  // 20 MB in bytes
+constexpr size_t MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 namespace api::v1 {
     class Pin;
@@ -37,14 +37,10 @@ namespace api::v1 {
             type(std::move(other.type)), contentType(std::move(other.contentType)),
             responsePin(std::move(other.responsePin)), responseTweet(std::move(other.responseTweet)) {}
 
-        // Destructor to remove the file when the object is destroyed
         ~FileTransferInfo() override {
             try {
-                // Use std::filesystem to remove the file
                 std::filesystem::remove(fileName);
             } catch(const std::filesystem::__cxx11::filesystem_error& e) {
-                // Optional: Log the error or handle it as appropriate for your application
-                // For example, you might want to log the error or use a logging framework
                 std::cerr << "Error removing file: " << e.what() << std::endl;
             }
         }
@@ -152,7 +148,6 @@ namespace api::v1 {
             return contentType;
         }
 
-        // function to detect is it video or not
         [[nodiscard]] bool isVideo() const {
             return type == MediaType::VIDEO;
         }

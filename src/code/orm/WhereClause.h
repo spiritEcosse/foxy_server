@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 #include <sstream>
+#include <iostream>
 #include <fmt/format.h>
 
 enum class Operator { EQUALS, NOT_EQUALS, GREATER_THAN, LESS_THAN, GREATER_OR_EQUAL, LESS_OR_EQUAL, LIKE, IS };
@@ -56,25 +57,20 @@ namespace api::v1 {
             BaseClass(), _field(field1), _comparisonField(field2), _op(Operator::EQUALS),
             _valueType(ValueType::FIELD_COMPARISON) {}
 
-        friend WhereClause operator&(const WhereClause& lhs, const WhereClause& rhs) {
-            WhereClause combined(lhs._field, lhs._value, lhs._op);
-            combined._valueType = lhs._valueType;
-            combined._comparisonField = lhs._comparisonField;
+        friend WhereClause operator&(WhereClause lhs, WhereClause rhs) {
+            WhereClause combined(std::move(lhs));
             combined._type = LogicalType::AND;
-            combined._subclauses.push_back(std::make_shared<WhereClause>(rhs._field, rhs._value, rhs._op));
+            combined._subclauses.push_back(std::move(rhs));
             return combined;
         }
 
-        friend WhereClause operator|(const WhereClause& lhs, const WhereClause& rhs) {
-            WhereClause combined(lhs._field, lhs._value, lhs._op);
-            combined._valueType = lhs._valueType;
-            combined._comparisonField = lhs._comparisonField;
+        friend WhereClause operator|(WhereClause lhs, WhereClause rhs) {
+            WhereClause combined(std::move(lhs));
             combined._type = LogicalType::OR;
-            combined._subclauses.push_back(std::make_shared<WhereClause>(rhs._field, rhs._value, rhs._op));
+            combined._subclauses.push_back(std::move(rhs));
             return combined;
         }
 
-        // Serialize the clause
         std::string serialize() const {
             std::stringstream ss;
             serializeRecursive(ss);
@@ -83,23 +79,17 @@ namespace api::v1 {
 
     private:
         void serializeRecursive(std::stringstream& ss) const {
-            const bool needParentheses = (_type != LogicalType::SINGLE);
+            const bool needParentheses = _type != LogicalType::SINGLE;
 
             if(needParentheses)
                 ss << "(";
 
-            if(_type == LogicalType::SINGLE) {
-                ss << serializeSingleClause();
-            } else {
-                // First clause (this)
-                ss << serializeSingleClause();
-
-                // Add logical operator
+            ss << serializeSingleClause();
+            if(_type != LogicalType::SINGLE) {
                 ss << (_type == LogicalType::AND ? " AND " : " OR ");
 
-                // Subclauses
                 for(const auto& subClause: _subclauses) {
-                    subClause->serializeRecursive(ss);
+                    subClause.serializeRecursive(ss);
                 }
             }
 
@@ -135,6 +125,6 @@ namespace api::v1 {
         Operator _op;
         ValueType _valueType;
         LogicalType _type = LogicalType::SINGLE;
-        std::vector<std::shared_ptr<WhereClause>> _subclauses;
+        std::vector<WhereClause> _subclauses;
     };
 }

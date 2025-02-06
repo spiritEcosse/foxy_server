@@ -12,7 +12,6 @@ namespace api::v1 {
         explicit MastodonClient(const Json::Value& mediaJson);
         bool downloadMedia();
 
-        // Properties
         std::vector<SharedFileTransferInfo> media;
 
     private:

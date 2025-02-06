@@ -4,19 +4,18 @@
 
 namespace api::v1 {
     struct TransparentStringHash {
-        using is_transparent = void;  // This makes the hasher transparent (required for heterogeneous lookup)
+        using is_transparent = void;
 
         size_t operator()(std::string_view key) const noexcept {
-            return std::hash<std::string_view>{}(
-                key);  // Use hash for string_view (works with both string and string_view)
+            return std::hash<std::string_view>{}(key);
         }
 
         size_t operator()(const std::string& key) const noexcept {
-            return std::hash<std::string_view>{}(key);  // Call the same hash function for std::string
+            return std::hash<std::string_view>{}(key);
         }
 
         size_t operator()(const char* key) const noexcept {
-            return std::hash<std::string_view>{}(key);  // Call the same hash function for C-style string
+            return std::hash<std::string_view>{}(key);
         }
     };
 

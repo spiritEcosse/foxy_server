@@ -8,7 +8,6 @@ namespace api::v1 {
                      const std::string_view& description,
                      const std::vector<SharedFileTransferInfo>& media,
                      const Json::Value& tags) : SocialMediaType(itemId, title, slug, description, media, tags) {
-        // formating description
         this->description = truncateDescription(fmt::format("{} {}", description, itemUrl));
     };
 
@@ -28,21 +27,20 @@ namespace api::v1 {
         auto postingVideos = [this]() {
             std::this_thread::sleep_for(std::chrono::seconds(2));
             std::vector<std::jthread> threads;
-            std::atomic allSuccess{true};  // Track success across threads
+            std::atomic allSuccess{true};
 
             std::ranges::for_each(videos, [this, &threads, &allSuccess](const auto& videoItem) {
                 threads.emplace_back([this, &videoItem, &allSuccess]() {
-                    // Safely set allSuccess to false if any postVideo fails
                     if(!YouTube(itemId, title, slug, description, videoItem, tags).postVideo()) {
-                        allSuccess.store(false, std::memory_order_relaxed);  // Avoid copying
+                        allSuccess.store(false, std::memory_order_relaxed);
                     }
                 });
             });
 
             for(auto& thread: threads)
-                thread.join();  // Wait for all threads to finish
+                thread.join();
 
-            return allSuccess.load(std::memory_order_relaxed);  // Return final status
+            return allSuccess.load(std::memory_order_relaxed);
         };
 
         return postingVideos();

@@ -8,7 +8,6 @@ namespace api::v1 {
              const std::string_view& description,
              const std::vector<SharedFileTransferInfo>& media,
              const Json::Value& tags) : SocialMediaType(itemId, title, slug, description, media, tags) {
-        // formating description
         images = cutMedia(images);
         this->description = truncateDescription(fmt::format("{} {} {}", description, itemUrl, tagsToString()));
     };

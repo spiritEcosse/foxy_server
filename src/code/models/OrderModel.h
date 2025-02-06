@@ -88,7 +88,7 @@ namespace api::v1 {
         [[nodiscard]] static std::string
         sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params);
         [[nodiscard]] std::string sqlSelectOne(const BaseField *field,
-                                               const std::string &value,
+                                               std::string &&value,
                                                const std::map<std::string, std::string, std::less<>> &params) override;
 
         [[nodiscard]] static JoinMap joinMap();

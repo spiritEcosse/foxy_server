@@ -69,7 +69,7 @@ OrderModel::sqlSelectList(const int page, int limit, const std::map<std::string,
 }
 
 std::string OrderModel::sqlSelectOne(const BaseField *field,
-                                     const std::string &value,
+                                     std::string &&value,
                                      [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
     QuerySet<ItemModel> qsBasketItem(0, ItemModel::tableName, false);
     qsBasketItem.join<BasketItemModel>()
@@ -77,7 +77,7 @@ std::string OrderModel::sqlSelectOne(const BaseField *field,
         .functions(Function(fmt::format("json_agg(json_build_object({}))", ItemModel().fieldsJsonObject())));
 
     QuerySet<OrderModel> qsOrder(tableName, true, true);
-    qsOrder.filter(field, value)
+    qsOrder.filter(field, std::move(value))
         .jsonFields(addExtraQuotes(OrderModel().fieldsJsonObject()))
         .functions(Function(
             addExtraQuotes(fmt::format(R"( 'items', COALESCE(({}), '[]'::json))", qsBasketItem.buildSelect()))));

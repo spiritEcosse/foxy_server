@@ -21,11 +21,9 @@ inline std::string truncateText(const std::string_view& text, size_t maxLength =
         return std::string(text);
     }
 
-    // Reserve approximate capacity to avoid reallocations
     std::vector<std::string> words;
-    words.reserve(text.length() / 5);  // Rough estimate of word count
+    words.reserve(text.length() / 5);
 
-    // More efficient word splitting without stringstream
     size_t start = 0;
     size_t end = text.find(' ');
     while(end != std::string_view::npos) {
@@ -38,7 +36,7 @@ inline std::string truncateText(const std::string_view& text, size_t maxLength =
     }
 
     std::string newText;
-    newText.reserve(maxLength);  // Reserve space for efficiency
+    newText.reserve(maxLength);
 
     while(!words.empty()) {
         newText = fmt::format("{}", fmt::join(words, " "));
@@ -52,7 +50,6 @@ inline std::string truncateText(const std::string_view& text, size_t maxLength =
         return std::string(text.substr(0, maxLength - 3)) + "...";
     }
 
-    // Ensure we don't cut off in the middle of a URL
     if(size_t lastSpacePos = newText.rfind(' ', maxLength - 3); lastSpacePos != std::string::npos) {
         newText = newText.substr(0, lastSpacePos) + "...";
     } else {

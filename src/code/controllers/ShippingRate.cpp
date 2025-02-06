@@ -3,14 +3,13 @@
 #include "Request.h"
 #include "QuerySet.h"
 #include "env.h"
-#include <fmt/core.h>
 
 using namespace api::v1;
 using namespace drogon::orm;
 
 void ShippingRate::getShippingRateByItem(const drogon::HttpRequestPtr &req,
                                          std::function<void(const drogon::HttpResponsePtr &)> &&callback,
-                                         const std::string &stringId) const {
+                                         std::string &&stringId) const {
     const auto callbackPtr =
         std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
 
@@ -33,6 +32,7 @@ void ShippingRate::getShippingRateByItem(const drogon::HttpRequestPtr &req,
     std::map<std::string, std::string, std::less<>> params;
     params["client_ip"] = std::to_string(integer_ip);
 
-    const std::string query = ShippingRateModel::getShippingRateByItem(&ItemModel::Field::slug, stringId, params);
+    const std::string query =
+        ShippingRateModel::getShippingRateByItem(&ItemModel::Field::slug, std::move(stringId), params);
     executeSqlQuery(callbackPtr, query);
 }

@@ -26,7 +26,6 @@ void SocialMedia::handleRow(const auto &row) const {
     auto media = row[4].template as<Json::Value>();
     auto netsJson = row[5].template as<Json::Value>();
     auto tags = row[6].template as<Json::Value>();
-    std::cout << "id: " << itemId << std::endl;
 
     std::set<std::string, std::less<>> target = {std::string(TwitterClient::clientName),
                                                  std::string(PinterestClient::clientName)};
@@ -38,7 +37,6 @@ void SocialMedia::handleRow(const auto &row) const {
 
     std::set<std::string, std::less<>> netsSet(nets.begin(), nets.end());
 
-    // Calculate difference: elements in target that do NOT exist in netsSet
     std::set<std::string, std::less<>> diffNets;
     std::ranges::set_difference(target, netsSet, std::inserter(diffNets, diffNets.end()));
 
@@ -78,18 +76,14 @@ void SocialMedia::handleSqlResultPublish(const drogon::orm::Result &r) const {
     if(r.empty())
         return;
 
-    // Number of threads to use (can be std::thread::hardware_concurrency() for dynamic detection)
-    // Divide tasks among threads
     std::vector<std::future<void>> futures;
 
     for(const auto &row: r) {
-        // Launch each row as a separate task
         futures.push_back(std::async(std::launch::async, [this, row]() {
             handleRow(row);
         }));
     }
 
-    // Wait for all tasks to complete
     for(auto &fut: futures) {
         fut.get();
     }
@@ -107,8 +101,12 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
     qsSocialMedia.functions(Function(fmt::format("json_agg({})", SocialMediaModel::Field::title.getFullFieldName())))
         .filter(&SocialMediaModel::Field::itemId, &BaseModel<ItemModel>::Field::id);
 
-    QuerySet<ItemModel> qsItemCte(0, std::string("item_cte"), false, true);
-    qsItemCte.left_join<SocialMediaModel>().count(&SocialMediaModel::Field::title);
+    QuerySet<SocialMediaModel> qsItemCte(0, std::string("item_cte"), false);
+    qsItemCte.right_join<ItemModel>()
+        .only(&BaseModel<ItemModel>::Field::id, std::string("item_id"))
+        .count(&SocialMediaModel::Field::title, "count_net")
+        .group_by(&BaseModel<ItemModel>::Field::id);
+    std::string alias = qsItemCte.getAlias();
 
     const auto callbackPtr =
         std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
@@ -118,7 +116,7 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
             &ItemModel::Field::slug,
             &ItemModel::Field::description)
         .join<MediaModel>()
-        .addDynamoDbCte(std::move(qsItemCte))
+        .join<SocialMediaModel>(std::move(qsItemCte), std::move(alias), " AND item_cte.count_net < 1")
         .filter(&BaseModel<ItemModel>::Field::id, std::string("93"))
         .group_by(&BaseModel<ItemModel>::Field::id)
         .functions(Function(fmt::format("json_agg("
@@ -137,7 +135,6 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
         .functions(Function(fmt::format(R"( COALESCE(({}), '[]'::json) AS nets)", qsSocialMedia.buildSelect())))
         .functions(Function(fmt::format(R"( COALESCE(({}), '[]'::json) AS tags)", qsTag.buildSelect())));
 
-    std::cout << qs.buildSelect() << std::endl;
     executeSqlQuery(callbackPtr,
                     qs.buildSelect(),
                     [this](const drogon::orm::Result &r,

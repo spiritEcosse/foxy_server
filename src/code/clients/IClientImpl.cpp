@@ -14,7 +14,6 @@ namespace api::v1 {
                                     const cpr::Response& response,
                                     const Json::Value& jsonResponse) {
         if(!jsonResponse.isMember(std::string(field))) {
-            // Capture JSON parsing error
             sentryHelper(
                 std::runtime_error(fmt::format("No data or id in PostType to post. Url: {}, Status: {}, Response: {}.",
                                                response.url.str(),
@@ -28,7 +27,6 @@ namespace api::v1 {
 
     bool IClientImpl::parseJson(const cpr::Response& response, Json::Value& jsonResponse) {
         if(Json::Reader reader; !reader.parse(response.text, jsonResponse)) {
-            // Capture JSON parsing error
             sentryHelper(std::runtime_error(fmt::format("JSON parsing error: {}. Url: {}, Status: {}, Response: {}.",
                                                         reader.getFormattedErrorMessages(),
                                                         response.url.str(),
@@ -80,7 +78,6 @@ namespace api::v1 {
                                                      const std::map<std::string, std::string, std::less<>>& params,
                                                      const std::string_view consumerSecret,
                                                      const std::string_view tokenSecret) {
-        // Step 1-5: Create the signature base string
         std::vector<std::string> encodedParams;
         std::ranges::transform(params, std::back_inserter(encodedParams), [](const auto& pair) {
             return fmt::format("{}={}", urlEncode(pair.first), urlEncode(pair.second));
@@ -90,10 +87,8 @@ namespace api::v1 {
         const std::string signatureBaseString =
             fmt::format("{}&{}&{}", urlEncode(httpMethod), urlEncode(url), urlEncode(paramString));
 
-        // Step 6: Generate the signing key
         const std::string signingKey = fmt::format("{}&{}", urlEncode(consumerSecret), urlEncode(tokenSecret));
 
-        // Step 7-8: Sign the base string using HMAC-SHA1 and encode in base64
         unsigned int digest_len;
         const unsigned char* digest = HMAC(EVP_sha1(),
                                            signingKey.c_str(),
@@ -103,7 +98,6 @@ namespace api::v1 {
                                            nullptr,
                                            &digest_len);
 
-        // Convert the HMAC digest into base64
         BIO* bmem = BIO_new(BIO_s_mem());
         BIO* b64 = BIO_new(BIO_f_base64());
         bmem = BIO_push(b64, bmem);
@@ -114,7 +108,7 @@ namespace api::v1 {
         BUF_MEM* bptr;
         BIO_get_mem_ptr(bmem, &bptr);
 
-        std::string oauthSignature(bptr->data, bptr->length - 1);  // Exclude the null terminator added by BIO
+        std::string oauthSignature(bptr->data, bptr->length - 1);
 
         BIO_free_all(bmem);
 

@@ -9,7 +9,7 @@ using namespace drogon::orm;
 
 void Page::getOne(const drogon::HttpRequestPtr &req,
                   std::function<void(const drogon::HttpResponsePtr &)> &&callback,
-                  const std::string &stringId) const {
+                  std::string &&stringId) const {
     const auto callbackPtr =
         std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
 
@@ -20,6 +20,6 @@ void Page::getOne(const drogon::HttpRequestPtr &req,
     }
 
     const auto &filterKey = isInt ? &BaseModel<PageModel>::Field::id : &PageModel::Field::slug;
-    const std::string query = PageModel().sqlSelectOne(filterKey, stringId, {});
+    const std::string query = PageModel().sqlSelectOne(filterKey, std::move(stringId), {});
     executeSqlQuery(callbackPtr, query);
 }

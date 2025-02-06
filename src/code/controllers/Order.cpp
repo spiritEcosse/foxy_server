@@ -11,7 +11,7 @@ using namespace api::v1;
 
 void Order::getOneAdmin(const drogon::HttpRequestPtr &req,
                         std::function<void(const drogon::HttpResponsePtr &)> &&callback,
-                        const std::string &stringId) const {
+                        std::string &&stringId) const {
     const auto callbackPtr =
         std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
 
@@ -21,25 +21,21 @@ void Order::getOneAdmin(const drogon::HttpRequestPtr &req,
         return;
     }
 
-    // User subquery with JSON aggregation
     QuerySet<UserModel> qsUser(0, UserModel::tableName, false);
     qsUser.filter(&BaseModel<UserModel>::Field::id, &OrderModel::Field::userId)
         .jsonFields(UserModel().fieldsJsonObject());
 
-    // Address subquery with JSON aggregation
     QuerySet<AddressModel> qsAddress(0, AddressModel::tableName, false);
     qsAddress.filter(&BaseModel<AddressModel>::Field::id, &OrderModel::Field::addressId)
         .jsonFields(AddressModel().fieldsJsonObject());
 
-    // Basket items subquery with JSON aggregation
     QuerySet<ItemModel> qsItems(0, ItemModel::tableName, false);
     qsItems.join<BasketItemModel>()
         .filter(&BasketItemModel::Field::basketId, &OrderModel::Field::basketId)
         .functions(Function(fmt::format("json_agg(json_build_object({}))", BasketItemModel().fieldsJsonObject())));
 
-    // Main order query combining all JSON objects
     QuerySet<OrderModel> qsOrder(OrderModel::tableName, true, true);
-    qsOrder.filter(&BaseModel<OrderModel>::Field::id, stringId)
+    qsOrder.filter(&BaseModel<OrderModel>::Field::id, std::move(stringId))
         .jsonFields(addExtraQuotes(OrderModel().fieldsJsonObject()))
         .functions(Function(addExtraQuotes(fmt::format(R"(
              'items', COALESCE(({}),'[]'::json),

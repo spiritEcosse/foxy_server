@@ -71,7 +71,6 @@ namespace api::v1 {
     std::vector<std::string> SocialMediaType<ClientType, PostType>::extractTags(const Json::Value &tagsJson) {
         std::vector<std::string> tags;
 
-        //must be for_each, because of: no matching function for call to object of type 'const __transform_fn'
         std::ranges::for_each(tagsJson, [&tags](const auto &tag) {
             std::string tagTitle = tag["title"].asString();
             if(std::ranges::any_of(tag["social_media"], isEqualPlatform))

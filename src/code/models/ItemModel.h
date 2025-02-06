@@ -29,7 +29,6 @@ namespace api::v1 {
             }
         };
 
-        // start fields
         std::string title;
         int shippingProfileId{};
         std::string description;
@@ -37,8 +36,6 @@ namespace api::v1 {
         bool enabled = false;
         dec::decimal<2> price;
         std::string metaDescription;
-
-        // end fields
 
         explicit ItemModel(const Json::Value &json) : BaseModel(json) {
             title = json[Field::title.getFieldName()].asString();
@@ -63,7 +60,7 @@ namespace api::v1 {
         [[nodiscard]] static std::string
         sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params);
         [[nodiscard]] std::string sqlSelectOne(const BaseField *field,
-                                               const std::string &value,
+                                               std::string &&value,
                                                const std::map<std::string, std::string, std::less<>> &params) override;
         [[nodiscard]] static JoinMap joinMap();
     };

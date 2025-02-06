@@ -41,9 +41,10 @@ namespace api::v1 {
         }
 
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
+        [[nodiscard]] static JoinMap joinMap();
         [[nodiscard]] static std::string
         getShippingRateByItem(const BaseField *field,
-                              const std::string &value,
+                              std::string &&value,
                               const std::map<std::string, std::string, std::less<>> &params = {});
     };
 }

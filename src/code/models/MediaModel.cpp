@@ -52,10 +52,13 @@ MediaModel::sqlSelectList(int page, int limit, const std::map<std::string, std::
     const auto orderIt = params.find("order");
     const auto orderValue = orderIt != params.end() ? orderIt->second : "";
     const auto it = field.allFields.find(orderValue);
-    const auto &orderField = (it != field.allFields.end()) ? field.allFields.at(orderValue) : &Field::updatedAt;
+    const auto &orderField = it != field.allFields.end() ? field.allFields.at(orderValue) : &Field::sort;
 
     const auto directionIt = params.find("direction");
-    const bool isAsc = directionIt != params.end() && directionIt->second == "asc";
+    bool isAsc = true;
+    if(directionIt != params.end()) {
+        isAsc = directionIt->second == "asc";
+    }
 
     QuerySet<MediaModel> qs(limit, "data");
     qs.offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))

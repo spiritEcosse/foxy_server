@@ -34,9 +34,7 @@ namespace api::v1 {
             createClient();
         }
 
-        // Functions
         static bool isEqualPlatform(const Json::Value& platform);
-        // Params
         std::unique_ptr<ClientType> client;
         std::string title;
         std::string slug;

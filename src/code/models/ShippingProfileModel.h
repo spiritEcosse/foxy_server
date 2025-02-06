@@ -28,9 +28,9 @@ namespace api::v1 {
 
         std::string title;
         int processingTime{};
-        int countryId{};  // The country from where the items are shipped.
-        std::string postalCode;  // The postal code from where the items are shipped.
-        dec::decimal<2> shippingUpgradeCost;  // offer buyers the option to pay more for faster shipping.
+        int countryId{};
+        std::string postalCode;
+        dec::decimal<2> shippingUpgradeCost;
 
         explicit ShippingProfileModel(const Json::Value &json) : BaseModel(json) {
             title = json[Field::title.getFieldName()].asString();

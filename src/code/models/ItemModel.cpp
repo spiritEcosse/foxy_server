@@ -41,15 +41,18 @@ std::string ItemModel::sqlSelectList(const int page,
     std::string media_video = "media_video";
     const auto &itemID = &BaseModel::Field::id;
     auto mediaItemID = MediaModel::Field::itemId.getFullFieldName();
+    QuerySet<MediaModel> qsMedia = MediaModel::qsMediaMinSort();
+    std::string mediaAlias = qsMedia.getAlias();
 
     QuerySet<ItemModel> qs(limit, "data");
-    qs.join<MediaModel>(std::string("image_media"),
-                        fmt::format(R"(AND {0}.type = 'image' AND {0}.row_num = 1)", std::string("image_media")))
-        .left_join<MediaModel>(std::string("video_media"),
-                               fmt::format(R"(AND {0}.type = 'video' AND {0}.row_num = 1)", std::string("video_media")))
+    qs.join<MediaModel>(std::move(qsMedia),
+                        "image_media",
+                        fmt::format(R"(AND {0}.type = 'image' AND {0}.row_num = 1)", "image_media"))
+        .left_join<MediaModel>(std::move(mediaAlias),
+                               "video_media",
+                               fmt::format(R"(AND {0}.type = 'video' AND {0}.row_num = 1)", "video_media"))
         .filter(&Field::enabled, true)
         .order_by(orderByItem, false)
-        .addDynamoDbCte(MediaModel::qsMediaMinSort())
         .order_by(itemID, false)
         .only(allSetFields())
         .functions(Function(fmt::format("format_src({}.src, '{}') as src", "image_media", APP_CLOUD_NAME)))
@@ -59,7 +62,7 @@ std::string ItemModel::sqlSelectList(const int page,
 }
 
 std::string ItemModel::sqlSelectOne(const BaseField *field,
-                                    const std::string &value,
+                                    std::string &&value,
                                     [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
     QuerySet<MediaModel> qsMedia(0, MediaModel::tableName, false);
     qsMedia.filter(&MediaModel::Field::itemId, &BaseModel::Field::id)
@@ -67,7 +70,7 @@ std::string ItemModel::sqlSelectOne(const BaseField *field,
             fmt::format("json_agg(json_build_object({}) ORDER BY media.sort ASC)", MediaModel().fieldsJsonObject())));
 
     QuerySet<ItemModel> qsItem(tableName, true, true);
-    qsItem.filter(field, value)
+    qsItem.filter(field, std::move(value))
         .jsonFields(addExtraQuotes(fieldsJsonObject()))
         .functions(
             Function(addExtraQuotes(fmt::format(R"( 'media', COALESCE(({}), '[]'::json))", qsMedia.buildSelect()))));

@@ -5,6 +5,10 @@
 
 using namespace api::v1;
 
+BaseModelImpl::JoinMap ShippingRateModel::joinMap() {
+    return {};
+}
+
 BaseModel<ShippingRateModel>::SetMapFieldTypes ShippingRateModel::getObjectValues() const {
     ValueVariant countryIdValue = countryId == 0 ? ValueVariant{std::nullopt} : ValueVariant{countryId};
     return SetMapFieldTypes{{&Field::countryId, countryIdValue},
@@ -14,7 +18,7 @@ BaseModel<ShippingRateModel>::SetMapFieldTypes ShippingRateModel::getObjectValue
 }
 
 std::string ShippingRateModel::getShippingRateByItem(const BaseField *field,
-                                                     const std::string &value,
+                                                     std::string &&value,
                                                      const std::map<std::string, std::string, std::less<>> &params) {
     std::string app_cloud_name;
     const auto it = params.find("client_ip");
@@ -25,15 +29,15 @@ std::string ShippingRateModel::getShippingRateByItem(const BaseField *field,
         .filter(&CountriesIpsModel::Field::endRange, clientIp, Operator::GREATER_OR_EQUAL)
         .only(&CountriesIpsModel::Field::countryId);
 
-    const auto countryIdIsNull = WhereClause(&Field::countryId, std::nullopt, Operator::IS);
-    const auto countryIdIsValue = WhereClause(
-        &Field::countryId,
-        fmt::format("(SELECT {} FROM {})", CountriesIpsModel::Field::countryId.getFieldName(), qsCountry.alias()));
     QuerySet<ShippingRateModel> qsShipping("shipping", false);
     qsShipping.join<ShippingProfileModel>()
         .join<ItemModel>()
-        .filter(countryIdIsNull | countryIdIsValue)
-        .filter(field, value)
+        .filter(WhereClause(&Field::countryId, std::nullopt, Operator::IS) |
+                WhereClause(&Field::countryId,
+                            fmt::format("(SELECT {} FROM {})",
+                                        CountriesIpsModel::Field::countryId.getFieldName(),
+                                        qsCountry.alias())))
+        .filter(field, std::move(value))
         .jsonFields(fmt::format("'{0}', {1} + {2}, '{3}', {4} + {2}",
                                 Field::deliveryDaysMax.getFieldName(),
                                 Field::deliveryDaysMax.getFullFieldName(),

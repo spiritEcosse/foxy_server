@@ -35,7 +35,8 @@ $$
 -- Mock data for media
         INSERT INTO media (src, item_id, sort, type, content_type)
         VALUES ('media1.png', 1, 1, 'image', 'image/png'),
-               ('media2.png', 2, 2, 'image', 'image/png');
+               ('media2.png', 2, 2, 'image', 'image/png'),
+               ('media3.mp4', 1, 3, 'video', 'video/mp4');
 
 -- Mock data for page
         INSERT INTO page (title, slug, meta_description, description, enabled, canonical_url)
