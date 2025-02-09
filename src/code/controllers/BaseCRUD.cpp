@@ -323,8 +323,7 @@ void BaseCRUD<T, R>::handleSqlError(
     const DrogonDbException &e,
     std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const {
     std::string errorMsg = e.base().what();
-    if(errorMsg.find("duplicate key value violates unique constraint") !=
-       std::string::npos) {
+    if(errorMsg.find("duplicate key value violates unique constraint") != std::string::npos) {
         auto resp = drogon::HttpResponse::newHttpResponse();
         resp->setStatusCode(drogon::HttpStatusCode::k409Conflict);
         (*callbackPtr)(resp);

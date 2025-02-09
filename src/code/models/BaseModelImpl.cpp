@@ -8,7 +8,7 @@ namespace api::v1 {
     std::string BaseModelImpl::timePointToString(std::chrono::system_clock::time_point tp) {
         auto time_t = std::chrono::system_clock::to_time_t(tp);
 
-        struct tm local_time{};
+        struct tm local_time {};
 
         localtime_r(&time_t, &local_time);
 

@@ -29,7 +29,7 @@ namespace api::v1 {
 
         explicit SocialMediaModel(const Json::Value &json) : BaseModel(json) {
             title = json[Field::title.getFieldName()].asString();
-            externalId = json[Field::externalId.getFieldName()].asInt();
+            externalId = json[Field::externalId.getFieldName()].asString();
             itemId = json[Field::itemId.getFieldName()].asInt();
 
             validateField(Field::title.getFieldName(), title, missingFields);
