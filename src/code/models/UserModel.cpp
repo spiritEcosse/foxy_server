@@ -11,10 +11,11 @@ BaseModelImpl::JoinMap UserModel::joinMap() {
 }
 
 BaseModel<UserModel>::SetMapFieldTypes UserModel::getObjectValues() const {
+    ValueVariant birthdayValue = birthday == "" ? ValueVariant{std::nullopt} : ValueVariant{birthday};
     return {{&Field::email, email},
             {&Field::firstName, firstName},
             {&Field::lastName, lastName},
-            {&Field::birthday, birthday},
+            {&Field::birthday, birthdayValue},
             {&Field::hasNewsletter, hasNewsletter},
             {&Field::isAdmin, isAdmin}};
 }

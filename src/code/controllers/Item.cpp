@@ -22,7 +22,7 @@ void Item::getListAdmin(const drogon::HttpRequestPtr &req,
     const auto &itemID = &BaseModel<ItemModel>::Field::id;
     qs.left_join<MediaModel>(MediaModel::qsMediaMinSort(),
                              "image_media",
-                             fmt::format("AND {0}.type = 'image' AND {0}.row_num = 1", MediaModel::tableName))
+                             fmt::format("AND {0}.type = 'image' AND {0}.row_num = 1", "image_media"))
         .order_by(orderByItemField, false)
         .order_by(itemID, false)
         .only(ItemModel::allSetFields())
