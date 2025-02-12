@@ -17,7 +17,7 @@ namespace api::v1 {
                      const std::string_view& description,
                      const SharedFileTransferInfo& video,
                      const std::vector<std::string>& tags) :
-        SocialMediaType(itemId, title, slug, description, tags), video(video) {};
+        SocialMediaType(itemId, title, slug, description, tags), video(video){};
 
     bool YouTube::post() {
         return postVideos();
