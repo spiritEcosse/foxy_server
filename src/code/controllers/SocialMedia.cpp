@@ -121,7 +121,7 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
             &ItemModel::Field::slug,
             &ItemModel::Field::description)
         .join<MediaModel>()
-        .join<SocialMediaModel>(std::move(qsItemCte), std::move(alias), " AND item_cte.count_net < 1")
+        .join<SocialMediaModel>(std::move(qsItemCte), std::move(alias), " AND item_cte.count_net < 3")
         .group_by(&BaseModel<ItemModel>::Field::id)
         .functions(Function(fmt::format("json_agg("
                                         "json_build_object('type', {0}, 'url', CASE "

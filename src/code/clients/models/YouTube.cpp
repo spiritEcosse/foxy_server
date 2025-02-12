@@ -74,7 +74,6 @@ namespace api::v1 {
         Json::StreamWriterBuilder builder;
         builder["commentStyle"] = "None";
         builder["indentation"] = "";
-        std::cout << writeString(builder, mediaSource) << std::endl;
         return writeString(builder, mediaSource);
     }
 }
