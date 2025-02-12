@@ -14,22 +14,24 @@
 enum class Operator { EQUALS, NOT_EQUALS, GREATER_THAN, LESS_THAN, GREATER_OR_EQUAL, LESS_OR_EQUAL, LIKE, IS };
 
 inline std::string operatorToString(const Operator op) {
+    using enum Operator;
+
     switch(op) {
-        case Operator::EQUALS:
+        case EQUALS:
             return "=";
-        case Operator::NOT_EQUALS:
+        case NOT_EQUALS:
             return "!=";
-        case Operator::GREATER_THAN:
+        case GREATER_THAN:
             return ">";
-        case Operator::LESS_THAN:
+        case LESS_THAN:
             return "<";
-        case Operator::GREATER_OR_EQUAL:
+        case GREATER_OR_EQUAL:
             return ">=";
-        case Operator::LESS_OR_EQUAL:
+        case LESS_OR_EQUAL:
             return "<=";
-        case Operator::LIKE:
+        case LIKE:
             return "LIKE";
-        case Operator::IS:
+        case IS:
             return "IS";
         default:
             throw std::invalid_argument("Unknown operator");
@@ -79,14 +81,16 @@ namespace api::v1 {
 
     private:
         void serializeRecursive(std::stringstream& ss) const {
-            const bool needParentheses = _type != LogicalType::SINGLE;
+            using enum LogicalType;
+
+            const bool needParentheses = _type != SINGLE;
 
             if(needParentheses)
                 ss << "(";
 
             ss << serializeSingleClause();
-            if(_type != LogicalType::SINGLE) {
-                ss << (_type == LogicalType::AND ? " AND " : " OR ");
+            if(_type != SINGLE) {
+                ss << (_type == AND ? " AND " : " OR ");
 
                 for(const auto& subClause: _subclauses) {
                     subClause.serializeRecursive(ss);

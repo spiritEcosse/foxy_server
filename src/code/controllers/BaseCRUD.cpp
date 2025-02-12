@@ -323,10 +323,12 @@ void BaseCRUD<T, R>::handleSqlError(
     const DrogonDbException &e,
     std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const {
     std::string errorMsg = e.base().what();
+    // TODO: use Use "contains" instead of "find". in 23
     if(errorMsg.find("duplicate key value violates unique constraint") != std::string::npos) {
         auto resp = drogon::HttpResponse::newHttpResponse();
         resp->setStatusCode(drogon::HttpStatusCode::k409Conflict);
         (*callbackPtr)(resp);
+        // TODO: use Use "contains" instead of "find". in 23
     } else if(errorMsg.find("not_found") != std::string::npos) {
         auto resp = drogon::HttpResponse::newHttpResponse();
         resp->setStatusCode(drogon::HttpStatusCode::k404NotFound);
