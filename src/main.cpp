@@ -36,16 +36,16 @@ int main() {
 #endif
 
         app().loadConfigFile(CONFIG_APP_PATH);
-        app().registerHandler("/",
-                              [](const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
-                                  Json::Value json;
-                                  json["result"] = "ok";
-                                  json["message"] = "hello,world!";
-                                  auto resp = HttpResponse::newHttpJsonResponse(json);
-                                  auto callbackPtr = std::make_shared<std::function<void(const HttpResponsePtr &)>>(
-                                      std::move(callback));
-                                  (*callbackPtr)(resp);
-                              });
+        app().registerHandler(
+            "/",
+            []([[maybe_unused]] const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
+                Json::Value json;
+                json["result"] = "ok";
+                json["message"] = "hello,world!";
+                auto resp = HttpResponse::newHttpJsonResponse(json);
+                auto callbackPtr = std::make_shared<std::function<void(const HttpResponsePtr &)>>(std::move(callback));
+                (*callbackPtr)(resp);
+            });
 #if defined(SENTRY_DSN)
         app().registerHandler("/sentry",
                               [](const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
@@ -79,8 +79,8 @@ int main() {
             }
         });
         app().setThreadNum(std::thread::hardware_concurrency() + 2);
-        std::string host = (strcmp(ENVIRONMENT, "dev") == 0) ? "127.0.0.1" : "0.0.0.0";
-        app().addListener(std::move(host), static_cast<uint16_t>(std::stoi(FOXY_HTTP_PORT))).run();
+        const std::string host = strcmp(ENVIRONMENT, "dev") == 0 ? "127.0.0.1" : "0.0.0.0";
+        app().addListener(host, static_cast<uint16_t>(std::stoi(FOXY_HTTP_PORT))).run();
 
 #if defined(SENTRY_DSN)
         sentry_close();

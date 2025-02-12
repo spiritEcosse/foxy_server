@@ -16,6 +16,27 @@ inline std::string addExtraQuotes(const std::string& str) {
     return result;
 }
 
+inline std::string removeHtmlTags(const std::string& input) {
+    std::string result;
+    bool insideTag = false;
+
+    for(char c: input) {
+        if(c == '<') {
+            insideTag = true;
+            continue;
+        }
+        if(c == '>') {
+            insideTag = false;
+            continue;
+        }
+        if(!insideTag) {
+            result += c;
+        }
+    }
+
+    return result;
+}
+
 inline std::string truncateText(const std::string_view& text, size_t maxLength = 280) {
     if(text.length() <= maxLength) {
         return std::string(text);

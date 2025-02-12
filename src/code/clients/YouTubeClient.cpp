@@ -1,4 +1,5 @@
-#include "YouTubeClient.h"
+﻿#include "YouTubeClient.h"
+
 #include "YouTube.h"
 
 namespace api::v1 {
@@ -6,7 +7,35 @@ namespace api::v1 {
         return fmt::format("Bearer {}", accessToken);
     }
 
+    bool YouTubeClient::setAccessToken() {
+        if(!accessToken.empty())
+            return true;
+
+        cpr::Payload payload{{"client_id", std::string(clientId)},
+                             {"client_secret", std::string(clientSecret)},
+                             {"refresh_token", std::string(refreshToken)},
+                             {"grant_type", "refresh_token"}};
+        const cpr::Response response = Post(cpr::Url{tokenUrl},
+                                            std::move(payload),
+                                            cpr::Header{{"Content-Type", "application/x-www-form-urlencoded"}});
+
+        if(!checkResponses(std::vector{response}))
+            return false;
+
+        Json::Value jsonResponse;
+
+        if(!parseJson(response, jsonResponse) || !fieldIsMember("access_token", response, jsonResponse))
+            return false;
+        accessToken = jsonResponse["access_token"].asString();
+        return true;
+    }
+
     bool YouTubeClient::uploadVideo(YouTube* post) const {
+        if(accessToken.empty()) {
+            sentryHelper(std::runtime_error("YouTube Access token is empty"), "IClientImpl::checkResponses");
+            return false;
+        }
+
         const auto initResponse = Post(cpr::Url{apiUploadMedia},
                                        getHttpHeaders(),
                                        cpr::Body{post->toJson()},

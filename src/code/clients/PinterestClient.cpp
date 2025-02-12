@@ -9,6 +9,10 @@ namespace api::v1 {
         return fmt::format("Bearer {}", accessToken);
     }
 
+    bool PinterestClient::setAccessToken() {
+        return true;
+    }
+
     bool PinterestClient::uploadVideos(const Pin* pin) const {
         if(pin->videos.empty())
             return false;
@@ -20,7 +24,7 @@ namespace api::v1 {
 
         std::ranges::transform(pin->videos,
                                std::back_inserter(sessionsInit),
-                               [this, &multiplePerform](const auto& media) {
+                               [this, &multiplePerform]([[maybe_unused]] const auto& media) {
                                    auto session = std::make_shared<cpr::Session>();
                                    session->SetUrl(cpr::Url{apiUploadMedia});
                                    session->SetHeader(getHttpHeaders());

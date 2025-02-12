@@ -10,6 +10,7 @@ namespace api::v1 {
         static constexpr std::string_view accessToken = PINTEREST_ACCESS_TOKEN;
         std::string auth() const override;
         bool setPostId(const cpr::Response& response, const Json::Value& jsonResponse, Pin* pin) const override;
+        bool setAccessToken() override;
 
     public:
         [[nodiscard]] bool uploadVideos(const Pin* pin) const;

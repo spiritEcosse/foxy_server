@@ -12,6 +12,10 @@ namespace api::v1 {
         return auth(apiCreatePost);
     }
 
+    bool TwitterClient::setAccessToken() {
+        return true;
+    }
+
     bool TwitterClient::setPostId(const cpr::Response& response, const Json::Value& jsonResponse, Tweet* tweet) const {
         if(!fieldIsMember("data", response, jsonResponse) || !fieldIsMember("id", response, jsonResponse["data"]))
             return false;

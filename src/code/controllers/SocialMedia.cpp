@@ -27,8 +27,11 @@ void SocialMedia::handleRow(const auto &row) const {
     auto netsJson = row[5].template as<Json::Value>();
     auto tags = row[6].template as<Json::Value>();
 
-    std::set<std::string, std::less<>> target = {std::string(TwitterClient::clientName),
-                                                 std::string(PinterestClient::clientName)};
+    std::set<std::string, std::less<>> target = {
+        std::string(TwitterClient::clientName),
+        std::string(PinterestClient::clientName),
+        std::string(YouTubeClient::clientName),
+    };
 
     std::vector<std::string> nets;
     for(const auto &net: netsJson) {
@@ -49,22 +52,24 @@ void SocialMedia::handleRow(const auto &row) const {
     if(!clientDownloadMedia.downloadMedia())
         return;
 
-    // std::future<bool> tweetPost = std::async(std::launch::async, [&]() {
-    //     return diffNets.contains(TwitterClient::clientName) &&
-    //            Tweet(itemId, title, slug, "", clientDownloadMedia.media, tags).post();
-    // });
-    // std::future<bool> pinPost = std::async(std::launch::async, [&]() {
-    //     return diffNets.contains(PinterestClient::clientName) &&
-    //            Pin(itemId, title, slug, description, clientDownloadMedia.media, tags).post();
-    // });
-    std::future<bool> youtubePost =
+    std::future<bool> tweetPost =
+        std::async(std::launch::async, [&diffNets, &clientDownloadMedia, itemId, &title, &slug, &tags]() {
+            return diffNets.contains(TwitterClient::clientName) &&
+                   Tweet(itemId, title, slug, "", clientDownloadMedia.media, tags).post();
+        });
+    std::future<bool> pinPost =
         std::async(std::launch::async, [&diffNets, &clientDownloadMedia, itemId, &title, &slug, &description, &tags]() {
             return diffNets.contains(PinterestClient::clientName) &&
+                   Pin(itemId, title, slug, description, clientDownloadMedia.media, tags).post();
+        });
+    std::future<bool> youtubePost =
+        std::async(std::launch::async, [&diffNets, &clientDownloadMedia, itemId, &title, &slug, &description, &tags]() {
+            return diffNets.contains(YouTubeClient::clientName) &&
                    YouTube(itemId, title, slug, description, clientDownloadMedia.media, tags).post();
         });
     youtubePost.get();
-    // tweetPost.get();
-    // pinPost.get();
+    tweetPost.get();
+    pinPost.get();
 }
 
 void SocialMedia::handleSqlResultPublish(const drogon::orm::Result &r) const {
@@ -117,7 +122,6 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
             &ItemModel::Field::description)
         .join<MediaModel>()
         .join<SocialMediaModel>(std::move(qsItemCte), std::move(alias), " AND item_cte.count_net < 1")
-        .filter(&BaseModel<ItemModel>::Field::id, std::string("93"))
         .group_by(&BaseModel<ItemModel>::Field::id)
         .functions(Function(fmt::format("json_agg("
                                         "json_build_object('type', {0}, 'url', CASE "

@@ -52,7 +52,12 @@ namespace api::v1 {
 
     template<typename ClientType, typename PostType>
     std::string SocialMediaType<ClientType, PostType>::truncateDescription(const std::string_view &description) {
-        return truncateText(fmt::format("{} {}", INTRODUCTION_TEXT_POST, description), PostType::maxDescriptionSize);
+        std::string cleanDescription = removeHtmlTags(std::string(description));
+
+        return truncateText(cleanDescription.find(INTRODUCTION_TEXT_POST) != std::string_view::npos
+                                ? cleanDescription
+                                : fmt::format("{} {}", INTRODUCTION_TEXT_POST, cleanDescription),
+                            PostType::maxDescriptionSize);
     }
 
     template<typename ClientType, typename PostType>

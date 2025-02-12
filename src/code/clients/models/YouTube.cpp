@@ -17,7 +17,7 @@ namespace api::v1 {
                      const std::string_view& description,
                      const SharedFileTransferInfo& video,
                      const std::vector<std::string>& tags) :
-        SocialMediaType(itemId, title, slug, description, tags), video(video){};
+        SocialMediaType(itemId, title, slug, description, tags), video(video) {};
 
     bool YouTube::post() {
         return postVideos();
@@ -63,8 +63,10 @@ namespace api::v1 {
         snippet["tags"] = tagsJson;
 
         Json::Value status;
-        status["privacyStatus"] = "private";
-        // status["privacyStatus"] = "public";
+        status["privacyStatus"] = strcmp(ENVIRONMENT, "dev") == 0 ? "private" : "public";
+        status["madeForKids"] = false;
+        status["selfDeclaredMadeForKids"] = false;
+
         Json::Value mediaSource;
         mediaSource["snippet"] = snippet;
         mediaSource["status"] = status;
@@ -72,6 +74,7 @@ namespace api::v1 {
         Json::StreamWriterBuilder builder;
         builder["commentStyle"] = "None";
         builder["indentation"] = "";
+        std::cout << writeString(builder, mediaSource) << std::endl;
         return writeString(builder, mediaSource);
     }
 }

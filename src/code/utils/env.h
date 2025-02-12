@@ -8,8 +8,16 @@
 #error APP_BUCKET_HOST must be defined at compile-time
 #endif
 
-#ifndef YOUTUBE_ACCESS_TOKEN
-#error YOUTUBE_ACCESS_TOKEN must be defined at compile-time
+#ifndef YOUTUBE_REFRESH_TOKEN
+#error YOUTUBE_REFRESH_TOKEN must be defined at compile-time
+#endif
+
+#ifndef YOUTUBE_CLIENT_ID
+#error YOUTUBE_CLIENT_ID must be defined at compile-time
+#endif
+
+#ifndef YOUTUBE_CLIENT_SECRET
+#error YOUTUBE_CLIENT_SECRET must be defined at compile-time
 #endif
 
 #ifndef FOXY_CLIENT
