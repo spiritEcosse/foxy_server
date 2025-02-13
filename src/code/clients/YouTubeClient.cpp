@@ -32,7 +32,7 @@ namespace api::v1 {
 
     bool YouTubeClient::uploadVideo(YouTube* post) const {
         if(accessToken.empty()) {
-            sentryHelper(std::runtime_error("YouTube Access token is empty"), "IClientImpl::checkResponses");
+            sentryHelper(std::runtime_error("YouTube Access token is empty"), "YouTubeClient::uploadVideos");
             return false;
         }
 

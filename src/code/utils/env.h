@@ -40,8 +40,16 @@
 #error FOXY_HTTP_PORT must be defined at compile-time
 #endif
 
-#ifndef PINTEREST_ACCESS_TOKEN
-#error PINTEREST_ACCESS_TOKEN must be defined at compile-time
+#ifndef PINTEREST_REFRESH_TOKEN
+#error PINTEREST_REFRESH_TOKEN must be defined at compile-time
+#endif
+
+#ifndef PINTEREST_CLIENT_ID
+#error PINTEREST_CLIENT_ID must be defined at compile-time
+#endif
+
+#ifndef PINTEREST_CLIENT_SECRET
+#error PINTEREST_CLIENT_SECRET must be defined at compile-time
 #endif
 
 #ifndef PINTEREST_API_HOST

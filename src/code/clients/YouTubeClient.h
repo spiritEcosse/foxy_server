@@ -14,7 +14,6 @@ namespace api::v1 {
         std::string auth() const override;
         bool setPostId(const cpr::Response& response, const Json::Value& jsonResponse, YouTube* post) const override;
         bool setAccessToken() override;
-        std::string accessToken;
 
     public:
         explicit YouTubeClient() : IClient() {

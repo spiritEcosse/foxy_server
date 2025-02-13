@@ -27,6 +27,12 @@ namespace api::v1 {
 
     template<typename ClientType, typename PostType>
     bool IClient<ClientType, PostType>::post(PostType* postType, std::string body) const {
+        if(accessToken.empty()) {
+            sentryHelper(std::runtime_error(fmt::format("{} Access token is empty", ClientType::clientName)),
+                         "IClient::post");
+            return false;
+        }
+
         if(body.empty())
             body = postType->toJson();
 
