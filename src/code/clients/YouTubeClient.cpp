@@ -49,7 +49,7 @@ namespace api::v1 {
            location_iter != initResponse.header.end()) {
             uploadUrl = location_iter->second;
         } else {
-            sentryHelper(std::runtime_error("Location header not found."), "IClientImpl::checkResponses");
+            sentryHelper(std::runtime_error("Location header not found."), "YouTubeClient::checkResponses");
             return false;
         }
 
