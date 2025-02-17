@@ -110,7 +110,7 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
     qsItemCte.right_join<ItemModel>()
         .only(&BaseModel<ItemModel>::Field::id, std::string("item_id"))
         .count(&SocialMediaModel::Field::title, "count_net")
-        .group_by(&BaseModel<ItemModel>::Field::id);
+        .group_by(&BaseModel<ItemModel>::Field::id, &SocialMediaModel::Field::title);
     std::string alias = qsItemCte.getAlias();
 
     const auto callbackPtr =
