@@ -12,8 +12,14 @@ jobs:
           ENVIRONMENT: dev
           CONFIG_APP_PATH: dev
           FOXY_HTTP_PORT: dev
-          PINTEREST_ACCESS_TOKEN: dev
           PINTEREST_API_HOST: dev
+          PINTEREST_BOARD_ID: 1212
+          PINTEREST_REFRESH_TOKEN: test
+          PINTEREST_CLIENT_ID: test
+          PINTEREST_CLIENT_SECRET: test
+          YOUTUBE_REFRESH_TOKEN: test
+          YOUTUBE_CLIENT_SECRET: test
+          YOUTUBE_CLIENT_ID: test
           TWITTER_API_KEY: dev
           TWITTER_API_SECRET: dev
           TWITTER_ACCESS_TOKEN: dev
