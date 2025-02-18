@@ -1,7 +1,7 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl sudo ca-certificates tzdata && \
+    apt-get install -y --no-install-recommends curl sudo ca-certificates tzdata g++-14 adduser && \
     rm -rf /var/lib/apt/lists/*
 
 ENV TZ=UTC
