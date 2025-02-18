@@ -2,6 +2,7 @@
 
 #include "Tweet.h"
 #include "Pin.h"
+#include "YouTube.h"
 
 namespace api::v1 {
     template<typename ClientType, typename PostType>
@@ -19,7 +20,6 @@ namespace api::v1 {
                 return false;
             media->setResponse<PostType>(jsonResponse);
             media->setExternalId<PostType>(jsonResponse[std::string(ClientType::field_media_id)].asString());
-            std::cout << media->getExternalId<PostType>() << " : " << media->getFileName() << std::endl;
             ++i;
         }
         return true;
@@ -27,6 +27,12 @@ namespace api::v1 {
 
     template<typename ClientType, typename PostType>
     bool IClient<ClientType, PostType>::post(PostType* postType, std::string body) const {
+        if(accessToken.empty()) {
+            sentryHelper(std::runtime_error(fmt::format("{} Access token is empty", ClientType::clientName)),
+                         "IClient::post");
+            return false;
+        }
+
         if(body.empty())
             body = postType->toJson();
 
@@ -39,4 +45,5 @@ namespace api::v1 {
 
     template class IClient<PinterestClient, Pin>;
     template class IClient<TwitterClient, Tweet>;
+    template class IClient<YouTubeClient, YouTube>;
 }

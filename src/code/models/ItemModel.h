@@ -23,17 +23,12 @@ namespace api::v1 {
             static inline const auto price = BaseField("price", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(title.getFieldName(), std::cref(title));
-                allFields.try_emplace(description.getFieldName(), std::cref(description));
-                allFields.try_emplace(metaDescription.getFieldName(), std::cref(metaDescription));
-                allFields.try_emplace(shippingProfileId.getFieldName(), std::cref(shippingProfileId));
-                allFields.try_emplace(slug.getFieldName(), std::cref(slug));
-                allFields.try_emplace(price.getFieldName(), std::cref(price));
-                allFields.try_emplace(enabled.getFieldName(), std::cref(enabled));
+                constexpr std::array
+                    fields{&title, &description, &metaDescription, &shippingProfileId, &slug, &price, &enabled};
+                registerFields(fields);
             }
         };
 
-        // start fields
         std::string title;
         int shippingProfileId{};
         std::string description;
@@ -41,8 +36,6 @@ namespace api::v1 {
         bool enabled = false;
         dec::decimal<2> price;
         std::string metaDescription;
-
-        // end fields
 
         explicit ItemModel(const Json::Value &json) : BaseModel(json) {
             title = json[Field::title.getFieldName()].asString();
@@ -61,14 +54,14 @@ namespace api::v1 {
             validateField(Field::price.getFieldName(), price, missingFields);
         }
 
-        [[nodiscard]] static QuerySet qsCount();
+        [[nodiscard]] static QuerySet<ItemModel> qsCount();
 
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
         [[nodiscard]] static std::string
         sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params);
-        [[nodiscard]] std::string sqlSelectOne(const std::string &field,
-                                               const std::string &value,
+        [[nodiscard]] std::string sqlSelectOne(const BaseField *field,
+                                               std::string &&value,
                                                const std::map<std::string, std::string, std::less<>> &params) override;
-        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
+        [[nodiscard]] static JoinMap joinMap();
     };
 }

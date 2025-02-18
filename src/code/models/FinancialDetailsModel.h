@@ -18,11 +18,8 @@ namespace api::v1 {
             static inline const auto merchantName = BaseField("merchant_name", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(taxRate.getFieldName(), std::cref(taxRate));
-                allFields.try_emplace(gateway.getFieldName(), std::cref(gateway));
-                allFields.try_emplace(gatewayMerchantId.getFieldName(), std::cref(gatewayMerchantId));
-                allFields.try_emplace(merchantId.getFieldName(), std::cref(merchantId));
-                allFields.try_emplace(merchantName.getFieldName(), std::cref(merchantName));
+                constexpr std::array fields{&taxRate, &gateway, &gatewayMerchantId, &merchantId, &merchantName};
+                registerFields(fields);
             }
         };
 

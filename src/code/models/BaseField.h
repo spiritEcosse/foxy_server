@@ -24,6 +24,10 @@ namespace api::v1 {
             return fieldName.empty();
         }
 
+        [[nodiscard]] std::string getTableName() const {
+            return tableName;
+        }
+
     private:
         std::string fieldName;
         std::string tableName;

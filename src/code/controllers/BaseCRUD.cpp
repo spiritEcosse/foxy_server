@@ -211,7 +211,7 @@ void BaseCRUD<T, R>::getList(const drogon::HttpRequestPtr &req,
 template<class T, class R>
 void BaseCRUD<T, R>::getOne([[maybe_unused]] const drogon::HttpRequestPtr &req,
                             std::function<void(const drogon::HttpResponsePtr &)> &&callback,
-                            const std::string &stringId) const {
+                            std::string &&stringId) const {
     auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
 
     bool isInt = canBeInt(stringId);
@@ -220,9 +220,7 @@ void BaseCRUD<T, R>::getOne([[maybe_unused]] const drogon::HttpRequestPtr &req,
         return;
     }
 
-    std::string filterKey = T::Field::id.getFullFieldName();
-    const std::string query = T().sqlSelectOne(filterKey, stringId, {});
-
+    const std::string query = T().sqlSelectOne(&T::Field::id, std::move(stringId), {});
     executeSqlQuery(callbackPtr, query);
 }
 
@@ -325,12 +323,13 @@ void BaseCRUD<T, R>::handleSqlError(
     const DrogonDbException &e,
     std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr) const {
     std::string errorMsg = e.base().what();
-    if(errorMsg.find("duplicate key value violates unique constraint") !=
-       std::string::npos) {  // Check if the error is a unique violation
+    // TODO: use Use "contains" instead of "find". in 23
+    if(errorMsg.find("duplicate key value violates unique constraint") != std::string::npos) {
         auto resp = drogon::HttpResponse::newHttpResponse();
         resp->setStatusCode(drogon::HttpStatusCode::k409Conflict);
         (*callbackPtr)(resp);
-    } else if(errorMsg.find("not_found") != std::string::npos) {  // Check if the error is a not found error
+        // TODO: use Use "contains" instead of "find". in 23
+    } else if(errorMsg.find("not_found") != std::string::npos) {
         auto resp = drogon::HttpResponse::newHttpResponse();
         resp->setStatusCode(drogon::HttpStatusCode::k404NotFound);
         (*callbackPtr)(resp);

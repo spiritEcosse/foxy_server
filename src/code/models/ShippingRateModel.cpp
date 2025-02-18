@@ -5,55 +5,44 @@
 
 using namespace api::v1;
 
-BaseModel<ShippingRateModel>::SetMapFieldTypes ShippingRateModel::getObjectValues() const {
-    SetMapFieldTypes baseValues = {};
-
-    if(countryId) {
-        baseValues.emplace_back(std::cref(Field::countryId), countryId);
-    } else {
-        baseValues.emplace_back(std::cref(Field::countryId), "Null");
-    }
-
-    baseValues.emplace_back(std::cref(Field::shippingProfileId), shippingProfileId);
-    baseValues.emplace_back(std::cref(Field::deliveryDaysMin), deliveryDaysMin);
-    baseValues.emplace_back(std::cref(Field::deliveryDaysMax), deliveryDaysMax);
-
-    return baseValues;
+BaseModelImpl::JoinMap ShippingRateModel::joinMap() {
+    return {};
 }
 
-std::string ShippingRateModel::getShippingRateByItem(const std::string &field,
-                                                     const std::string &value,
+BaseModel<ShippingRateModel>::SetMapFieldTypes ShippingRateModel::getObjectValues() const {
+    ValueVariant countryIdValue = countryId == 0 ? ValueVariant{std::nullopt} : ValueVariant{countryId};
+    return SetMapFieldTypes{{&Field::countryId, countryIdValue},
+                            {&Field::shippingProfileId, ValueVariant{shippingProfileId}},
+                            {&Field::deliveryDaysMin, ValueVariant{deliveryDaysMin}},
+                            {&Field::deliveryDaysMax, ValueVariant{deliveryDaysMax}}};
+}
+
+std::string ShippingRateModel::getShippingRateByItem(const BaseField *field,
+                                                     std::string &&value,
                                                      const std::map<std::string, std::string, std::less<>> &params) {
     std::string app_cloud_name;
     const auto it = params.find("client_ip");
     const auto clientIp = it->second;
 
-    QuerySet qsCountry(CountriesIpsModel::tableName, "one_country_id", false, false);
-    qsCountry
-        .filter(CountriesIpsModel::Field::startRange.getFullFieldName(),
-                clientIp,
-                true,
-                std::string("<="),
-                std::string("AND"))
-        .filter(CountriesIpsModel::Field::endRange.getFullFieldName(), clientIp, true, std::string(">="))
-        .only(std::cref(CountriesIpsModel::Field::countryId));
+    QuerySet<CountriesIpsModel> qsCountry("one_country_id", false, false);
+    qsCountry.filter(&CountriesIpsModel::Field::startRange, clientIp, Operator::LESS_OR_EQUAL)
+        .filter(&CountriesIpsModel::Field::endRange, clientIp, Operator::GREATER_OR_EQUAL)
+        .only(&CountriesIpsModel::Field::countryId);
 
-    QuerySet qsShipping(tableName, "shipping", false);
-    qsShipping.join(ShippingProfileModel())
-        .join(ItemModel())
-        .filter(
-            {{Field::countryId.getFullFieldName(),
-              "=",
-              fmt::format("(SELECT {} FROM {})", CountriesIpsModel::Field::countryId.getFieldName(), qsCountry.alias()),
-              false,
-              "OR"},
-             {Field::countryId.getFullFieldName(), "IS", "NULL", false, ""}})
-        .filter(field, std::string(value), true, std::string("="))
+    QuerySet<ShippingRateModel> qsShipping("shipping", false);
+    qsShipping.join<ShippingProfileModel>()
+        .join<ItemModel>()
+        .filter(WhereClause(&Field::countryId, std::nullopt, Operator::IS) |
+                WhereClause(&Field::countryId,
+                            fmt::format("(SELECT {} FROM {})",
+                                        CountriesIpsModel::Field::countryId.getFieldName(),
+                                        qsCountry.alias())))
+        .filter(field, std::move(value))
         .jsonFields(fmt::format("'{0}', {1} + {2}, '{3}', {4} + {2}",
                                 Field::deliveryDaysMax.getFieldName(),
                                 Field::deliveryDaysMax.getFullFieldName(),
                                 ShippingProfileModel::Field::processingTime.getFullFieldName(),
                                 Field::deliveryDaysMin.getFieldName(),
                                 Field::deliveryDaysMin.getFullFieldName()));
-    return QuerySet::buildQuery(std::move(qsCountry), std::move(qsShipping));
+    return BuildComplexQueries::buildQuery(std::move(qsCountry), std::move(qsShipping));
 }

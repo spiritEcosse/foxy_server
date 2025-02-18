@@ -8,56 +8,51 @@
 
 using namespace api::v1;
 
-std::map<std::string, std::pair<std::string, std::string>, std::less<>> OrderModel::joinMap() const {
-    return {
-        {BasketModel::tableName,
-         {Field::basketId.getFullFieldName(), BaseModel<BasketModel>::Field::id.getFullFieldName()}},
-        {ItemModel::tableName,
-         {Field::basketId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName()}},
-        {BasketItemModel::tableName,
-         {Field::basketId.getFullFieldName(), BasketItemModel::Field::basketId.getFullFieldName()}},
-        {AddressModel::tableName,
-         {Field::addressId.getFullFieldName(), BaseModel<AddressModel>::Field::id.getFullFieldName()}},
-        {UserModel::tableName, {Field::userId.getFullFieldName(), BaseModel<UserModel>::Field::id.getFullFieldName()}}};
+BaseModelImpl::JoinMap OrderModel::joinMap() {
+    return {{BasketModel::tableName, {&Field::basketId, &BaseModel<BasketModel>::Field::id}},
+            {ItemModel::tableName, {&Field::basketId, &BaseModel<ItemModel>::Field::id}},
+            {BasketItemModel::tableName, {&Field::basketId, &BasketItemModel::Field::basketId}},
+            {AddressModel::tableName, {&Field::addressId, &BaseModel<AddressModel>::Field::id}},
+            {UserModel::tableName, {&Field::userId, &BaseModel<UserModel>::Field::id}}};
 }
 
 BaseModel<OrderModel>::SetMapFieldTypes OrderModel::getObjectValues() const {
-    return {{std::cref(Field::status), status},
-            {std::cref(Field::basketId), basketId},
-            {std::cref(Field::total), total},
-            {std::cref(Field::totalExTaxes), totalExTaxes},
-            {std::cref(Field::taxRate), taxRate},
-            {std::cref(Field::taxes), taxes},
-            {std::cref(Field::userId), userId},
-            {std::cref(Field::returned), returned},
-            {std::cref(Field::addressId), addressId}};
+    return {{&Field::status, status},
+            {&Field::basketId, basketId},
+            {&Field::total, total},
+            {&Field::totalExTaxes, totalExTaxes},
+            {&Field::taxRate, taxRate},
+            {&Field::taxes, taxes},
+            {&Field::userId, userId},
+            {&Field::returned, returned},
+            {&Field::addressId, addressId}};
 }
 
 std::string
 OrderModel::sqlSelectList(const int page, int limit, const std::map<std::string, std::string, std::less<>> &params) {
-    QuerySet qsCount = OrderModel::qsCount();
-    QuerySet qsPage = OrderModel::qsPage(page, limit);
+    auto qsCount = OrderModel::qsCount();
+    auto qsPage = OrderModel::qsPage(page, limit);
 
-    QuerySet qs(tableName, limit, "data");
-    qs.join(BasketItemModel())
+    QuerySet<OrderModel> qs(limit, "data");
+    qs.join<BasketItemModel>()
         .only(allSetFields())
         .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
-        .order_by(std::make_pair(std::cref(BaseModel::Field::updatedAt), false),
-                  std::make_pair(std::cref(BaseModel::Field::id), false))
-        .group_by(std::cref(BaseModel::Field::id),
-                  std::cref(BaseModel::Field::updatedAt),
-                  std::cref(Field::addressId),
-                  std::cref(UserModel::Field::firstName),
-                  std::cref(UserModel::Field::lastName),
-                  std::cref(BaseModel<UserModel>::Field::id),
-                  std::cref(BaseModel<AddressModel>::Field::id),
-                  std::cref(AddressModel::Field::userId),
-                  std::cref(AddressModel::Field::address),
-                  std::cref(AddressModel::Field::city),
-                  std::cref(AddressModel::Field::zipcode),
-                  std::cref(AddressModel::Field::countryId))
-        .join(AddressModel())
-        .join(UserModel())
+        .order_by(&BaseModel::Field::updatedAt, false)
+        .order_by(&BaseModel::Field::id, false)
+        .group_by(&BaseModel::Field::id,
+                  &BaseModel::Field::updatedAt,
+                  &Field::addressId,
+                  &UserModel::Field::firstName,
+                  &UserModel::Field::lastName,
+                  &BaseModel<UserModel>::Field::id,
+                  &BaseModel<AddressModel>::Field::id,
+                  &AddressModel::Field::userId,
+                  &AddressModel::Field::address,
+                  &AddressModel::Field::city,
+                  &AddressModel::Field::zipcode,
+                  &AddressModel::Field::countryId)
+        .join<AddressModel>()
+        .join<UserModel>()
         .functions(Function(fmt::format(R"(json_build_object('{}', {}, '{}', {}, '{}', {}) AS user)",
                                         UserModel::Field::firstName.getFieldName(),
                                         UserModel::Field::firstName.getFullFieldName(),
@@ -70,21 +65,22 @@ OrderModel::sqlSelectList(const int page, int limit, const std::map<std::string,
                                         BasketItemModel().fieldsJsonObject())));
 
     applyFilters(qs, qsCount, params);
-    return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
+    return BuildComplexQueries::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
 }
 
-std::string OrderModel::sqlSelectOne(const std::string &field,
-                                     const std::string &value,
+std::string OrderModel::sqlSelectOne(const BaseField *field,
+                                     std::string &&value,
                                      [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
-    QuerySet qsBasketItem(ItemModel::tableName, 0, ItemModel::tableName, false);
-    qsBasketItem.join(BasketItemModel())
-        .filter(BasketItemModel::Field::itemId.getFullFieldName(), BaseModel::Field::id.getFullFieldName(), false)
+    QuerySet<ItemModel> qsBasketItem(0, ItemModel::tableName, false);
+    qsBasketItem.join<BasketItemModel>()
+        .filter(&BasketItemModel::Field::itemId, &BaseModel::Field::id)
         .functions(Function(fmt::format("json_agg(json_build_object({}))", ItemModel().fieldsJsonObject())));
 
-    QuerySet qsOrder(tableName, tableName, true, true);
-    qsOrder.filter(field, value)
+    QuerySet<OrderModel> qsOrder(tableName, true, true);
+    qsOrder.filter(field, std::move(value))
         .jsonFields(addExtraQuotes(OrderModel().fieldsJsonObject()))
-        .functions(Function(fmt::format(R"( 'items', COALESCE(({}), '[]'::json))", qsBasketItem.buildSelect())));
+        .functions(Function(
+            addExtraQuotes(fmt::format(R"( 'items', COALESCE(({}), '[]'::json))", qsBasketItem.buildSelect()))));
 
     return qsOrder.buildSelectOne();
 }

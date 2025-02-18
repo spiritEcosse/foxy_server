@@ -4,12 +4,40 @@
 namespace api::v1 {
     std::string PinterestClient::apiUploadMedia = fmt::format("{}/v5/media", PINTEREST_API_HOST);
     std::string PinterestClient::apiCreatePost = fmt::format("{}/v5/pins", PINTEREST_API_HOST);
+    std::string PinterestClient::tokenUrl = fmt::format("{}/v5/oauth/token", PINTEREST_API_HOST);
 
     std::string PinterestClient::auth() const {
         return fmt::format("Bearer {}", accessToken);
     }
 
+    bool PinterestClient::setAccessToken() {
+        if(!accessToken.empty())
+            return true;
+
+        cpr::Payload payload{{"refresh_token", std::string(refreshToken)}, {"grant_type", "refresh_token"}};
+        const cpr::Response response = Post(
+            cpr::Url{tokenUrl},
+            std::move(payload),
+            cpr::Header{{"Content-Type", "application/x-www-form-urlencoded"},
+                        {"Authorization", "Basic " + Base64::Encode(std::format("{}:{}", clientId, clientSecret))}});
+
+        if(!checkResponses(std::vector{response}))
+            return false;
+
+        Json::Value jsonResponse;
+
+        if(!parseJson(response, jsonResponse) || !fieldIsMember("access_token", response, jsonResponse))
+            return false;
+        accessToken = jsonResponse["access_token"].asString();
+        return true;
+    }
+
     bool PinterestClient::uploadVideos(const Pin* pin) const {
+        if(accessToken.empty()) {
+            sentryHelper(std::runtime_error("Pinterest Access token is empty"), "PinterestClient::uploadVideos");
+            return false;
+        }
+
         if(pin->videos.empty())
             return false;
 
@@ -20,7 +48,7 @@ namespace api::v1 {
 
         std::ranges::transform(pin->videos,
                                std::back_inserter(sessionsInit),
-                               [this, &multiplePerform](const auto& media) {
+                               [this, &multiplePerform]([[maybe_unused]] const auto& media) {
                                    auto session = std::make_shared<cpr::Session>();
                                    session->SetUrl(cpr::Url{apiUploadMedia});
                                    session->SetHeader(getHttpHeaders());

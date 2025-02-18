@@ -13,12 +13,10 @@ using namespace drogon;
 
 [[noreturn]] void handleSignal(int signal) {
     std::cerr << "Caught signal " << signal << std::endl;
-    // Add your cleanup code or logging here
-    // Capture and print the stack trace
     backward::StackTrace st;
-    st.load_here(32);  // You can adjust the number of frames captured
+    st.load_here(32);
     backward::Printer p;
-    p.print(st, std::cerr);  // Print the stack trace to stderr
+    p.print(st, std::cerr);
     std::exit(signal);
 }
 
@@ -29,9 +27,6 @@ int main() {
 #if defined(SENTRY_DSN)
         sentry_options_t *options = sentry_options_new();
         sentry_options_set_dsn(options, SENTRY_DSN);
-        // This is also the default-path. For further information and recommendations:
-        // https://docs.sentry.io/platforms/native/configuration/options/#database-path
-        //        sentry_options_set_database_path(options, ".sentry-native");
         sentry_options_set_handler_path(
             options,
             fmt::format("{}/_deps/sentry-build/crashpad_build/handler/crashpad_handler", CMAKE_BINARY_DIR).c_str());
@@ -41,16 +36,16 @@ int main() {
 #endif
 
         app().loadConfigFile(CONFIG_APP_PATH);
-        app().registerHandler("/",
-                              [](const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
-                                  Json::Value json;
-                                  json["result"] = "ok";
-                                  json["message"] = "hello,world!";
-                                  auto resp = HttpResponse::newHttpJsonResponse(json);
-                                  auto callbackPtr = std::make_shared<std::function<void(const HttpResponsePtr &)>>(
-                                      std::move(callback));
-                                  (*callbackPtr)(resp);
-                              });
+        app().registerHandler(
+            "/",
+            []([[maybe_unused]] const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
+                Json::Value json;
+                json["result"] = "ok";
+                json["message"] = "hello,world!";
+                auto resp = HttpResponse::newHttpJsonResponse(json);
+                auto callbackPtr = std::make_shared<std::function<void(const HttpResponsePtr &)>>(std::move(callback));
+                (*callbackPtr)(resp);
+            });
 #if defined(SENTRY_DSN)
         app().registerHandler("/sentry",
                               [](const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
@@ -84,8 +79,8 @@ int main() {
             }
         });
         app().setThreadNum(std::thread::hardware_concurrency() + 2);
-        std::string host = (strcmp(ENVIRONMENT, "dev") == 0) ? "127.0.0.1" : "0.0.0.0";
-        app().addListener(std::move(host), static_cast<uint16_t>(std::stoi(FOXY_HTTP_PORT))).run();
+        const std::string host = strcmp(ENVIRONMENT, "dev") == 0 ? "127.0.0.1" : "0.0.0.0";
+        app().addListener(host, static_cast<uint16_t>(std::stoi(FOXY_HTTP_PORT))).run();
 
 #if defined(SENTRY_DSN)
         sentry_close();
@@ -93,9 +88,9 @@ int main() {
 
     } catch(...) {
         backward::StackTrace st;
-        st.load_here(32);  // Capture the stack trace with a maximum of 32 frames
+        st.load_here(32);
         backward::Printer p;
-        p.print(st, std::cerr);  // Print the stack trace to stderr
+        p.print(st, std::cerr);
     }
     return 0;
 }

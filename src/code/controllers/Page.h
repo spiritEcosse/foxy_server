@@ -18,6 +18,6 @@ namespace api::v1 {
 
         void getOne(const drogon::HttpRequestPtr &req,
                     std::function<void(const drogon::HttpResponsePtr &)> &&callback,
-                    const std::string &) const;
+                    std::string &&stringId) const;
     };
 }

@@ -12,28 +12,24 @@ namespace api::v1 {
 
         static const inline std::string tableName = "user";
 
-        struct Field : public BaseModel::Field {
-            static inline const auto email = BaseField("email", tableName);
-            static inline const auto firstName = BaseField("first_name", tableName);
-            static inline const auto lastName = BaseField("last_name", tableName);
-            static inline const auto birthday = BaseField("birthday", tableName);
-            static inline const auto hasNewsletter = BaseField("has_newsletter", tableName);
-            static inline const auto isAdmin = BaseField("is_admin", tableName);
+        struct Field : BaseModel::Field {
+            static inline const auto email = makeField("email");
+            static inline const auto firstName = makeField("first_name");
+            static inline const auto lastName = makeField("last_name");
+            static inline const auto birthday = makeField("birthday");
+            static inline const auto hasNewsletter = makeField("has_newsletter");
+            static inline const auto isAdmin = makeField("is_admin");
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(email.getFieldName(), std::cref(email));
-                allFields.try_emplace(firstName.getFieldName(), std::cref(firstName));
-                allFields.try_emplace(lastName.getFieldName(), std::cref(lastName));
-                allFields.try_emplace(birthday.getFieldName(), std::cref(birthday));
-                allFields.try_emplace(hasNewsletter.getFieldName(), std::cref(hasNewsletter));
-                allFields.try_emplace(isAdmin.getFieldName(), std::cref(isAdmin));
+                constexpr std::array fields{&email, &firstName, &lastName, &birthday, &hasNewsletter, &isAdmin};
+                registerFields(fields);
             }
         };
 
         std::string email;
         std::string firstName;
         std::string lastName;
-        std::string birthday = "Null";
+        std::string birthday;
         bool hasNewsletter{};
         bool isAdmin{};
 
@@ -69,6 +65,6 @@ namespace api::v1 {
 
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
         [[nodiscard]] std::string sqlGetOrCreateUser();
-        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
+        [[nodiscard]] static JoinMap joinMap();
     };
 }

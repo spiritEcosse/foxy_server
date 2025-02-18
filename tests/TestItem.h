@@ -38,15 +38,24 @@ class ItemControllerTest : public BaseTestClass<ItemControllerTest, api::v1::Ite
 
         // Set up the "media" array
         Json::Value media = Json::arrayValue;
-        Json::Value mediaEntry;
-        mediaEntry["content_type"] = "image/png";
-        mediaEntry["id"] = 1;
-        mediaEntry["item_id"] = 1;
-        mediaEntry["sort"] = 1;
-        mediaEntry["src"] = "media1.png";
-        mediaEntry["type"] = "image";
+        Json::Value mediaEntry1;
+        mediaEntry1["content_type"] = "image/png";
+        mediaEntry1["id"] = 1;
+        mediaEntry1["item_id"] = 1;
+        mediaEntry1["sort"] = 1;
+        mediaEntry1["src"] = "media1.png";
+        mediaEntry1["type"] = "image";
 
-        media.append(mediaEntry);
+        Json::Value mediaEntry2;
+        mediaEntry2["content_type"] = "video/mp4";
+        mediaEntry2["id"] = 3;
+        mediaEntry2["item_id"] = 1;
+        mediaEntry2["sort"] = 3;
+        mediaEntry2["src"] = "media3.mp4";
+        mediaEntry2["type"] = "video";
+
+        media.append(mediaEntry1);
+        media.append(mediaEntry2);
         getOneValues["media"] = media;
     }
 
@@ -62,7 +71,7 @@ class ItemControllerTest : public BaseTestClass<ItemControllerTest, api::v1::Ite
         item["shipping_profile_id"] = 1;
         item["slug"] = "item1";
         item["src"] = "media1.png";
-        item["src_video"] = Json::nullValue;
+        item["src_video"] = "media3.mp4";
         item["title"] = "Item1";
 
         data.append(item);
@@ -93,15 +102,23 @@ class ItemControllerTest : public BaseTestClass<ItemControllerTest, api::v1::Ite
         tags.append(tagItem);
         getOneAdminValues["tags"] = tags;
 
-        Json::Value mediaItem;
-        mediaItem["id"] = 1;
-        mediaItem["type"] = "image";
-        mediaItem["src"] = "media1.png";
-        mediaItem["content_type"] = "image/png";
-        mediaItem["sort"] = 1;
+        Json::Value mediaEntry1;
+        mediaEntry1["id"] = 1;
+        mediaEntry1["type"] = "image";
+        mediaEntry1["src"] = "media1.png";
+        mediaEntry1["content_type"] = "image/png";
+        mediaEntry1["sort"] = 1;
+
+        Json::Value mediaEntry2;
+        mediaEntry2["content_type"] = "video/mp4";
+        mediaEntry2["id"] = 3;
+        mediaEntry2["sort"] = 3;
+        mediaEntry2["src"] = "media3.mp4";
+        mediaEntry2["type"] = "video";
 
         Json::Value media = Json::arrayValue;
-        media.append(mediaItem);
+        media.append(mediaEntry1);
+        media.append(mediaEntry2);
         getOneAdminValues["media"] = media;
     }
 };

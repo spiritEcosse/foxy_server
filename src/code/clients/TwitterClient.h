@@ -2,7 +2,7 @@
 
 #include "IClient.h"
 #include "env.h"
-#include "TransparentHasher.h"
+#include "TransparentStringHash.h"
 
 namespace api::v1 {
     class Tweet;
@@ -21,6 +21,7 @@ namespace api::v1 {
         bool setPostId(const cpr::Response& response, const Json::Value& jsonResponse, Tweet* tweet) const override;
         bool uploadMediaImage(const Tweet* tweet) const;
         bool uploadMediaVideo(const Tweet* tweet) const;
+        bool setAccessToken() override;
 
     public:
         [[nodiscard]] bool uploadMedia(const Tweet* tweet) const;

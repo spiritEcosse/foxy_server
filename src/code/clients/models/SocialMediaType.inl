@@ -3,6 +3,7 @@
 #include "PinterestClient.h"  // must be because of it : ClientType::clientName
 #include "SocialMediaModel.h"
 #include "TwitterClient.h"  // must be because of it : ClientType::clientName
+#include "YouTubeClient.h"  // must be because of it : ClientType::clientName
 #include "sentryHelper.h"
 #include "env.h"
 #include <ranges>
@@ -51,7 +52,12 @@ namespace api::v1 {
 
     template<typename ClientType, typename PostType>
     std::string SocialMediaType<ClientType, PostType>::truncateDescription(const std::string_view &description) {
-        return truncateText(fmt::format("{} {}", INTRODUCTION_TEXT_POST, description), PostType::maxDescriptionSize);
+        std::string cleanDescription = removeHtmlTags(std::string(description));
+
+        return truncateText(cleanDescription.find(INTRODUCTION_TEXT_POST) != std::string_view::npos
+                                ? cleanDescription
+                                : fmt::format("{} {}", INTRODUCTION_TEXT_POST, cleanDescription),
+                            PostType::maxDescriptionSize);
     }
 
     template<typename ClientType, typename PostType>
@@ -70,7 +76,6 @@ namespace api::v1 {
     std::vector<std::string> SocialMediaType<ClientType, PostType>::extractTags(const Json::Value &tagsJson) {
         std::vector<std::string> tags;
 
-        //must be for_each, because of: no matching function for call to object of type 'const __transform_fn'
         std::ranges::for_each(tagsJson, [&tags](const auto &tag) {
             std::string tagTitle = tag["title"].asString();
             if(std::ranges::any_of(tag["social_media"], isEqualPlatform))

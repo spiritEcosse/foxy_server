@@ -9,11 +9,13 @@ class SocialMediaControllerTest : public BaseTestClass<SocialMediaControllerTest
     void setupExpectedValues() override {
         expectedValues["item_id"] = 1;
         expectedValues["title"] = "Pinterest";
+        expectedValues["external_id"] = "3453453654675rtydfghr645";
     }
 
     void setupUpdatedValues() override {
         updatedValues["title"] = "Twitter";
         updatedValues["item_id"] = 2;
+        updatedValues["external_id"] = "jfwo48ru8y587yer87234";
     }
 
     void setupGetOneValues() override {

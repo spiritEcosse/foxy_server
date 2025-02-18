@@ -44,7 +44,7 @@ namespace api::v1 {
     public:
         virtual void getOne(const drogon::HttpRequestPtr &req,
                             std::function<void(const drogon::HttpResponsePtr &)> &&callback,
-                            const std::string &) const;
+                            std::string &&stringId) const;
         virtual void createItem(const drogon::HttpRequestPtr &req,
                                 std::function<void(const drogon::HttpResponsePtr &)> &&callback) const;
         virtual void createItems(const drogon::HttpRequestPtr &req,

@@ -12,6 +12,10 @@ namespace api::v1 {
         return auth(apiCreatePost);
     }
 
+    bool TwitterClient::setAccessToken() {
+        return true;
+    }
+
     bool TwitterClient::setPostId(const cpr::Response& response, const Json::Value& jsonResponse, Tweet* tweet) const {
         if(!fieldIsMember("data", response, jsonResponse) || !fieldIsMember("id", response, jsonResponse["data"]))
             return false;
@@ -20,18 +24,14 @@ namespace api::v1 {
     }
 
     bool TwitterClient::uploadMediaImage(const Tweet* tweet) const {
-        // If no images, return true (no images to upload)
         if(tweet->images.empty())
             return true;
 
-        // Create a MultiPerform object
         cpr::MultiPerform multiplePerform;
 
-        // Store shared pointers to sessions to prevent premature destruction
         std::vector<std::shared_ptr<cpr::Session>> sessions;
         sessions.reserve(tweet->images.size());
 
-        // Create sessions for each media item
         std::ranges::transform(tweet->images,
                                std::back_inserter(sessions),
                                [this, &multiplePerform](const auto& media) {
@@ -44,19 +44,16 @@ namespace api::v1 {
                                    return session;
                                });
 
-        // Perform all requests
         const std::vector<cpr::Response> responses = multiplePerform.Post();
         return checkResponses(responses) && saveMediaIdString(responses, tweet->images);
     }
 
     bool TwitterClient::uploadMediaVideo(const Tweet* tweet) const {
-        // If no videos, return true (no videos to upload)
         if(tweet->videos.empty())
             return true;
 
         cpr::MultiPerform multiplePerform;
 
-        // INIT: First step of Twitter's chunked video upload
         std::vector<std::shared_ptr<cpr::Session>> initSessions;
         initSessions.reserve(tweet->videos.size());
 
@@ -67,7 +64,6 @@ namespace api::v1 {
                                    session->SetUrl(cpr::Url{apiUploadMedia});
                                    session->SetHeader({{"Authorization", auth(apiUploadMedia, "POST")}});
 
-                                   // Prepare video file info for INIT
                                    session->SetMultipart(
                                        {{"command", "INIT"},
                                         {"media_type", media->getContentType()},
@@ -77,16 +73,13 @@ namespace api::v1 {
                                    return session;
                                });
 
-        // Execute INIT requests
         const auto initResponses = multiplePerform.Post();
 
         if(!checkResponses(initResponses, 202))
             return false;
 
-        // save media_id_string to media
         saveMediaIdString(initResponses, tweet->videos);
 
-        // APPEND: Upload video in chunks
         cpr::MultiPerform multiplePerformAppend;
         std::vector<std::shared_ptr<cpr::Session>> appendSessions;
         std::vector<std::shared_ptr<std::vector<char>>> allFileContents;
@@ -95,7 +88,6 @@ namespace api::v1 {
         for(const auto& media: tweet->videos) {
             if(!media)
                 continue;
-            // Safely get file content
             auto fileContent = media->getFileContent();
             if(fileContent->empty())
                 continue;
@@ -104,7 +96,7 @@ namespace api::v1 {
             std::filesystem::path fileName = media->getFileName();
             if(externalId.empty() || fileName.empty())
                 continue;
-            constexpr size_t chunkSize = 1048576;  // 1MB chunks
+            constexpr size_t chunkSize = 1048576;
             allFileContents.push_back(fileContent);
 
             size_t segmentIndex = 0;
@@ -117,7 +109,6 @@ namespace api::v1 {
                 session->SetHeader({{"Authorization", auth(apiUploadMedia)}});
 
                 try {
-                    // Use ptrdiff_t for iterator difference to avoid narrowing conversion
                     auto start = fileContent->begin() + static_cast<std::ptrdiff_t>(offset);
                     auto end = std::min(fileContent->end(),
                                         fileContent->begin() + static_cast<std::ptrdiff_t>(offset + currentChunkSize));
@@ -130,19 +121,15 @@ namespace api::v1 {
                     multiplePerformAppend.AddSession(session);
                     appendSessions.push_back(session);
                 } catch(const std::exception& e) {
-                    // Log or handle the exception
                     std::cerr << "Error creating session: " << e.what() << std::endl;
                 }
                 segmentIndex++;
             }
         }
 
-        // Execute APPEND requests
-
         if(!checkResponses(multiplePerformAppend.Post(), 204))
             return false;
 
-        // FINALIZE: Mark video upload as complete
         cpr::MultiPerform multiplePerformFin;
         std::vector<std::shared_ptr<cpr::Session>> finalizeSessions;
         finalizeSessions.reserve(tweet->videos.size());
@@ -159,7 +146,6 @@ namespace api::v1 {
                                    return session;
                                });
 
-        // Execute FINALIZE requests
         return checkResponses(multiplePerformFin.Post());
     }
 
@@ -191,7 +177,7 @@ namespace api::v1 {
             {"oauth_version", "1.0"},
         };
         std::ranges::transform(params, std::inserter(oauthParams, oauthParams.end()), [](const auto& pair) {
-            return pair;  // Return the key-value pair unchanged
+            return pair;
         });
 
         oauthParams["oauth_signature"] =

@@ -22,10 +22,6 @@ namespace api::v1 {
         return fmt::format("{}.{}", time_string, milliseconds.count());
     }
 
-    std::map<std::string, std::pair<std::string, std::string>, std::less<>> BaseModelImpl::joinMap() const {
-        return {};
-    }
-
     std::size_t BaseModelImpl::ModelFieldHasher::operator()(std::string_view sv) const {
         std::hash<std::string_view> hasher;
         return hasher(sv);

@@ -66,7 +66,7 @@ public:
             for(Json::ArrayIndex i = 0; i < respJson.size(); ++i) {
                 checkJsonValue(respJson[i], expectedValue[i], buildKeyPath("[" + std::to_string(i) + "]"));
             }
-        } else if(keyPath.ends_with("src")) {
+        } else if(keyPath.ends_with("src") | keyPath.ends_with("src_video")) {
             // Special handling for "src"
             EXPECT_EQ(respJson.asString(), fmt::format("https://{}/{}", APP_CLOUD_NAME, expectedValue.asString()))
                 << "Mismatch at key path: " << keyPath;

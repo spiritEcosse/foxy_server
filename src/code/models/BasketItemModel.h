@@ -13,17 +13,15 @@ namespace api::v1 {
 
         static const inline std::string tableName = "basket_item";
 
-        struct Field : public BaseModel::Field {
+        struct Field : BaseModel::Field {
             static inline const auto basketId = BaseField("basket_id", tableName);
             static inline const auto itemId = BaseField("item_id", tableName);
             static inline const auto quantity = BaseField("quantity", tableName);
             static inline const auto price = BaseField("price", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(basketId.getFieldName(), std::cref(basketId));
-                allFields.try_emplace(itemId.getFieldName(), std::cref(itemId));
-                allFields.try_emplace(quantity.getFieldName(), std::cref(quantity));
-                allFields.try_emplace(price.getFieldName(), std::cref(price));
+                constexpr std::array fields{&basketId, &itemId, &quantity, &price};
+                registerFields(fields);
             }
         };
 
@@ -44,9 +42,10 @@ namespace api::v1 {
         }
 
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
-        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
         [[nodiscard]] std::string fieldsJsonObject() override;
         [[nodiscard]] static std::string
         sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params);
+
+        [[nodiscard]] static JoinMap joinMap();
     };
 }
