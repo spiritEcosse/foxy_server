@@ -35,10 +35,7 @@ execute_process(COMMAND bash -c "cp -f config.json ${PROJECT_BINARY_DIR}"
 if (NOT COPY_CONFIG EQUAL "0")
     message(FATAL_ERROR "cp config.json failed with : ${COPY_CONFIG}, please check")
 endif ()
-
-if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    link_directories(/usr/lib/x86_64-linux-gnu/)
-endif ()
+#
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty" "${CMAKE_BINARY_DIR}/_deps/cmake-scripts-src/")
 include(3rdparty)
