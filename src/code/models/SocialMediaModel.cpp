@@ -25,8 +25,7 @@ std::string SocialMediaModel::sqlSelectList(const int page,
     auto qsCount = SocialMediaModel::qsCount();
     auto qsPage = SocialMediaModel::qsPage(page, limit);
     QuerySet<SocialMediaModel> qs(limit, "data");
-    qs.join<SocialMediaModel>()
-        .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
+    qs.offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
         .only(allSetFields())
         .order_by(&BaseModel::Field::updatedAt, false)
         .functions(Function(fmt::format("format_social_url({}, {}::TEXT) as social_url",

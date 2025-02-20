@@ -80,7 +80,9 @@ $$
                ('Tag2', ARRAY ['Twitter', 'Facebook']::social_media_type[], 2);
 
         INSERT INTO social_media (title, item_id, external_id)
-        VALUES ('Facebook', 1, 100),
-               ('Twitter', 2, 20000);
+        VALUES ('YouTube', 1, 100),
+               ('Twitter', 2, 20000),
+               ('Pinterest', 1, 30000),
+               ('Twitter', 1, 40000);
     END
 $$;
