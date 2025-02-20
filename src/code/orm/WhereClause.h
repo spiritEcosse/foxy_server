@@ -46,7 +46,7 @@ namespace api::v1 {
     class WhereClause final : public BaseClass {
     public:
         enum class LogicalType { SINGLE, AND, OR };
-        enum class ValueType { STRING, SPECIAL, FIELD_COMPARISON };
+        enum class ValueType { STRING, SPECIAL, FIELD_COMPARISON, RAW_SQL };
 
         WhereClause(const BaseField* field, std::string value, const Operator op = Operator::EQUALS) :
             BaseClass(), _field(field), _value(std::move(value)), _op(op), _valueType(ValueType::STRING) {}
@@ -58,6 +58,12 @@ namespace api::v1 {
         WhereClause(const BaseField* field1, const BaseField* field2) :
             BaseClass(), _field(field1), _comparisonField(field2), _op(Operator::EQUALS),
             _valueType(ValueType::FIELD_COMPARISON) {}
+
+        static WhereClause rawSql(const BaseField* field, std::string sql, const Operator op = Operator::EQUALS) {
+            WhereClause clause(field, std::move(sql), op);
+            clause._valueType = ValueType::RAW_SQL;
+            return clause;
+        }
 
         friend WhereClause operator&(WhereClause lhs, WhereClause rhs) {
             WhereClause combined(std::move(lhs));
@@ -75,30 +81,30 @@ namespace api::v1 {
 
         std::string serialize() const {
             std::stringstream ss;
-            serializeRecursive(ss);
+            serializeRecursive(ss, false);
             return ss.str();
         }
 
     private:
-        void serializeRecursive(std::stringstream& ss) const {
-            using enum LogicalType;
+        void serializeRecursive(std::stringstream& ss, bool isNested) const {
+            bool needParentheses = isNested || (_type != LogicalType::SINGLE && !_subclauses.empty());
 
-            const bool needParentheses = _type != SINGLE;
-
-            if(needParentheses)
+            if(needParentheses) {
                 ss << "(";
+            }
 
             ss << serializeSingleClause();
-            if(_type != SINGLE) {
-                ss << (_type == AND ? " AND " : " OR ");
 
-                for(const auto& subClause: _subclauses) {
-                    subClause.serializeRecursive(ss);
+            if(!_subclauses.empty()) {
+                for(size_t i = 0; i < _subclauses.size(); ++i) {
+                    ss << (_type == LogicalType::AND ? " AND " : " OR ");
+                    _subclauses[i].serializeRecursive(ss, true);
                 }
             }
 
-            if(needParentheses)
+            if(needParentheses) {
                 ss << ")";
+            }
         }
 
         std::string serializeSingleClause() const {
@@ -110,10 +116,10 @@ namespace api::v1 {
                                        _comparisonField->getFullFieldName());
 
                 case ValueType::STRING:
-                    return fmt::format("{} {} {}",
-                                       _field->getFullFieldName(),
-                                       operatorToString(_op),
-                                       fmt::format("'{}'", _value));
+                    return fmt::format("{} {} '{}'", _field->getFullFieldName(), operatorToString(_op), _value);
+
+                case ValueType::RAW_SQL:
+                    return fmt::format("{} {} {}", _field->getFullFieldName(), operatorToString(_op), _value);
 
                 case ValueType::SPECIAL:
                     return fmt::format("{} {} {}", _field->getFullFieldName(), operatorToString(_op), _value);

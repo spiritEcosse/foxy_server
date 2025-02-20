@@ -72,7 +72,7 @@ $$
 
 -- Mock data for countries_ips
         INSERT INTO countries_ips (start_range, end_range, country_code, country_name, country_id)
-        VALUES (1, 100, 'US', 'United States of America', 1),
+        VALUES (0, 100, 'US', 'United States of America', 1),
                (101, 200, 'ES', 'Spain', 2);
 
         INSERT INTO tag (title, social_media, item_id)

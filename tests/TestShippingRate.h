@@ -6,6 +6,7 @@
 #include <gtest/gtest.h>
 
 class ShippingRateControllerTest : public BaseTestClass<ShippingRateControllerTest, api::v1::ShippingRate> {
+protected:
     void setupExpectedValues() override {
         expectedValues["shipping_profile_id"] = 1;
         expectedValues["delivery_days_min"] = 1;
@@ -51,6 +52,34 @@ class ShippingRateControllerTest : public BaseTestClass<ShippingRateControllerTe
 
         getListValues["data"] = data;
     }
+
+    std::function<void(const drogon::HttpResponsePtr&)>
+    getShippingRateByItemCallback(const std::shared_ptr<std::promise<void>>& testPromise,
+                                  const drogon::HttpStatusCode statusCode = drogon::k200OK) {
+        return [this, testPromise, statusCode](const drogon::HttpResponsePtr& resp) {
+            try {
+                EXPECT_EQ(resp->getStatusCode(), statusCode);
+
+                if(resp->getStatusCode() == drogon::k200OK) {
+                    const auto responseJson = resp->getJsonObject();
+                    const Json::StreamWriterBuilder builder;
+                    const std::string jsonString = writeString(builder, *responseJson);
+                    std::cout << jsonString << std::endl;
+                    EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
+                    Json::Value obj;
+                    Json::Value shipping;
+                    shipping["delivery_days_max"] = 7;
+                    shipping["delivery_days_min"] = 3;
+                    obj["shipping"] = shipping;
+                    this->checkJsonValue(*responseJson, obj);
+                }
+                testPromise->set_value();
+            } catch(const std::exception& e) {
+                testPromise->set_exception(std::current_exception());
+                LOG_ERROR << e.what();
+            }
+        };
+    }
 };
 
 TEST_F(ShippingRateControllerTest, Create200) {
@@ -75,6 +104,16 @@ TEST_F(ShippingRateControllerTest, Update200) {
 
 TEST_F(ShippingRateControllerTest, GetOne200) {
     testGetOne200();
+}
+
+TEST_F(ShippingRateControllerTest, GetShippingRateByItem) {
+    setupGetOneValues();
+
+    runAsyncTest<void>([this](auto promise) {
+        drogon::app().getLoop()->queueInLoop([this, promise]() {
+            controller.getShippingRateByItem(*reqPtr, getShippingRateByItemCallback(promise), "item1");
+        });
+    }).get();
 }
 
 TEST_F(ShippingRateControllerTest, GetList200) {
