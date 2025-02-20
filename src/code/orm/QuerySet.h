@@ -428,7 +428,7 @@ namespace api::v1 {
             return addFilter(WhereClause(field1, field2));
         }
 
-        QuerySet &filter(WhereClause whereClause) {
+        QuerySet &filter(WhereClause &&whereClause) {
             return addFilter(std::move(whereClause));
         }
 
