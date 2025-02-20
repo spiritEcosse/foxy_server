@@ -70,14 +70,9 @@ std::string ItemModel::sqlSelectOne(const BaseField *field,
         .functions(Function(
             fmt::format("json_agg(json_build_object({}) ORDER BY media.sort ASC)", MediaModel().fieldsJsonObject())));
 
-    QuerySet<SocialMediaModel> nets(0, SocialMediaModel::tableName, false);
-    nets.functions(Function(fmt::format("json_agg(json_build_object({}))", SocialMediaModel().fieldsJsonObject())))
-        .filter(&SocialMediaModel::Field::itemId, &BaseModel::Field::id);
-
     QuerySet<ItemModel> qsItem(tableName, true, true);
     qsItem.filter(field, std::move(value))
         .jsonFields(addExtraQuotes(fieldsJsonObject()))
-        .functions(Function(addExtraQuotes(fmt::format(R"( 'nets', COALESCE(({}), '[]'::json))", nets.buildSelect()))))
         .functions(
             Function(addExtraQuotes(fmt::format(R"( 'media', COALESCE(({}), '[]'::json))", qsMedia.buildSelect()))));
 

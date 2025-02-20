@@ -36,26 +36,6 @@ class ItemControllerTest : public BaseTestClass<ItemControllerTest, api::v1::Ite
         getOneValues["shipping_profile_id"] = 1;
         getOneValues["price"] = 100.0;
 
-        Json::Value nets;
-        Json::Value net1;
-        net1["id"] = 1;
-        net1["title"] = "YouTube";
-        net1["social_url"] = "https://www.youtube.com/watch?v=100";
-        nets.append(net1);
-
-        Json::Value net2;
-        net2["id"] = 3;
-        net2["title"] = "Pinterest";
-        net2["social_url"] = "https://pinterest.com/pin/30000";
-        nets.append(net2);
-
-        Json::Value net3;
-        net3["id"] = 4;
-        net3["title"] = "Twitter";
-        net3["social_url"] = "https://x.com/faithfishart/status/40000";
-        nets.append(net3);
-        getOneValues["nets"] = nets;
-
         // Set up the "media" array
         Json::Value media = Json::arrayValue;
         Json::Value mediaEntry1;
