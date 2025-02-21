@@ -33,6 +33,8 @@ void SocialMedia::handleRow(const auto &row) const {
         std::string(YouTubeClient::clientName),
     };
 
+    std::cout << "itemId: " << itemId << std::endl;
+
     std::vector<std::string> nets;
     for(const auto &net: netsJson) {
         nets.emplace_back(net.asString());
@@ -109,8 +111,10 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
     QuerySet<SocialMediaModel> qsItemCte(0, std::string("item_cte"), false);
     qsItemCte.right_join<ItemModel>()
         .only(&BaseModel<ItemModel>::Field::id, std::string("item_id"))
-        .count(&SocialMediaModel::Field::title, "count_net")
-        .group_by(&BaseModel<ItemModel>::Field::id, &SocialMediaModel::Field::title);
+        .functions(Function(fmt::format("count(distinct {})::integer as {}",
+                                        SocialMediaModel::Field::title.getFullFieldName(),
+                                        "count_net")))
+        .group_by(&BaseModel<ItemModel>::Field::id);
     std::string alias = qsItemCte.getAlias();
 
     const auto callbackPtr =
