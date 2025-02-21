@@ -59,46 +59,100 @@ namespace api::v1 {
             BaseClass(), _field(field1), _comparisonField(field2), _op(Operator::EQUALS),
             _valueType(ValueType::FIELD_COMPARISON) {}
 
+        WhereClause(LogicalType type, std::vector<WhereClause> subclauses, bool isGrouped = false) :
+            BaseClass(), _field(nullptr), _op(), _valueType(), _needsGrouping(isGrouped), _type(type),
+            _subclauses(std::move(subclauses)) {}
+
+        // Modified group method that creates a new wrapper clause
+        static WhereClause createGroup(WhereClause clause) {
+            std::vector<WhereClause> subclauses;
+            subclauses.push_back(std::move(clause));
+            return WhereClause(LogicalType::SINGLE, std::move(subclauses), true);
+        }
+
         static WhereClause rawSql(const BaseField* field, std::string sql, const Operator op = Operator::EQUALS) {
             WhereClause clause(field, std::move(sql), op);
             clause._valueType = ValueType::RAW_SQL;
             return clause;
         }
 
+        // Modified operator overloads
         friend WhereClause operator&(WhereClause lhs, WhereClause rhs) {
-            WhereClause combined(std::move(lhs));
-            combined._type = LogicalType::AND;
-            combined._subclauses.push_back(std::move(rhs));
-            return combined;
+            // If we're already building an AND clause, just append
+            if(lhs._type == LogicalType::AND && lhs._field == nullptr) {
+                lhs._subclauses.push_back(std::move(rhs));
+                return std::move(lhs);
+            }
+
+            // Otherwise, create a new AND clause
+            std::vector<WhereClause> subclauses;
+            subclauses.push_back(std::move(lhs));
+            subclauses.push_back(std::move(rhs));
+            return WhereClause(LogicalType::AND, std::move(subclauses));
         }
 
         friend WhereClause operator|(WhereClause lhs, WhereClause rhs) {
-            WhereClause combined(std::move(lhs));
-            combined._type = LogicalType::OR;
-            combined._subclauses.push_back(std::move(rhs));
-            return combined;
+            // If we're already building an OR clause, just append
+            if(lhs._type == LogicalType::OR && lhs._field == nullptr) {
+                lhs._subclauses.push_back(std::move(rhs));
+                return std::move(lhs);
+            }
+
+            // Otherwise, create a new OR clause
+            std::vector<WhereClause> subclauses;
+            subclauses.push_back(std::move(lhs));
+            subclauses.push_back(std::move(rhs));
+            return WhereClause(LogicalType::OR, std::move(subclauses));
         }
 
         std::string serialize() const {
             std::stringstream ss;
-            serializeRecursive(ss, false);
+            serializeRecursive(ss);
             return ss.str();
         }
 
+        // Add this as a public method to WhereClause class
+        WhereClause&& group() && {
+            _needsGrouping = true;
+            return std::move(*this);
+        }
+
     private:
-        void serializeRecursive(std::stringstream& ss, bool isNested) const {
-            bool needParentheses = isNested || (_type != LogicalType::SINGLE && !_subclauses.empty());
+        // Modified serialization
+        void serializeRecursive(std::stringstream& ss) const {
+            // If this is a grouping wrapper, just serialize the first subclause with forced parentheses
+            if(_field == nullptr && _type == LogicalType::SINGLE && _subclauses.size() == 1 && _needsGrouping) {
+                _subclauses[0].serializeRecursive(ss);
+                return;
+            }
+
+            // For real clauses with multiple subclauses
+            bool needParentheses = _needsGrouping || (_type != LogicalType::SINGLE && _subclauses.size() > 1);
 
             if(needParentheses) {
                 ss << "(";
             }
 
-            ss << serializeSingleClause();
+            // If this is a logical operator clause
+            if(_field == nullptr) {
+                if(!_subclauses.empty()) {
+                    _subclauses[0].serializeRecursive(ss);
 
-            if(!_subclauses.empty()) {
-                for(size_t i = 0; i < _subclauses.size(); ++i) {
-                    ss << (_type == LogicalType::AND ? " AND " : " OR ");
-                    _subclauses[i].serializeRecursive(ss, true);
+                    for(size_t i = 1; i < _subclauses.size(); ++i) {
+                        ss << (_type == LogicalType::AND ? " AND " : " OR ");
+                        _subclauses[i].serializeRecursive(ss);
+                    }
+                }
+            } else {
+                // This is a leaf clause
+                ss << serializeSingleClause();
+
+                // Handle any subclauses
+                if(!_subclauses.empty()) {
+                    for(const auto& subclause: _subclauses) {
+                        ss << (_type == LogicalType::AND ? " AND " : " OR ");
+                        subclause.serializeRecursive(ss);
+                    }
                 }
             }
 
@@ -134,6 +188,7 @@ namespace api::v1 {
         std::string _value;
         Operator _op;
         ValueType _valueType;
+        bool _needsGrouping = false;
         LogicalType _type = LogicalType::SINGLE;
         std::vector<WhereClause> _subclauses;
     };

@@ -377,7 +377,7 @@ namespace api::v1 {
                                });
 
             std::vector serialized(transformed.begin(), transformed.end());
-            std::string query = fmt::format(" WHERE {} ", fmt::join(serialized, " "));
+            std::string query = fmt::format(" WHERE {} ", fmt::join(serialized, " AND "));
             return _doAndCheck ? addExtraQuotes(query) : query;
         }
     };
@@ -385,11 +385,7 @@ namespace api::v1 {
     template<class T>
     class QuerySet final : public BaseQuerySet<T> {
         QuerySet &addFilter(WhereClause &&whereClause) {
-            if(this->filters.empty()) {
-                this->filters.push_back(std::move(whereClause));
-            } else {
-                this->filters[0] = std::move(std::move(this->filters[0]) & std::move(whereClause));
-            }
+            this->filters.push_back(std::move(whereClause));
             return *this;
         }
 

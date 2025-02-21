@@ -29,12 +29,13 @@ std::string ShippingRateModel::getShippingRateByItem(const BaseField *field,
         .filter(&CountriesIpsModel::Field::endRange, clientIp, Operator::GREATER_OR_EQUAL)
         .only(&CountriesIpsModel::Field::countryId);
 
-    auto fullCondition = (WhereClause(&Field::countryId, std::nullopt, Operator::IS) |
-                          WhereClause::rawSql(&Field::countryId,
-                                              fmt::format("(SELECT {} FROM {})",
-                                                          CountriesIpsModel::Field::countryId.getFieldName(),
-                                                          qsCountry.alias())) &
-                              WhereClause(field, std::move(value)));
+    auto fullCondition =
+        WhereClause::createGroup(WhereClause(&Field::countryId, std::nullopt, Operator::IS) |
+                                 WhereClause::rawSql(&Field::countryId,
+                                                     fmt::format("(SELECT {} FROM {})",
+                                                                 CountriesIpsModel::Field::countryId.getFieldName(),
+                                                                 qsCountry.alias()))) &
+        WhereClause(field, std::move(value));
 
     QuerySet<ShippingRateModel> qsShipping("shipping", false);
     qsShipping.join<ShippingProfileModel>()
