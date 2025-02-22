@@ -15,6 +15,7 @@ namespace api::v1 {
 
         virtual bool post(PostType* postType, std::string body = "") const;
         virtual bool setAccessToken() = 0;
+        virtual std::string getAccessToken() const = 0;
 
         virtual std::string auth() const = 0;
         virtual bool

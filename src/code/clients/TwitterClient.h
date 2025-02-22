@@ -22,6 +22,7 @@ namespace api::v1 {
         bool uploadMediaImage(const Tweet* tweet) const;
         bool uploadMediaVideo(const Tweet* tweet) const;
         bool setAccessToken() override;
+        std::string getAccessToken() const override;
 
     public:
         [[nodiscard]] bool uploadMedia(const Tweet* tweet) const;

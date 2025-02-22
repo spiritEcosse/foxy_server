@@ -10,6 +10,10 @@ namespace api::v1 {
         return fmt::format("Bearer {}", accessToken);
     }
 
+    std::string PinterestClient::getAccessToken() const {
+        return accessToken;
+    }
+
     bool PinterestClient::setAccessToken() {
         if(!accessToken.empty())
             return true;

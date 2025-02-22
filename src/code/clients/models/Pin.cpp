@@ -19,7 +19,7 @@ namespace api::v1 {
              const SharedFileTransferInfo& coverImage,
              const SharedFileTransferInfo& video,
              const std::vector<std::string>& tags) :
-        SocialMediaType(itemId, title, slug, description, tags), coverImage(coverImage), video(video){};
+        SocialMediaType(itemId, title, slug, description, tags), coverImage(coverImage), video(video) {};
 
     bool Pin::post() {
         std::future<bool> postVideoFuture = std::async(std::launch::async, [this]() {
@@ -27,12 +27,12 @@ namespace api::v1 {
         });
 
         std::future<bool> postImagesFuture = std::async(std::launch::async, [this]() {
-            return !images.empty() && SocialMediaType::post();
+            return SocialMediaType::post();
         });
 
         const bool postImagesResult = postImagesFuture.get();
         const bool postVideoResult = postVideoFuture.get();
-        return postImagesResult && postVideoResult;
+        return !images.empty() && !videos.empty() && (postImagesResult || postVideoResult);
     }
 
     bool Pin::postVideos() {
@@ -82,18 +82,24 @@ namespace api::v1 {
 
     std::string Pin::toJson() const {
         Json::Value mediaSource;
-        mediaSource["source_type"] = "multiple_image_base64";
 
-        Json::Value items = Json::arrayValue;
-        std::ranges::for_each(images, [&items, this](const auto& info) {
-            Json::Value item;
-            item["data"] = info->getBase64ContentOfFile();
-            item["content_type"] = info->getContentType();
-            item["link"] = itemUrl;
-            items.append(item);
-        });
+        if(images.size() > 1) {
+            mediaSource["source_type"] = "multiple_image_base64";
+            Json::Value items = Json::arrayValue;
+            std::ranges::for_each(images, [&items, this](const auto& info) {
+                Json::Value item;
+                item["data"] = info->getBase64ContentOfFile();
+                item["content_type"] = info->getContentType();
+                item["link"] = itemUrl;
+                items.append(item);
+            });
 
-        mediaSource["items"] = items;
+            mediaSource["items"] = items;
+        } else {
+            mediaSource["source_type"] = "image_base64";
+            mediaSource["data"] = images[0]->getBase64ContentOfFile();
+            mediaSource["content_type"] = images[0]->getContentType();
+        }
         return toJsonInternal(mediaSource);
     }
 }

@@ -7,6 +7,10 @@ namespace api::v1 {
         return fmt::format("Bearer {}", accessToken);
     }
 
+    std::string YouTubeClient::getAccessToken() const {
+        return accessToken;
+    }
+
     bool YouTubeClient::setAccessToken() {
         if(!accessToken.empty())
             return true;

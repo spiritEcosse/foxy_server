@@ -14,6 +14,7 @@ namespace api::v1 {
         std::string auth() const override;
         bool setPostId(const cpr::Response& response, const Json::Value& jsonResponse, Pin* pin) const override;
         bool setAccessToken() override;
+        std::string getAccessToken() const override;
 
     public:
         explicit PinterestClient() : IClient() {
