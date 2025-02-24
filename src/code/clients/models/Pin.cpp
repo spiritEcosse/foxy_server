@@ -9,7 +9,9 @@ namespace api::v1 {
              const std::vector<SharedFileTransferInfo>& media,
              const Json::Value& tags) : SocialMediaType(itemId, title, slug, description, media, tags) {
         images = cutMedia(images);
-        this->description = truncateDescription(fmt::format("{} {} {}", description, itemUrl, tagsToString()));
+
+        this->description = truncateDescription(
+            fmt::format("{} {} {}", truncateText(description, maxDescriptionSize - 200), itemUrl, tagsToString()));
     };
 
     Pin::Pin(const int itemId,
