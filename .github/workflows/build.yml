@@ -105,7 +105,6 @@ jobs:
           -e CMAKE_BUILD_TYPE="${{ vars.CMAKE_BUILD_TYPE }}"
           -e FOXY_ADMIN="${{ vars.FOXY_ADMIN }}"
           -e CONFIG_APP_PATH="${{ vars.CONFIG_APP_PATH }}"
-          -e FOXY_HTTP_PORT="${{ vars.FOXY_HTTP_PORT }}"
           -e ENVIRONMENT="${{ vars.ENVIRONMENT }}"
           -e PINTEREST_API_HOST="${{ vars.PINTEREST_API_HOST }}"
           -e PINTEREST_BOARD_ID="${{ vars.PINTEREST_BOARD_ID }}"

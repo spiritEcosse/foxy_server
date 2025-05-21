@@ -79,8 +79,6 @@ int main() {
             }
         });
         app().setThreadNum(std::thread::hardware_concurrency() + 2);
-        const std::string host = strcmp(ENVIRONMENT, "dev") == 0 ? "127.0.0.1" : "0.0.0.0";
-        app().addListener(host, static_cast<uint16_t>(std::stoi(FOXY_HTTP_PORT))).run();
 
 #if defined(SENTRY_DSN)
         sentry_close();

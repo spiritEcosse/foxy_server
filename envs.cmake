@@ -6,7 +6,6 @@ set(ENV_VARS
         PINTEREST_API_HOST
         FOXY_CLIENT
         FOXY_ADMIN
-        FOXY_HTTP_PORT
         APP_CLOUD_NAME
         CONFIG_APP_PATH
         ENVIRONMENT

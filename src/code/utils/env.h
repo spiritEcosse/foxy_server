@@ -36,10 +36,6 @@
 #error CONFIG_APP_PATH must be defined at compile-time
 #endif
 
-#ifndef FOXY_HTTP_PORT
-#error FOXY_HTTP_PORT must be defined at compile-time
-#endif
-
 #ifndef PINTEREST_REFRESH_TOKEN
 #error PINTEREST_REFRESH_TOKEN must be defined at compile-time
 #endif
