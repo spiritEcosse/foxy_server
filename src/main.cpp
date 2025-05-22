@@ -79,7 +79,7 @@ int main() {
             }
         });
         app().setThreadNum(std::thread::hardware_concurrency() + 2);
-
+        app().run();
 #if defined(SENTRY_DSN)
         sentry_close();
 #endif
