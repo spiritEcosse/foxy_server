@@ -1,63 +1,68 @@
-version: '3.8'
-
 services:
-  foxy_server:
-    build:
-      context: .
-    image: ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME:-latest}
+  postgres:
+    image: postgres:17-alpine
+    container_name: postgres
+    restart: always
     environment:
-      - APP_CLOUD_NAME=${APP_CLOUD_NAME}
-      - APP_BUCKET_HOST=${APP_BUCKET_HOST}
-      - CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-      - FOXY_ADMIN=${FOXY_ADMIN}
-      - CONFIG_APP_PATH=${CONFIG_APP_PATH}
-      - ENVIRONMENT=${ENVIRONMENT}
-      - PINTEREST_API_HOST=${PINTEREST_API_HOST}
-      - PINTEREST_BOARD_ID=${PINTEREST_BOARD_ID}
-      - PINTEREST_REFRESH_TOKEN=${PINTEREST_REFRESH_TOKEN}
-      - PINTEREST_CLIENT_ID=${PINTEREST_CLIENT_ID}
-      - PINTEREST_CLIENT_SECRET=${PINTEREST_CLIENT_SECRET}
-      - YOUTUBE_REFRESH_TOKEN=${YOUTUBE_REFRESH_TOKEN}
-      - YOUTUBE_CLIENT_SECRET=${YOUTUBE_CLIENT_SECRET}
-      - YOUTUBE_CLIENT_ID=${YOUTUBE_CLIENT_ID}
-      - SENTRY_DSN=${SENTRY_DSN}
-      - FOXY_CLIENT=${FOXY_CLIENT}
-      - SERVER_HOST=${SERVER_HOST}
-      - SERVER_USER=${SERVER_USER}
-      - SERVER_PASSWORD=${SERVER_PASSWORD}
-      - SERVER_PSQL_DBNAME=${SERVER_PSQL_DBNAME}
-      - SERVER_PSQL_USER=${SERVER_PSQL_USER}
-      - SERVER_PSQL_PASSWORD=${SERVER_PSQL_PASSWORD}
-      - TWITTER_ACCESS_TOKEN=${TWITTER_ACCESS_TOKEN}
-      - TWITTER_ACCESS_TOKEN_SECRET=${TWITTER_ACCESS_TOKEN_SECRET}
-      - TWITTER_API_KEY=${TWITTER_API_KEY}
-      - TWITTER_API_SECRET=${TWITTER_API_SECRET}
-      - TWITTER_BEARER_TOKEN=${TWITTER_BEARER_TOKEN}
-      - KEY_PATH=${KEY_PATH}
-      - CERT_PATH=${CERT_PATH}
-      - BUILD_FOLDER=${BUILD_FOLDER:-/home/ubuntu/ubuntu_x86_64}
-      - SRC=${SRC:-/home/ubuntu/ubuntu_x86_64_src}
-      - DB_HOST=foxy_db
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
-      - ./:${SRC:-/home/ubuntu/ubuntu_x86_64_src}
-      - build_data:${BUILD_FOLDER:-/home/ubuntu/ubuntu_x86_64}
-    depends_on:
-      foxy_db:
-        condition: service_healthy
-
-  foxy_db:
-    image: postgres:latest
-    environment:
-      - POSTGRES_DB=foxy_tests
-      - POSTGRES_USER=foxy
-      - POSTGRES_PASSWORD=foxy
-    ports:
-      - "5433:5432"
+      - pgdata:/var/lib/postgresql/data
+      - pg_socket:/var/run/postgresql
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+      - ./helper.sql:/docker-entrypoint-initdb.d/helper.sql
+    networks:
+      - backend
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U foxy -d foxy_tests" ]
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  foxy-prod:
+    image: ghcr.io/spiritecosse/foxy_server:main
+    container_name: foxy-prod
+    hostname: foxy_prod
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - pg_socket:/var/run/postgresql
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.foxy-prod.rule=Host(`api.faithfishart.com`)"
+      - "traefik.http.routers.foxy-prod.entrypoints=websecure"
+      - "traefik.http.routers.foxy-prod.tls.certresolver=letsencrypt"
+    networks:
+      - web
+      - backend
+
+  foxy-dev:
+    image: ghcr.io/spiritecosse/foxy_server:dev
+    container_name: foxy-dev
+    hostname: foxy_dev
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - pg_socket:/var/run/postgresql
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.foxy-dev.rule=Host(`dev-api.faithfishart.com`)"
+      - "traefik.http.routers.foxy-dev.entrypoints=websecure"
+      - "traefik.http.routers.foxy-dev.tls.certresolver=letsencrypt"
+    networks:
+      - web
+      - backend
+
 volumes:
-  build_data:
+  pgdata:
+  pg_socket:
+
+networks:
+  web:
+    external: true
+  backend:
+    driver: bridge

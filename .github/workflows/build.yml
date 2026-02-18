@@ -1,60 +1,15 @@
-env:
-  BUILD_FOLDER: "/home/ubuntu/ubuntu_x86_64"
-  SRC: "/home/ubuntu/ubuntu_x86_64_src"
-  FORCE_REBUILD_IMAGE: ${{ vars.FORCE_REBUILD_IMAGE }}
-
 on:
   push:
     branches:
       - '*'
   workflow_call:
-    inputs:
-      BUILD_FOLDER:
-        required: true
-        type: string
-      SRC:
-        required: true
-        type: string
     secrets:
       CR_PAT:
-        required: true
-      SENTRY_DSN:
-        required: true
-      SERVER_HOST:
-        required: true
-      SERVER_USER:
-        required: true
-      SERVER_PASSWORD:
-        required: true
-      SERVER_PSQL_DBNAME:
-        required: true
-      SERVER_PSQL_USER:
-        required: true
-      SERVER_PSQL_PASSWORD:
-        required: true
-      CERT_PATH:
-        required: true
-      KEY_PATH:
         required: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    services:
-      foxy_db:
-        image: postgres:latest
-        env:
-          POSTGRES_DB: foxy_tests
-          POSTGRES_USER: foxy
-          POSTGRES_PASSWORD: foxy
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready -U foxy"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
 
     steps:
       - name: Checkout repository
@@ -64,80 +19,52 @@ jobs:
         shell: bash
         run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" >> $GITHUB_ENV
 
-      - name: Execute shell script based on branch
-        run: |
-          CONTENT="cmake_build"
-          if [ "$BRANCH_NAME" = "main" ]; then
-              CONTENT+=";rsync_from_host_to_sever;server_run_commands=(create_config_file;supervisorctl)"
-          fi
-          echo "CONTENT=$CONTENT" >> $GITHUB_ENV
-
       - name: Login to GitHub Container Registry
         run: echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u spiritEcosse --password-stdin
 
-      - name: Check Docker image
-        id: check_image
-        if: env.FORCE_REBUILD_IMAGE == 'false'
+      - name: Pull build image
+        id: pull_build_image
         run: |
-          docker pull ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} && echo "::set-output name=exists::true" || echo "::set-output name=exists::false"
+          if git diff --name-only HEAD~1 HEAD | grep -q "Dockerfile.build"; then
+            echo "exists=false" >> $GITHUB_OUTPUT
+          else
+            docker pull ghcr.io/spiritecosse/foxy_server_build:${BRANCH_NAME} && echo "exists=true" >> $GITHUB_OUTPUT || echo "exists=false" >> $GITHUB_OUTPUT
+          fi
         continue-on-error: true
 
-      - name: Build Docker image
-        id: build_image
+      - name: Build and push build image
+        if: steps.pull_build_image.outputs.exists != 'true'
         run: |
-          docker build -t ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} --build-arg LLVM_TAG="${{ vars.LLVM_TAG }}" . && echo "::set-output name=exists::true" || (echo "::set-output name=exists::false" && exit 1)
-        if: steps.check_image.outputs.exists == 'false' || env.FORCE_REBUILD_IMAGE == 'true'
+          docker build -f Dockerfile.build -t ghcr.io/spiritecosse/foxy_server_build:${BRANCH_NAME} .
+          docker push ghcr.io/spiritecosse/foxy_server_build:${BRANCH_NAME}
 
-      - name: Push Docker image
+      - name: Build runtime image
+        run: |
+          cat > .env.build <<EOF
+          APP_CLOUD_NAME=${{ vars.APP_CLOUD_NAME }}
+          APP_BUCKET_HOST=${{ vars.APP_BUCKET_HOST }}
+          FOXY_ADMIN=${{ vars.FOXY_ADMIN }}
+          FOXY_CLIENT=${{ vars.FOXY_CLIENT }}
+          ENVIRONMENT=${{ vars.ENVIRONMENT }}
+          PINTEREST_API_HOST=${{ vars.PINTEREST_API_HOST }}
+          PINTEREST_BOARD_ID=${{ vars.PINTEREST_BOARD_ID }}
+          PINTEREST_REFRESH_TOKEN=${{ secrets.PINTEREST_REFRESH_TOKEN }}
+          PINTEREST_CLIENT_ID=${{ vars.PINTEREST_CLIENT_ID }}
+          PINTEREST_CLIENT_SECRET=${{ secrets.PINTEREST_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN=${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          YOUTUBE_CLIENT_ID=${{ vars.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET=${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          TWITTER_API_KEY=${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET=${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN=${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_TOKEN_SECRET=${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+          TWITTER_BEARER_TOKEN=${{ secrets.TWITTER_BEARER_TOKEN }}
+          EOF
+          docker build \
+            -t ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} \
+            --build-arg BRANCH_NAME="${BRANCH_NAME}" \
+            --secret id=env,src=.env.build \
+            .
+
+      - name: Push runtime image
         run: docker push ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME}
-        if: steps.build_image.outputs.exists == 'true'
-
-      - name: Create build folder in home directory
-        run: mkdir -p ~/build && chmod 777 ~/build
-
-      - name: CMake Build
-        if: steps.build_image.outputs.exists == 'true' || steps.check_image.outputs.exists == 'true'
-        run: >
-          docker run --rm --privileged
-          --add-host=host.docker.internal:host-gateway
-          -e APP_CLOUD_NAME="${{ vars.APP_CLOUD_NAME }}"
-          -e APP_BUCKET_HOST="${{ vars.APP_BUCKET_HOST }}"
-          -e CMAKE_BUILD_TYPE="${{ vars.CMAKE_BUILD_TYPE }}"
-          -e FOXY_ADMIN="${{ vars.FOXY_ADMIN }}"
-          -e CONFIG_APP_PATH="${{ vars.CONFIG_APP_PATH }}"
-          -e ENVIRONMENT="${{ vars.ENVIRONMENT }}"
-          -e PINTEREST_API_HOST="${{ vars.PINTEREST_API_HOST }}"
-          -e PINTEREST_BOARD_ID="${{ vars.PINTEREST_BOARD_ID }}"
-          -e PINTEREST_REFRESH_TOKEN="${{ secrets.PINTEREST_REFRESH_TOKEN }}"
-          -e PINTEREST_CLIENT_ID="${{ vars.PINTEREST_CLIENT_ID }}"
-          -e PINTEREST_CLIENT_SECRET="${{ secrets.PINTEREST_CLIENT_SECRET }}"
-          -e YOUTUBE_REFRESH_TOKEN="${{ secrets.YOUTUBE_REFRESH_TOKEN }}"
-          -e YOUTUBE_CLIENT_SECRET="${{ secrets.YOUTUBE_CLIENT_SECRET }}"
-          -e YOUTUBE_CLIENT_ID="${{ vars.YOUTUBE_CLIENT_ID }}"
-          -e FOXY_CLIENT="${{ vars.FOXY_CLIENT }}"
-          -e SERVER_HOST="${{ secrets.SERVER_HOST }}"
-          -e SERVER_USER="${{ secrets.SERVER_USER }}"
-          -e SERVER_PASSWORD="${{ secrets.SERVER_PASSWORD }}"
-          -e SERVER_PSQL_DBNAME="${{ secrets.SERVER_PSQL_DBNAME }}"
-          -e SERVER_PSQL_USER="${{ secrets.SERVER_PSQL_USER }}"
-          -e SERVER_PSQL_PASSWORD="${{ secrets.SERVER_PSQL_PASSWORD }}"
-          -e TWITTER_ACCESS_TOKEN="${{ secrets.TWITTER_ACCESS_TOKEN }}"
-          -e TWITTER_ACCESS_TOKEN_SECRET="${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}"
-          -e TWITTER_API_KEY="${{ secrets.TWITTER_API_KEY }}"
-          -e TWITTER_API_SECRET="${{ secrets.TWITTER_API_SECRET }}"
-          -e TWITTER_BEARER_TOKEN="${{ secrets.TWITTER_BEARER_TOKEN }}"
-          -e KEY_PATH="${{ vars.KEY_PATH }}"
-          -e CERT_PATH="${{ vars.CERT_PATH }}"
-          -e BUILD_FOLDER="${{ env.BUILD_FOLDER }}"
-          -e DB_HOST="host.docker.internal"
-          -e SRC="${{ env.SRC }}"
-          -v $PWD:"${{ env.SRC }}"
-          -v ~/build:"${{ env.BUILD_FOLDER }}" ghcr.io/spiritecosse/foxy_server:${BRANCH_NAME} /bin/bash -c "
-          curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='$CONTENT'
-          "
-
-      - name: Archive build directory
-        uses: actions/upload-artifact@v4
-        with:
-          name: build
-          path: ~/build

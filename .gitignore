@@ -37,6 +37,9 @@ ehthumbs.db
 Icon?
 ._*
 
+# Environment files
+.env
+
 # Temporary files
 *.log
 *.swp

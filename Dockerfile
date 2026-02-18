@@ -1,15 +1,39 @@
-FROM ubuntu:24.04
+ARG BRANCH_NAME=dev
+FROM ghcr.io/spiritecosse/foxy_server_build:${BRANCH_NAME} AS builder
+
+COPY . /src
+WORKDIR /src
+
+RUN --mount=type=secret,id=env \
+    export $(grep -v '^#' /run/secrets/env | grep -v '^$' | xargs) && \
+    export CONFIG_APP_PATH=/app/config.json && \
+    cmake --preset ninja-release && \
+    cmake --build --preset ninja-release
+
+FROM debian:bookworm-slim AS runtime
+
+ENV TZ=Europe/Madrid
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl sudo ca-certificates tzdata g++-14 adduser && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        tzdata \
+        libpq5 \
+        libssl3 \
+        zlib1g \
+        libuuid1 \
+        libunwind8 \
+        libbinutils \
+    && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+    && rm -rf /var/lib/apt/lists/*
 
-ENV TZ=UTC
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+WORKDIR /app
 
-ARG LLVM_TAG
+COPY --from=builder /src/build/release/foxy_server /app/foxy_server
+COPY docker/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh /app/foxy_server
 
-RUN curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func='add_user=ubuntu'
-USER ubuntu
-WORKDIR /home/ubuntu
-RUN export LLVM_TAG="$LLVM_TAG" && curl https://raw.githubusercontent.com/spiritEcosse/aws-sailfish-sdk/master/install.sh | bash -s -- --func=foxy_sever_libs
+EXPOSE 8080
+
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["/app/foxy_server"]
