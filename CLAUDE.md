@@ -50,7 +50,7 @@ Connects via PostgreSQL unix socket (`/var/run/postgresql`). Hardcoded in the bi
 | Context | PG_DB | PG_USER |
 |---------|-------|---------|
 | Local (default) | `foxy` | `foxy` |
-| Docker dev | `dev_foxy` | `dev_foxy` |
+| Docker dev | `foxy_dev` | `foxy_dev` |
 | Docker prod | `foxy` | `foxy` |
 
 Docker containers get `PG_DB`/`PG_USER` from `docker-compose.yml`.

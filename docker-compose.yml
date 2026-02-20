@@ -1,3 +1,6 @@
+x-db-main: &db-main foxy
+x-db-dev: &db-dev foxy_dev
+
 x-app-env: &app-env
   FOXY_CLIENT: ${FOXY_CLIENT}
   FOXY_ADMIN: ${FOXY_ADMIN}
@@ -18,45 +21,64 @@ x-app-env: &app-env
   TWITTER_ACCESS_TOKEN_SECRET: ${TWITTER_ACCESS_TOKEN_SECRET}
   TWITTER_BEARER_TOKEN: ${TWITTER_BEARER_TOKEN}
 
+x-postgres-env: &postgres-env
+  POSTGRES_USER: postgres
+  POSTGRES_HOST_AUTH_METHOD: trust
+
+x-postgres-base: &postgres-base
+  image: postgres:17-alpine
+  restart: always
+  networks:
+    - backend
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U postgres"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+
 services:
-  postgres:
-    image: postgres:17-alpine
-    container_name: postgres
-    restart: always
+  postgres-main:
+    <<: *postgres-base
+    container_name: postgres-main
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_HOST_AUTH_METHOD: trust
+      <<: *postgres-env
+      DB_NAME: *db-main
     volumes:
-      - pgdata:/var/lib/postgresql/data
-      - pg_socket:/var/run/postgresql
+      - pgdata-main:/var/lib/postgresql/data
+      - pg_socket_main:/var/run/postgresql
       - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
       - ./helper.sql:/docker-entrypoint-initdb.d/helper.sql
-    networks:
-      - backend
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
-  foxy-prod:
+  postgres-dev:
+    <<: *postgres-base
+    container_name: postgres-dev
+    environment:
+      <<: *postgres-env
+      DB_NAME: *db-dev
+    volumes:
+      - pgdata-dev:/var/lib/postgresql/data
+      - pg_socket_dev:/var/run/postgresql
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+      - ./helper.sql:/docker-entrypoint-initdb.d/helper.sql
+
+  foxy-main:
     image: ghcr.io/spiritecosse/foxy_server:main
-    container_name: foxy-prod
+    container_name: foxy-main
     restart: always
     depends_on:
-      postgres:
+      postgres-main:
         condition: service_healthy
     environment:
       <<: *app-env
-      PG_DB: foxy
-      PG_USER: foxy
+      PG_DB: *db-main
+      PG_USER: *db-main
     volumes:
-      - pg_socket:/var/run/postgresql
+      - pg_socket_main:/var/run/postgresql
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.foxy-prod.rule=Host(`api.faithfishart.com`)"
-      - "traefik.http.routers.foxy-prod.entrypoints=websecure"
-      - "traefik.http.routers.foxy-prod.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.foxy-main.rule=Host(`api.faithfishart.com`)"
+      - "traefik.http.routers.foxy-main.entrypoints=websecure"
+      - "traefik.http.routers.foxy-main.tls.certresolver=letsencrypt"
     networks:
       - web
       - backend
@@ -66,14 +88,14 @@ services:
     container_name: foxy-dev
     restart: always
     depends_on:
-      postgres:
+      postgres-dev:
         condition: service_healthy
     environment:
       <<: *app-env
-      PG_DB: dev_foxy
-      PG_USER: dev_foxy
+      PG_DB: *db-dev
+      PG_USER: *db-dev
     volumes:
-      - pg_socket:/var/run/postgresql
+      - pg_socket_dev:/var/run/postgresql
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.foxy-dev.rule=Host(`dev-api.faithfishart.com`)"
@@ -84,8 +106,10 @@ services:
       - backend
 
 volumes:
-  pgdata:
-  pg_socket:
+  pgdata-main:
+  pgdata-dev:
+  pg_socket_main:
+  pg_socket_dev:
 
 networks:
   web:
