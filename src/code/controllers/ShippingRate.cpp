@@ -2,7 +2,6 @@
 #include "ShippingRate.h"
 #include "Request.h"
 #include "QuerySet.h"
-#include "env.h"
 
 using namespace api::v1;
 using namespace drogon::orm;

@@ -4,7 +4,7 @@
 #include "drogon/HttpRequest.h"
 #include "drogon/drogon.h"
 #include <ranges>
-#include "env.h"
+#include "config.h"
 
 #include <future>
 #include <gtest/gtest.h>
@@ -68,7 +68,7 @@ public:
             }
         } else if(keyPath.ends_with("src") | keyPath.ends_with("src_video")) {
             // Special handling for "src"
-            EXPECT_EQ(respJson.asString(), fmt::format("https://{}/{}", APP_CLOUD_NAME, expectedValue.asString()))
+            EXPECT_EQ(respJson.asString(), fmt::format("https://{}/{}", api::v1::getEnv("APP_CLOUD_NAME", ""), expectedValue.asString()))
                 << "Mismatch at key path: " << keyPath;
         } else {
             // Direct value comparison

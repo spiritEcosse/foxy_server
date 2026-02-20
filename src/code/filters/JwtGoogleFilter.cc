@@ -1,5 +1,5 @@
 #include "JwtGoogleFilter.h"
-#include "env.h"
+#include "config.h"
 #include <JWT.h>
 
 using namespace drogon;
@@ -19,7 +19,7 @@ void JwtGoogleFilter::doFilter(const HttpRequestPtr &request, FilterCallback &&f
 
         const auto res = HttpResponse::newHttpJsonResponse(resultJson);
 
-        if(const auto origin = request->getHeader("Origin"); origin == FOXY_CLIENT || origin == FOXY_ADMIN) {
+        if(const auto origin = request->getHeader("Origin"); origin == getEnv("FOXY_CLIENT", "") || origin == getEnv("FOXY_ADMIN", "")) {
             res->addHeader("Access-Control-Allow-Origin", origin);
         }
         res->setStatusCode(k401Unauthorized);
@@ -31,7 +31,7 @@ void JwtGoogleFilter::doFilter(const HttpRequestPtr &request, FilterCallback &&f
         const auto res = HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
         res->setStatusCode(drogon::k401Unauthorized);
         res->setContentTypeCode(CT_APPLICATION_JSON);
-        if(const auto origin = request->getHeader("Origin"); origin == FOXY_CLIENT || origin == FOXY_ADMIN) {
+        if(const auto origin = request->getHeader("Origin"); origin == getEnv("FOXY_CLIENT", "") || origin == getEnv("FOXY_ADMIN", "")) {
             res->addHeader("Access-Control-Allow-Origin", origin);
         }
 

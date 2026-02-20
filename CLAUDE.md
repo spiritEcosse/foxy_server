@@ -8,28 +8,52 @@ C++20 REST API server built with the Drogon web framework, using PostgreSQL.
 
 ## Build Commands
 
-All commands run from the project root:
+All commands run from the project root. **No env vars required for cmake** — all config is read at runtime.
 
 ```bash
-# Configure (Release, without tests)
-cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+# Debug (with tests)
+cmake --preset ninja-debug && cmake --build --preset ninja-debug
+ctest --preset ninja-debug
 
-# Configure (with tests enabled)
-cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=ON
+# Release (with tests — for dev/CI)
+cmake --preset ninja-release && cmake --build --preset ninja-release
+ctest --preset ninja-release
 
-# Build
-cmake --build build
-
-# Run tests (requires ENABLE_TESTS=ON and a running PostgreSQL with `foxy_tests` database)
-cd build && ctest
+# Production (no tests)
+cmake --preset ninja-prod && cmake --build --preset ninja-prod
 
 # Format code
-cmake --build build --target clang-format
-
-# The test binary is built as `foxy_tests` in the build/tests/ directory
+cmake --build build/release --target clang-format
 ```
 
-**Environment variables are required at compile time** — all variables listed in `envs.cmake` must be set before running cmake, or the build will fail. These include API keys for Pinterest, YouTube, Twitter, plus `FOXY_CLIENT`, `FOXY_ADMIN`, `APP_CLOUD_NAME`, `APP_BUCKET_HOST`, `CONFIG_APP_PATH`, and `ENVIRONMENT`.
+## Running Locally
+
+The server needs runtime env vars for API keys and CORS origins. DB connects via unix socket with defaults (`foxy`/`foxy`).
+
+```bash
+# Option 1: direnv (recommended — auto-loads on cd)
+direnv allow   # once, after installing direnv
+
+# Option 2: manual export
+export $(grep -v '^#' .env | grep -v '^$' | xargs)
+
+# Then run
+./build/debug/foxy_server
+```
+
+**SENTRY_DSN** is the one exception — it must be set *before* cmake if Sentry integration is needed, because it controls conditional compilation (`#if defined(SENTRY_DSN)`).
+
+## Database
+
+Connects via PostgreSQL unix socket (`/var/run/postgresql`). Hardcoded in the binary. DB name and user are runtime:
+
+| Context | PG_DB | PG_USER |
+|---------|-------|---------|
+| Local (default) | `foxy` | `foxy` |
+| Docker dev | `dev_foxy` | `dev_foxy` |
+| Docker prod | `foxy` | `foxy` |
+
+Docker containers get `PG_DB`/`PG_USER` from `docker-compose.yml`.
 
 ## Architecture
 
@@ -59,11 +83,13 @@ Custom query builder — not Drogon's built-in ORM:
 - `src/code/filters/` — Drogon request filters
 - `src/code/clients/` — external API clients (Pinterest, YouTube, Twitter)
 - `src/code/utils/` — database helpers, JWT, request parsing, exceptions
+- `src/code/utils/config.h` — runtime `getEnv()` utility (replaces compile-time macros)
 - `src/code/sentry_catcher/` — Sentry error tracking integration
 - `tests/` — Google Test suite
+- `cmake/` — modular cmake includes (cpm, dependencies, tests, format, sanitizers, sentry)
 
 ## Code Style
 
 - `.clang-format`: LLVM-based, 120 column limit, 4-space indent, always break template declarations
-- `.clang-tidy`: warnings as errors, excludes `build/`, `cmake-build-debug/`, `3rdparty/`
+- `.clang-tidy`: warnings as errors, excludes `build/`, `cmake-build-debug/`
 - No spaces before parentheses (`SpaceBeforeParens: Never`)

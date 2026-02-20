@@ -1,15 +1,15 @@
 #pragma once
 
 #include "IClient.h"
-#include "env.h"
+#include "config.h"
 
 namespace api::v1 {
     class YouTube;
 
     class YouTubeClient final : public IClient<YouTubeClient, YouTube> {
-        static constexpr std::string_view refreshToken = YOUTUBE_REFRESH_TOKEN;
-        static constexpr std::string_view clientId = YOUTUBE_CLIENT_ID;
-        static constexpr std::string_view clientSecret = YOUTUBE_CLIENT_SECRET;
+        static inline const std::string refreshToken = getEnv("YOUTUBE_REFRESH_TOKEN");
+        static inline const std::string clientId = getEnv("YOUTUBE_CLIENT_ID");
+        static inline const std::string clientSecret = getEnv("YOUTUBE_CLIENT_SECRET");
         static constexpr std::string_view tokenUrl = "https://oauth2.googleapis.com/token";
         std::string auth() const override;
         bool setPostId(const cpr::Response& response, const Json::Value& jsonResponse, YouTube* post) const override;

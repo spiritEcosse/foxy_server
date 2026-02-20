@@ -217,10 +217,10 @@ namespace api::v1 {
     BaseModel<T>::sqlSelectOne(const BaseField *field,
                                std::string &&value,
                                [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
-        return QuerySet<T>(T::tableName, true)
-            .jsonFields(addExtraQuotes(fieldsJsonObject()))
-            .filter(field, std::move(value))
-            .buildSelect();
+        QuerySet<T> qs(T::tableName, true);
+        qs.jsonFields(addExtraQuotes(fieldsJsonObject()));
+        qs.filter(field, std::move(value));
+        return qs.buildSelect();
     }
 
     template<class T>

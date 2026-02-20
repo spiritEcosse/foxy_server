@@ -1,28 +1,15 @@
 #include "drogon/drogon.h"
-#include "env.h"
+#include "config.h"
 #if defined(SENTRY_DSN)
 #include <sentry.h>
 #endif
 #include <fmt/format.h>
 #include "sentryHelper.h"
-#include "backward-cpp/backward.hpp"
-#include <csignal>
 #include <iostream>
 
 using namespace drogon;
 
-[[noreturn]] void handleSignal(int signal) {
-    std::cerr << "Caught signal " << signal << std::endl;
-    backward::StackTrace st;
-    st.load_here(32);
-    backward::Printer p;
-    p.print(st, std::cerr);
-    std::exit(signal);
-}
-
 int main() {
-    std::signal(SIGTRAP, handleSignal);
-
     try {
 #if defined(SENTRY_DSN)
         sentry_options_t *options = sentry_options_new();
@@ -35,7 +22,11 @@ int main() {
         sentry_init(options);
 #endif
 
-        app().loadConfigFile(CONFIG_APP_PATH);
+        const auto pgDb = api::v1::getEnv("PG_DB", "foxy");
+        const auto pgUser = api::v1::getEnv("PG_USER", "foxy");
+        app().createDbClient("postgresql", "/var/run/postgresql", 5432, pgDb, pgUser, "", 1, "", "default", true);
+        app().createDbClient(
+            "postgresql", "/var/run/postgresql", 5432, pgDb, pgUser, "", 1, "", "default_not_fast", false);
         app().registerHandler(
             "/",
             []([[maybe_unused]] const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
@@ -74,21 +65,21 @@ int main() {
                               });
         app().registerPostHandlingAdvice([]([[maybe_unused]] const HttpRequestPtr &req, const HttpResponsePtr &resp) {
             auto origin = req->getHeader("Origin");
-            if(origin == FOXY_CLIENT || origin == FOXY_ADMIN) {
+            const auto foxyClient = api::v1::getEnv("FOXY_CLIENT", "");
+            const auto foxyAdmin = api::v1::getEnv("FOXY_ADMIN", "");
+            if(origin == foxyClient || origin == foxyAdmin) {
                 resp->addHeader("Access-Control-Allow-Origin", origin);
             }
         });
         app().setThreadNum(std::thread::hardware_concurrency() + 2);
+        app().addListener("0.0.0.0", 8080);
         app().run();
 #if defined(SENTRY_DSN)
         sentry_close();
 #endif
 
     } catch(...) {
-        backward::StackTrace st;
-        st.load_here(32);
-        backward::Printer p;
-        p.print(st, std::cerr);
+        std::cerr << "Unhandled exception in main" << std::endl;
     }
     return 0;
 }

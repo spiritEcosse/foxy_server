@@ -1,3 +1,23 @@
+x-app-env: &app-env
+  FOXY_CLIENT: ${FOXY_CLIENT}
+  FOXY_ADMIN: ${FOXY_ADMIN}
+  APP_CLOUD_NAME: ${APP_CLOUD_NAME}
+  APP_BUCKET_HOST: ${APP_BUCKET_HOST}
+  ENVIRONMENT: ${ENVIRONMENT}
+  PINTEREST_API_HOST: ${PINTEREST_API_HOST}
+  PINTEREST_BOARD_ID: ${PINTEREST_BOARD_ID}
+  PINTEREST_REFRESH_TOKEN: ${PINTEREST_REFRESH_TOKEN}
+  PINTEREST_CLIENT_ID: ${PINTEREST_CLIENT_ID}
+  PINTEREST_CLIENT_SECRET: ${PINTEREST_CLIENT_SECRET}
+  YOUTUBE_REFRESH_TOKEN: ${YOUTUBE_REFRESH_TOKEN}
+  YOUTUBE_CLIENT_ID: ${YOUTUBE_CLIENT_ID}
+  YOUTUBE_CLIENT_SECRET: ${YOUTUBE_CLIENT_SECRET}
+  TWITTER_API_KEY: ${TWITTER_API_KEY}
+  TWITTER_API_SECRET: ${TWITTER_API_SECRET}
+  TWITTER_ACCESS_TOKEN: ${TWITTER_ACCESS_TOKEN}
+  TWITTER_ACCESS_TOKEN_SECRET: ${TWITTER_ACCESS_TOKEN_SECRET}
+  TWITTER_BEARER_TOKEN: ${TWITTER_BEARER_TOKEN}
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -22,11 +42,14 @@ services:
   foxy-prod:
     image: ghcr.io/spiritecosse/foxy_server:main
     container_name: foxy-prod
-    hostname: foxy_prod
     restart: always
     depends_on:
       postgres:
         condition: service_healthy
+    environment:
+      <<: *app-env
+      PG_DB: foxy
+      PG_USER: foxy
     volumes:
       - pg_socket:/var/run/postgresql
     labels:
@@ -41,11 +64,14 @@ services:
   foxy-dev:
     image: ghcr.io/spiritecosse/foxy_server:dev
     container_name: foxy-dev
-    hostname: foxy_dev
     restart: always
     depends_on:
       postgres:
         condition: service_healthy
+    environment:
+      <<: *app-env
+      PG_DB: dev_foxy
+      PG_USER: dev_foxy
     volumes:
       - pg_socket:/var/run/postgresql
     labels:

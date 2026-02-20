@@ -2,45 +2,59 @@
   "version": 4,
   "configurePresets": [
     {
-      "name": "ninja-debug",
-      "displayName": "Ninja Debug",
-      "description": "Use Ninja generator with Debug build type",
+      "name": "base",
+      "hidden": true,
       "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "CMAKE_CXX_STANDARD": "20",
-        "CMAKE_CXX_STANDARD_REQUIRED": "ON",
-        "CMAKE_C_COMPILER": "/usr/bin/clang-21",
-        "CMAKE_CXX_COMPILER": "/usr/bin/clang++-21",
-        "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS": "/usr/bin/clang-scan-deps-21"
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS": "clang-scan-deps",
+        "CMAKE_CXX_FLAGS": "-stdlib=libc++",
+        "CMAKE_EXE_LINKER_FLAGS": "-stdlib=libc++ -lc++abi",
+        "CPM_SOURCE_CACHE": "${sourceDir}/.cache/CPM"
       }
     },
     {
+      "name": "ninja-debug",
+      "displayName": "Ninja Debug",
+      "description": "Debug build with tests",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/debug",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "ENABLE_TESTS": "ON" }
+    },
+    {
       "name": "ninja-release",
-      "displayName": "Ninja Release",
-      "description": "Use Ninja generator with Release build type",
-      "generator": "Ninja",
+      "displayName": "Ninja Release (dev)",
+      "description": "Release build with tests — for development and CI",
+      "inherits": "base",
       "binaryDir": "${sourceDir}/build/release",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "CMAKE_CXX_STANDARD": "20",
-        "CMAKE_CXX_STANDARD_REQUIRED": "ON",
-        "CMAKE_C_COMPILER": "/usr/bin/clang-21",
-        "CMAKE_CXX_COMPILER": "/usr/bin/clang++-21",
-        "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS": "/usr/bin/clang-scan-deps-21"
-      }
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "ENABLE_TESTS": "ON" }
+    },
+    {
+      "name": "ninja-prod",
+      "displayName": "Ninja Production",
+      "description": "Optimised Release build — no tests",
+      "inherits": "base",
+      "binaryDir": "${sourceDir}/build/prod",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
     }
   ],
   "buildPresets": [
+    { "name": "ninja-debug", "configurePreset": "ninja-debug" },
+    { "name": "ninja-release", "configurePreset": "ninja-release" },
+    { "name": "ninja-prod", "configurePreset": "ninja-prod" }
+  ],
+  "testPresets": [
     {
       "name": "ninja-debug",
-      "configurePreset": "ninja-debug"
+      "configurePreset": "ninja-debug",
+      "output": { "outputOnFailure": true },
+      "execution": { "jobs": 0 }
     },
     {
       "name": "ninja-release",
+      "inherits": "ninja-debug",
       "configurePreset": "ninja-release"
     }
   ]

@@ -5,14 +5,14 @@
 #include "TwitterClient.h"  // must be because of it : ClientType::clientName
 #include "YouTubeClient.h"  // must be because of it : ClientType::clientName
 #include "sentryHelper.h"
-#include "env.h"
+#include "config.h"
 #include <ranges>
 
 namespace api::v1 {
 
     template<typename ClientType, typename PostType>
     std::string SocialMediaType<ClientType, PostType>::createItemUrl(const std::string_view &slug) {
-        return fmt::format("{}/item/{}", FOXY_CLIENT, slug);
+        return fmt::format("{}/item/{}", getEnv("FOXY_CLIENT", ""), slug);
     }
 
     template<typename ClientType, typename PostType>

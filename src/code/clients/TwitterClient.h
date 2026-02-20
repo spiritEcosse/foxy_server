@@ -1,18 +1,18 @@
 #pragma once
 
 #include "IClient.h"
-#include "env.h"
+#include "config.h"
 #include "TransparentStringHash.h"
 
 namespace api::v1 {
     class Tweet;
 
     class TwitterClient final : public IClient<TwitterClient, Tweet> {
-        static constexpr std::string_view apiKey = TWITTER_API_KEY;
-        static constexpr std::string_view apiSecretKey = TWITTER_API_SECRET;
-        static constexpr std::string_view accessToken = TWITTER_ACCESS_TOKEN;
-        static constexpr std::string_view accessTokenSecret = TWITTER_ACCESS_TOKEN_SECRET;
-        static constexpr std::string_view bearerToken = TWITTER_BEARER_TOKEN;
+        static inline const std::string apiKey = getEnv("TWITTER_API_KEY");
+        static inline const std::string apiSecretKey = getEnv("TWITTER_API_SECRET");
+        static inline const std::string accessToken = getEnv("TWITTER_ACCESS_TOKEN");
+        static inline const std::string accessTokenSecret = getEnv("TWITTER_ACCESS_TOKEN_SECRET");
+        static inline const std::string bearerToken = getEnv("TWITTER_BEARER_TOKEN");
 
         std::string auth(const std::string_view url,
                          const std::string_view method = "POST",

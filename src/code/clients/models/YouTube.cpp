@@ -63,7 +63,7 @@ namespace api::v1 {
         snippet["tags"] = tagsJson;
 
         Json::Value status;
-        status["privacyStatus"] = strcmp(ENVIRONMENT, "dev") == 0 ? "private" : "public";
+        status["privacyStatus"] = getEnv("ENVIRONMENT", "prod") == "dev" ? "private" : "public";
         status["madeForKids"] = false;
         status["selfDeclaredMadeForKids"] = false;
 

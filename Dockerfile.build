@@ -1,22 +1,13 @@
-FROM debian:bookworm-slim
+FROM silkeh/clang:21
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        ca-certificates \
         cmake \
-        curl \
         git \
-        gnupg \
-        libbfd-dev \
-        libjsoncpp-dev \
         libpq-dev \
         libssl-dev \
-        libunwind-dev \
-        lsb-release \
         ninja-build \
         pkg-config \
-        software-properties-common \
         uuid-dev \
         zlib1g-dev \
-    && curl -fsSL https://apt.llvm.org/llvm.sh | bash -s 21 \
     && rm -rf /var/lib/apt/lists/*

@@ -1,4 +1,5 @@
 #include "SocialMedia.h"
+#include "config.h"
 #include "ItemModel.h"
 #include "MediaModel.h"
 #include "QuerySet.h"
@@ -137,8 +138,8 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
                                         "END ASC) AS media_list",
                                         MediaModel::Field::type.getFullFieldName(),
                                         MediaModel::Field::src.getFullFieldName(),
-                                        APP_CLOUD_NAME,
-                                        APP_BUCKET_HOST,
+                                        getEnv("APP_CLOUD_NAME"),
+                                        getEnv("APP_BUCKET_HOST"),
                                         MediaModel::Field::contentType.getFullFieldName())))
         .functions(Function(fmt::format(R"( COALESCE(({}), '[]'::json) AS nets)", qsSocialMedia.buildSelect())))
         .functions(Function(fmt::format(R"( COALESCE(({}), '[]'::json) AS tags)", qsTag.buildSelect())));

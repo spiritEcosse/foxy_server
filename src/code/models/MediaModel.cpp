@@ -1,6 +1,6 @@
 #include "MediaModel.h"
 #include "ItemModel.h"
-#include "env.h"
+#include "config.h"
 #include "fmt/format.h"
 
 using namespace api::v1;
@@ -35,7 +35,7 @@ std::string MediaModel::fieldsJsonObject() {
     std::ranges::transform(field.allFields, std::back_inserter(formattedFields), [&](const auto &pair) {
         const auto &[key, value] = pair;
         if(key == "src") {
-            return fmt::format("'{}', format_src({}, '{}')", key, value->getFullFieldName(), APP_CLOUD_NAME);
+            return fmt::format("'{}', format_src({}, '{}')", key, value->getFullFieldName(), getEnv("APP_CLOUD_NAME"));
         }
         return fmt::format("'{}', {}", key, value->getFullFieldName());
     });
@@ -63,7 +63,7 @@ MediaModel::sqlSelectList(int page, int limit, const std::map<std::string, std::
     QuerySet<MediaModel> qs(limit, "data");
     qs.offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit))
         .only(allSetFields())
-        .functions(Function(fmt::format("format_src(media.src, '{}') as src", APP_CLOUD_NAME)))
+        .functions(Function(fmt::format("format_src(media.src, '{}') as src", getEnv("APP_CLOUD_NAME"))))
         .order_by(orderField, isAsc)
         .order_by(&Field::id, false);
     applyFilters(qs, qsCount, params);

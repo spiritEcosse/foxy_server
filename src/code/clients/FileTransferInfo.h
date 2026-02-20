@@ -40,7 +40,7 @@ namespace api::v1 {
         ~FileTransferInfo() override {
             try {
                 std::filesystem::remove(fileName);
-            } catch(const std::filesystem::__cxx11::filesystem_error& e) {
+            } catch(const std::filesystem::filesystem_error& e) {
                 std::cerr << "Error removing file: " << e.what() << std::endl;
             }
         }

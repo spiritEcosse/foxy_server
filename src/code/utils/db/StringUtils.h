@@ -3,6 +3,7 @@
 #include <string>
 #include <random>
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
 inline std::string addExtraQuotes(const std::string& str) {
     std::string result;

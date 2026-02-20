@@ -1,5 +1,6 @@
 #include "IClientImpl.h"
 #include "fmt/format.h"
+#include <fmt/ranges.h>
 #include <string>
 #include <random>
 #include <openssl/buffer.h>

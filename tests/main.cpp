@@ -13,19 +13,25 @@
 #include "TestSocialMedia.h"
 #include "TestFinancialDetails.h"
 #include "TestOrder.h"
+#include "config.h"
 
 #include <future>
 #include <thread>
 #include "drogon/drogon_test.h"
 
 static std::jthread appThread;
-static std::atomic<bool> appRunning{false};  // Atomic flag for thread safety
+static std::atomic<bool> appRunning{false};
 
 class DrogonTestEnvironment : public ::testing::Environment {
 public:
     void SetUp() override {
-        if(!appRunning.exchange(true)) {  // Atomically check and set
-            drogon::app().loadConfigFile("./config.json");
+        if(!appRunning.exchange(true)) {
+            const auto pgDb = api::v1::getEnv("PG_DB", "foxy");
+            const auto pgUser = api::v1::getEnv("PG_USER", "foxy");
+            drogon::app().createDbClient(
+                "postgresql", "/var/run/postgresql", 5432, pgDb, pgUser, "", 1, "", "default", true);
+            drogon::app().createDbClient(
+                "postgresql", "/var/run/postgresql", 5432, pgDb, pgUser, "", 1, "", "default_not_fast", false);
 
             auto promise = std::make_shared<std::promise<void>>();
             auto future = promise->get_future();
@@ -37,12 +43,12 @@ public:
                 drogon::app().run();
             });
 
-            future.get();  // Wait for the app to start
+            future.get();
         }
     }
 
     void TearDown() override {
-        if(appRunning.exchange(false)) {  // Atomically check and set
+        if(appRunning.exchange(false)) {
             drogon::app().getLoop()->queueInLoop([]() {
                 drogon::app().quit();
                 std::this_thread::sleep_for(std::chrono::milliseconds(30));
@@ -56,7 +62,5 @@ public:
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
-
-    // Run all tests
     return RUN_ALL_TESTS();
 }

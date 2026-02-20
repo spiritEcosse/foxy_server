@@ -1,6 +1,4 @@
 #pragma once
-#include "env.h"
-
 #if defined(SENTRY_DSN)
 #include <sentry.h>
 #endif

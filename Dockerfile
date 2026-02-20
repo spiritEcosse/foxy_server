@@ -4,11 +4,9 @@ FROM ghcr.io/spiritecosse/foxy_server_build:${BRANCH_NAME} AS builder
 COPY . /src
 WORKDIR /src
 
-RUN --mount=type=secret,id=env \
-    export $(grep -v '^#' /run/secrets/env | grep -v '^$' | xargs) && \
-    export CONFIG_APP_PATH=/app/config.json && \
-    cmake --preset ninja-release && \
-    cmake --build --preset ninja-release
+RUN --mount=type=cache,target=/root/.cache/CPM \
+    CPM_SOURCE_CACHE=/root/.cache/CPM \
+    cmake --preset ninja-prod && cmake --build --preset ninja-prod
 
 FROM debian:bookworm-slim AS runtime
 
@@ -22,18 +20,23 @@ RUN apt-get update && \
         libssl3 \
         zlib1g \
         libuuid1 \
-        libunwind8 \
-        libbinutils \
+        wget \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && rm -rf /var/lib/apt/lists/*
 
+# libc++ runtime — binary links against libc++.so.1 (built with -stdlib=libc++)
+RUN --mount=type=bind,from=builder,source=/usr/lib,target=/builder-lib \
+    find /builder-lib -name "libc++.so.1*" -o -name "libc++abi.so.1*" \
+    | xargs -I{} cp {} /usr/lib/ && ldconfig
+
 WORKDIR /app
 
-COPY --from=builder /src/build/release/foxy_server /app/foxy_server
-COPY docker/entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh /app/foxy_server
+COPY --from=builder /src/build/prod/foxy_server /app/foxy_server
+RUN chmod +x /app/foxy_server
 
 EXPOSE 8080
 
-ENTRYPOINT ["/app/entrypoint.sh"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget -qO- http://localhost:8080/ || exit 1
+
 CMD ["/app/foxy_server"]

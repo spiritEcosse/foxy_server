@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SocialMediaType.h"
-#include "env.h"
+#include "config.h"
 
 namespace api::v1 {
     class YouTube final : public SocialMediaType<YouTubeClient, YouTube> {

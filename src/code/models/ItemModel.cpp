@@ -6,7 +6,7 @@
 #include "QuerySet.h"
 #include "SocialMediaModel.h"
 #include "StringUtils.h"
-#include "env.h"
+#include "config.h"
 #include <fmt/core.h>
 
 using namespace api::v1;
@@ -56,8 +56,8 @@ std::string ItemModel::sqlSelectList(const int page,
         .order_by(orderByItem, false)
         .order_by(itemID, false)
         .only(allSetFields())
-        .functions(Function(fmt::format("format_src({}.src, '{}') as src", "image_media", APP_CLOUD_NAME)))
-        .functions(Function(fmt::format("format_src({}.src, '{}') as src_video", "video_media", APP_BUCKET_HOST)))
+        .functions(Function(fmt::format("format_src({}.src, '{}') as src", "image_media", getEnv("APP_CLOUD_NAME"))))
+        .functions(Function(fmt::format("format_src({}.src, '{}') as src_video", "video_media", getEnv("APP_BUCKET_HOST"))))
         .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit));
     return BuildComplexQueries::buildQuery(qsCount(), std::move(qsPage), std::move(qs));
 }

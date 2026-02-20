@@ -10,6 +10,7 @@
 #include "WhereClause.h"
 #include <ranges>
 #include <fmt/core.h>
+#include <fmt/ranges.h>
 
 namespace api::v1 {
 

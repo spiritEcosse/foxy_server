@@ -1,0 +1,58 @@
+on:
+  workflow_run:
+    workflows: ["build"]
+    branches: [main, dev]
+    types: [completed]
+
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.workflow_run.head_branch == 'main' && 'prod' || 'dev' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract branch name
+        run: echo "BRANCH_NAME=${{ github.event.workflow_run.head_branch }}" >> $GITHUB_ENV
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Set up Docker context
+        run: |
+          docker context create remote \
+            --docker "host=ssh://${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}"
+          docker context use remote
+
+      - name: Pull latest image
+        run: docker compose pull foxy-${{ env.BRANCH_NAME == 'main' && 'prod' || 'dev' }}
+
+      - name: Deploy
+        env:
+          FOXY_CLIENT: ${{ vars.FOXY_CLIENT }}
+          FOXY_ADMIN: ${{ vars.FOXY_ADMIN }}
+          APP_CLOUD_NAME: ${{ vars.APP_CLOUD_NAME }}
+          APP_BUCKET_HOST: ${{ vars.APP_BUCKET_HOST }}
+          ENVIRONMENT: ${{ vars.ENVIRONMENT }}
+          PINTEREST_API_HOST: ${{ vars.PINTEREST_API_HOST }}
+          PINTEREST_BOARD_ID: ${{ vars.PINTEREST_BOARD_ID }}
+          PINTEREST_REFRESH_TOKEN: ${{ secrets.PINTEREST_REFRESH_TOKEN }}
+          PINTEREST_CLIENT_ID: ${{ vars.PINTEREST_CLIENT_ID }}
+          PINTEREST_CLIENT_SECRET: ${{ secrets.PINTEREST_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          YOUTUBE_CLIENT_ID: ${{ vars.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+          TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
+        run: |
+          docker compose up -d \
+            foxy-${{ env.BRANCH_NAME == 'main' && 'prod' || 'dev' }}

@@ -2,9 +2,9 @@
 #include "Pin.h"
 
 namespace api::v1 {
-    std::string PinterestClient::apiUploadMedia = fmt::format("{}/v5/media", PINTEREST_API_HOST);
-    std::string PinterestClient::apiCreatePost = fmt::format("{}/v5/pins", PINTEREST_API_HOST);
-    std::string PinterestClient::tokenUrl = fmt::format("{}/v5/oauth/token", PINTEREST_API_HOST);
+    std::string PinterestClient::apiUploadMedia = fmt::format("{}/v5/media", getEnv("PINTEREST_API_HOST"));
+    std::string PinterestClient::apiCreatePost = fmt::format("{}/v5/pins", getEnv("PINTEREST_API_HOST"));
+    std::string PinterestClient::tokenUrl = fmt::format("{}/v5/oauth/token", getEnv("PINTEREST_API_HOST"));
 
     std::string PinterestClient::auth() const {
         return fmt::format("Bearer {}", accessToken);

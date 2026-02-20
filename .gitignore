@@ -21,6 +21,7 @@ compile_commands.json
 bin/
 lib/
 build/
+.cache/
 
 # IDE-specific files
 .vscode/
