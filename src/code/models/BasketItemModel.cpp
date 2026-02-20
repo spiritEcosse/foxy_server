@@ -25,8 +25,9 @@ std::string BasketItemModel::sqlSelectList(const int page,
 
     QuerySet<ItemModel> qsItem("_item", false, false);
     qsItem
-        .jsonFields(
-            fmt::format("{}, 'src', format_src(media.src, '{}')", ItemModel().fieldsJsonObject(), getEnv("APP_CLOUD_NAME")))
+        .jsonFields(fmt::format("{}, 'src', format_src(media.src, '{}')",
+                                ItemModel().fieldsJsonObject(),
+                                getEnv("APP_CLOUD_NAME")))
         .join<MediaModel>()
         .filter(&MediaModel::Field::type, std::string("image"))
         .filter(&BaseModel<ItemModel>::Field::id, &Field::itemId)
@@ -43,7 +44,9 @@ std::string BasketItemModel::sqlSelectList(const int page,
 
 std::string BasketItemModel::fieldsJsonObject() {
     QuerySet<ItemModel> qs("item", false, false);
-    qs.jsonFields(fmt::format("{}, 'src', format_src(media.src, '{}')", ItemModel().fieldsJsonObject(), getEnv("APP_CLOUD_NAME")))
+    qs.jsonFields(fmt::format("{}, 'src', format_src(media.src, '{}')",
+                              ItemModel().fieldsJsonObject(),
+                              getEnv("APP_CLOUD_NAME")))
         .filter(&BaseModel<ItemModel>::Field::id, &Field::itemId)
         .filter(&MediaModel::Field::type, std::string("image"))
         .join<MediaModel>()

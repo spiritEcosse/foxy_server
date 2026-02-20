@@ -28,10 +28,18 @@ public:
         if(!appRunning.exchange(true)) {
             const auto pgDb = api::v1::getEnv("PG_DB", "foxy");
             const auto pgUser = api::v1::getEnv("PG_USER", "foxy");
-            drogon::app().createDbClient(
-                "postgresql", "/var/run/postgresql", 5432, pgDb, pgUser, "", 1, "", "default", true);
-            drogon::app().createDbClient(
-                "postgresql", "/var/run/postgresql", 5432, pgDb, pgUser, "", 1, "", "default_not_fast", false);
+            drogon::app()
+                .createDbClient("postgresql", "/var/run/postgresql", 5432, pgDb, pgUser, "", 1, "", "default", true);
+            drogon::app().createDbClient("postgresql",
+                                         "/var/run/postgresql",
+                                         5432,
+                                         pgDb,
+                                         pgUser,
+                                         "",
+                                         1,
+                                         "",
+                                         "default_not_fast",
+                                         false);
 
             auto promise = std::make_shared<std::promise<void>>();
             auto future = promise->get_future();

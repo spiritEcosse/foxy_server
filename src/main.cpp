@@ -25,8 +25,16 @@ int main() {
         const auto pgDb = api::v1::getEnv("PG_DB", "foxy");
         const auto pgUser = api::v1::getEnv("PG_USER", "foxy");
         app().createDbClient("postgresql", "/var/run/postgresql", 5432, pgDb, pgUser, "", 1, "", "default", true);
-        app().createDbClient(
-            "postgresql", "/var/run/postgresql", 5432, pgDb, pgUser, "", 1, "", "default_not_fast", false);
+        app().createDbClient("postgresql",
+                             "/var/run/postgresql",
+                             5432,
+                             pgDb,
+                             pgUser,
+                             "",
+                             1,
+                             "",
+                             "default_not_fast",
+                             false);
         app().registerHandler(
             "/",
             []([[maybe_unused]] const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) {
