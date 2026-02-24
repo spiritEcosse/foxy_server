@@ -46,7 +46,8 @@ $$
 -- Mock data for shipping_rate
         INSERT INTO shipping_rate (shipping_profile_id, country_id, delivery_days_min, delivery_days_max)
         VALUES (1, 1, 1, 5),
-               (2, 2, 2, 6);
+               (2, 2, 2, 6),
+               (1, NULL, 1, 5);
 
 -- Mock data for basket
         INSERT INTO "basket" (user_id)
@@ -69,11 +70,6 @@ $$
         INSERT INTO "financial_details" (tax_rate, gateway, gateway_merchant_id, merchant_id, merchant_name)
         VALUES (15.00, 'PayPal', 'merchant123', 'merchant001', 'Merchant One'),
                (10.00, 'Stripe', 'merchant456', 'merchant002', 'Merchant Two');
-
--- Mock data for countries_ips
-        INSERT INTO countries_ips (start_range, end_range, country_code, country_name, country_id)
-        VALUES (0, 100, 'US', 'United States of America', 1),
-               (101, 200, 'ES', 'Spain', 2);
 
         INSERT INTO tag (title, social_media, item_id)
         VALUES ('Tag1', ARRAY ['Facebook']::social_media_type[], 1),

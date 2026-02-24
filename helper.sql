@@ -111,10 +111,6 @@ $$
             FOREIGN KEY (item_id) REFERENCES item (id) ON DELETE CASCADE
         );
 
-        --         INSERT INTO country (title, code)
---         VALUES ('United States of America', 'US'),
---                ('Spain', 'ES');
-
         CREATE TABLE IF NOT EXISTS shipping_rate
         (
             id                  SERIAL PRIMARY KEY,
@@ -254,17 +250,6 @@ $$
             FOREIGN KEY (address_id) REFERENCES address (id) ON DELETE SET NULL
         );
 
-        CREATE TABLE IF NOT EXISTS countries_ips
-        (
-            start_range  BIGINT NOT NULL,
-            end_range    BIGINT NOT NULL,
-            country_code TEXT   NOT NULL,
-            country_name TEXT   NOT NULL,
-            country_id   INT,
-            PRIMARY KEY (start_range, end_range),
-            FOREIGN KEY (country_id) REFERENCES country (id) ON DELETE CASCADE
-        );
-
         CREATE TABLE IF NOT EXISTS social_media
         (
             id          SERIAL PRIMARY KEY,
@@ -293,8 +278,6 @@ $$
         CREATE INDEX IF NOT EXISTS idx_shipping_rate_shipping_profile_id_country_id ON shipping_rate (shipping_profile_id, country_id);
         CREATE INDEX IF NOT EXISTS idx_shipping_rate_country_id ON shipping_rate (country_id);
         CREATE INDEX IF NOT EXISTS idx_item_shipping_profile_id ON item (shipping_profile_id);
-        CREATE INDEX IF NOT EXISTS idx_countries_ips_country_id ON countries_ips (country_id);
-        CREATE INDEX IF NOT EXISTS end_range_with_include_idx ON countries_ips USING btree (end_range ASC NULLS LAST) INCLUDE (start_range, country_id);
         CREATE INDEX IF NOT EXISTS idx_item_updated_at ON item (updated_at);
         CREATE INDEX IF NOT EXISTS idx_item_enabled ON item (enabled);
         CREATE INDEX IF NOT EXISTS idx_order_status ON "order" (status);
@@ -384,13 +367,6 @@ $$
         CREATE TRIGGER set_timestamp
             BEFORE UPDATE
             ON "review"
-            FOR EACH ROW
-        EXECUTE PROCEDURE trigger_set_timestamp();
-
-        DROP TRIGGER IF EXISTS set_timestamp ON "countries_ips";
-        CREATE TRIGGER set_timestamp
-            BEFORE UPDATE
-            ON "countries_ips"
             FOR EACH ROW
         EXECUTE PROCEDURE trigger_set_timestamp();
 

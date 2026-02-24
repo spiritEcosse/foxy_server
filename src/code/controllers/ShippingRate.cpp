@@ -18,20 +18,6 @@ void ShippingRate::getShippingRateByItem(const drogon::HttpRequestPtr &req,
         return;
     }
 
-    const auto ip_address = req->getPeerAddr().toIp();
-    std::stringstream ss(ip_address);
-    std::string octet;
-    std::vector<int> octets;
-
-    while(std::getline(ss, octet, '.')) {
-        octets.push_back(std::stoi(octet));
-    }
-
-    const auto integer_ip = (octets[0] * (256 * 256 * 256)) + (octets[1] * (256 * 256)) + (octets[2] * 256) + octets[3];
-    std::map<std::string, std::string, std::less<>> params;
-    params["client_ip"] = std::to_string(integer_ip);
-
-    const std::string query =
-        ShippingRateModel::getShippingRateByItem(&ItemModel::Field::slug, std::move(stringId), params);
+    const std::string query = ShippingRateModel::getShippingRateByItem(&ItemModel::Field::slug, std::move(stringId));
     executeSqlQuery(callbackPtr, query);
 }

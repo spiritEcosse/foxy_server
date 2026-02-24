@@ -29,26 +29,34 @@ protected:
 
     void setupGetListValues() override {
         getListValues["_page"] = 1;
-        getListValues["total"] = 2;
+        getListValues["total"] = 3;
 
         Json::Value data = Json::arrayValue;
 
         Json::Value entry1;
-        entry1["country_id"] = 2;
-        entry1["id"] = 2;
-        entry1["delivery_days_max"] = 6;
-        entry1["delivery_days_min"] = 2;
-        entry1["shipping_profile_id"] = 2;
+        entry1["country_id"] = Json::nullValue;
+        entry1["id"] = 3;
+        entry1["delivery_days_max"] = 5;
+        entry1["delivery_days_min"] = 1;
+        entry1["shipping_profile_id"] = 1;
 
         Json::Value entry2;
-        entry2["country_id"] = 1;
-        entry2["id"] = 1;
-        entry2["delivery_days_max"] = 5;
-        entry2["delivery_days_min"] = 1;
-        entry2["shipping_profile_id"] = 1;
+        entry2["country_id"] = 2;
+        entry2["id"] = 2;
+        entry2["delivery_days_max"] = 6;
+        entry2["delivery_days_min"] = 2;
+        entry2["shipping_profile_id"] = 2;
+
+        Json::Value entry3;
+        entry3["country_id"] = 1;
+        entry3["id"] = 1;
+        entry3["delivery_days_max"] = 5;
+        entry3["delivery_days_min"] = 1;
+        entry3["shipping_profile_id"] = 1;
 
         data.append(entry1);
         data.append(entry2);
+        data.append(entry3);
 
         getListValues["data"] = data;
     }

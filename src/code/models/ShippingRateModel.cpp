@@ -1,5 +1,4 @@
 #include "ShippingRateModel.h"
-#include "CountriesIpsModel.h"
 #include "ShippingProfileModel.h"
 #include "ItemModel.h"
 
@@ -17,25 +16,9 @@ BaseModel<ShippingRateModel>::SetMapFieldTypes ShippingRateModel::getObjectValue
                             {&Field::deliveryDaysMax, ValueVariant{deliveryDaysMax}}};
 }
 
-std::string ShippingRateModel::getShippingRateByItem(const BaseField *field,
-                                                     std::string &&value,
-                                                     const std::map<std::string, std::string, std::less<>> &params) {
-    std::string app_cloud_name;
-    const auto it = params.find("client_ip");
-    const auto clientIp = it->second;
-
-    QuerySet<CountriesIpsModel> qsCountry("one_country_id", false, false);
-    qsCountry.filter(&CountriesIpsModel::Field::startRange, clientIp, Operator::LESS_OR_EQUAL)
-        .filter(&CountriesIpsModel::Field::endRange, clientIp, Operator::GREATER_OR_EQUAL)
-        .only(&CountriesIpsModel::Field::countryId);
-
-    auto fullCondition =
-        WhereClause::createGroup(WhereClause(&Field::countryId, std::nullopt, Operator::IS) |
-                                 WhereClause::rawSql(&Field::countryId,
-                                                     fmt::format("(SELECT {} FROM {})",
-                                                                 CountriesIpsModel::Field::countryId.getFieldName(),
-                                                                 qsCountry.alias()))) &
-        WhereClause(field, std::move(value));
+std::string ShippingRateModel::getShippingRateByItem(const BaseField *field, std::string &&value) {
+    auto fullCondition = WhereClause(&Field::countryId, std::nullopt, Operator::IS) &
+                         WhereClause(field, std::move(value));
 
     QuerySet<ShippingRateModel> qsShipping("shipping", false);
     qsShipping.join<ShippingProfileModel>()
@@ -47,5 +30,5 @@ std::string ShippingRateModel::getShippingRateByItem(const BaseField *field,
                                 ShippingProfileModel::Field::processingTime.getFullFieldName(),
                                 Field::deliveryDaysMin.getFieldName(),
                                 Field::deliveryDaysMin.getFullFieldName()));
-    return BuildComplexQueries::buildQuery(std::move(qsCountry), std::move(qsShipping));
+    return BuildComplexQueries::buildQuery(std::move(qsShipping));
 }
