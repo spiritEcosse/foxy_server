@@ -110,7 +110,10 @@ namespace api::v1 {
             for(size_t offset = 0; offset < fileSize; offset += chunkSize) {
                 const size_t currentChunkSize = std::min(chunkSize, fileSize - offset);
                 if(fileSize < offset + currentChunkSize)
-                    throw std::runtime_error(fmt::format("Chunk overflow: fileSize={}, offset={}, chunk={}", fileSize, offset, currentChunkSize));
+                    throw std::runtime_error(fmt::format("Chunk overflow: fileSize={}, offset={}, chunk={}",
+                                                         fileSize,
+                                                         offset,
+                                                         currentChunkSize));
                 auto session = std::make_shared<cpr::Session>();
                 session->SetUrl(cpr::Url{apiUploadMedia});
                 session->SetHeader({{"Authorization", auth(apiUploadMedia)}});
