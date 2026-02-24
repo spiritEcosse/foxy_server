@@ -7,8 +7,4 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE DATABASE ${DB_NAME} OWNER ${DB_NAME};
 EOSQL
 
-echo "Running schema on '${DB_NAME}'..."
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$DB_NAME" \
-    < /docker-entrypoint-initdb.d/helper.sql
-
-echo "Done: ${DB_NAME}"
+echo "Done: ${DB_NAME} — schema will be applied by Atlas"

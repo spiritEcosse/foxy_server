@@ -83,4 +83,4 @@ namespace api::v1 {
 ## Before creating
 1. Read the existing model files that are most similar to what you need
 2. Read `src/code/models/BaseModel.h` and `src/code/models/BaseModelImpl.h` if needed
-3. Check the database schema in `init-db.sh` or `changes.sql` to know the actual column names and types
+3. Check the database schema in `migrations/20260101000000_baseline.sql` to know the actual column names and types
