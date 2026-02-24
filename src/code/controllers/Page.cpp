@@ -1,6 +1,6 @@
-#include "Page.h"
-#include "Request.h"
-#include "MediaModel.h"
+#include "controllers/Page.h"
+#include "utils/request/Request.h"
+#include "models/MediaModel.h"
 #include <fmt/core.h>
 
 using namespace api::v1;

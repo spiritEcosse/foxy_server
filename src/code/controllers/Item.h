@@ -3,7 +3,7 @@
 #include <drogon/drogon.h>
 #include "drogon/HttpController.h"
 #include "BaseCRUD.h"
-#include "ItemModel.h"
+#include "models/ItemModel.h"
 
 namespace api::v1 {
 

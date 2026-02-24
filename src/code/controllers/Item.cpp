@@ -1,9 +1,9 @@
-#include "Item.h"
-#include "Request.h"
-#include "QuerySet.h"
-#include "MediaModel.h"
-#include "TagModel.h"
-#include "config.h"
+#include "controllers/Item.h"
+#include "utils/request/Request.h"
+#include "orm/QuerySet.h"
+#include "models/MediaModel.h"
+#include "models/TagModel.h"
+#include "utils/config.h"
 #include <fmt/core.h>
 
 using namespace api::v1;

@@ -1,12 +1,12 @@
 #pragma once
-#include "BaseClass.h"
+#include "utils/BaseClass.h"
 
 #include <string>
 #include <json/value.h>
 #include <chrono>
 #include "decimal.h"
-#include "QuerySet.h"
-#include "TransparentStringHash.h"
+#include "orm/QuerySet.h"
+#include "utils/TransparentStringHash.h"
 
 #include <unordered_map>
 

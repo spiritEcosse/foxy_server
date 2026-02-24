@@ -1,11 +1,11 @@
 #pragma once
-#include "StringUtils.h"
-#include "PinterestClient.h"  // must be because of it : ClientType::clientName
-#include "SocialMediaModel.h"
-#include "TwitterClient.h"  // must be because of it : ClientType::clientName
-#include "YouTubeClient.h"  // must be because of it : ClientType::clientName
-#include "sentryHelper.h"
-#include "config.h"
+#include "utils/db/StringUtils.h"
+#include "clients/PinterestClient.h"  // must be because of it : ClientType::clientName
+#include "models/SocialMediaModel.h"
+#include "clients/TwitterClient.h"  // must be because of it : ClientType::clientName
+#include "clients/YouTubeClient.h"  // must be because of it : ClientType::clientName
+#include "sentry_catcher/sentryHelper.h"
+#include "utils/config.h"
 #include <ranges>
 
 namespace api::v1 {

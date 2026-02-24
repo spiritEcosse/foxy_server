@@ -1,4 +1,4 @@
-#include "sentryHelper.h"
+#include "sentry_catcher/sentryHelper.h"
 #include "fmt/format.h"
 
 void sentryHelper(const std::string& error, const std::string& logger) {

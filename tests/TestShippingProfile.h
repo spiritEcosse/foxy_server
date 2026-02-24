@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BaseTestClass.h"
-#include "ShippingProfile.h"
+#include "controllers/ShippingProfile.h"
 
 #include <gtest/gtest.h>
 

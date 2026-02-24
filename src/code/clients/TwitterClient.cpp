@@ -1,13 +1,13 @@
-#include "TwitterClient.h"
+#include "clients/TwitterClient.h"
 
 #include <cpr/cpr.h>
 #include "fmt/format.h"
 #include <stdexcept>
 #include <string>
 #include <drogon/drogon.h>
-#include <Tweet.h>
-#include "cuuid.h"
-#include "sentryHelper.h"
+#include <clients/models/Tweet.h>
+#include "utils/cuuid.h"
+#include "sentry_catcher/sentryHelper.h"
 
 namespace api::v1 {
     std::string TwitterClient::auth() const {

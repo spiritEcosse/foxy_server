@@ -1,4 +1,4 @@
-#include "IClientImpl.h"
+#include "clients/IClientImpl.h"
 #include "fmt/format.h"
 #include <fmt/ranges.h>
 #include <string>
@@ -7,7 +7,7 @@
 #include <openssl/hmac.h>
 #include <map>
 #include <drogon/drogon.h>
-#include "HttpException.h"
+#include "utils/exceptions/HttpException.h"
 #include <functional>
 
 namespace api::v1 {

@@ -1,6 +1,6 @@
-#include "ShippingRateModel.h"
-#include "ShippingProfileModel.h"
-#include "ItemModel.h"
+#include "models/ShippingRateModel.h"
+#include "models/ShippingProfileModel.h"
+#include "models/ItemModel.h"
 
 using namespace api::v1;
 

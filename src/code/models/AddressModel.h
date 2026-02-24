@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "BaseModel.h"
+#include "models/BaseModel.h"
 
 namespace api::v1 {
     class AddressModel final : public BaseModel<AddressModel> {

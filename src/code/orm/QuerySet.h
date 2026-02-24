@@ -4,10 +4,10 @@
 #include <utility>
 #include <vector>
 #include <variant>
-#include "StringUtils.h"
-#include "BaseField.h"
-#include "Function.h"
-#include "WhereClause.h"
+#include "utils/db/StringUtils.h"
+#include "models/BaseField.h"
+#include "orm/Function.h"
+#include "orm/WhereClause.h"
 #include <ranges>
 #include <fmt/core.h>
 #include <fmt/ranges.h>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BaseModel.h"
+#include "models/BaseModel.h"
 
 namespace api::v1 {
     class SocialMediaModel final : public BaseModel<SocialMediaModel> {

@@ -1,4 +1,4 @@
-#include "FinancialDetailsModel.h"
+#include "models/FinancialDetailsModel.h"
 
 using namespace api::v1;
 

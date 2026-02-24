@@ -2,8 +2,8 @@
 
 #include <string>
 #include <drogon/drogon.h>
-#include "BaseModel.h"
-#include "BasketModel.h"
+#include "models/BaseModel.h"
+#include "models/BasketModel.h"
 #include "decimal.h"
 
 struct OrderStatus {

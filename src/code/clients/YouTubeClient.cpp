@@ -1,6 +1,6 @@
-﻿#include "YouTubeClient.h"
+﻿#include "clients/YouTubeClient.h"
 
-#include "YouTube.h"
+#include "clients/models/YouTube.h"
 
 namespace api::v1 {
     std::string YouTubeClient::auth() const {

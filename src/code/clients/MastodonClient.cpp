@@ -1,11 +1,11 @@
-#include "MastodonClient.h"
+#include "clients/MastodonClient.h"
 
-#include <sentryHelper.h>
+#include <sentry_catcher/sentryHelper.h>
 #include <drogon/drogon.h>
 #include <fmt/core.h>
 #include <cpr/cpr.h>
-#include "Tweet.h"  // must be because of it : ClientType::clientName
-#include "Pin.h"  // must be because of it : ClientType::clientName
+#include "clients/models/Tweet.h"  // must be because of it : ClientType::clientName
+#include "clients/models/Pin.h"  // must be because of it : ClientType::clientName
 #include <algorithm>
 
 namespace api::v1 {

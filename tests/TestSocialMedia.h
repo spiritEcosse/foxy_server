@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BaseTestClass.h"
-#include "SocialMedia.h"
+#include "controllers/SocialMedia.h"
 
 #include <gtest/gtest.h>
 

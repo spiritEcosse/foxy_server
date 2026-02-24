@@ -1,5 +1,5 @@
-#include "ShippingProfileModel.h"
-#include "ShippingRateModel.h"
+#include "models/ShippingProfileModel.h"
+#include "models/ShippingRateModel.h"
 
 using namespace api::v1;
 

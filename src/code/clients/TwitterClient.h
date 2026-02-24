@@ -1,8 +1,8 @@
 #pragma once
 
-#include "IClient.h"
-#include "config.h"
-#include "TransparentStringHash.h"
+#include "clients/IClient.h"
+#include "utils/config.h"
+#include "utils/TransparentStringHash.h"
 
 namespace api::v1 {
     class Tweet;

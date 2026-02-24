@@ -3,8 +3,8 @@
 #include <string>
 #include <chrono>
 #include <drogon/drogon.h>
-#include "BaseModel.h"
-#include "OrderModel.h"
+#include "models/BaseModel.h"
+#include "models/OrderModel.h"
 
 namespace api::v1 {
     class BasketItemModel final : public BaseModel<BasketItemModel> {

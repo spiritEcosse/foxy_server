@@ -1,6 +1,6 @@
 #pragma once
-#include "FileTransferInfo.h"
-#include "IClientImpl.h"
+#include "clients/FileTransferInfo.h"
+#include "clients/IClientImpl.h"
 
 namespace api::v1 {
     template<typename ClientType, typename PostType>

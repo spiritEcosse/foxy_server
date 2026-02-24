@@ -1,7 +1,7 @@
 #pragma once
 
 #include <decimal.h>
-#include "BaseModel.h"
+#include "models/BaseModel.h"
 
 namespace api::v1 {
     class FinancialDetailsModel final : public BaseModel<FinancialDetailsModel> {

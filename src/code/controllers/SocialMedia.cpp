@@ -1,17 +1,17 @@
-#include "SocialMedia.h"
-#include "config.h"
-#include "ItemModel.h"
-#include "MediaModel.h"
-#include "QuerySet.h"
+#include "controllers/SocialMedia.h"
+#include "utils/config.h"
+#include "models/ItemModel.h"
+#include "models/MediaModel.h"
+#include "orm/QuerySet.h"
 #include <memory>
 #include <future>
 #include <vector>
-#include "Request.h"
-#include "TagModel.h"
-#include "Pin.h"
-#include "Tweet.h"
-#include "MastodonClient.h"
-#include "YouTube.h"
+#include "utils/request/Request.h"
+#include "models/TagModel.h"
+#include "clients/models/Pin.h"
+#include "clients/models/Tweet.h"
+#include "clients/MastodonClient.h"
+#include "clients/models/YouTube.h"
 
 #include <execution>
 

@@ -1,6 +1,6 @@
-#include "MediaModel.h"
-#include "ItemModel.h"
-#include "config.h"
+#include "models/MediaModel.h"
+#include "models/ItemModel.h"
+#include "utils/config.h"
 #include "fmt/format.h"
 
 using namespace api::v1;

@@ -1,4 +1,4 @@
-#include "Pin.h"
+#include "clients/models/Pin.h"
 #include <execution>
 
 namespace api::v1 {

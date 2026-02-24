@@ -1,9 +1,9 @@
-#include "Auth.h"
+#include "auth/Auth.h"
 #include <drogon/drogon.h>
-#include "UserModel.h"
-#include <JWT.h>
+#include "models/UserModel.h"
+#include <utils/jwt/JWT.h>
 #include <string>
-#include "JwtGoogleFilter.h"
+#include "filters/JwtGoogleFilter.h"
 
 using namespace api::v1;
 using namespace drogon::orm;

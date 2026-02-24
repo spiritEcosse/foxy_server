@@ -3,7 +3,7 @@
 #include <string>
 #include <chrono>
 #include <drogon/drogon.h>
-#include "BaseModel.h"
+#include "models/BaseModel.h"
 #include "decimal.h"
 
 namespace api::v1 {

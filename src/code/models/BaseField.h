@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "BaseClass.h"
+#include "utils/BaseClass.h"
 #include <fmt/core.h>
 
 namespace api::v1 {

@@ -1,8 +1,8 @@
 #pragma once
-#include "Base64.h"
-#include "BaseClass.h"
+#include "utils/Base64.h"
+#include "utils/BaseClass.h"
 
-#include <MediaModel.h>
+#include <models/MediaModel.h>
 #include <fstream>
 #include <string>
 #include <filesystem>

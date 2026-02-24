@@ -1,7 +1,7 @@
 #include <fmt/chrono.h>
 #include <fmt/core.h>
 
-#include "BaseModelImpl.h"
+#include "models/BaseModelImpl.h"
 
 namespace api::v1 {
 

@@ -1,8 +1,8 @@
 #pragma once
 #include <json/json.h>
-#include "FileTransferInfo.h"
+#include "clients/FileTransferInfo.h"
 
-#include <IClientImpl.h>
+#include <clients/IClientImpl.h>
 
 namespace api::v1 {
     class MastodonClient final : public IClientImpl {

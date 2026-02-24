@@ -3,7 +3,7 @@
 #include <exception>
 #include <string>
 #include <sstream>
-#include "sentryHelper.h"
+#include "sentry_catcher/sentryHelper.h"
 
 namespace api::v1 {
     class BaseException : public std::exception, public BaseClass {

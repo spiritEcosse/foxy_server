@@ -13,7 +13,7 @@
 #include "TestSocialMedia.h"
 #include "TestFinancialDetails.h"
 #include "TestOrder.h"
-#include "config.h"
+#include "utils/config.h"
 
 #include <future>
 #include <thread>

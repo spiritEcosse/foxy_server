@@ -2,7 +2,7 @@
 
 #include "drogon/HttpController.h"
 #include "BaseCRUD.h"
-#include "SocialMediaModel.h"
+#include "models/SocialMediaModel.h"
 
 namespace api::v1 {
     class SocialMedia final : public drogon::HttpController<SocialMedia>,

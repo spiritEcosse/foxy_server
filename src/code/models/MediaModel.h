@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BaseModel.h"
+#include "models/BaseModel.h"
 #include "json/json.h"
 
 namespace api::v1 {

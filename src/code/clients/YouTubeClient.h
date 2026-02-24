@@ -1,7 +1,7 @@
 #pragma once
 
-#include "IClient.h"
-#include "config.h"
+#include "clients/IClient.h"
+#include "utils/config.h"
 
 namespace api::v1 {
     class YouTube;

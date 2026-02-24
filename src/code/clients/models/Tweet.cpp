@@ -1,4 +1,4 @@
-#include "Tweet.h"
+#include "clients/models/Tweet.h"
 #include <ranges>
 
 namespace api::v1 {

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "BaseClass.h"
+#include "utils/BaseClass.h"
 #include "drogon/HttpRequest.h"
 #include "drogon/drogon.h"
 #include <ranges>
-#include "config.h"
+#include "utils/config.h"
 
 #include <future>
 #include <gtest/gtest.h>

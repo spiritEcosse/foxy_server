@@ -1,8 +1,8 @@
-#include "IClient.h"
+#include "clients/IClient.h"
 
-#include "Tweet.h"
-#include "Pin.h"
-#include "YouTube.h"
+#include "clients/models/Tweet.h"
+#include "clients/models/Pin.h"
+#include "clients/models/YouTube.h"
 
 namespace api::v1 {
     template<typename ClientType, typename PostType>

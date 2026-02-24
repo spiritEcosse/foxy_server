@@ -1,7 +1,7 @@
 #pragma once
 
 #include <unordered_map>
-#include "BaseModelImpl.h"
+#include "models/BaseModelImpl.h"
 #include <algorithm>
 
 namespace api::v1 {
@@ -73,4 +73,4 @@ namespace api::v1 {
     };
 }
 
-#include "BaseModel.inl"
+#include "models/BaseModel.inl"

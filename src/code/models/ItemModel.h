@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "BaseModel.h"
+#include "models/BaseModel.h"
 #include "decimal.h"
 
 namespace api::v1 {

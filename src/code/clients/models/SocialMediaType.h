@@ -1,10 +1,10 @@
 #pragma once
 
-#include "SocialMediaTypeImpl.h"
+#include "clients/models/SocialMediaTypeImpl.h"
 #include <string>
 #include <vector>
 #include <drogon/drogon.h>
-#include "FileTransferInfo.h"
+#include "clients/FileTransferInfo.h"
 
 const std::string INTRODUCTION_TEXT_POST = "Explore #FaithFishArt: Discover and buy inspiring art. Follow for updates!";
 
@@ -62,4 +62,4 @@ namespace api::v1 {
     };
 }
 
-#include "SocialMediaType.inl"
+#include "clients/models/SocialMediaType.inl"

@@ -1,5 +1,5 @@
-#include "SocialMediaModel.h"
-#include "ItemModel.h"
+#include "models/SocialMediaModel.h"
+#include "models/ItemModel.h"
 
 using namespace api::v1;
 

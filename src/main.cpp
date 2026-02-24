@@ -1,10 +1,10 @@
 #include "drogon/drogon.h"
-#include "config.h"
+#include "utils/config.h"
 #if defined(SENTRY_DSN)
 #include <sentry.h>
 #endif
 #include <fmt/format.h>
-#include "sentryHelper.h"
+#include "sentry_catcher/sentryHelper.h"
 #include <iostream>
 
 using namespace drogon;
