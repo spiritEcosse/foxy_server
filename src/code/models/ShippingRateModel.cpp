@@ -17,8 +17,8 @@ BaseModel<ShippingRateModel>::SetMapFieldTypes ShippingRateModel::getObjectValue
 }
 
 std::string ShippingRateModel::getShippingRateByItem(const BaseField *field, std::string &&value) {
-    auto fullCondition = WhereClause(&Field::countryId, std::nullopt, Operator::IS) &
-                         WhereClause(field, std::move(value));
+    auto fullCondition =
+        WhereClause(&Field::countryId, std::nullopt, Operator::IS) & WhereClause(field, std::move(value));
 
     QuerySet<ShippingRateModel> qsShipping("shipping", false);
     qsShipping.join<ShippingProfileModel>()
