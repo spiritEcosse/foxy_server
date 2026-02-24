@@ -157,6 +157,18 @@ Before implementing any feature or fix: if a GitHub issue exists for it, create 
 git checkout -b issue-42-add-shipping-rates
 ```
 
+When creating a pull request, always include `Closes #<issue-number>` in the PR body. This links the PR to the issue in GitHub's UI and automatically closes the issue when the PR is merged.
+
+```bash
+gh pr create --base dev --title "..." --body "$(cat <<'EOF'
+## Summary
+...
+
+Closes #42
+EOF
+)"
+```
+
 ## Code Style
 
 - `.clang-format`: LLVM-based, 120 column limit, 4-space indent, always break template declarations
