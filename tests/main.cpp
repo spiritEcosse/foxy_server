@@ -29,20 +29,23 @@ public:
             const auto pgDb = api::v1::getEnv("PG_DB", "foxy_tests");
             const auto pgUser = api::v1::getEnv("PG_USER", "foxy");
 
-            auto runCmd = [](const std::string& cmd) {
+            auto runCmd = [](const std::string &cmd) {
                 if(std::system(cmd.c_str()) != 0)
                     throw std::runtime_error("DB setup command failed: " + cmd);
             };
 
-            runCmd(fmt::format(
-                "psql -U {} -d {} -c \"DROP SCHEMA public CASCADE; "
-                "DROP SCHEMA IF EXISTS atlas_schema_revisions CASCADE; "
-                "CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO {};\"",
-                pgUser, pgDb, pgUser));
+            runCmd(fmt::format("psql -U {} -d {} -c \"DROP SCHEMA public CASCADE; "
+                               "DROP SCHEMA IF EXISTS atlas_schema_revisions CASCADE; "
+                               "CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO {};\"",
+                               pgUser,
+                               pgDb,
+                               pgUser));
 
-            runCmd(fmt::format(
-                "atlas migrate apply --url 'postgres://{}@/{}?host=/var/run/postgresql' --dir 'file://{}'",
-                pgUser, pgDb, TEST_MIGRATIONS_DIR));
+            runCmd(
+                fmt::format("atlas migrate apply --url 'postgres://{}@/{}?host=/var/run/postgresql' --dir 'file://{}'",
+                            pgUser,
+                            pgDb,
+                            TEST_MIGRATIONS_DIR));
 
             runCmd(fmt::format("psql -U {} -d {} -f '{}'", pgUser, pgDb, TEST_FIXTURES_PATH));
 
