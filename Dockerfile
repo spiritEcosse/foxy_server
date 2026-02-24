@@ -21,8 +21,11 @@ RUN apt-get update && \
         zlib1g \
         libuuid1 \
         wget \
+        curl \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && rm -rf /var/lib/apt/lists/*
+
+RUN curl -sSf https://atlasgo.sh | sh
 
 # libc++ runtime — binary links against libc++.so.1 (built with -stdlib=libc++)
 RUN --mount=type=bind,from=builder,source=/usr/lib,target=/builder-lib \

@@ -51,6 +51,21 @@ git push origin main
 
 The revert triggers a new build and deploy automatically.
 
+## Atlas / Database Migrations
+
+Schema changes are managed with [Atlas](https://atlasgo.io) versioned migrations in `migrations/`.
+
+```bash
+# Apply pending migrations locally
+atlas migrate apply --env local
+
+# Create a new migration
+atlas migrate new --env local --name <description>
+
+# Show applied/pending migrations
+atlas migrate status --env local
+```
+
 ## Local Development
 
 See `CLAUDE.md` for build commands, local setup, and architecture overview.
