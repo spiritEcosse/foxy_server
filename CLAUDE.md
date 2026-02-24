@@ -88,6 +88,14 @@ Custom query builder — not Drogon's built-in ORM:
 - `tests/` — Google Test suite
 - `cmake/` — modular cmake includes (cpm, dependencies, tests, format, sanitizers, sentry)
 
+## Workflow
+
+Before implementing any feature or fix: if a GitHub issue exists for it, create a branch named `issue-<number>-<short-description>` and switch to it before writing any code.
+
+```bash
+git checkout -b issue-42-add-shipping-rates
+```
+
 ## Code Style
 
 - `.clang-format`: LLVM-based, 120 column limit, 4-space indent, always break template declarations

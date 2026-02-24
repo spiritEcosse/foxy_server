@@ -34,8 +34,6 @@ void SocialMedia::handleRow(const auto &row) const {
         std::string(YouTubeClient::clientName),
     };
 
-    std::cout << "itemId: " << itemId << std::endl;
-
     std::vector<std::string> nets;
     for(const auto &net: netsJson) {
         nets.emplace_back(net.asString());
@@ -46,9 +44,6 @@ void SocialMedia::handleRow(const auto &row) const {
     std::set<std::string, std::less<>> diffNets;
     std::ranges::set_difference(target, netsSet, std::inserter(diffNets, diffNets.end()));
 
-    for(const auto &net: diffNets) {
-        std::cout << "net: " << net << std::endl;
-    }
     if(diffNets.empty())
         return;
     auto clientDownloadMedia = MastodonClient(media);

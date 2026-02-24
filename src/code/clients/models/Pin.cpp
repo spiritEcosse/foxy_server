@@ -42,7 +42,7 @@ namespace api::v1 {
             std::this_thread::sleep_for(std::chrono::seconds(2));
             std::vector<std::jthread> threads;
             std::ranges::for_each(videos, [this, &threads](const auto& videoItem) {
-                threads.emplace_back([this, &videoItem]() {
+                threads.emplace_back([this, videoItem]() {
                     return Pin(itemId, title, slug, description, images[0], videoItem, tags).postVideo();
                 });
             });

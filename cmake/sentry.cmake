@@ -6,9 +6,9 @@ if(DEFINED ENV{SENTRY_DSN})
     set(SENTRY_BACKEND crashpad)
     CPMAddPackage(
         NAME sentry
-        VERSION 0.7.10
+        VERSION 0.13.0
         GITHUB_REPOSITORY getsentry/sentry-native
-        GIT_TAG 0.7.10
+        GIT_TAG 0.13.0
         OPTIONS "SENTRY_BACKEND=${SENTRY_BACKEND}"
     )
     target_link_libraries(${PROJECT_NAME} PRIVATE sentry)

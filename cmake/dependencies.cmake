@@ -21,14 +21,14 @@ endif()
 # drogon
 CPMAddPackage(
     NAME drogon
-    VERSION v1.9.8
+    VERSION 1.9.12
     GITHUB_REPOSITORY drogonframework/drogon
-    GIT_TAG v1.9.4
+    GIT_TAG v1.9.12
     OPTIONS "BUILD_TESTING OFF"
 )
 
 # cpr
-CPMAddPackage(NAME cpr VERSION 1.11.0 GITHUB_REPOSITORY libcpr/cpr GIT_TAG 1.11.0)
+CPMAddPackage(NAME cpr VERSION 1.14.2 GITHUB_REPOSITORY libcpr/cpr GIT_TAG 1.14.2)
 
 # fmt
 CPMAddPackage(NAME fmt VERSION 12.1.0 GITHUB_REPOSITORY fmtlib/fmt GIT_TAG 12.1.0)
@@ -47,4 +47,10 @@ endif()
 find_library(ZLIB_LIBRARY NAMES z)
 if(NOT ZLIB_LIBRARY)
     message(FATAL_ERROR "zlib not found")
+endif()
+
+# libunistring — required by libidn2 (curl dependency)
+find_library(UNISTRING_LIBRARY NAMES unistring)
+if(NOT UNISTRING_LIBRARY)
+    message(FATAL_ERROR "libunistring not found")
 endif()

@@ -2,10 +2,12 @@
 
 #include <cpr/cpr.h>
 #include "fmt/format.h"
+#include <stdexcept>
 #include <string>
 #include <drogon/drogon.h>
 #include <Tweet.h>
 #include "cuuid.h"
+#include "sentryHelper.h"
 
 namespace api::v1 {
     std::string TwitterClient::auth() const {
@@ -107,7 +109,8 @@ namespace api::v1 {
             const size_t fileSize = fileContent->size();
             for(size_t offset = 0; offset < fileSize; offset += chunkSize) {
                 const size_t currentChunkSize = std::min(chunkSize, fileSize - offset);
-                assert(fileSize >= offset + currentChunkSize);
+                if(fileSize < offset + currentChunkSize)
+                    throw std::runtime_error(fmt::format("Chunk overflow: fileSize={}, offset={}, chunk={}", fileSize, offset, currentChunkSize));
                 auto session = std::make_shared<cpr::Session>();
                 session->SetUrl(cpr::Url{apiUploadMedia});
                 session->SetHeader({{"Authorization", auth(apiUploadMedia)}});
@@ -125,7 +128,7 @@ namespace api::v1 {
                     multiplePerformAppend.AddSession(session);
                     appendSessions.push_back(session);
                 } catch(const std::exception& e) {
-                    std::cerr << "Error creating session: " << e.what() << std::endl;
+                    sentryHelper(e, "TwitterClient::uploadMedia");
                 }
                 segmentIndex++;
             }

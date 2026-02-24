@@ -6,7 +6,7 @@
 #include <fstream>
 #include <string>
 #include <filesystem>
-#include <iostream>
+#include <drogon/drogon.h>
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
@@ -41,7 +41,7 @@ namespace api::v1 {
             try {
                 std::filesystem::remove(fileName);
             } catch(const std::filesystem::filesystem_error& e) {
-                std::cerr << "Error removing file: " << e.what() << std::endl;
+                LOG_ERROR << "Error removing file: " << e.what();
             }
         }
 
@@ -71,12 +71,12 @@ namespace api::v1 {
             try {
                 std::ifstream file(fileName, std::ios::binary | std::ios::ate);
                 if(!file) {
-                    std::cerr << "Failed to open file: " << fileName << " Error: " << std::strerror(errno) << std::endl;
+                    LOG_ERROR << "Failed to open file: " << fileName << " Error: " << std::strerror(errno);
                     return 0;
                 }
                 return file.tellg();
             } catch(const std::exception& e) {
-                std::cerr << "Exception in getSize: " << e.what() << std::endl;
+                LOG_ERROR << "Exception in getSize: " << e.what();
                 return 0;
             }
         }
@@ -85,7 +85,7 @@ namespace api::v1 {
             try {
                 std::ifstream file(fileName, std::ios::binary);
                 if(!file) {
-                    std::cerr << "Failed to open file: " << fileName << " Error: " << std::strerror(errno) << std::endl;
+                    LOG_ERROR << "Failed to open file: " << fileName << " Error: " << std::strerror(errno);
                     return nullptr;
                 }
 
@@ -94,19 +94,19 @@ namespace api::v1 {
                 file.seekg(0, std::ios::beg);
 
                 if(fileSize > MAX_FILE_SIZE) {
-                    std::cerr << "File too large: " << fileName << " Size: " << fileSize << std::endl;
+                    LOG_ERROR << "File too large: " << fileName << " Size: " << fileSize;
                     return nullptr;
                 }
 
                 auto buffer = std::make_shared<std::vector<char>>(static_cast<size_t>(fileSize));
                 if(!file.read(buffer->data(), fileSize)) {
-                    std::cerr << "Failed to read file: " << fileName << " Error: " << std::strerror(errno) << std::endl;
+                    LOG_ERROR << "Failed to read file: " << fileName << " Error: " << std::strerror(errno);
                     return nullptr;
                 }
 
                 return buffer;
             } catch(const std::exception& e) {
-                std::cerr << "Exception in getFileContent: " << e.what() << std::endl;
+                LOG_ERROR << "Exception in getFileContent: " << e.what();
                 return nullptr;
             }
         }

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 project(foxy_server)
 cmake_policy(SET CMP0115 NEW)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -52,7 +52,7 @@ include_directories(${CMAKE_SOURCE_DIR}/src/code/filters)
 include_directories(${CMAKE_SOURCE_DIR}/src/code/sentry_catcher)
 
 # Link dependencies
-target_link_libraries(${PROJECT_NAME} PRIVATE drogon cpr fmt::fmt ${UUID_LIBRARY} ${ZLIB_LIBRARY})
+target_link_libraries(${PROJECT_NAME} PRIVATE drogon cpr fmt::fmt ${UUID_LIBRARY} ${ZLIB_LIBRARY} ${UNISTRING_LIBRARY})
 
 # Post-target: sentry (conditional), formatting, sanitizers, tests
 include(cmake/sentry.cmake)
