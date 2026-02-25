@@ -1,6 +1,5 @@
 #pragma once
 
-#include <decimal.h>
 #include "models/BaseModel.h"
 
 namespace api::v1 {
@@ -24,7 +23,7 @@ namespace api::v1 {
         };
 
         explicit FinancialDetailsModel(const Json::Value &json) : BaseModel(json) {
-            taxRate = json[Field::taxRate.getFieldName()].asDouble();
+            taxRate = json[Field::taxRate.getFieldName()].asString();
             gateway = json[Field::gateway.getFieldName()].asString();
             gatewayMerchantId = json[Field::gatewayMerchantId.getFieldName()].asString();
             merchantId = json[Field::merchantId.getFieldName()].asString();
@@ -37,7 +36,7 @@ namespace api::v1 {
             validateField(Field::merchantName.getFieldName(), merchantName, missingFields);
         }
 
-        dec::decimal<2> taxRate;
+        std::string taxRate;
         std::string gateway;
         std::string gatewayMerchantId;
         std::string merchantId;

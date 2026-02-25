@@ -40,10 +40,6 @@ namespace api::v1 {
             return std::to_string(arg);
         } else if constexpr(std::is_same_v<Type, bool>) {
             return arg ? "true" : "false";
-        } else if constexpr(std::is_same_v<Type, dec::decimal<2>>) {
-            std::stringstream ss;
-            ss << arg;
-            return ss.str();
         } else if constexpr(std::is_same_v<Type, std::vector<std::string>>) {
             std::string data = "{";
             for(const auto &str: arg) {

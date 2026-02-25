@@ -4,7 +4,6 @@
 #include <drogon/drogon.h>
 #include "models/BaseModel.h"
 #include "models/BasketModel.h"
-#include "decimal.h"
 
 struct OrderStatus {
     static inline std::string ordered = "Ordered";  // The item has been ordered by the customer.
@@ -52,10 +51,10 @@ namespace api::v1 {
 
         std::string status = OrderStatus::ordered;
         int basketId{};
-        dec::decimal<2> total{};
-        dec::decimal<2> totalExTaxes{};
-        dec::decimal<2> taxRate{};
-        dec::decimal<2> taxes{};
+        std::string total;
+        std::string totalExTaxes;
+        std::string taxRate;
+        std::string taxes;
         bool returned = false;
         int userId{};
         int addressId{};
@@ -63,10 +62,10 @@ namespace api::v1 {
 
         explicit OrderModel(const Json::Value &json) : BaseModel(json) {
             basketId = json[Field::basketId.getFieldName()].asInt();
-            total = json[Field::total.getFieldName()].asDouble();
-            totalExTaxes = json[Field::totalExTaxes.getFieldName()].asDouble();
-            taxRate = json[Field::taxRate.getFieldName()].asDouble();
-            taxes = json[Field::taxes.getFieldName()].asDouble();
+            total = json[Field::total.getFieldName()].asString();
+            totalExTaxes = json[Field::totalExTaxes.getFieldName()].asString();
+            taxRate = json[Field::taxRate.getFieldName()].asString();
+            taxes = json[Field::taxes.getFieldName()].asString();
             userId = json[Field::userId.getFieldName()].asInt();
             addressId = json[Field::addressId.getFieldName()].asInt();
             returned = json[Field::returned.getFieldName()].asBool();

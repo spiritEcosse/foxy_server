@@ -2,7 +2,6 @@
 
 #include <string>
 #include "models/BaseModel.h"
-#include "decimal.h"
 
 namespace api::v1 {
 
@@ -32,7 +31,7 @@ namespace api::v1 {
         std::string description;
         std::string slug;
         bool enabled = false;
-        dec::decimal<2> price;
+        std::string price;
         std::string metaDescription;
 
         explicit ItemModel(const Json::Value &json) : BaseModel(json) {
@@ -42,7 +41,7 @@ namespace api::v1 {
             slug = json[Field::slug.getFieldName()].asString();
             shippingProfileId = json[Field::shippingProfileId.getFieldName()].asInt();
             enabled = json[Field::enabled.getFieldName()].asBool();
-            price = json[Field::price.getFieldName()].asDouble();
+            price = json[Field::price.getFieldName()].asString();
 
             validateField(Field::title.getFieldName(), title, missingFields);
             validateField(Field::description.getFieldName(), description, missingFields);

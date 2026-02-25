@@ -4,7 +4,6 @@
 #include <string>
 #include <json/value.h>
 #include <chrono>
-#include "decimal.h"
 #include "orm/QuerySet.h"
 #include "utils/TransparentStringHash.h"
 
@@ -41,10 +40,6 @@ namespace api::v1 {
             }
         } else if constexpr(std::is_same_v<VDecayed, std::string_view> || std::is_same_v<VDecayed, std::string>) {
             if(value.empty()) {
-                fields[fieldName] = fieldName + " is required";
-            }
-        } else if constexpr(std::is_same_v<VDecayed, dec::decimal<2>>) {
-            if(value == dec::decimal<2>(0)) {
                 fields[fieldName] = fieldName + " is required";
             }
         } else if constexpr(std::is_same_v<VDecayed, double>) {

@@ -4,7 +4,6 @@
 #include <chrono>
 #include <drogon/drogon.h>
 #include "models/BaseModel.h"
-#include "decimal.h"
 
 namespace api::v1 {
     class ShippingProfileModel final : public BaseModel<ShippingProfileModel> {
@@ -30,14 +29,14 @@ namespace api::v1 {
         int processingTime{};
         int countryId{};
         std::string postalCode;
-        dec::decimal<2> shippingUpgradeCost;
+        std::string shippingUpgradeCost;
 
         explicit ShippingProfileModel(const Json::Value &json) : BaseModel(json) {
             title = json[Field::title.getFieldName()].asString();
             processingTime = json[Field::processingTime.getFieldName()].asInt();
             countryId = json[Field::countryId.getFieldName()].asInt();
             postalCode = json[Field::postalCode.getFieldName()].asString();
-            shippingUpgradeCost = json[Field::shippingUpgradeCost.getFieldName()].asDouble();
+            shippingUpgradeCost = json[Field::shippingUpgradeCost.getFieldName()].asString();
 
             validateField(Field::title.getFieldName(), title, missingFields);
             validateField(Field::processingTime.getFieldName(), processingTime, missingFields);
