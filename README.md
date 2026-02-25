@@ -32,7 +32,6 @@ push to dev  → build → push image :dev  → deploy foxy-dev  (dev)
 | `PINTEREST_BOARD_ID` | Pinterest board ID |
 | `PINTEREST_CLIENT_ID` | Pinterest OAuth client ID |
 | `PINTEREST_CLIENT_SECRET` | Pinterest OAuth client secret |
-| `PINTEREST_REFRESH_TOKEN` | Pinterest refresh token |
 | `YOUTUBE_CLIENT_ID` | YouTube OAuth client ID |
 | `YOUTUBE_CLIENT_SECRET` | YouTube OAuth client secret |
 | `YOUTUBE_REFRESH_TOKEN` | YouTube refresh token |

@@ -7,7 +7,6 @@ namespace api::v1 {
     class Pin;
 
     class PinterestClient final : public IClient<PinterestClient, Pin> {
-        static inline const std::string refreshToken = getEnv("PINTEREST_REFRESH_TOKEN");
         static inline const std::string clientId = getEnv("PINTEREST_CLIENT_ID");
         static inline const std::string clientSecret = getEnv("PINTEREST_CLIENT_SECRET");
 

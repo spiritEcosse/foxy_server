@@ -88,23 +88,19 @@ Atlas tracks applied migrations in the `atlas_schema_revisions` table. On the ne
 
 ### How to write migration SQL files
 
-**Use a transaction for every migration.** PostgreSQL supports transactional DDL — if the migration fails mid-way, the transaction rolls back cleanly with no partial state.
+**Do not add `BEGIN`/`COMMIT` to migration files.** Atlas wraps every migration in its own transaction automatically (`txmode=file`). Adding explicit `BEGIN/COMMIT` causes Atlas to exit with `"unexpected transaction status idle"` because the inner `COMMIT` ends Atlas's outer transaction before it records the revision — breaking CI/CD.
 
 ```sql
-BEGIN;
-
 ALTER TABLE item ADD COLUMN weight_kg NUMERIC(8,3);
 ALTER TABLE item ALTER COLUMN price SET NOT NULL;
-
-COMMIT;
 ```
 
 **Rules:**
-- Always wrap statements in `BEGIN; ... COMMIT;` — Atlas applies each file atomically in PostgreSQL by default, but being explicit makes intent clear.
+- Do not wrap statements in `BEGIN; ... COMMIT;` — Atlas handles the transaction.
 - One logical change per file (e.g. "add column" or "create table", not both in the same file unless they are tightly coupled).
 - Never edit an already-committed migration file. If you need to fix something, create a new migration that corrects it.
 - Do not use `IF NOT EXISTS` / `IF EXISTS` guards — Atlas will never re-apply a migration it has already recorded.
-- Do not use the `DO $$ BEGIN ... END $$;` wrapper from the baseline — that was needed for the old idempotent single-file approach. Plain SQL in a transaction is the correct pattern here.
+- Do not use the `DO $$ BEGIN ... END $$;` wrapper from the baseline — that was needed for the old idempotent single-file approach. Plain SQL is the correct pattern here.
 
 **Non-transactional operations** (`CREATE INDEX CONCURRENTLY`, `VACUUM`, etc.) cannot run inside a transaction. Use the Atlas directive to opt out per-file:
 

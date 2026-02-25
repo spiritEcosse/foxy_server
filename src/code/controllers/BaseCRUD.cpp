@@ -18,6 +18,8 @@
 #include "utils/exceptions/RequiredFieldsException.h"
 #include "controllers/FinancialDetails.h"
 #include "models/TagModel.h"
+#include "controllers/PinterestOAuth.h"
+#include "models/PinterestTokenModel.h"
 #include "sentry_catcher/sentryHelper.h"
 #include <drogon/utils/Utilities.h>
 
@@ -398,3 +400,4 @@ template class api::v1::BaseCRUD<BasketModel, Basket>;
 template class api::v1::BaseCRUD<FinancialDetailsModel, FinancialDetails>;
 template class api::v1::BaseCRUD<SocialMediaModel, SocialMedia>;
 template class api::v1::BaseCRUD<TagModel, Tag>;
+template class api::v1::BaseCRUD<PinterestTokenModel, PinterestOAuth>;
