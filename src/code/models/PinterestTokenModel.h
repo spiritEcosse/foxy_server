@@ -7,7 +7,8 @@ namespace api::v1 {
     public:
         using BaseModel::BaseModel;
 
-        static const inline std::string tableName = "pinterest_token"; // NOSONAR (cpp:S1117) — intentional CRTP pattern
+        static const inline std::string tableName =
+            "pinterest_token";  // NOSONAR (cpp:S1117) — intentional CRTP pattern
 
         struct Field : BaseModel::Field {
             static inline const auto accessToken = makeField("access_token");

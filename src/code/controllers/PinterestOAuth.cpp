@@ -22,9 +22,8 @@ namespace {
         return fmt::format("{:%Y-%m-%dT%H:%M:%SZ}", gmt);
     }
 
-    void exchangeTokenAndSave(
-        const std::shared_ptr<std::function<void(const HttpResponsePtr &)>> &callbackPtr,
-        const std::string &code) {
+    void exchangeTokenAndSave(const std::shared_ptr<std::function<void(const HttpResponsePtr &)>> &callbackPtr,
+                              const std::string &code) {
         const std::string clientId = getEnv("PINTEREST_CLIENT_ID");
         const std::string clientSecret = getEnv("PINTEREST_CLIENT_SECRET");
         const std::string apiHost = getEnv("PINTEREST_API_HOST");
@@ -32,21 +31,17 @@ namespace {
             getEnv("PINTEREST_REDIRECT_URI", "http://localhost:8080/admin/pinterest/oauth/callback");
         const std::string tokenUrl = fmt::format("{}/v5/oauth/token", apiHost);
 
-        const cpr::Response tokenResponse =
-            cpr::Post(cpr::Url{tokenUrl},
-                      cpr::Payload{{"grant_type", "authorization_code"},
-                                   {"code", code},
-                                   {"redirect_uri", redirectUri}},
-                      cpr::Header{{"Content-Type", "application/x-www-form-urlencoded"},
-                                  {"Authorization",
-                                   "Basic " + Base64::Encode(fmt::format("{}:{}", clientId, clientSecret))}});
+        const cpr::Response tokenResponse = cpr::Post(
+            cpr::Url{tokenUrl},
+            cpr::Payload{{"grant_type", "authorization_code"}, {"code", code}, {"redirect_uri", redirectUri}},
+            cpr::Header{{"Content-Type", "application/x-www-form-urlencoded"},
+                        {"Authorization", "Basic " + Base64::Encode(fmt::format("{}:{}", clientId, clientSecret))}});
 
         if(tokenResponse.status_code != 200) {
-            sentryHelper(
-                std::runtime_error(fmt::format("Pinterest token exchange failed. Status: {}, Response: {}",
-                                               tokenResponse.status_code,
-                                               tokenResponse.text)),
-                "PinterestOAuth::callback");
+            sentryHelper(std::runtime_error(fmt::format("Pinterest token exchange failed. Status: {}, Response: {}",
+                                                        tokenResponse.status_code,
+                                                        tokenResponse.text)),
+                         "PinterestOAuth::callback");
             Json::Value json;
             json["error"] = "Token exchange failed";
             json["detail"] = tokenResponse.text;
@@ -101,9 +96,10 @@ namespace {
         resp->setStatusCode(HttpStatusCode::k200OK);
         (*callbackPtr)(resp);
     }
-} // namespace
+}  // namespace
 
-void PinterestOAuth::getOAuthUrl(const HttpRequestPtr &, std::function<void(const HttpResponsePtr &)> &&callback) const {
+void PinterestOAuth::getOAuthUrl(const HttpRequestPtr &,
+                                 std::function<void(const HttpResponsePtr &)> &&callback) const {
     const std::string state = drogon::utils::genRandomString(32);
     {
         std::lock_guard lock(stateMutex);
@@ -116,9 +112,12 @@ void PinterestOAuth::getOAuthUrl(const HttpRequestPtr &, std::function<void(cons
         getEnv("PINTEREST_REDIRECT_URI", "http://localhost:8080/admin/pinterest/oauth/callback");
     constexpr std::string_view scope = "pins:read,pins:write,user_accounts:read,boards:read,boards:write";
 
-    const std::string url = fmt::format(
-        "{}/oauth/?consumer_id={}&redirect_uri={}&scope={}&response_type=code&state={}",
-        oauthUri, clientId, redirectUri, scope, state);
+    const std::string url = fmt::format("{}/oauth/?consumer_id={}&redirect_uri={}&scope={}&response_type=code&state={}",
+                                        oauthUri,
+                                        clientId,
+                                        redirectUri,
+                                        scope,
+                                        state);
 
     Json::Value json;
     json["url"] = url;
@@ -161,8 +160,7 @@ void PinterestOAuth::callback(const HttpRequestPtr &req,
         pendingState.clear();
     }
 
-    const auto callbackPtr =
-        std::make_shared<std::function<void(const HttpResponsePtr &)>>(std::move(callback));
+    const auto callbackPtr = std::make_shared<std::function<void(const HttpResponsePtr &)>>(std::move(callback));
 
     // Run blocking CPR call off the event loop thread
     std::jthread([callbackPtr, code]() {

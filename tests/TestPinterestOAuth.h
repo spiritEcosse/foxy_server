@@ -6,6 +6,7 @@
 
 class PinterestOAuthTest : public BaseTestClass<PinterestOAuthTest, api::v1::PinterestOAuth> {
     void setupExpectedValues() override { /* no create endpoint */ }
+
     void setupUpdatedValues() override { /* no update endpoint */ }
 
     static Json::Value tokenEntry() {
@@ -50,8 +51,7 @@ class PinterestOAuthTest : public BaseTestClass<PinterestOAuthTest, api::v1::Pin
     }
 
     static std::function<void(const drogon::HttpResponsePtr &)>
-    callbackErrorCallback(const std::shared_ptr<std::promise<void>> &promise,
-                          const std::string &expectedError) {
+    callbackErrorCallback(const std::shared_ptr<std::promise<void>> &promise, const std::string &expectedError) {
         return [promise, expectedError](const drogon::HttpResponsePtr &resp) {
             try {
                 EXPECT_EQ(resp->getStatusCode(), drogon::k400BadRequest);
