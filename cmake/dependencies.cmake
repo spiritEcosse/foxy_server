@@ -33,10 +33,6 @@ CPMAddPackage(NAME cpr VERSION 1.14.2 GITHUB_REPOSITORY libcpr/cpr GIT_TAG 1.14.
 # fmt
 CPMAddPackage(NAME fmt VERSION 12.1.0 GITHUB_REPOSITORY fmtlib/fmt GIT_TAG 12.1.0)
 
-# decimal_for_cpp (header-only)
-CPMAddPackage(NAME decimal_for_cpp GITHUB_REPOSITORY vpiotr/decimal_for_cpp GIT_TAG 599372e DOWNLOAD_ONLY YES)
-include_directories(${decimal_for_cpp_SOURCE_DIR}/include)
-
 # libuuid — system library, installed via uuid-dev in Dockerfile.build
 find_library(UUID_LIBRARY uuid)
 if(NOT UUID_LIBRARY)

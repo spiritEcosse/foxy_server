@@ -28,11 +28,11 @@ namespace api::v1 {
         int basketId{};
         int itemId{};
         int quantity = 1;
-        dec::decimal<2> price;
+        std::string price = "0";
 
         explicit BasketItemModel(const Json::Value &json) : BaseModel(json) {
             if(json.isMember(Field::price.getFieldName())) {
-                price = json[Field::price.getFieldName()].asDouble();
+                price = json[Field::price.getFieldName()].asString();
             }
             basketId = json[Field::basketId.getFieldName()].asInt();
             itemId = json[Field::itemId.getFieldName()].asInt();
