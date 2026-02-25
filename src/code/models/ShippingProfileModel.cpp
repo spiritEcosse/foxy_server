@@ -12,5 +12,6 @@ BaseModel<ShippingProfileModel>::SetMapFieldTypes ShippingProfileModel::getObjec
             {&Field::processingTime, processingTime},
             {&Field::countryId, countryId},
             {&Field::postalCode, postalCode},
-            {&Field::shippingUpgradeCost, shippingUpgradeCost.empty() ? ValueVariant{std::nullopt} : ValueVariant{shippingUpgradeCost}}};
+            {&Field::shippingUpgradeCost,
+             shippingUpgradeCost.empty() ? ValueVariant{std::nullopt} : ValueVariant{shippingUpgradeCost}}};
 }
