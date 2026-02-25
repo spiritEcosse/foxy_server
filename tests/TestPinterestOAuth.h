@@ -5,32 +5,66 @@
 #include <gtest/gtest.h>
 
 class PinterestOAuthTest : public BaseTestClass<PinterestOAuthTest, api::v1::PinterestOAuth> {
-    void setupExpectedValues() override {}
+    void setupExpectedValues() override { /* no create endpoint */ }
+    void setupUpdatedValues() override { /* no update endpoint */ }
 
-    void setupUpdatedValues() override {}
-
-    void setupGetOneValues() override {
-        getOneValues["id"] = 1;
-        getOneValues["access_token"] = "fixture_access_token";
-        getOneValues["refresh_token"] = "fixture_refresh_token";
-        getOneValues["scope"] = "pins:read,pins:write,user_accounts:read,boards:read,boards:write";
-        getOneValues["singleton"] = true;
-    }
-
-    void setupGetListValues() override {
-        getListValues["_page"] = 1;
-        getListValues["total"] = 1;
-
+    static Json::Value tokenEntry() {
         Json::Value entry;
         entry["id"] = 1;
         entry["access_token"] = "fixture_access_token";
         entry["refresh_token"] = "fixture_refresh_token";
         entry["scope"] = "pins:read,pins:write,user_accounts:read,boards:read,boards:write";
         entry["singleton"] = true;
+        return entry;
+    }
 
+    void setupGetOneValues() override {
+        getOneValues = tokenEntry();
+    }
+
+    void setupGetListValues() override {
+        getListValues["_page"] = 1;
+        getListValues["total"] = 1;
         Json::Value data = Json::arrayValue;
-        data.append(entry);
+        data.append(tokenEntry());
         getListValues["data"] = data;
+    }
+
+    static void checkOAuthUrlResponse(const drogon::HttpResponsePtr &resp,
+                                      const std::shared_ptr<std::promise<void>> &promise) {
+        try {
+            EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
+            EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
+            const auto json = resp->getJsonObject();
+            ASSERT_NE(json, nullptr);
+            ASSERT_TRUE(json->isMember("url"));
+            const std::string url = (*json)["url"].asString();
+            EXPECT_FALSE(url.empty());
+            EXPECT_NE(url.find("oauth"), std::string::npos);
+            EXPECT_NE(url.find("response_type=code"), std::string::npos);
+            EXPECT_NE(url.find("state="), std::string::npos);
+            promise->set_value();
+        } catch(...) {
+            promise->set_exception(std::current_exception());
+        }
+    }
+
+    static std::function<void(const drogon::HttpResponsePtr &)>
+    callbackErrorCallback(const std::shared_ptr<std::promise<void>> &promise,
+                          const std::string &expectedError) {
+        return [promise, expectedError](const drogon::HttpResponsePtr &resp) {
+            try {
+                EXPECT_EQ(resp->getStatusCode(), drogon::k400BadRequest);
+                EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
+                const auto json = resp->getJsonObject();
+                ASSERT_NE(json, nullptr);
+                ASSERT_TRUE(json->isMember("error"));
+                EXPECT_EQ((*json)["error"].asString(), expectedError);
+                promise->set_value();
+            } catch(...) {
+                promise->set_exception(std::current_exception());
+            }
+        };
     }
 
 public:
@@ -39,21 +73,7 @@ public:
             drogon::app().getLoop()->queueInLoop([this, promise]() {
                 auto req = drogon::HttpRequest::newHttpRequest();
                 controller.getOAuthUrl(req, [promise](const drogon::HttpResponsePtr &resp) {
-                    try {
-                        EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
-                        EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
-                        const auto json = resp->getJsonObject();
-                        ASSERT_NE(json, nullptr);
-                        ASSERT_TRUE(json->isMember("url"));
-                        const std::string url = (*json)["url"].asString();
-                        EXPECT_FALSE(url.empty());
-                        EXPECT_NE(url.find("oauth"), std::string::npos);
-                        EXPECT_NE(url.find("response_type=code"), std::string::npos);
-                        EXPECT_NE(url.find("state="), std::string::npos);
-                        promise->set_value();
-                    } catch(...) {
-                        promise->set_exception(std::current_exception());
-                    }
+                    checkOAuthUrlResponse(resp, promise);
                 });
             });
         }).get();
@@ -63,19 +83,7 @@ public:
         runAsyncTest<void>([this](auto promise) {
             drogon::app().getLoop()->queueInLoop([this, promise]() {
                 auto req = drogon::HttpRequest::newHttpRequest();
-                controller.callback(req, [promise](const drogon::HttpResponsePtr &resp) {
-                    try {
-                        EXPECT_EQ(resp->getStatusCode(), drogon::k400BadRequest);
-                        EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
-                        const auto json = resp->getJsonObject();
-                        ASSERT_NE(json, nullptr);
-                        ASSERT_TRUE(json->isMember("error"));
-                        EXPECT_EQ((*json)["error"].asString(), "Invalid or expired state parameter");
-                        promise->set_value();
-                    } catch(...) {
-                        promise->set_exception(std::current_exception());
-                    }
-                });
+                controller.callback(req, callbackErrorCallback(promise, "Invalid or expired state parameter"));
             });
         }).get();
     }
@@ -85,19 +93,7 @@ public:
             drogon::app().getLoop()->queueInLoop([this, promise]() {
                 auto req = drogon::HttpRequest::newHttpRequest();
                 req->setParameter("state", "totally_wrong_state_value");
-                controller.callback(req, [promise](const drogon::HttpResponsePtr &resp) {
-                    try {
-                        EXPECT_EQ(resp->getStatusCode(), drogon::k400BadRequest);
-                        EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
-                        const auto json = resp->getJsonObject();
-                        ASSERT_NE(json, nullptr);
-                        ASSERT_TRUE(json->isMember("error"));
-                        EXPECT_EQ((*json)["error"].asString(), "Invalid or expired state parameter");
-                        promise->set_value();
-                    } catch(...) {
-                        promise->set_exception(std::current_exception());
-                    }
-                });
+                controller.callback(req, callbackErrorCallback(promise, "Invalid or expired state parameter"));
             });
         }).get();
     }
@@ -132,19 +128,7 @@ public:
             drogon::app().getLoop()->queueInLoop([this, promise, capturedState]() {
                 auto req = drogon::HttpRequest::newHttpRequest();
                 req->setParameter("state", capturedState);
-                controller.callback(req, [promise](const drogon::HttpResponsePtr &resp) {
-                    try {
-                        EXPECT_EQ(resp->getStatusCode(), drogon::k400BadRequest);
-                        EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
-                        const auto json = resp->getJsonObject();
-                        ASSERT_NE(json, nullptr);
-                        ASSERT_TRUE(json->isMember("error"));
-                        EXPECT_EQ((*json)["error"].asString(), "Missing code parameter");
-                        promise->set_value();
-                    } catch(...) {
-                        promise->set_exception(std::current_exception());
-                    }
-                });
+                controller.callback(req, callbackErrorCallback(promise, "Missing code parameter"));
             });
         }).get();
     }

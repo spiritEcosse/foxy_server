@@ -1,7 +1,7 @@
 CREATE TABLE pinterest_token
 (
     id                       SERIAL PRIMARY KEY,
-    singleton                BOOLEAN     NOT NULL DEFAULT TRUE UNIQUE CHECK (singleton = TRUE),
+    singleton                BOOLEAN     NOT NULL DEFAULT TRUE UNIQUE CHECK (singleton),
     access_token             TEXT        NOT NULL,
     access_token_expires_at  TIMESTAMPTZ NOT NULL,
     refresh_token            TEXT        NOT NULL,
