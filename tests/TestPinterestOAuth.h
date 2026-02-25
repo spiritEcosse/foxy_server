@@ -6,6 +6,7 @@
 
 class PinterestOAuthTest : public BaseTestClass<PinterestOAuthTest, api::v1::PinterestOAuth> {
     void setupExpectedValues() override {}
+
     void setupUpdatedValues() override {}
 
     void setupGetOneValues() override {

@@ -18,8 +18,12 @@ namespace api::v1 {
             static inline const auto singleton = makeField("singleton");
 
             Field() : BaseModel::Field() {
-                constexpr std::array fields{
-                    &accessToken, &accessTokenExpiresAt, &refreshToken, &refreshTokenExpiresAt, &scope, &singleton};
+                constexpr std::array fields{&accessToken,
+                                            &accessTokenExpiresAt,
+                                            &refreshToken,
+                                            &refreshTokenExpiresAt,
+                                            &scope,
+                                            &singleton};
                 registerFields(fields);
             }
         };

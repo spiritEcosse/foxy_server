@@ -8,11 +8,8 @@ PinterestTokenModel::PinterestTokenModel(std::string accessToken,
                                          std::string refreshToken,
                                          std::chrono::system_clock::time_point refreshTokenExpiresAt,
                                          std::string scope) :
-    accessToken(std::move(accessToken)),
-    accessTokenExpiresAt(accessTokenExpiresAt),
-    refreshToken(std::move(refreshToken)),
-    refreshTokenExpiresAt(refreshTokenExpiresAt),
-    scope(std::move(scope)) {}
+    accessToken(std::move(accessToken)), accessTokenExpiresAt(accessTokenExpiresAt),
+    refreshToken(std::move(refreshToken)), refreshTokenExpiresAt(refreshTokenExpiresAt), scope(std::move(scope)) {}
 
 BaseModel<PinterestTokenModel>::SetMapFieldTypes PinterestTokenModel::getObjectValues() const {
     return {{&Field::accessToken, accessToken},

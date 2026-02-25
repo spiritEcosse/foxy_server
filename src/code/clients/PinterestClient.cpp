@@ -26,19 +26,19 @@ namespace api::v1 {
         }
 
         try {
-            const auto result = dbClient->execSqlSync(
-                "SELECT access_token, refresh_token, "
-                "access_token_expires_at > NOW() AS access_valid, "
-                "refresh_token_expires_at > NOW() AS refresh_valid "
-                "FROM pinterest_token LIMIT 1");
+            const auto result = dbClient->execSqlSync("SELECT access_token, refresh_token, "
+                                                      "access_token_expires_at > NOW() AS access_valid, "
+                                                      "refresh_token_expires_at > NOW() AS refresh_valid "
+                                                      "FROM pinterest_token LIMIT 1");
 
             if(result.empty()) {
-                sentryHelper(std::runtime_error("Pinterest token not found — run the OAuth flow at /admin/pinterest/oauth"),
-                             "PinterestClient::setAccessToken");
+                sentryHelper(
+                    std::runtime_error("Pinterest token not found — run the OAuth flow at /admin/pinterest/oauth"),
+                    "PinterestClient::setAccessToken");
                 return false;
             }
 
-            const auto &row = result[0];
+            const auto& row = result[0];
 
             if(row["access_valid"].as<bool>()) {
                 accessToken = row["access_token"].as<std::string>();
@@ -46,7 +46,8 @@ namespace api::v1 {
             }
 
             if(!row["refresh_valid"].as<bool>()) {
-                sentryHelper(std::runtime_error("Pinterest refresh token expired — re-run the OAuth flow at /admin/pinterest/oauth"),
+                sentryHelper(std::runtime_error(
+                                 "Pinterest refresh token expired — re-run the OAuth flow at /admin/pinterest/oauth"),
                              "PinterestClient::setAccessToken");
                 return false;
             }
@@ -57,9 +58,9 @@ namespace api::v1 {
             const cpr::Response response =
                 Post(cpr::Url{tokenUrl},
                      std::move(payload),
-                     cpr::Header{{"Content-Type", "application/x-www-form-urlencoded"},
-                                 {"Authorization",
-                                  "Basic " + Base64::Encode(std::format("{}:{}", clientId, clientSecret))}});
+                     cpr::Header{
+                         {"Content-Type", "application/x-www-form-urlencoded"},
+                         {"Authorization", "Basic " + Base64::Encode(std::format("{}:{}", clientId, clientSecret))}});
 
             if(!checkResponses(std::vector{response}))
                 return false;
@@ -77,13 +78,13 @@ namespace api::v1 {
             gmtime_r(&newExpiryT, &newExpiryTm);
             const std::string newExpiryStr = fmt::format("{:%Y-%m-%d %H:%M:%S}", newExpiryTm);
 
-            dbClient->execSqlSync(
-                "UPDATE pinterest_token SET access_token = $1, access_token_expires_at = $2, updated_at = NOW() WHERE singleton = TRUE",
-                accessToken,
-                newExpiryStr);
+            dbClient->execSqlSync("UPDATE pinterest_token SET access_token = $1, access_token_expires_at = $2, "
+                                  "updated_at = NOW() WHERE singleton = TRUE",
+                                  accessToken,
+                                  newExpiryStr);
 
             return true;
-        } catch(const drogon::orm::DrogonDbException &e) {
+        } catch(const drogon::orm::DrogonDbException& e) {
             sentryHelper(std::runtime_error(e.base().what()), "PinterestClient::setAccessToken");
             return false;
         }
