@@ -80,5 +80,10 @@ $$
                ('Twitter', 2, 20000),
                ('Pinterest', 1, 30000),
                ('Twitter', 1, 40000);
+
+-- Mock data for pinterest_token
+        INSERT INTO pinterest_token (access_token, access_token_expires_at, refresh_token, refresh_token_expires_at, scope)
+        VALUES ('fixture_access_token', '2099-01-01 00:00:00+00', 'fixture_refresh_token', '2099-12-31 00:00:00+00',
+                'pins:read,pins:write,user_accounts:read,boards:read,boards:write');
     END
 $$;

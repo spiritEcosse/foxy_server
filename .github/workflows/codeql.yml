@@ -13,7 +13,6 @@ jobs:
           CONFIG_APP_PATH: dev
           PINTEREST_API_HOST: dev
           PINTEREST_BOARD_ID: 1212
-          PINTEREST_REFRESH_TOKEN: test
           PINTEREST_CLIENT_ID: test
           PINTEREST_CLIENT_SECRET: test
           YOUTUBE_REFRESH_TOKEN: test

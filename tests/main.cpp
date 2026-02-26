@@ -13,6 +13,7 @@
 #include "TestSocialMedia.h"
 #include "TestFinancialDetails.h"
 #include "TestOrder.h"
+#include "TestPinterestOAuth.h"
 #include "utils/config.h"
 
 #include <future>

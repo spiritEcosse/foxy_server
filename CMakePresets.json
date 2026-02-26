@@ -50,7 +50,7 @@
       "name": "ninja-debug",
       "configurePreset": "ninja-debug",
       "output": { "outputOnFailure": true },
-      "execution": { "jobs": 0 }
+      "execution": { "jobs": 1 }
     },
     {
       "name": "ninja-release",
