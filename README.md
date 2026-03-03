@@ -1,6 +1,6 @@
 # foxy_server
 
-C++20 REST API server built with [Drogon](https://github.com/drogonframework/drogon) and PostgreSQL.
+C++23 REST API server built with [Drogon](https://github.com/drogonframework/drogon) and PostgreSQL.
 
 ## Deployment
 
