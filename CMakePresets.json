@@ -9,6 +9,8 @@
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_C_COMPILER_LAUNCHER": "ccache",
+        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
         "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS": "clang-scan-deps",
         "CMAKE_CXX_FLAGS": "-stdlib=libc++",
         "CMAKE_EXE_LINKER_FLAGS": "-stdlib=libc++ -lc++abi",
@@ -41,9 +43,9 @@
     }
   ],
   "buildPresets": [
-    { "name": "ninja-debug", "configurePreset": "ninja-debug" },
-    { "name": "ninja-release", "configurePreset": "ninja-release" },
-    { "name": "ninja-prod", "configurePreset": "ninja-prod" }
+    { "name": "ninja-debug",   "configurePreset": "ninja-debug",   "jobs": 12 },
+    { "name": "ninja-release", "configurePreset": "ninja-release", "jobs": 12 },
+    { "name": "ninja-prod",    "configurePreset": "ninja-prod",    "jobs": 12 }
   ],
   "testPresets": [
     {
