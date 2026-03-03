@@ -6,11 +6,10 @@
 class PinSerializationTest : public testing::Test {
 protected:
     static api::v1::SharedFileTransferInfo makeImageMedia() {
-        return std::make_shared<api::v1::FileTransferInfo>(
-            "http://example.com/img.png",
-            "/tmp/test_pin_image.png",
-            "image",
-            "image/png");
+        return std::make_shared<api::v1::FileTransferInfo>("http://example.com/img.png",
+                                                           "/tmp/test_pin_image.png",
+                                                           "image",
+                                                           "image/png");
     }
 };
 

@@ -31,14 +31,17 @@ QuerySet<MediaModel> MediaModel::qsMediaMinSort() {
 
 std::string MediaModel::fieldsJsonObject() {
     const Field field;
-    std::vector<std::string> formattedFields;
-    std::ranges::transform(field.allFields, std::back_inserter(formattedFields), [&](const auto &pair) {
-        const auto &[key, value] = pair;
-        if(key == "src") {
-            return fmt::format("'{}', format_src({}, '{}')", key, value->getFullFieldName(), getEnv("APP_CLOUD_NAME"));
-        }
-        return fmt::format("'{}', {}", key, value->getFullFieldName());
-    });
+    auto formattedFields = field.allFields | std::views::transform([](const auto &pair) {
+                               const auto &[key, value] = pair;
+                               if(key == "src") {
+                                   return fmt::format("'{}', format_src({}, '{}')",
+                                                      key,
+                                                      value->getFullFieldName(),
+                                                      getEnv("APP_CLOUD_NAME"));
+                               }
+                               return fmt::format("'{}', {}", key, value->getFullFieldName());
+                           }) |
+                           std::ranges::to<std::vector>();
 
     return fmt::to_string(fmt::join(formattedFields, ", "));
 }

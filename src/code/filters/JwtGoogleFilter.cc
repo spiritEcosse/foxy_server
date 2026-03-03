@@ -28,8 +28,8 @@ void JwtGoogleFilter::doFilter(const HttpRequestPtr &request, FilterCallback &&f
         return fcb(res);
     }
 
-    if(auto [statusCode, jsonResponse] = JWT::verifyGoogleToken(token.substr(7)); statusCode != k200OK) {
-        const auto res = HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
+    if(auto tokenResult = JWT::verifyGoogleToken(token.substr(7)); !tokenResult) {
+        const auto res = HttpResponse::newHttpJsonResponse(std::move(tokenResult.error()));
         res->setStatusCode(drogon::k401Unauthorized);
         res->setContentTypeCode(CT_APPLICATION_JSON);
         if(const auto origin = request->getHeader("Origin");
@@ -42,16 +42,16 @@ void JwtGoogleFilter::doFilter(const HttpRequestPtr &request, FilterCallback &&f
     return fccb();
 }
 
-std::tuple<bool, Json::Value>
+std::expected<Json::Value, std::monostate>
 JwtGoogleFilter::verifyTokenAndRespond(const std::string &credentialsStr,
                                        std::shared_ptr<std::function<void(const HttpResponsePtr &)>> callbackPtr) {
-    auto [statusCode, jsonResponse] = JWT::verifyGoogleToken(credentialsStr);
-    if(statusCode != k200OK) {
-        const auto res = HttpResponse::newHttpJsonResponse(std::move(jsonResponse));
+    auto tokenResult = JWT::verifyGoogleToken(credentialsStr);
+    if(!tokenResult) {
+        const auto res = HttpResponse::newHttpJsonResponse(std::move(tokenResult.error()));
         res->setStatusCode(drogon::k401Unauthorized);
         res->setContentTypeCode(ContentType::CT_APPLICATION_JSON);
         (*callbackPtr)(res);
-        return {false, jsonResponse};
+        return std::unexpected(std::monostate{});
     }
-    return {true, jsonResponse};
+    return std::move(*tokenResult);
 }

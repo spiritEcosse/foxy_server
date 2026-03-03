@@ -6,6 +6,7 @@
 #include "clients/YouTubeClient.h"  // must be because of it : ClientType::clientName
 #include "sentry_catcher/sentryHelper.h"
 #include "utils/config.h"
+#include <print>
 #include <ranges>
 
 namespace api::v1 {
@@ -35,9 +36,7 @@ namespace api::v1 {
         auto dbClient = drogon::app().getFastDbClient("default");
         dbClient->execSqlAsync(
             query,
-            [](const drogon::orm::Result &r) {
-                std::cout << "Inserted " << r.affectedRows() << " rows." << std::endl;
-            },
+            [](const drogon::orm::Result &r) { std::println("Inserted {} rows.", r.affectedRows()); },
             [](const drogon::orm::DrogonDbException &e) {
                 const std::string error = e.base().what();
                 sentryHelper(error, "saveToDb");
@@ -54,7 +53,7 @@ namespace api::v1 {
     std::string SocialMediaType<ClientType, PostType>::truncateDescription(const std::string_view &description) {
         std::string cleanDescription = removeHtmlTags(std::string(description));
 
-        return truncateText(cleanDescription.find(INTRODUCTION_TEXT_POST) != std::string_view::npos
+        return truncateText(cleanDescription.contains(INTRODUCTION_TEXT_POST)
                                 ? cleanDescription
                                 : fmt::format("{} {}", INTRODUCTION_TEXT_POST, cleanDescription),
                             PostType::maxDescriptionSize);
@@ -88,16 +87,8 @@ namespace api::v1 {
     template<typename ClientType, typename PostType>
     std::vector<SharedFileTransferInfo>
     SocialMediaType<ClientType, PostType>::cutMedia(const std::vector<SharedFileTransferInfo> &mediaOriginal) {
-        std::vector<SharedFileTransferInfo> media;
         const size_t numItems = std::min(static_cast<size_t>(PostType::maxMediaItems), mediaOriginal.size());
-        media.reserve(numItems);
-
-        std::ranges::transform(mediaOriginal | std::ranges::views::take(numItems),
-                               std::back_inserter(media),
-                               [](const auto &mediaObj) {
-                                   return mediaObj;
-                               });
-        return media;
+        return mediaOriginal | std::views::take(numItems) | std::ranges::to<std::vector>();
     }
 
     template<typename ClientType, typename PostType>

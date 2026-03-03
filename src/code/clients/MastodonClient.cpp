@@ -14,37 +14,33 @@ namespace api::v1 {
     bool MastodonClient::downloadMedia() {
         cpr::MultiPerform multiplePerform;
 
-        std::vector<std::shared_ptr<cpr::Session>> sessions;
-
-        std::ranges::transform(media, std::back_inserter(sessions), [&multiplePerform](const auto& mediaItem) {
-            auto session = std::make_shared<cpr::Session>();
-            session->SetUrl(cpr::Url{mediaItem->getUrl()});
-            multiplePerform.AddSession(session);
-            return session;
-        });
+        auto sessions = media | std::views::transform([&multiplePerform](const auto& mediaItem) {
+                            auto session = std::make_shared<cpr::Session>();
+                            session->SetUrl(cpr::Url{mediaItem->getUrl()});
+                            multiplePerform.AddSession(session);
+                            return session;
+                        }) |
+                        std::ranges::to<std::vector>();
         std::vector<cpr::Response> responses = multiplePerform.Get();
 
         if(!checkResponses(responses))
             return false;
 
-        for(size_t idx = 0; idx < responses.size(); ++idx) {
-            if(!media[idx]->saveFile(std::move(responses[idx].text)))
+        for(auto&& [response, mediaItem]: std::views::zip(responses, media)) {
+            if(!mediaItem->saveFile(std::move(response.text)))
                 return false;
         }
         return true;
     }
 
     std::vector<SharedFileTransferInfo> MastodonClient::transformMedia(const Json::Value& mediaJson) {
-        std::vector<SharedFileTransferInfo> mediaUrls;
-        mediaUrls.reserve(mediaJson.size());
-
-        std::ranges::transform(mediaJson, std::back_inserter(mediaUrls), [](const Json::Value& objJson) {
-            const std::string mediaUrl = objJson["url"].asString();
-            return std::make_shared<FileTransferInfo>(fmt::format("{}?twic=v1/cover=2000x2000", mediaUrl),
-                                                      mediaUrl.substr(mediaUrl.find_last_of('/') + 1),
-                                                      objJson["type"].asString(),
-                                                      objJson["content_type"].asString());
-        });
-        return mediaUrls;
+        return mediaJson | std::views::transform([](const Json::Value& objJson) {
+                   const std::string mediaUrl = objJson["url"].asString();
+                   return std::make_shared<FileTransferInfo>(fmt::format("{}?twic=v1/cover=2000x2000", mediaUrl),
+                                                             mediaUrl.substr(mediaUrl.find_last_of('/') + 1),
+                                                             objJson["type"].asString(),
+                                                             objJson["content_type"].asString());
+               }) |
+               std::ranges::to<std::vector>();
     }
 }

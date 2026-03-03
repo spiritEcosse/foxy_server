@@ -13,8 +13,8 @@ namespace api::v1 {
 
         template<typename T>
         std::vector<T> concatVectors(const std::vector<T>& v1, const std::vector<T>& v2) const {
-            std::vector<T> result(v1);
-            result.insert(result.end(), v2.begin(), v2.end());
+            auto result = v1;
+            result.append_range(v2);
             return result;
         }
     };

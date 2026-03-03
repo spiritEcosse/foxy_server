@@ -6,6 +6,8 @@
 #include <string>
 #include <optional>
 #include <memory>
+#include <ranges>
+#include <utility>
 #include <vector>
 #include <sstream>
 #include <iostream>
@@ -138,9 +140,9 @@ namespace api::v1 {
                 if(!_subclauses.empty()) {
                     _subclauses[0].serializeRecursive(ss);
 
-                    for(size_t i = 1; i < _subclauses.size(); ++i) {
+                    for(const auto& clause: _subclauses | std::views::drop(1)) {
                         ss << (_type == LogicalType::AND ? " AND " : " OR ");
-                        _subclauses[i].serializeRecursive(ss);
+                        clause.serializeRecursive(ss);
                     }
                 }
             } else {
@@ -179,7 +181,7 @@ namespace api::v1 {
                     return fmt::format("{} {} {}", _field->getFullFieldName(), operatorToString(_op), _value);
 
                 default:
-                    return "";
+                    std::unreachable();
             }
         }
 

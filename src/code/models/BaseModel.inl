@@ -18,10 +18,8 @@ namespace api::v1 {
     std::string BaseModel<T>::sqlDeleteMultiple(const std::vector<int> &ids) {
         auto sql = fmt::format(R"(DELETE FROM "{}" WHERE {} IN ( )", T::tableName, T::Field::id.getFullFieldName());
 
-        for(const auto &_id: ids) {
-            sql.append(std::to_string(_id)).append(",");
-        }
-        sql.pop_back();
+        sql.append(ids | std::views::transform([](int id) { return std::to_string(id); }) |
+                   std::views::join_with(',') | std::ranges::to<std::string>());
         sql.append(");");
         return sql;
     }
@@ -41,15 +39,9 @@ namespace api::v1 {
         } else if constexpr(std::is_same_v<Type, bool>) {
             return arg ? "true" : "false";
         } else if constexpr(std::is_same_v<Type, std::vector<std::string>>) {
-            std::string data = "{";
-            for(const auto &str: arg) {
-                data.append(addExtraQuotes(str)).append(",");
-            }
-            if(!arg.empty()) {
-                data.pop_back();
-            }
-            data.append("}");
-            return data;
+            return "{" + (arg | std::views::transform([](const auto& str) { return addExtraQuotes(str); }) |
+                          std::views::join_with(',') | std::ranges::to<std::string>()) +
+                   "}";
         } else {
             return std::string(arg);
         }
@@ -103,10 +95,8 @@ namespace api::v1 {
     template<class T>
     std::string BaseModel<T>::sqlInsertMultiple(const std::vector<T> &items) {
         std::string sql = fmt::format(R"(INSERT INTO "{}" ({}) VALUES )", T::tableName, fieldsToString());
-        for(const auto &item: items) {
-            sql.append(sqlInsertSingle(item)).append(",");
-        }
-        sql.pop_back();
+        sql.append(items | std::views::transform([this](const auto& item) { return sqlInsertSingle(item); }) |
+                   std::views::join_with(',') | std::ranges::to<std::string>());
         sql.append(" RETURNING json_build_object(" + fieldsJsonObject() + ")");
         return sql;
     }
@@ -121,14 +111,10 @@ namespace api::v1 {
     template<class T>
     std::string BaseModel<T>::sqlUpdateMultiple(const std::vector<T> &items) {
         std::string sql = fmt::format(R"(UPDATE "{}" SET )", T::tableName);
-        std::string ids;
         TransparentMap uniqueColumns;
-
-        for(const auto &item: items) {
-            sqlUpdateSingle(item, uniqueColumns);
-            ids.append(fmt::format("{},", item.id));
-        }
-        ids.pop_back();
+        std::ranges::for_each(items, [this, &uniqueColumns](const auto& item) { sqlUpdateSingle(item, uniqueColumns); });
+        auto ids = items | std::views::transform([](const auto& item) { return std::to_string(item.id); }) |
+                   std::views::join_with(',') | std::ranges::to<std::string>();
         for(const auto &[key, value]: uniqueColumns) {
             sql.append(fmt::format("{} = CASE {} ELSE {} END,", key, value, key));
         }

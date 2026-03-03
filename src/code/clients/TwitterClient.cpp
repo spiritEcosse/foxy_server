@@ -35,20 +35,16 @@ namespace api::v1 {
 
         cpr::MultiPerform multiplePerform;
 
-        std::vector<std::shared_ptr<cpr::Session>> sessions;
-        sessions.reserve(tweet->images.size());
-
-        std::ranges::transform(tweet->images,
-                               std::back_inserter(sessions),
-                               [this, &multiplePerform](const auto& media) {
-                                   auto session = std::make_shared<cpr::Session>();
-                                   session->SetUrl(cpr::Url{apiUploadMedia});
-                                   session->SetHeader({{"Authorization", auth(apiUploadMedia)}});
-                                   session->SetMultipart(
-                                       {{"media", cpr::File{media->getFileName()}}, {"media_category", "tweet_image"}});
-                                   multiplePerform.AddSession(session);
-                                   return session;
-                               });
+        auto sessions =
+            tweet->images | std::views::transform([this, &multiplePerform](const auto& media) {
+                auto session = std::make_shared<cpr::Session>();
+                session->SetUrl(cpr::Url{apiUploadMedia});
+                session->SetHeader({{"Authorization", auth(apiUploadMedia)}});
+                session->SetMultipart({{"media", cpr::File{media->getFileName()}}, {"media_category", "tweet_image"}});
+                multiplePerform.AddSession(session);
+                return session;
+            }) |
+            std::ranges::to<std::vector>();
 
         const std::vector<cpr::Response> responses = multiplePerform.Post();
         return checkResponses(responses) && saveMediaIdString(responses, tweet->images);
@@ -60,24 +56,19 @@ namespace api::v1 {
 
         cpr::MultiPerform multiplePerform;
 
-        std::vector<std::shared_ptr<cpr::Session>> initSessions;
-        initSessions.reserve(tweet->videos.size());
-
-        std::ranges::transform(tweet->videos,
-                               std::back_inserter(initSessions),
-                               [this, &multiplePerform](const auto& media) {
-                                   auto session = std::make_shared<cpr::Session>();
-                                   session->SetUrl(cpr::Url{apiUploadMedia});
-                                   session->SetHeader({{"Authorization", auth(apiUploadMedia, "POST")}});
-
-                                   session->SetMultipart(
-                                       {{"command", "INIT"},
-                                        {"media_type", media->getContentType()},
-                                        {"total_bytes", std::to_string(static_cast<int>(media->getSize()))},
-                                        {"media_category", "tweet_video"}});
-                                   multiplePerform.AddSession(session);
-                                   return session;
-                               });
+        auto initSessions =
+            tweet->videos | std::views::transform([this, &multiplePerform](const auto& media) {
+                auto session = std::make_shared<cpr::Session>();
+                session->SetUrl(cpr::Url{apiUploadMedia});
+                session->SetHeader({{"Authorization", auth(apiUploadMedia, "POST")}});
+                session->SetMultipart({{"command", "INIT"},
+                                       {"media_type", media->getContentType()},
+                                       {"total_bytes", std::to_string(static_cast<int>(media->getSize()))},
+                                       {"media_category", "tweet_video"}});
+                multiplePerform.AddSession(session);
+                return session;
+            }) |
+            std::ranges::to<std::vector>();
 
         const auto initResponses = multiplePerform.Post();
 
@@ -141,20 +132,16 @@ namespace api::v1 {
             return false;
 
         cpr::MultiPerform multiplePerformFin;
-        std::vector<std::shared_ptr<cpr::Session>> finalizeSessions;
-        finalizeSessions.reserve(tweet->videos.size());
-
-        std::ranges::transform(tweet->videos,
-                               std::back_inserter(finalizeSessions),
-                               [this, &multiplePerformFin](const auto& media) {
-                                   auto session = std::make_shared<cpr::Session>();
-                                   session->SetUrl(cpr::Url{apiUploadMedia});
-                                   session->SetHeader({{"Authorization", auth(apiUploadMedia, "POST")}});
-                                   session->SetMultipart(
-                                       {{"command", "FINALIZE"}, {"media_id", media->template getExternalId<Tweet>()}});
-                                   multiplePerformFin.AddSession(session);
-                                   return session;
-                               });
+        auto finalizeSessions =
+            tweet->videos | std::views::transform([this, &multiplePerformFin](const auto& media) {
+                auto session = std::make_shared<cpr::Session>();
+                session->SetUrl(cpr::Url{apiUploadMedia});
+                session->SetHeader({{"Authorization", auth(apiUploadMedia, "POST")}});
+                session->SetMultipart({{"command", "FINALIZE"}, {"media_id", media->template getExternalId<Tweet>()}});
+                multiplePerformFin.AddSession(session);
+                return session;
+            }) |
+            std::ranges::to<std::vector>();
 
         return checkResponses(multiplePerformFin.Post());
     }
@@ -193,11 +180,10 @@ namespace api::v1 {
         oauthParams["oauth_signature"] =
             calculateOAuthSignature(method, url, oauthParams, apiSecretKey, accessTokenSecret);
 
-        std::vector<std::string> parts;
-        parts.reserve(oauthParams.size());
-        std::ranges::transform(oauthParams, std::back_inserter(parts), [](const auto& pair) {
-            return fmt::format(R"({}="{}")", pair.first, urlEncode(pair.second));
-        });
+        auto parts = oauthParams | std::views::transform([](const auto& pair) {
+                         return fmt::format(R"({}="{}")", pair.first, urlEncode(pair.second));
+                     }) |
+                     std::ranges::to<std::vector>();
 
         return fmt::format("OAuth {}", fmt::join(parts, ", "));
     }

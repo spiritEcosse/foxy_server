@@ -126,10 +126,9 @@ void api::v1::BaseCRUD<T, R>::deleteItems(const drogon::HttpRequestPtr &req,
 }
 
 template<class T, class R>
-void api::v1::BaseCRUD<T, R>::getItem(
-    const drogon::HttpRequestPtr &req,
-    std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr,
-    std::function<void(T)> successCallback) const {
+void api::v1::BaseCRUD<T, R>::getItem(const drogon::HttpRequestPtr &req,
+                                      std::shared_ptr<std::function<void(const drogon::HttpResponsePtr &)>> callbackPtr,
+                                      std::function<void(T)> successCallback) const {
     if(auto resp = checkBody(req); resp) {
         (*callbackPtr)(resp);
         return;

@@ -13,14 +13,12 @@ namespace api::v1 {
     template<typename ClientType, typename PostType>
     bool IClient<ClientType, PostType>::saveMediaIdString(const std::vector<cpr::Response>& responses,
                                                           const std::vector<SharedFileTransferInfo>& medias) {
-        for(size_t i = 0; const auto& media: medias) {
-            const auto& response = responses[i];
+        for(const auto& [response, media]: std::views::zip(responses, medias)) {
             Json::Value jsonResponse;
             if(!parseJson(response, jsonResponse) || !fieldIsMember(ClientType::field_media_id, response, jsonResponse))
                 return false;
             media->setResponse<PostType>(jsonResponse);
             media->setExternalId<PostType>(jsonResponse[std::string(ClientType::field_media_id)].asString());
-            ++i;
         }
         return true;
     }

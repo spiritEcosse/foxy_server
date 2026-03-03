@@ -87,8 +87,12 @@ namespace {
             }
             dbClient->execSqlAsync(
                 query,
-                [dbPromise](const drogon::orm::Result &) { dbPromise->set_value(std::nullopt); },
-                [dbPromise](const drogon::orm::DrogonDbException &e) { dbPromise->set_value(e.base().what()); });
+                [dbPromise](const drogon::orm::Result &) {
+                    dbPromise->set_value(std::nullopt);
+                },
+                [dbPromise](const drogon::orm::DrogonDbException &e) {
+                    dbPromise->set_value(e.base().what());
+                });
         });
 
         if(const auto dbError = dbFuture.get()) {

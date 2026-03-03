@@ -45,14 +45,14 @@ namespace api::v1 {
                 "access_token_expires_at > NOW() AS access_valid, "
                 "refresh_token_expires_at > NOW() AS refresh_valid "
                 "FROM pinterest_token LIMIT 1",
-                [selectPromise](const drogon::orm::Result &result) {
+                [selectPromise](const drogon::orm::Result& result) {
                     SelectResult sr;
                     if(result.empty()) {
                         sr.error = "Pinterest token not found — run the OAuth flow at /admin/pinterest/oauth";
                         selectPromise->set_value(std::move(sr));
                         return;
                     }
-                    const auto &row = result[0];
+                    const auto& row = result[0];
                     sr.ok = true;
                     sr.accessToken = row["access_token"].as<std::string>();
                     sr.refreshToken = row["refresh_token"].as<std::string>();
@@ -60,7 +60,7 @@ namespace api::v1 {
                     sr.refreshValid = row["refresh_valid"].as<bool>();
                     selectPromise->set_value(std::move(sr));
                 },
-                [selectPromise](const drogon::orm::DrogonDbException &e) {
+                [selectPromise](const drogon::orm::DrogonDbException& e) {
                     SelectResult sr;
                     sr.error = e.base().what();
                     selectPromise->set_value(std::move(sr));
@@ -88,12 +88,11 @@ namespace api::v1 {
 
         // Access token expired but refresh token still valid — exchange it
         cpr::Payload payload{{"refresh_token", sr.refreshToken}, {"grant_type", "refresh_token"}};
-        const cpr::Response response =
-            Post(cpr::Url{tokenUrl},
-                 std::move(payload),
-                 cpr::Header{
-                     {"Content-Type", "application/x-www-form-urlencoded"},
-                     {"Authorization", "Basic " + Base64::Encode(std::format("{}:{}", clientId, clientSecret))}});
+        const cpr::Response response = Post(
+            cpr::Url{tokenUrl},
+            std::move(payload),
+            cpr::Header{{"Content-Type", "application/x-www-form-urlencoded"},
+                        {"Authorization", "Basic " + Base64::Encode(std::format("{}:{}", clientId, clientSecret))}});
 
         if(!checkResponses(std::vector{response}))
             return false;
@@ -124,8 +123,10 @@ namespace api::v1 {
             dbClient->execSqlAsync(
                 "UPDATE pinterest_token SET access_token = $1, access_token_expires_at = $2, "
                 "updated_at = NOW() WHERE singleton = TRUE",
-                [updatePromise](const drogon::orm::Result &) { updatePromise->set_value(true); },
-                [updatePromise](const drogon::orm::DrogonDbException &e) {
+                [updatePromise](const drogon::orm::Result&) {
+                    updatePromise->set_value(true);
+                },
+                [updatePromise](const drogon::orm::DrogonDbException& e) {
                     sentryHelper(std::runtime_error(e.base().what()), "PinterestClient::setAccessToken");
                     updatePromise->set_value(false);
                 },
@@ -147,45 +148,36 @@ namespace api::v1 {
 
         cpr::MultiPerform multiplePerform;
 
-        std::vector<std::shared_ptr<cpr::Session>> sessionsInit;
-        sessionsInit.reserve(pin->videos.size());
-
-        std::ranges::transform(pin->videos,
-                               std::back_inserter(sessionsInit),
-                               [this, &multiplePerform]([[maybe_unused]] const auto& media) {
-                                   auto session = std::make_shared<cpr::Session>();
-                                   session->SetUrl(cpr::Url{apiUploadMedia});
-                                   session->SetHeader(getHttpHeaders());
-                                   session->SetBody(cpr::Body{R"({"media_type":"video"})"});
-                                   multiplePerform.AddSession(session);
-                                   return session;
-                               });
+        auto sessionsInit = pin->videos |
+                            std::views::transform([this, &multiplePerform]([[maybe_unused]] const auto& media) {
+                                auto session = std::make_shared<cpr::Session>();
+                                session->SetUrl(cpr::Url{apiUploadMedia});
+                                session->SetHeader(getHttpHeaders());
+                                session->SetBody(cpr::Body{R"({"media_type":"video"})"});
+                                multiplePerform.AddSession(session);
+                                return session;
+                            }) |
+                            std::ranges::to<std::vector>();
         if(const auto responses = multiplePerform.Post();
            !checkResponses(responses, 201) || !saveMediaIdString(responses, pin->videos))
             return false;
 
         cpr::MultiPerform multipleUpload;
-        std::vector<std::shared_ptr<cpr::Session>> sessionsUpload;
-        sessionsUpload.reserve(pin->videos.size());
-
-        std::ranges::transform(pin->videos,
-                               std::back_inserter(sessionsUpload),
-                               [this, &multipleUpload](const auto& media) {
-                                   auto session = std::make_shared<cpr::Session>();
-                                   const auto& response = media->getResponse();
-                                   session->SetUrl(cpr::Url{response["upload_url"].asString()});
-
-                                   cpr::Multipart multipart{};
-
-                                   const auto& uploadParams = response["upload_parameters"];
-                                   for(const auto& paramName: uploadParams.getMemberNames()) {
-                                       multipart.parts.emplace_back(paramName, uploadParams[paramName].asString());
-                                   }
-                                   multipart.parts.emplace_back("file", cpr::File{media->getFileName()});
-                                   session->SetMultipart(multipart);
-                                   multipleUpload.AddSession(session);
-                                   return session;
-                               });
+        auto sessionsUpload = pin->videos | std::views::transform([this, &multipleUpload](const auto& media) {
+                                  auto session = std::make_shared<cpr::Session>();
+                                  const auto& response = media->getResponse();
+                                  session->SetUrl(cpr::Url{response["upload_url"].asString()});
+                                  cpr::Multipart multipart{};
+                                  const auto& uploadParams = response["upload_parameters"];
+                                  for(const auto& paramName: uploadParams.getMemberNames()) {
+                                      multipart.parts.emplace_back(paramName, uploadParams[paramName].asString());
+                                  }
+                                  multipart.parts.emplace_back("file", cpr::File{media->getFileName()});
+                                  session->SetMultipart(multipart);
+                                  multipleUpload.AddSession(session);
+                                  return session;
+                              }) |
+                              std::ranges::to<std::vector>();
         return checkResponses(multipleUpload.Post(), 204);
     }
 

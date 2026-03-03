@@ -1,6 +1,7 @@
 #include "clients/IClientImpl.h"
 #include "fmt/format.h"
 #include <fmt/ranges.h>
+#include <ranges>
 #include <string>
 #include <random>
 #include <openssl/buffer.h>
@@ -43,17 +44,15 @@ namespace api::v1 {
         if(!std::ranges::all_of(responses, [status_code](const cpr::Response& response) {
                return response.status_code == status_code;
            })) {
-            std::vector<std::string> errorMessages;
-            std::ranges::transform(responses,
-                                   std::back_inserter(errorMessages),
-                                   [status_code](const cpr::Response& response) {
-                                       return response.status_code != status_code
-                                                  ? fmt::format("Url: {}, Status: {}, Response: {}\n",
-                                                                response.url.str(),
-                                                                response.status_code,
-                                                                response.text)
-                                                  : "";
-                                   });
+            auto errorMessages = responses | std::views::transform([status_code](const cpr::Response& response) {
+                                     return response.status_code != status_code
+                                                ? fmt::format("Url: {}, Status: {}, Response: {}\n",
+                                                              response.url.str(),
+                                                              response.status_code,
+                                                              response.text)
+                                                : "";
+                                 }) |
+                                 std::ranges::to<std::vector>();
             sentryHelper(std::runtime_error(fmt::format("{}", fmt::join(errorMessages, ""))),
                          "IClientImpl::checkResponses");
             return false;
@@ -79,10 +78,10 @@ namespace api::v1 {
                                                      const std::map<std::string, std::string, std::less<>>& params,
                                                      const std::string_view consumerSecret,
                                                      const std::string_view tokenSecret) {
-        std::vector<std::string> encodedParams;
-        std::ranges::transform(params, std::back_inserter(encodedParams), [](const auto& pair) {
-            return fmt::format("{}={}", urlEncode(pair.first), urlEncode(pair.second));
-        });
+        auto encodedParams = params | std::views::transform([](const auto& pair) {
+                                 return fmt::format("{}={}", urlEncode(pair.first), urlEncode(pair.second));
+                             }) |
+                             std::ranges::to<std::vector>();
         const std::string paramString = fmt::to_string(fmt::join(encodedParams, "&"));
 
         const std::string signatureBaseString =

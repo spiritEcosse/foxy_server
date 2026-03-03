@@ -16,13 +16,13 @@ void Auth::googleLogin(const drogon::HttpRequestPtr &request,
 
     std::string credentialsStr = responseJson["credentials"].asString();
 
-    auto [ready, jsonResponse] = filters::JwtGoogleFilter::verifyTokenAndRespond(credentialsStr, callbackPtr);
+    auto tokenResult = filters::JwtGoogleFilter::verifyTokenAndRespond(credentialsStr, callbackPtr);
 
-    if(!ready) {
+    if(!tokenResult) {
         return;
     }
 
-    UserModel item(jsonResponse, true);
+    UserModel item(*tokenResult, true);
     if(!item.missingFields.empty()) {
         auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(item.missingFields));
         resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
@@ -39,12 +39,12 @@ void Auth::googleLoginAdmin(const drogon::HttpRequestPtr &request,
 
     std::string credentialsStr = responseJson["credentials"].asString();
 
-    auto [ready, jsonResponse] = filters::JwtGoogleFilter::verifyTokenAndRespond(credentialsStr, callbackPtr);
+    auto tokenResult = filters::JwtGoogleFilter::verifyTokenAndRespond(credentialsStr, callbackPtr);
 
-    if(!ready) {
+    if(!tokenResult) {
         return;
     }
-    UserModel item(jsonResponse, true);
+    UserModel item(*tokenResult, true);
     if(!item.missingFields.empty()) {
         auto resp = drogon::HttpResponse::newHttpResponse();
         resp->setStatusCode(drogon::HttpStatusCode::k401Unauthorized);
