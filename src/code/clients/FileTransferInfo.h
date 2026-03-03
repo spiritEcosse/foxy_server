@@ -68,47 +68,37 @@ namespace api::v1 {
         }
 
         [[nodiscard]] size_t getSize() const {
-            try {
-                std::ifstream file(fileName, std::ios::binary | std::ios::ate);
-                if(!file) {
-                    LOG_ERROR << "Failed to open file: " << fileName << " Error: " << std::strerror(errno);
-                    return 0;
-                }
-                return file.tellg();
-            } catch(const std::exception& e) {
-                LOG_ERROR << "Exception in getSize: " << e.what();
+            std::ifstream file(fileName, std::ios::binary | std::ios::ate);
+            if(!file) {
+                LOG_ERROR << "Failed to open file: " << fileName << " Error: " << std::strerror(errno);
                 return 0;
             }
+            return file.tellg();
         }
 
         [[nodiscard]] std::shared_ptr<std::vector<char>> getFileContent() const {
-            try {
-                std::ifstream file(fileName, std::ios::binary);
-                if(!file) {
-                    LOG_ERROR << "Failed to open file: " << fileName << " Error: " << std::strerror(errno);
-                    return nullptr;
-                }
-
-                file.seekg(0, std::ios::end);
-                std::streampos fileSize = file.tellg();
-                file.seekg(0, std::ios::beg);
-
-                if(fileSize > MAX_FILE_SIZE) {
-                    LOG_ERROR << "File too large: " << fileName << " Size: " << fileSize;
-                    return nullptr;
-                }
-
-                auto buffer = std::make_shared<std::vector<char>>(static_cast<size_t>(fileSize));
-                if(!file.read(buffer->data(), fileSize)) {
-                    LOG_ERROR << "Failed to read file: " << fileName << " Error: " << std::strerror(errno);
-                    return nullptr;
-                }
-
-                return buffer;
-            } catch(const std::exception& e) {
-                LOG_ERROR << "Exception in getFileContent: " << e.what();
+            std::ifstream file(fileName, std::ios::binary);
+            if(!file) {
+                LOG_ERROR << "Failed to open file: " << fileName << " Error: " << std::strerror(errno);
                 return nullptr;
             }
+
+            file.seekg(0, std::ios::end);
+            std::streampos fileSize = file.tellg();
+            file.seekg(0, std::ios::beg);
+
+            if(fileSize > MAX_FILE_SIZE) {
+                LOG_ERROR << "File too large: " << fileName << " Size: " << fileSize;
+                return nullptr;
+            }
+
+            auto buffer = std::make_shared<std::vector<char>>(static_cast<size_t>(fileSize));
+            if(!file.read(buffer->data(), fileSize)) {
+                LOG_ERROR << "Failed to read file: " << fileName << " Error: " << std::strerror(errno);
+                return nullptr;
+            }
+
+            return buffer;
         }
 
         [[nodiscard]] std::string getFileName() const {
