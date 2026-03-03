@@ -32,7 +32,7 @@ namespace api::v1 {
             return false;
         const SocialMediaModel item(std::string(ClientType::clientName), postId, itemId);
         std::string query = SocialMediaModel().sqlInsert(item);
-        auto dbClient = drogon::app().getDbClient("default_not_fast");
+        auto dbClient = drogon::app().getFastDbClient("default");
         dbClient->execSqlAsync(
             query,
             [](const drogon::orm::Result &r) {

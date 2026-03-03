@@ -67,6 +67,46 @@ class SocialMediaControllerTest : public BaseTestClass<SocialMediaControllerTest
 
         getListValues["data"] = data;
     }
+
+public:
+    void testPublish200() {
+        runAsyncTest<void>([this](auto promise) {
+            drogon::app().getLoop()->queueInLoop([this, promise]() {
+                controller.publish(*reqPtr, [promise](const drogon::HttpResponsePtr &resp) {
+                    try {
+                        EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
+                        EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
+                        const auto json = resp->getJsonObject();
+                        ASSERT_NE(json, nullptr);
+                        ASSERT_TRUE(json->isMember("result"));
+                        EXPECT_NE((*json)["result"].asString().find("You are going to publish"), std::string::npos);
+                        promise->set_value();
+                    } catch(...) {
+                        promise->set_exception(std::current_exception());
+                    }
+                });
+            });
+        }).get();
+    }
+
+    void testPublishWithLimitParam() {
+        req->setParameter("limit", "5");
+        runAsyncTest<void>([this](auto promise) {
+            drogon::app().getLoop()->queueInLoop([this, promise]() {
+                controller.publish(*reqPtr, [promise](const drogon::HttpResponsePtr &resp) {
+                    try {
+                        EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
+                        const auto json = resp->getJsonObject();
+                        ASSERT_NE(json, nullptr);
+                        ASSERT_TRUE(json->isMember("result"));
+                        promise->set_value();
+                    } catch(...) {
+                        promise->set_exception(std::current_exception());
+                    }
+                });
+            });
+        }).get();
+    }
 };
 
 TEST_F(SocialMediaControllerTest, Create200) {
@@ -111,4 +151,12 @@ TEST_F(SocialMediaControllerTest, testCreateItems) {
 
 TEST_F(SocialMediaControllerTest, testUpdateItems) {
     testUpdateItems();
+}
+
+TEST_F(SocialMediaControllerTest, Publish200) {
+    testPublish200();
+}
+
+TEST_F(SocialMediaControllerTest, PublishWithLimitParam) {
+    testPublishWithLimitParam();
 }

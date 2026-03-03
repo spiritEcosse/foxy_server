@@ -9,6 +9,8 @@
 #include <fmt/chrono.h>
 #include <drogon/utils/Utilities.h>
 #include <chrono>
+#include <future>
+#include <optional>
 #include <thread>
 
 using namespace api::v1;
@@ -74,11 +76,23 @@ namespace {
         PinterestTokenModel tokenModel(accessToken, accessExpiresAt, refreshToken, refreshExpiresAt, scope);
         const std::string query = tokenModel.sqlUpsert();
 
-        const auto dbClient = drogon::app().getDbClient("default_not_fast");
-        try {
-            dbClient->execSqlSync(query);
-        } catch(const drogon::orm::DrogonDbException &e) {
-            sentryHelper(std::runtime_error(e.base().what()), "PinterestOAuth::callback");
+        auto dbPromise = std::make_shared<std::promise<std::optional<std::string>>>();
+        auto dbFuture = dbPromise->get_future();
+
+        drogon::app().getLoop()->queueInLoop([dbPromise, query]() {
+            const auto dbClient = drogon::app().getFastDbClient("default");
+            if(!dbClient) {
+                dbPromise->set_value("DB client not available");
+                return;
+            }
+            dbClient->execSqlAsync(
+                query,
+                [dbPromise](const drogon::orm::Result &) { dbPromise->set_value(std::nullopt); },
+                [dbPromise](const drogon::orm::DrogonDbException &e) { dbPromise->set_value(e.base().what()); });
+        });
+
+        if(const auto dbError = dbFuture.get()) {
+            sentryHelper(std::runtime_error(*dbError), "PinterestOAuth::callback");
             Json::Value json;
             json["error"] = "Failed to save tokens to database";
             const auto resp = HttpResponse::newHttpJsonResponse(std::move(json));

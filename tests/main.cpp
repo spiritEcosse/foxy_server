@@ -14,6 +14,7 @@
 #include "TestFinancialDetails.h"
 #include "TestOrder.h"
 #include "TestPinterestOAuth.h"
+#include "TestPin.h"
 #include "utils/config.h"
 
 #include <future>
@@ -52,16 +53,6 @@ public:
 
             drogon::app()
                 .createDbClient("postgresql", "/var/run/postgresql", 5432, pgDb, pgUser, "", 1, "", "default", true);
-            drogon::app().createDbClient("postgresql",
-                                         "/var/run/postgresql",
-                                         5432,
-                                         pgDb,
-                                         pgUser,
-                                         "",
-                                         1,
-                                         "",
-                                         "default_not_fast",
-                                         false);
 
             auto promise = std::make_shared<std::promise<void>>();
             auto future = promise->get_future();

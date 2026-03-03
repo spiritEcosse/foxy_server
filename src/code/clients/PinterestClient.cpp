@@ -1,6 +1,7 @@
 #include "clients/PinterestClient.h"
 #include "clients/models/Pin.h"
 #include <fmt/chrono.h>
+#include <future>
 
 namespace api::v1 {
     std::string PinterestClient::apiUploadMedia = fmt::format("{}/v5/media", getEnv("PINTEREST_API_HOST"));
@@ -19,75 +20,120 @@ namespace api::v1 {
         if(!accessToken.empty())
             return true;
 
-        const auto dbClient = drogon::app().getDbClient("default_not_fast");
-        if(!dbClient) {
-            sentryHelper(std::runtime_error("DB client not available"), "PinterestClient::setAccessToken");
+        struct SelectResult {
+            bool ok = false;
+            std::string error;
+            std::string accessToken;
+            std::string refreshToken;
+            bool accessValid = false;
+            bool refreshValid = false;
+        };
+
+        auto selectPromise = std::make_shared<std::promise<SelectResult>>();
+        auto selectFuture = selectPromise->get_future();
+
+        drogon::app().getLoop()->queueInLoop([selectPromise]() {
+            const auto dbClient = drogon::app().getFastDbClient("default");
+            if(!dbClient) {
+                SelectResult sr;
+                sr.error = "DB client not available";
+                selectPromise->set_value(std::move(sr));
+                return;
+            }
+            dbClient->execSqlAsync(
+                "SELECT access_token, refresh_token, "
+                "access_token_expires_at > NOW() AS access_valid, "
+                "refresh_token_expires_at > NOW() AS refresh_valid "
+                "FROM pinterest_token LIMIT 1",
+                [selectPromise](const drogon::orm::Result &result) {
+                    SelectResult sr;
+                    if(result.empty()) {
+                        sr.error = "Pinterest token not found — run the OAuth flow at /admin/pinterest/oauth";
+                        selectPromise->set_value(std::move(sr));
+                        return;
+                    }
+                    const auto &row = result[0];
+                    sr.ok = true;
+                    sr.accessToken = row["access_token"].as<std::string>();
+                    sr.refreshToken = row["refresh_token"].as<std::string>();
+                    sr.accessValid = row["access_valid"].as<bool>();
+                    sr.refreshValid = row["refresh_valid"].as<bool>();
+                    selectPromise->set_value(std::move(sr));
+                },
+                [selectPromise](const drogon::orm::DrogonDbException &e) {
+                    SelectResult sr;
+                    sr.error = e.base().what();
+                    selectPromise->set_value(std::move(sr));
+                });
+        });
+
+        const auto sr = selectFuture.get();
+
+        if(!sr.ok) {
+            sentryHelper(std::runtime_error(sr.error), "PinterestClient::setAccessToken");
             return false;
         }
 
-        try {
-            const auto result = dbClient->execSqlSync("SELECT access_token, refresh_token, "
-                                                      "access_token_expires_at > NOW() AS access_valid, "
-                                                      "refresh_token_expires_at > NOW() AS refresh_valid "
-                                                      "FROM pinterest_token LIMIT 1");
-
-            if(result.empty()) {
-                sentryHelper(
-                    std::runtime_error("Pinterest token not found — run the OAuth flow at /admin/pinterest/oauth"),
-                    "PinterestClient::setAccessToken");
-                return false;
-            }
-
-            const auto& row = result[0];
-
-            if(row["access_valid"].as<bool>()) {
-                accessToken = row["access_token"].as<std::string>();
-                return true;
-            }
-
-            if(!row["refresh_valid"].as<bool>()) {
-                sentryHelper(std::runtime_error(
-                                 "Pinterest refresh token expired — re-run the OAuth flow at /admin/pinterest/oauth"),
-                             "PinterestClient::setAccessToken");
-                return false;
-            }
-
-            // Access token expired but refresh token still valid — exchange it
-            const std::string storedRefreshToken = row["refresh_token"].as<std::string>();
-            cpr::Payload payload{{"refresh_token", storedRefreshToken}, {"grant_type", "refresh_token"}};
-            const cpr::Response response =
-                Post(cpr::Url{tokenUrl},
-                     std::move(payload),
-                     cpr::Header{
-                         {"Content-Type", "application/x-www-form-urlencoded"},
-                         {"Authorization", "Basic " + Base64::Encode(std::format("{}:{}", clientId, clientSecret))}});
-
-            if(!checkResponses(std::vector{response}))
-                return false;
-
-            Json::Value jsonResponse;
-            if(!parseJson(response, jsonResponse) || !fieldIsMember("access_token", response, jsonResponse))
-                return false;
-
-            accessToken = jsonResponse["access_token"].asString();
-            const int expiresIn = jsonResponse.get("expires_in", 2592000).asInt();
-            const auto now = std::chrono::system_clock::now();
-            const auto newExpiry = now + std::chrono::seconds(expiresIn);
-            const auto newExpiryT = std::chrono::system_clock::to_time_t(newExpiry);
-            struct tm newExpiryTm{};
-            gmtime_r(&newExpiryT, &newExpiryTm);
-            const std::string newExpiryStr = fmt::format("{:%Y-%m-%d %H:%M:%S}", newExpiryTm);
-
-            dbClient->execSqlSync("UPDATE pinterest_token SET access_token = $1, access_token_expires_at = $2, "
-                                  "updated_at = NOW() WHERE singleton = TRUE",
-                                  accessToken,
-                                  newExpiryStr);
-
+        if(sr.accessValid) {
+            accessToken = sr.accessToken;
             return true;
-        } catch(const drogon::orm::DrogonDbException& e) {
-            sentryHelper(std::runtime_error(e.base().what()), "PinterestClient::setAccessToken");
+        }
+
+        if(!sr.refreshValid) {
+            sentryHelper(
+                std::runtime_error("Pinterest refresh token expired — re-run the OAuth flow at /admin/pinterest/oauth"),
+                "PinterestClient::setAccessToken");
             return false;
         }
+
+        // Access token expired but refresh token still valid — exchange it
+        cpr::Payload payload{{"refresh_token", sr.refreshToken}, {"grant_type", "refresh_token"}};
+        const cpr::Response response =
+            Post(cpr::Url{tokenUrl},
+                 std::move(payload),
+                 cpr::Header{
+                     {"Content-Type", "application/x-www-form-urlencoded"},
+                     {"Authorization", "Basic " + Base64::Encode(std::format("{}:{}", clientId, clientSecret))}});
+
+        if(!checkResponses(std::vector{response}))
+            return false;
+
+        Json::Value jsonResponse;
+        if(!parseJson(response, jsonResponse) || !fieldIsMember("access_token", response, jsonResponse))
+            return false;
+
+        accessToken = jsonResponse["access_token"].asString();
+        const int expiresIn = jsonResponse.get("expires_in", 2592000).asInt();
+        const auto now = std::chrono::system_clock::now();
+        const auto newExpiry = now + std::chrono::seconds(expiresIn);
+        const auto newExpiryT = std::chrono::system_clock::to_time_t(newExpiry);
+        struct tm newExpiryTm{};
+        gmtime_r(&newExpiryT, &newExpiryTm);
+        const std::string newExpiryStr = fmt::format("{:%Y-%m-%d %H:%M:%S}", newExpiryTm);
+
+        const std::string newAccessToken = accessToken;
+        auto updatePromise = std::make_shared<std::promise<bool>>();
+        auto updateFuture = updatePromise->get_future();
+
+        drogon::app().getLoop()->queueInLoop([updatePromise, newAccessToken, newExpiryStr]() {
+            const auto dbClient = drogon::app().getFastDbClient("default");
+            if(!dbClient) {
+                updatePromise->set_value(false);
+                return;
+            }
+            dbClient->execSqlAsync(
+                "UPDATE pinterest_token SET access_token = $1, access_token_expires_at = $2, "
+                "updated_at = NOW() WHERE singleton = TRUE",
+                [updatePromise](const drogon::orm::Result &) { updatePromise->set_value(true); },
+                [updatePromise](const drogon::orm::DrogonDbException &e) {
+                    sentryHelper(std::runtime_error(e.base().what()), "PinterestClient::setAccessToken");
+                    updatePromise->set_value(false);
+                },
+                newAccessToken,
+                newExpiryStr);
+        });
+
+        return updateFuture.get();
     }
 
     bool PinterestClient::uploadVideos(const Pin* pin) const {
