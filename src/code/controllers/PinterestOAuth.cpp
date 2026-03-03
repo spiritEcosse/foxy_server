@@ -181,7 +181,7 @@ void PinterestOAuth::callback(const HttpRequestPtr &req,
     const auto callbackPtr = std::make_shared<std::function<void(const HttpResponsePtr &)>>(std::move(callback));
 
     // Run blocking CPR call off the event loop thread
-    std::jthread([callbackPtr, code]() {
+    std::thread([callbackPtr, code]() {
         exchangeTokenAndSave(callbackPtr, code);
     }).detach();
 }
