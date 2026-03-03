@@ -10,8 +10,6 @@ namespace api::v1 {
     class BaseModel : public BaseModelImpl {
     public:
         using BaseModelImpl::BaseModelImpl;
-        static const inline std::string tableName;
-
         struct Field {
             static inline const auto id = BaseField("id", T::tableName);
             static inline const auto createdAt = BaseField("created_at", T::tableName);
