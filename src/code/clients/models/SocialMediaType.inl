@@ -103,22 +103,14 @@ namespace api::v1 {
     template<typename ClientType, typename PostType>
     std::vector<SharedFileTransferInfo>
     SocialMediaType<ClientType, PostType>::getImages(const std::vector<SharedFileTransferInfo> &mediaOriginal) {
-        // TODO: replace with ranges::to from c++23
-        std::vector<SharedFileTransferInfo> medias;
-        std::ranges::copy_if(mediaOriginal, std::back_inserter(medias), [](const auto &mediaItem) {
-            return !mediaItem->isVideo();
-        });
-        return medias;
+        return mediaOriginal | std::views::filter([](const auto &mediaItem) { return !mediaItem->isVideo(); }) |
+               std::ranges::to<std::vector>();
     }
 
     template<typename ClientType, typename PostType>
     std::vector<SharedFileTransferInfo>
     SocialMediaType<ClientType, PostType>::getVideos(const std::vector<SharedFileTransferInfo> &mediaOriginal) {
-        // TODO: replace with ranges::to from c++23
-        std::vector<SharedFileTransferInfo> medias;
-        std::ranges::copy_if(mediaOriginal, std::back_inserter(medias), [](const auto &mediaItem) {
-            return mediaItem->isVideo();
-        });
-        return medias;
+        return mediaOriginal | std::views::filter([](const auto &mediaItem) { return mediaItem->isVideo(); }) |
+               std::ranges::to<std::vector>();
     }
 }
