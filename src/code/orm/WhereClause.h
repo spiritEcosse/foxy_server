@@ -120,10 +120,14 @@ namespace api::v1 {
         }
 
     private:
+        [[nodiscard]] bool isGroupingWrapper() const {
+            return _field == nullptr && _type == LogicalType::SINGLE && _subclauses.size() == 1 && _needsGrouping;
+        }
+
         // Modified serialization
         void serializeRecursive(std::stringstream& ss) const {
             // If this is a grouping wrapper, just serialize the first subclause with forced parentheses
-            if(_field == nullptr && _type == LogicalType::SINGLE && _subclauses.size() == 1 && _needsGrouping) {
+            if(isGroupingWrapper()) {
                 _subclauses[0].serializeRecursive(ss);
                 return;
             }

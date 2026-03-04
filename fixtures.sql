@@ -1,5 +1,7 @@
 DO
 $$
+    DECLARE
+        twitter_title CONSTANT text := 'Twitter';
     BEGIN
 
         -- Mock data for country
@@ -73,13 +75,13 @@ $$
 
         INSERT INTO tag (title, social_media, item_id)
         VALUES ('Tag1', ARRAY ['Facebook']::social_media_type[], 1),
-               ('Tag2', ARRAY ['Twitter', 'Facebook']::social_media_type[], 2);
+               ('Tag2', ARRAY [twitter_title, 'Facebook']::social_media_type[], 2);
 
         INSERT INTO social_media (title, item_id, external_id)
         VALUES ('YouTube', 1, 100),
-               ('Twitter', 2, 20000),
+               (twitter_title, 2, 20000),
                ('Pinterest', 1, 30000),
-               ('Twitter', 1, 40000);
+               (twitter_title, 1, 40000);
 
 -- Mock data for pinterest_token
         INSERT INTO pinterest_token (access_token, access_token_expires_at, refresh_token, refresh_token_expires_at, scope)

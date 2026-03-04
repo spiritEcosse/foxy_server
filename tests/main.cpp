@@ -21,14 +21,13 @@
 #include <thread>
 #include "drogon/drogon_test.h"
 
-static std::jthread appThread;
-static std::atomic<bool> appRunning{false};
-
 struct DbSetupError : public std::runtime_error {
     using std::runtime_error::runtime_error;
 };
 
 class DrogonTestEnvironment : public ::testing::Environment {
+    std::jthread appThread;
+    std::atomic<bool> appRunning{false};
 public:
     void SetUp() override {
         if(!appRunning.exchange(true)) {
