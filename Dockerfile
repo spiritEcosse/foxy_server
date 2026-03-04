@@ -19,7 +19,6 @@ RUN apt-get update && \
         libpq5 \
         libssl3 \
         zlib1g \
-        libuuid1 \
         wget \
         curl \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \

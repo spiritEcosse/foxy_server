@@ -6,7 +6,6 @@
 #include <string>
 #include <drogon/drogon.h>
 #include <clients/models/Tweet.h>
-#include "utils/cuuid.h"
 #include "sentry_catcher/sentryHelper.h"
 
 namespace api::v1 {
@@ -164,10 +163,11 @@ namespace api::v1 {
     TwitterClient::auth(const std::string_view url, const std::string_view method, const TransparentMap& params) const {
         const auto now = std::chrono::system_clock::now().time_since_epoch();
         const auto now_in_seconds = std::chrono::duration_cast<std::chrono::seconds>(now).count();
+        const auto now_in_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now).count();
         std::string oauth_timestamp = std::to_string(now_in_seconds);
         std::map<std::string, std::string, std::less<>> oauthParams = {
             {"oauth_consumer_key", std::string(apiKey)},
-            {"oauth_nonce", cuuid()},
+            {"oauth_nonce", std::to_string(now_in_ms)},
             {"oauth_signature_method", "HMAC-SHA1"},
             {"oauth_timestamp", oauth_timestamp},
             {"oauth_token", std::string(accessToken)},

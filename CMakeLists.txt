@@ -42,7 +42,7 @@ include_directories(${CMAKE_SOURCE_DIR}/src/code)
 target_precompile_headers(foxy_server PRIVATE <drogon/drogon.h>)
 
 # Link dependencies
-target_link_libraries(${PROJECT_NAME} PRIVATE drogon cpr fmt::fmt ${UUID_LIBRARY} ${ZLIB_LIBRARY} ${UNISTRING_LIBRARY})
+target_link_libraries(${PROJECT_NAME} PRIVATE drogon cpr fmt::fmt ${ZLIB_LIBRARY} ${UNISTRING_LIBRARY})
 
 # Post-target: sentry (conditional), formatting, sanitizers, tests
 include(cmake/sentry.cmake)

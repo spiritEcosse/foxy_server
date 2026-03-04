@@ -8,6 +8,5 @@ RUN apt-get update && \
         libssl-dev \
         ninja-build \
         pkg-config \
-        uuid-dev \
         zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*

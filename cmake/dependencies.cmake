@@ -33,12 +33,6 @@ CPMAddPackage(NAME cpr VERSION 1.14.2 GITHUB_REPOSITORY libcpr/cpr GIT_TAG 1.14.
 # fmt
 CPMAddPackage(NAME fmt VERSION 12.1.0 GITHUB_REPOSITORY fmtlib/fmt GIT_TAG 12.1.0)
 
-# libuuid — system library, installed via uuid-dev in Dockerfile.build
-find_library(UUID_LIBRARY uuid)
-if(NOT UUID_LIBRARY)
-    message(FATAL_ERROR "libuuid not found")
-endif()
-
 # zlib
 find_library(ZLIB_LIBRARY NAMES z)
 if(NOT ZLIB_LIBRARY)
