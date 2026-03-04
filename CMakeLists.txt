@@ -39,8 +39,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}"
 
 include_directories(${CMAKE_SOURCE_DIR}/src/code)
 
-target_precompile_headers(foxy_server PRIVATE <drogon/drogon.h>)
-
 # Link dependencies
 target_link_libraries(${PROJECT_NAME} PRIVATE drogon cpr fmt::fmt ${ZLIB_LIBRARY} ${UNISTRING_LIBRARY})
 
