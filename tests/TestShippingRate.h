@@ -78,15 +78,10 @@ protected:
     getShippingRateByItemCallback(const std::shared_ptr<std::promise<void>>& testPromise,
                                   const drogon::HttpStatusCode statusCode = drogon::k200OK) {
         return [this, testPromise, statusCode](const drogon::HttpResponsePtr& resp) {
-            try {
-                EXPECT_EQ(resp->getStatusCode(), statusCode);
-                if(resp->getStatusCode() == drogon::k200OK)
-                    checkShippingRateByItemResponse(resp);
-                testPromise->set_value();
-            } catch(const std::exception& e) {
-                testPromise->set_exception(std::current_exception());
-                LOG_ERROR << e.what();
-            }
+            EXPECT_EQ(resp->getStatusCode(), statusCode);
+            if(resp->getStatusCode() == drogon::k200OK)
+                checkShippingRateByItemResponse(resp);
+            testPromise->set_value();
         };
     }
 };
