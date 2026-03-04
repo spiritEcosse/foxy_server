@@ -10,6 +10,8 @@
 #include <drogon/utils/Utilities.h>
 #include <chrono>
 #include <future>
+#include <list>
+#include <mutex>
 #include <optional>
 #include <thread>
 
@@ -180,8 +182,13 @@ void PinterestOAuth::callback(const HttpRequestPtr &req,
 
     const auto callbackPtr = std::make_shared<std::function<void(const HttpResponsePtr &)>>(std::move(callback));
 
-    // Run blocking CPR call off the event loop thread
-    std::thread([callbackPtr, code]() {
+    // Run blocking CPR call off the event loop thread.
+    // jthread is stored in a static list so it is not destroyed (which would block via join)
+    // and not detached (which would violate S5962). The list is bounded by OAuth traffic.
+    static std::mutex s_mutex;
+    static std::list<std::jthread> s_threads;
+    std::lock_guard lock(s_mutex);
+    s_threads.emplace_back([callbackPtr, code]() {
         exchangeTokenAndSave(callbackPtr, code);
-    }).detach();
+    });
 }

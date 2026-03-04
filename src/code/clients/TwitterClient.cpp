@@ -9,6 +9,10 @@
 #include "sentry_catcher/sentryHelper.h"
 
 namespace api::v1 {
+
+    struct TwitterMediaError : public std::runtime_error {
+        using std::runtime_error::runtime_error;
+    };
     std::string TwitterClient::auth() const {
         return auth(apiCreatePost);
     }
@@ -100,10 +104,10 @@ namespace api::v1 {
             for(size_t offset = 0; offset < fileSize; offset += chunkSize) {
                 const size_t currentChunkSize = std::min(chunkSize, fileSize - offset);
                 if(fileSize < offset + currentChunkSize)
-                    throw std::runtime_error(fmt::format("Chunk overflow: fileSize={}, offset={}, chunk={}",
-                                                         fileSize,
-                                                         offset,
-                                                         currentChunkSize));
+                    throw TwitterMediaError(fmt::format("Chunk overflow: fileSize={}, offset={}, chunk={}",
+                                                        fileSize,
+                                                        offset,
+                                                        currentChunkSize));
                 auto session = std::make_shared<cpr::Session>();
                 session->SetUrl(cpr::Url{apiUploadMedia});
                 session->SetHeader({{"Authorization", auth(apiUploadMedia)}});
@@ -120,7 +124,7 @@ namespace api::v1 {
 
                     multiplePerformAppend.AddSession(session);
                     appendSessions.push_back(session);
-                } catch(const std::exception& e) {
+                } catch(const std::runtime_error& e) {
                     sentryHelper(e, "TwitterClient::uploadMedia");
                 }
                 segmentIndex++;

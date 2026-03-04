@@ -61,28 +61,29 @@ protected:
         getListValues["data"] = data;
     }
 
+    void checkShippingRateByItemResponse(const drogon::HttpResponsePtr& resp) {
+        EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
+        const auto responseJson = resp->getJsonObject();
+        const Json::StreamWriterBuilder builder;
+        std::cout << writeString(builder, *responseJson) << std::endl;
+        Json::Value obj;
+        Json::Value shipping;
+        shipping["delivery_days_max"] = 7;
+        shipping["delivery_days_min"] = 3;
+        obj["shipping"] = shipping;
+        this->checkJsonValue(*responseJson, obj);
+    }
+
     std::function<void(const drogon::HttpResponsePtr&)>
     getShippingRateByItemCallback(const std::shared_ptr<std::promise<void>>& testPromise,
                                   const drogon::HttpStatusCode statusCode = drogon::k200OK) {
         return [this, testPromise, statusCode](const drogon::HttpResponsePtr& resp) {
             try {
                 EXPECT_EQ(resp->getStatusCode(), statusCode);
-
-                if(resp->getStatusCode() == drogon::k200OK) {
-                    const auto responseJson = resp->getJsonObject();
-                    const Json::StreamWriterBuilder builder;
-                    const std::string jsonString = writeString(builder, *responseJson);
-                    std::cout << jsonString << std::endl;
-                    EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
-                    Json::Value obj;
-                    Json::Value shipping;
-                    shipping["delivery_days_max"] = 7;
-                    shipping["delivery_days_min"] = 3;
-                    obj["shipping"] = shipping;
-                    this->checkJsonValue(*responseJson, obj);
-                }
+                if(resp->getStatusCode() == drogon::k200OK)
+                    checkShippingRateByItemResponse(resp);
                 testPromise->set_value();
-            } catch(const std::exception& e) {
+            } catch(const std::runtime_error& e) {
                 testPromise->set_exception(std::current_exception());
                 LOG_ERROR << e.what();
             }

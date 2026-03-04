@@ -24,6 +24,10 @@
 static std::jthread appThread;
 static std::atomic<bool> appRunning{false};
 
+struct DbSetupError : public std::runtime_error {
+    using std::runtime_error::runtime_error;
+};
+
 class DrogonTestEnvironment : public ::testing::Environment {
 public:
     void SetUp() override {
@@ -33,7 +37,7 @@ public:
 
             auto runCmd = [](const std::string &cmd) {
                 if(std::system(cmd.c_str()) != 0)
-                    throw std::runtime_error("DB setup command failed: " + cmd);
+                    throw DbSetupError("DB setup command failed: " + cmd);
             };
 
             runCmd(fmt::format("psql -U {} -d {} -c \"DROP SCHEMA public CASCADE; "

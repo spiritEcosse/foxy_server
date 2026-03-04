@@ -13,24 +13,25 @@ namespace api::v1 {
     class SocialMediaType : public SocialMediaTypeImpl {
     public:
         SocialMediaType(const int itemId,
-                        const std::string_view& title,
+                        const std::string_view& titleArg,
                         const std::string_view& slug,
-                        const std::string_view& description,
+                        const std::string_view& descriptionArg,
                         const std::vector<SharedFileTransferInfo>& media,
-                        const Json::Value& tags) :
-            SocialMediaTypeImpl(), title(truncateTitle(title)), slug(slug),
-            description(truncateDescription(description)), itemUrl(createItemUrl(slug)), itemId(itemId),
-            images(getImages(media)), videos(getVideos(media)), tags(extractTags(tags)) {
+                        const Json::Value& tagsArg) :
+            SocialMediaTypeImpl(), title(truncateTitle(titleArg)), slug(slug),
+            description(truncateDescription(descriptionArg)), itemUrl(createItemUrl(slug)), itemId(itemId),
+            images(getImages(media)), videos(getVideos(media)), tags(extractTags(tagsArg)) {
             createClient();
         }
 
         SocialMediaType(const int itemId,
-                        const std::string_view& title,
+                        const std::string_view& titleArg,
                         const std::string_view& slug,
-                        const std::string_view& description,
-                        const std::vector<std::string>& tags) :
-            SocialMediaTypeImpl(), title(truncateTitle(title)), slug(slug),
-            description(truncateDescription(description)), itemUrl(createItemUrl(slug)), itemId(itemId), tags(tags) {
+                        const std::string_view& descriptionArg,
+                        const std::vector<std::string>& tagsArg) :
+            SocialMediaTypeImpl(), title(truncateTitle(titleArg)), slug(slug),
+            description(truncateDescription(descriptionArg)), itemUrl(createItemUrl(slug)), itemId(itemId),
+            tags(tagsArg) {
             createClient();
         }
 

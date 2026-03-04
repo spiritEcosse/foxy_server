@@ -191,27 +191,31 @@ public:
         };
     }
 
+    void checkItemsResponse(const drogon::HttpResponsePtr& resp,
+                            const drogon::HttpStatusCode expectedCode,
+                            const Json::Value& values,
+                            const drogon::orm::DbClientPtr& dbClient) {
+        EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
+        EXPECT_EQ(resp->getStatusCode(), expectedCode);
+        const auto responseJson = resp->getJsonObject();
+        const Json::StreamWriterBuilder builder;
+        std::cout << writeString(builder, *responseJson) << std::endl;
+        if(resp->getStatusCode() == expectedCode) {
+            Json::Value data;
+            Json::Value items = Json::arrayValue;
+            items.append(values);
+            data["items"] = items;
+            this->checkJsonValue(*responseJson, data);
+        }
+        *dbClient << "ROLLBACK;";
+    }
+
     std::function<void(const drogon::HttpResponsePtr&)>
     createItemsCallback(const std::shared_ptr<std::promise<void>>& testPromise,
                         const drogon::orm::DbClientPtr& dbClient) {
         return [this, dbClient, testPromise](const drogon::HttpResponsePtr& resp) {
             try {
-                EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
-                EXPECT_EQ(resp->getStatusCode(), drogon::k201Created);
-
-                const auto responseJson = resp->getJsonObject();
-                const Json::StreamWriterBuilder builder;
-                const std::string jsonString = writeString(builder, *responseJson);
-                std::cout << jsonString << std::endl;
-
-                if(resp->getStatusCode() == drogon::k201Created) {
-                    Json::Value data;
-                    Json::Value items = Json::arrayValue;
-                    items.append(expectedValues);
-                    data["items"] = items;
-                    this->checkJsonValue(*responseJson, data);
-                }
-                *dbClient << "ROLLBACK;";
+                checkItemsResponse(resp, drogon::k201Created, expectedValues, dbClient);
                 testPromise->set_value();
             } catch(const std::exception& e) {
                 testPromise->set_exception(std::current_exception());
@@ -225,22 +229,7 @@ public:
                         const drogon::orm::DbClientPtr& dbClient) {
         return [this, dbClient, testPromise](const drogon::HttpResponsePtr& resp) {
             try {
-                EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
-                EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
-
-                const auto responseJson = resp->getJsonObject();
-                const Json::StreamWriterBuilder builder;
-                const std::string jsonString = writeString(builder, *responseJson);
-                std::cout << jsonString << std::endl;
-
-                if(resp->getStatusCode() == drogon::k200OK) {
-                    Json::Value data;
-                    Json::Value items = Json::arrayValue;
-                    items.append(updatedValues);
-                    data["items"] = items;
-                    this->checkJsonValue(*responseJson, data);
-                }
-                *dbClient << "ROLLBACK;";
+                checkItemsResponse(resp, drogon::k200OK, updatedValues, dbClient);
                 testPromise->set_value();
             } catch(const std::exception& e) {
                 testPromise->set_exception(std::current_exception());

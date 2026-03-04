@@ -13,10 +13,26 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Print colored output
-print_success() { echo -e "${GREEN}✓ $1${NC}"; }
-print_error() { echo -e "${RED}✗ $1${NC}"; }
-print_warning() { echo -e "${YELLOW}⚠ $1${NC}"; }
-print_info() { echo -e "${BLUE}ℹ $1${NC}"; }
+print_success() {
+    local message="$1"
+    echo -e "${GREEN}✓ ${message}${NC}"
+    return 0
+}
+print_error() {
+    local message="$1"
+    echo -e "${RED}✗ ${message}${NC}"
+    return 0
+}
+print_warning() {
+    local message="$1"
+    echo -e "${YELLOW}⚠ ${message}${NC}"
+    return 0
+}
+print_info() {
+    local message="$1"
+    echo -e "${BLUE}ℹ ${message}${NC}"
+    return 0
+}
 
 # Copy environment files to worktree
 copy_env_files() {
@@ -74,6 +90,7 @@ show_usage() {
     echo "  $0 remove ../feature-login              # Removes worktree and prompts to delete branch"
     echo "  $0 remove ../feature-login --force      # Force removes worktree and prompts to delete branch"
     echo ""
+    return 0
 }
 
 # Validate we're in a git repository
@@ -82,6 +99,7 @@ check_git_repo() {
         print_error "Not in a git repository"
         exit 1
     fi
+    return 0
 }
 
 # Add worktree with new branch from current branch
@@ -129,6 +147,7 @@ add_worktree() {
     copy_env_files "$worktree_path" "$skip_env"
 
     print_info "To switch to the worktree: cd $worktree_path"
+    return 0
 }
 
 # Remove worktree and optionally delete branch
@@ -179,12 +198,14 @@ remove_worktree() {
             print_info "Branch '$branch_name' kept"
         fi
     fi
+    return 0
 }
 
 # List all worktrees
 list_worktrees() {
     print_info "Current worktrees:"
     git worktree list
+    return 0
 }
 
 # Parse arguments for add command
@@ -207,6 +228,7 @@ parse_add_args() {
     fi
 
     add_worktree "$branch_name" "$worktree_path" "$skip_env"
+    return 0
 }
 
 # Parse arguments for remove command
@@ -224,18 +246,24 @@ parse_remove_args() {
     fi
 
     remove_worktree "$worktree_path" "$force"
+    return 0
 }
 
 # Main script logic
 main() {
+    local cmd="${1:-}"
+    local arg2="$2"
+    local arg3="$3"
+    local arg4="$4"
+
     check_git_repo
 
-    case "${1:-}" in
+    case "${cmd}" in
         "add")
-            parse_add_args "$2" "$3" "$4"
+            parse_add_args "${arg2}" "${arg3}" "${arg4}"
             ;;
         "remove")
-            parse_remove_args "$2" "$3"
+            parse_remove_args "${arg2}" "${arg3}"
             ;;
         "list")
             list_worktrees
@@ -249,11 +277,12 @@ main() {
             exit 1
             ;;
         *)
-            print_error "Unknown command: $1"
+            print_error "Unknown command: ${cmd}"
             show_usage
             exit 1
             ;;
     esac
+    return 0
 }
 
 # Run main function with all arguments
