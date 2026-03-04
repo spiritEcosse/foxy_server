@@ -10,8 +10,7 @@ namespace api::v1 {
     };
 
     inline std::string getEnv(const char *name, const char *defaultValue = nullptr) {
-        const char *val = std::getenv(name);
-        if(val)
+        if(const char *val = std::getenv(name); val)
             return val;
         if(defaultValue)
             return defaultValue;

@@ -33,37 +33,29 @@ class PinterestOAuthTest : public BaseTestClass<PinterestOAuthTest, api::v1::Pin
 
     static void checkOAuthUrlResponse(const drogon::HttpResponsePtr &resp,
                                       const std::shared_ptr<std::promise<void>> &promise) {
-        try {
-            EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
-            EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
-            const auto json = resp->getJsonObject();
-            ASSERT_NE(json, nullptr);
-            ASSERT_TRUE(json->isMember("url"));
-            const std::string url = (*json)["url"].asString();
-            EXPECT_FALSE(url.empty());
-            EXPECT_NE(url.find("oauth"), std::string::npos);
-            EXPECT_NE(url.find("response_type=code"), std::string::npos);
-            EXPECT_NE(url.find("state="), std::string::npos);
-            promise->set_value();
-        } catch(const std::exception&) {
-            promise->set_exception(std::current_exception());
-        }
+        EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
+        EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
+        const auto json = resp->getJsonObject();
+        ASSERT_NE(json, nullptr);
+        ASSERT_TRUE(json->isMember("url"));
+        const std::string url = (*json)["url"].asString();
+        EXPECT_FALSE(url.empty());
+        EXPECT_NE(url.find("oauth"), std::string::npos);
+        EXPECT_NE(url.find("response_type=code"), std::string::npos);
+        EXPECT_NE(url.find("state="), std::string::npos);
+        promise->set_value();
     }
 
     static std::function<void(const drogon::HttpResponsePtr &)>
     callbackErrorCallback(const std::shared_ptr<std::promise<void>> &promise, const std::string &expectedError) {
         return [promise, expectedError](const drogon::HttpResponsePtr &resp) {
-            try {
-                EXPECT_EQ(resp->getStatusCode(), drogon::k400BadRequest);
-                EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
-                const auto json = resp->getJsonObject();
-                ASSERT_NE(json, nullptr);
-                ASSERT_TRUE(json->isMember("error"));
-                EXPECT_EQ((*json)["error"].asString(), expectedError);
-                promise->set_value();
-            } catch(const std::exception&) {
-                promise->set_exception(std::current_exception());
-            }
+            EXPECT_EQ(resp->getStatusCode(), drogon::k400BadRequest);
+            EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
+            const auto json = resp->getJsonObject();
+            ASSERT_NE(json, nullptr);
+            ASSERT_TRUE(json->isMember("error"));
+            EXPECT_EQ((*json)["error"].asString(), expectedError);
+            promise->set_value();
         };
     }
 
