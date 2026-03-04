@@ -165,6 +165,59 @@ EOF
 )"
 ```
 
+## SonarCloud Quality Checks
+
+Use `scripts/sonarcloud-check.sh` to inspect code quality. Requires `SONAR_TOKEN` env var.
+
+```bash
+# Check current branch (auto-detects dev/main → branch mode, feature → PR mode)
+./scripts/sonarcloud-check.sh
+
+# Force branch mode for dev
+./scripts/sonarcloud-check.sh --branch dev
+
+# Check a specific PR
+./scripts/sonarcloud-check.sh --pr 42
+```
+
+### Fix-and-verify workflow
+
+After pushing fixes, SonarCloud takes a few minutes to re-analyze. Follow this loop:
+
+1. Run the check — note all CRITICAL, MAJOR, MINOR issues
+2. Fix every issue in code, build to confirm (`cmake --build --preset ninja-release`)
+3. Commit and push
+4. Wait ~3–5 minutes, then re-run the check
+5. Repeat until no code smell issues remain
+
+```bash
+# Full loop (fix → build → commit → push → wait → verify)
+cmake --build --preset ninja-release 2>&1 | tail -5   # confirm build
+git add <files> && git commit -m "fix: ..."
+git push origin dev
+sleep 180  # wait ~3 min for SonarCloud CI to finish
+./scripts/sonarcloud-check.sh --branch dev
+```
+
+### Common fix patterns (from project history)
+
+| Rule | Pattern | Fix |
+|------|---------|-----|
+| cpp:S1181 | `catch(std::runtime_error&)` or `catch(std::exception&)` around GTest/CPR ops that don't throw | Remove the dead try/catch entirely |
+| cpp:S5421 | Mutable global `static` variables | Move into the class that owns them |
+| cpp:S3776 | Cognitive complexity too high | Extract a private helper method for complex conditions |
+| cpp:S1192 | String literal repeated 3+ times in PL/pgSQL | Add `DECLARE … CONSTANT text := '…'` in the `DO $$` block |
+| cpp:S1481 | `catch(const T& e)` where `e` is never used | Drop the variable name: `catch(const T&)` |
+| cpp:S2738 | `catch(...)` | Replace with `catch(const std::exception&)` |
+| cpp:S6004 | Variable declared before `if`, used only in condition | Use C++17 if-init: `if(auto val = …; val)` |
+| cpp:S6177 | Verbose `EnumType::VALUE` in switch cases | Add `using enum EnumType;` at top of switch |
+| cpp:S6009 | `const std::string&` lambda param used only for comparison | Use `std::string_view` instead |
+| docker:S7031 | Consecutive `RUN` instructions in Dockerfile | Merge with `&& \` |
+| plsql:S1192 | Duplicate string literal 3+ times in SQL | Declare a PL/pgSQL `CONSTANT` variable |
+
+### Quality gate
+The gate fails on `new_security_hotspots_reviewed: 0%` — this requires manually reviewing/acknowledging hotspots in the SonarCloud UI (not fixable in code).
+
 ## Code Style
 
 - `.clang-format`: LLVM-based, 120 column limit, 4-space indent, always break template declarations
