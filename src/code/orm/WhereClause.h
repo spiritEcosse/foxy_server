@@ -168,20 +168,21 @@ namespace api::v1 {
         }
 
         std::string serializeSingleClause() const {
+            using enum ValueType;
             switch(_valueType) {
-                case ValueType::FIELD_COMPARISON:
+                case FIELD_COMPARISON:
                     return fmt::format("{} {} {}",
                                        _field->getFullFieldName(),
                                        operatorToString(_op),
                                        _comparisonField->getFullFieldName());
 
-                case ValueType::STRING:
+                case STRING:
                     return fmt::format("{} {} '{}'", _field->getFullFieldName(), operatorToString(_op), _value);
 
-                case ValueType::RAW_SQL:
+                case RAW_SQL:
                     return fmt::format("{} {} {}", _field->getFullFieldName(), operatorToString(_op), _value);
 
-                case ValueType::SPECIAL:
+                case SPECIAL:
                     return fmt::format("{} {} {}", _field->getFullFieldName(), operatorToString(_op), _value);
 
                 default:

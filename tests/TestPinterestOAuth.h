@@ -45,7 +45,7 @@ class PinterestOAuthTest : public BaseTestClass<PinterestOAuthTest, api::v1::Pin
             EXPECT_NE(url.find("response_type=code"), std::string::npos);
             EXPECT_NE(url.find("state="), std::string::npos);
             promise->set_value();
-        } catch(...) {
+        } catch(const std::exception&) {
             promise->set_exception(std::current_exception());
         }
     }
@@ -61,7 +61,7 @@ class PinterestOAuthTest : public BaseTestClass<PinterestOAuthTest, api::v1::Pin
                 ASSERT_TRUE(json->isMember("error"));
                 EXPECT_EQ((*json)["error"].asString(), expectedError);
                 promise->set_value();
-            } catch(...) {
+            } catch(const std::exception&) {
                 promise->set_exception(std::current_exception());
             }
         };

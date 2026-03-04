@@ -253,7 +253,7 @@ public:
                 expected["error"] = "Empty body";
                 EXPECT_EQ(*responseJson, expected);
                 testPromise->set_value();
-            } catch(const std::exception& e) {
+            } catch(const std::exception&) {
                 testPromise->set_exception(std::current_exception());
             }
         };
@@ -270,14 +270,14 @@ public:
                 const Json::StreamWriterBuilder builder;
                 const std::string jsonString = writeString(builder, *responseJson);
                 std::cout << jsonString << std::endl;
-                auto filteredKeys = expectedValues.getMemberNames() | std::views::filter([](const std::string& key) {
+                auto filteredKeys = expectedValues.getMemberNames() | std::views::filter([](std::string_view key) {
                                         return key != "id" && key != "enabled" && key != "status";
                                     });
                 for(const auto& key: filteredKeys) {
                     EXPECT_EQ(responseJson->operator[](key).asString(), fmt::format("{} is required", key));
                 }
                 testPromise->set_value();
-            } catch(const std::exception& e) {
+            } catch(const std::exception&) {
                 testPromise->set_exception(std::current_exception());
             }
         };

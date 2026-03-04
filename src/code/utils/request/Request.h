@@ -19,7 +19,7 @@ inline bool canBeInt(const std::string &input) {
     try {
         std::stoi(input);
         return true;
-    } catch(const std::invalid_argument &e) {
+    } catch(const std::invalid_argument&) {
         return false;
     }
 }
