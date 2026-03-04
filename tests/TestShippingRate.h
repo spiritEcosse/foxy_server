@@ -83,7 +83,7 @@ protected:
                 if(resp->getStatusCode() == drogon::k200OK)
                     checkShippingRateByItemResponse(resp);
                 testPromise->set_value();
-            } catch(const std::runtime_error& e) {
+            } catch(const std::exception& e) {
                 testPromise->set_exception(std::current_exception());
                 LOG_ERROR << e.what();
             }

@@ -112,21 +112,17 @@ namespace api::v1 {
                 session->SetUrl(cpr::Url{apiUploadMedia});
                 session->SetHeader({{"Authorization", auth(apiUploadMedia)}});
 
-                try {
-                    auto start = fileContent->begin() + static_cast<std::ptrdiff_t>(offset);
-                    auto end = std::min(fileContent->end(),
-                                        fileContent->begin() + static_cast<std::ptrdiff_t>(offset + currentChunkSize));
+                auto start = fileContent->begin() + static_cast<std::ptrdiff_t>(offset);
+                auto end = std::min(fileContent->end(),
+                                    fileContent->begin() + static_cast<std::ptrdiff_t>(offset + currentChunkSize));
 
-                    session->SetMultipart({{"command", "APPEND"},
-                                           {"media_id", externalId},
-                                           {"segment_index", std::to_string(segmentIndex)},
-                                           {"media", cpr::Buffer{start, end, std::move(fileName)}}});
+                session->SetMultipart({{"command", "APPEND"},
+                                       {"media_id", externalId},
+                                       {"segment_index", std::to_string(segmentIndex)},
+                                       {"media", cpr::Buffer{start, end, std::move(fileName)}}});
 
-                    multiplePerformAppend.AddSession(session);
-                    appendSessions.push_back(session);
-                } catch(const std::runtime_error& e) {
-                    sentryHelper(e, "TwitterClient::uploadMedia");
-                }
+                multiplePerformAppend.AddSession(session);
+                appendSessions.push_back(session);
                 segmentIndex++;
             }
         }
