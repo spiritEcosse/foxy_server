@@ -22,18 +22,23 @@ jobs:
       - name: Login to GitHub Container Registry
         run: echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u spiritEcosse --password-stdin
 
+      - name: Check if Dockerfile.build changed
+        id: changed
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            dockerfile:
+              - 'Dockerfile.build'
+
       - name: Pull build image
         id: pull_build_image
+        if: steps.changed.outputs.dockerfile != 'true'
         run: |
-          if git diff --name-only HEAD~1 HEAD | grep -q "Dockerfile.build"; then
-            echo "exists=false" >> $GITHUB_OUTPUT
-          else
-            docker pull ghcr.io/spiritecosse/foxy_server_build:${BRANCH_NAME} && echo "exists=true" >> $GITHUB_OUTPUT || echo "exists=false" >> $GITHUB_OUTPUT
-          fi
+          docker pull ghcr.io/spiritecosse/foxy_server_build:${BRANCH_NAME} && echo "exists=true" >> $GITHUB_OUTPUT || echo "exists=false" >> $GITHUB_OUTPUT
         continue-on-error: true
 
-      - name: Build and push build image
-        if: steps.pull_build_image.outputs.exists != 'true'
+      - name: Build new image
+        if: steps.changed.outputs.dockerfile == 'true' || steps.pull_build_image.outputs.exists == 'false'
         run: |
           docker build -f Dockerfile.build -t ghcr.io/spiritecosse/foxy_server_build:${BRANCH_NAME} .
           docker push ghcr.io/spiritecosse/foxy_server_build:${BRANCH_NAME}
