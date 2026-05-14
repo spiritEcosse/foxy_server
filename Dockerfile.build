@@ -9,4 +9,6 @@ RUN apt-get update && \
         ninja-build \
         pkg-config \
         zlib1g-dev \
+        meson \                  # ← this is what you need
+        python3-venv \           # helps meson on Debian
     && rm -rf /var/lib/apt/lists/*
