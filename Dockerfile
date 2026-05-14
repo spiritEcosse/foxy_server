@@ -33,6 +33,8 @@ RUN --mount=type=bind,from=builder,source=/usr/lib,target=/builder-lib \
 WORKDIR /app
 
 COPY --from=builder /src/build/prod/foxy_server /app/foxy_server
+COPY atlas.hcl /app/atlas.hcl
+COPY migrations /app/migrations
 RUN chmod +x /app/foxy_server
 
 EXPOSE 8080

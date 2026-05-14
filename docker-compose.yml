@@ -69,8 +69,6 @@ services:
         condition: service_healthy
     command: ["atlas", "migrate", "apply", "--env", "prod", "--config", "file:///app/atlas.hcl"]
     volumes:
-      - ./migrations:/app/migrations
-      - ./atlas.hcl:/app/atlas.hcl
       - pg_socket_main:/var/run/postgresql
     working_dir: /app
     networks:
@@ -85,8 +83,6 @@ services:
         condition: service_healthy
     command: ["atlas", "migrate", "apply", "--env", "dev", "--config", "file:///app/atlas.hcl"]
     volumes:
-      - ./migrations:/app/migrations
-      - ./atlas.hcl:/app/atlas.hcl
       - pg_socket_dev:/var/run/postgresql
     working_dir: /app
     networks:
