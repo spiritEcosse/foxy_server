@@ -12,4 +12,5 @@ RUN apt-get update && \
         meson \
         uuid-dev \
         libunistring-dev \
+        ccache \
     && rm -rf /var/lib/apt/lists/*
