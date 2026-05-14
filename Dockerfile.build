@@ -10,4 +10,5 @@ RUN apt-get update && \
         pkg-config \
         zlib1g-dev \
         meson \
+        uuid-dev \
     && rm -rf /var/lib/apt/lists/*
