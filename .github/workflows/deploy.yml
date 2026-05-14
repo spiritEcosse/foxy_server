@@ -8,6 +8,7 @@ jobs:
   deploy:
     if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
 
     steps:
       - name: Checkout repository
@@ -43,7 +44,6 @@ jobs:
           FOXY_ADMIN: ${{ secrets.FOXY_ADMIN }}
           APP_CLOUD_NAME: ${{ secrets.APP_CLOUD_NAME }}
           APP_BUCKET_HOST: ${{ secrets.APP_BUCKET_HOST }}
-          ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
           PINTEREST_API_HOST: ${{ secrets.PINTEREST_API_HOST }}
           PINTEREST_BOARD_ID: ${{ secrets.PINTEREST_BOARD_ID }}
           PINTEREST_CLIENT_ID: ${{ secrets.PINTEREST_CLIENT_ID }}

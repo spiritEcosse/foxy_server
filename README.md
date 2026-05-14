@@ -27,7 +27,6 @@ push to dev  → build → push image :dev  → deploy foxy-dev  (dev)
 | `FOXY_ADMIN` | Allowed CORS origin (admin app) |
 | `APP_CLOUD_NAME` | Cloudinary cloud name |
 | `APP_BUCKET_HOST` | Storage bucket host |
-| `ENVIRONMENT` | Runtime environment label |
 | `PINTEREST_API_HOST` | Pinterest API base URL |
 | `PINTEREST_BOARD_ID` | Pinterest board ID |
 | `PINTEREST_CLIENT_ID` | Pinterest OAuth client ID |

@@ -6,7 +6,6 @@ x-app-env: &app-env
   FOXY_ADMIN: ${FOXY_ADMIN}
   APP_CLOUD_NAME: ${APP_CLOUD_NAME}
   APP_BUCKET_HOST: ${APP_BUCKET_HOST}
-  ENVIRONMENT: ${ENVIRONMENT}
   PINTEREST_API_HOST: ${PINTEREST_API_HOST}
   PINTEREST_BOARD_ID: ${PINTEREST_BOARD_ID}
   PINTEREST_CLIENT_ID: ${PINTEREST_CLIENT_ID}
@@ -126,7 +125,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.foxy-dev.rule=Host(`dev-api.faithfishart.com`)"
-      - "traefik.http.routers.foxy-dev.entrypoints=websecure"
+      - "traefik.http.routers.foxy-dev.entrypoints=websecure-dev"
       - "traefik.http.routers.foxy-dev.tls.certresolver=letsencrypt"
     networks:
       - web
