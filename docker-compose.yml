@@ -58,12 +58,12 @@ services:
       - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
 
   migrate-main:
-    image: arigaio/atlas:latest-community
+    image: ghcr.io/spiritecosse/foxy_server_build:main
     restart: "no"
     depends_on:
       postgres-main:
         condition: service_healthy
-    command: ["migrate", "apply", "--env", "prod", "--config", "file:///app/atlas.hcl"]
+    command: ["atlas", "migrate", "apply", "--env", "prod", "--config", "file:///app/atlas.hcl"]
     volumes:
       - ./migrations:/app/migrations
       - ./atlas.hcl:/app/atlas.hcl
@@ -73,12 +73,12 @@ services:
       - backend
 
   migrate-dev:
-    image: arigaio/atlas:latest-community
+    image: ghcr.io/spiritecosse/foxy_server_build:main
     restart: "no"
     depends_on:
       postgres-dev:
         condition: service_healthy
-    command: ["migrate", "apply", "--env", "dev", "--config", "file:///app/atlas.hcl"]
+    command: ["atlas", "migrate", "apply", "--env", "dev", "--config", "file:///app/atlas.hcl"]
     volumes:
       - ./migrations:/app/migrations
       - ./atlas.hcl:/app/atlas.hcl
