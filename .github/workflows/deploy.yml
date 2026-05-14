@@ -61,4 +61,15 @@ jobs:
           TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
           TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
           TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
-        run: docker compose up -d foxy-${BRANCH_NAME}
+        run: |
+          if [ "$BRANCH_NAME" = "main" ] || [ "$BRANCH_NAME" = "master" ]; then
+            PROFILE="main"
+            SERVICE="foxy-main"
+          else
+            PROFILE="dev"
+            SERVICE="foxy-dev"
+          fi
+          
+          echo "Deploying with profile: $PROFILE | Service: $SERVICE"
+          
+          docker compose --profile $PROFILE up -d --wait $SERVICE

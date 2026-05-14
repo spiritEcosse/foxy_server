@@ -35,8 +35,10 @@ x-postgres-base: &postgres-base
     retries: 5
 
 services:
+
   postgres-main:
     <<: *postgres-base
+    profiles: ["main"]
     container_name: postgres-main
     environment:
       <<: *postgres-env
@@ -48,6 +50,7 @@ services:
 
   postgres-dev:
     <<: *postgres-base
+    profiles: ["dev"]
     container_name: postgres-dev
     environment:
       <<: *postgres-env
@@ -60,6 +63,7 @@ services:
   migrate-main:
     image: ghcr.io/spiritecosse/foxy_server_build:main
     restart: "no"
+    profiles: ["main"]
     depends_on:
       postgres-main:
         condition: service_healthy
@@ -75,6 +79,7 @@ services:
   migrate-dev:
     image: ghcr.io/spiritecosse/foxy_server_build:main
     restart: "no"
+    profiles: ["dev"]
     depends_on:
       postgres-dev:
         condition: service_healthy
@@ -91,6 +96,7 @@ services:
     image: ghcr.io/spiritecosse/foxy_server:main
     container_name: foxy-main
     restart: always
+    profiles: ["main"]
     depends_on:
       migrate-main:
         condition: service_completed_successfully
@@ -113,6 +119,7 @@ services:
     image: ghcr.io/spiritecosse/foxy_server:dev
     container_name: foxy-dev
     restart: always
+    profiles: ["dev"]
     depends_on:
       migrate-dev:
         condition: service_completed_successfully
