@@ -11,6 +11,9 @@ jobs:
     environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
 
     steps:
+      - name: Login to GitHub Container Registry
+        run: echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u spiritEcosse --password-stdin
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
