@@ -1,144 +1,81 @@
-x-db-main: &db-main foxy
-x-db-dev: &db-dev foxy_dev
-
-x-app-env: &app-env
-  FOXY_CLIENT: ${FOXY_CLIENT}
-  FOXY_ADMIN: ${FOXY_ADMIN}
-  APP_CLOUD_NAME: ${APP_CLOUD_NAME}
-  APP_BUCKET_HOST: ${APP_BUCKET_HOST}
-  PINTEREST_API_HOST: ${PINTEREST_API_HOST}
-  PINTEREST_BOARD_ID: ${PINTEREST_BOARD_ID}
-  PINTEREST_CLIENT_ID: ${PINTEREST_CLIENT_ID}
-  PINTEREST_CLIENT_SECRET: ${PINTEREST_CLIENT_SECRET}
-  YOUTUBE_REFRESH_TOKEN: ${YOUTUBE_REFRESH_TOKEN}
-  YOUTUBE_CLIENT_ID: ${YOUTUBE_CLIENT_ID}
-  YOUTUBE_CLIENT_SECRET: ${YOUTUBE_CLIENT_SECRET}
-  TWITTER_API_KEY: ${TWITTER_API_KEY}
-  TWITTER_API_SECRET: ${TWITTER_API_SECRET}
-  TWITTER_ACCESS_TOKEN: ${TWITTER_ACCESS_TOKEN}
-  TWITTER_ACCESS_TOKEN_SECRET: ${TWITTER_ACCESS_TOKEN_SECRET}
-  TWITTER_BEARER_TOKEN: ${TWITTER_BEARER_TOKEN}
-
-x-postgres-env: &postgres-env
-  POSTGRES_USER: postgres
-  POSTGRES_HOST_AUTH_METHOD: trust
-
-x-postgres-base: &postgres-base
-  image: postgres:17-alpine
-  restart: always
-  networks:
-    - backend
-  healthcheck:
-    test: ["CMD-SHELL", "pg_isready -U postgres"]
-    interval: 10s
-    timeout: 5s
-    retries: 5
+x-db: &db foxy
 
 services:
 
-  postgres-main:
-    <<: *postgres-base
-    profiles: ["main"]
-    container_name: postgres-main
+  postgres:
+    image: postgres:17-alpine
+    container_name: postgres-${PROFILE}
+    restart: always
     environment:
-      <<: *postgres-env
-      DB_NAME: *db-main
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_USER: *db
+      POSTGRES_DB: *db
     volumes:
-      - pgdata-main:/var/lib/postgresql/data
-      - pg_socket_main:/var/run/postgresql
-      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+      - pgdata:/var/lib/postgresql/data
+      - pg_socket:/var/run/postgresql
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  postgres-dev:
-    <<: *postgres-base
-    profiles: ["dev"]
-    container_name: postgres-dev
-    environment:
-      <<: *postgres-env
-      DB_NAME: *db-dev
-    volumes:
-      - pgdata-dev:/var/lib/postgresql/data
-      - pg_socket_dev:/var/run/postgresql
-      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
-
-  migrate-main:
-    image: ghcr.io/spiritecosse/foxy_server:main
+  migrate:
+    image: ghcr.io/spiritecosse/foxy_server:${TAG}
     restart: "no"
-    profiles: ["main"]
     depends_on:
-      postgres-main:
+      postgres:
         condition: service_healthy
-    command: ["atlas", "migrate", "apply", "--env", "prod", "--config", "file:///app/atlas.hcl"]
+    command: atlas migrate apply --env ${PROFILE}
     volumes:
-      - pg_socket_main:/var/run/postgresql
+      - pg_socket:/var/run/postgresql
     working_dir: /app
     networks:
       - backend
 
-  migrate-dev:
-    image: ghcr.io/spiritecosse/foxy_server:dev
-    restart: "no"
-    profiles: ["dev"]
-    depends_on:
-      postgres-dev:
-        condition: service_healthy
-    command: ["atlas", "migrate", "apply", "--env", "dev", "--config", "file:///app/atlas.hcl"]
-    volumes:
-      - pg_socket_dev:/var/run/postgresql
-    working_dir: /app
-    networks:
-      - backend
-
-  foxy-main:
-    image: ghcr.io/spiritecosse/foxy_server:main
-    container_name: foxy-main
+  foxy:
+    image: ghcr.io/spiritecosse/foxy_server:${TAG}
+    container_name: foxy-${PROFILE}
     restart: always
-    profiles: ["main"]
     depends_on:
-      migrate-main:
+      migrate:
         condition: service_completed_successfully
     environment:
-      <<: *app-env
-      PG_DB: *db-main
-      PG_USER: *db-main
+      FOXY_CLIENT: ${FOXY_CLIENT}
+      FOXY_ADMIN: ${FOXY_ADMIN}
+      APP_CLOUD_NAME: ${APP_CLOUD_NAME}
+      APP_BUCKET_HOST: ${APP_BUCKET_HOST}
+      PINTEREST_API_HOST: ${PINTEREST_API_HOST}
+      PINTEREST_BOARD_ID: ${PINTEREST_BOARD_ID}
+      PINTEREST_CLIENT_ID: ${PINTEREST_CLIENT_ID}
+      PINTEREST_CLIENT_SECRET: ${PINTEREST_CLIENT_SECRET}
+      YOUTUBE_REFRESH_TOKEN: ${YOUTUBE_REFRESH_TOKEN}
+      YOUTUBE_CLIENT_ID: ${YOUTUBE_CLIENT_ID}
+      YOUTUBE_CLIENT_SECRET: ${YOUTUBE_CLIENT_SECRET}
+      TWITTER_API_KEY: ${TWITTER_API_KEY}
+      TWITTER_API_SECRET: ${TWITTER_API_SECRET}
+      TWITTER_ACCESS_TOKEN: ${TWITTER_ACCESS_TOKEN}
+      TWITTER_ACCESS_TOKEN_SECRET: ${TWITTER_ACCESS_TOKEN_SECRET}
+      TWITTER_BEARER_TOKEN: ${TWITTER_BEARER_TOKEN}
+      PG_DB: *db
+      PG_USER: *db
     volumes:
-      - pg_socket_main:/var/run/postgresql
+      - pg_socket:/var/run/postgresql
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.foxy-main.rule=Host(`api.faithfishart.com`)"
-      - "traefik.http.routers.foxy-main.entrypoints=websecure"
-      - "traefik.http.routers.foxy-main.tls.certresolver=letsencrypt"
-    networks:
-      - web
-      - backend
-
-  foxy-dev:
-    image: ghcr.io/spiritecosse/foxy_server:dev
-    container_name: foxy-dev
-    restart: always
-    profiles: ["dev"]
-    depends_on:
-      migrate-dev:
-        condition: service_completed_successfully
-    environment:
-      <<: *app-env
-      PG_DB: *db-dev
-      PG_USER: *db-dev
-    volumes:
-      - pg_socket_dev:/var/run/postgresql
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.foxy-dev.rule=Host(`dev-api.faithfishart.com`)"
-      - "traefik.http.routers.foxy-dev.entrypoints=websecure-dev"
-      - "traefik.http.routers.foxy-dev.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.foxy-${PROFILE}.rule=Host(`${HOST}`)"
+      - "traefik.http.routers.foxy-${PROFILE}.entrypoints=${ENTRYPOINT}"
+      - "traefik.http.routers.foxy-${PROFILE}.tls.certresolver=letsencrypt"
     networks:
       - web
       - backend
 
 volumes:
-  pgdata-main:
-  pgdata-dev:
-  pg_socket_main:
-  pg_socket_dev:
+  pgdata:
+    name: foxy_pgdata_${PROFILE}
+  pg_socket:
+    name: foxy_pg_socket_${PROFILE}
 
 networks:
   web:
