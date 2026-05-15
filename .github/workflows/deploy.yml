@@ -63,7 +63,6 @@ jobs:
           TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
           PROFILE: ${{ vars.PROFILE }}
           HOST: ${{ vars.HOST }}
-          ENTRYPOINT: ${{ vars.ENTRYPOINT }}
           TAG: ${{ env.BRANCH_NAME }}
         run: |
           echo "Deploying profile=$PROFILE tag=$TAG host=$HOST"
