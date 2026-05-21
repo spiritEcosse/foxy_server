@@ -9,7 +9,6 @@ RUN apt-get update && \
         ninja-build \
         pkg-config \
         zlib1g-dev \
-        meson \
         uuid-dev \
         libunistring-dev \
         ccache \

@@ -18,6 +18,15 @@ add_compile_options(-ferror-limit=1 $<$<CONFIG:Debug>:-ftemplate-backtrace-limit
 set(BUILD_EXAMPLES OFF)
 set(BUILD_CTL OFF)
 set(BUILD_TESTING OFF)
+set(BUILD_REDIS OFF CACHE BOOL "Disable Drogon Redis support (hiredis dep)" FORCE)
+set(BUILD_YAML_CONFIG OFF CACHE BOOL "Disable Drogon YAML config (yaml-cpp ABI mismatch with libc++)" FORCE)
+set(BUILD_MYSQL OFF CACHE BOOL "Disable Drogon MySQL backend (unused)" FORCE)
+set(BUILD_SQLITE OFF CACHE BOOL "Disable Drogon SQLite backend (unused)" FORCE)
+# Drogon's USE_MYSQL/USE_SQLITE3 macros are driven by system probes, not BUILD_*.
+# Force them OFF to match BUILD_* and avoid undefined-reference links when the system has the libs.
+set(USE_MYSQL OFF CACHE BOOL "Force-disable Drogon's USE_MYSQL macro" FORCE)
+set(USE_SQLITE3 OFF CACHE BOOL "Force-disable Drogon's USE_SQLITE3 macro" FORCE)
+set(BUILD_BROTLI OFF CACHE BOOL "Disable Drogon Brotli compression (unused)" FORCE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_definitions(-DCMAKE_BINARY_DIR="${CMAKE_BINARY_DIR}")
 
