@@ -79,9 +79,9 @@ $$
 
         INSERT INTO social_media (title, item_id, external_id)
         VALUES ('YouTube', 1, 100),
-               (twitter_title, 2, 20000),
+               (twitter_title::social_media_type, 2, 20000),
                ('Pinterest', 1, 30000),
-               (twitter_title, 1, 40000);
+               (twitter_title::social_media_type, 1, 40000);
 
 -- Mock data for pinterest_token
         INSERT INTO pinterest_token (access_token, access_token_expires_at, refresh_token, refresh_token_expires_at, scope)
