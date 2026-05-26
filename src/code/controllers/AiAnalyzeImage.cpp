@@ -159,7 +159,9 @@ Return strictly valid JSON. Do not wrap in code fences.)";
     // FOXY_AI_WORKDIR env var so deployments can point at a dedicated private directory
     // (e.g. /var/lib/foxy/tmp) instead of the world-writable /tmp default.
     TempImage writeTempImage(std::string_view bytes, std::string_view ext) {
-        const std::string base = getEnv("FOXY_AI_WORKDIR", "/tmp");
+        // S5443: /tmp default is acceptable here — mkdtemp() below creates a 0700
+        // subdir, so the publicly-writable base does not grant access to the image.
+        const std::string base = getEnv("FOXY_AI_WORKDIR", "/tmp");  // NOSONAR(cpp:S5443)
         std::string templ = fmt::format("{}/foxy_ai_XXXXXX", base);
         const char *dirPath = ::mkdtemp(templ.data());
         if(!dirPath)

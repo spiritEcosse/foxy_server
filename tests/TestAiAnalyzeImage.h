@@ -27,7 +27,9 @@ protected:
         // user can list/read the stub script we drop inside it. The base path
         // is configurable via FOXY_AI_WORKDIR for environments where /tmp is
         // unsuitable.
-        const std::string base = api::v1::getEnv("FOXY_AI_WORKDIR", "/tmp");
+        // S5443: /tmp default is fine in tests — mkdtemp creates a 0700 subdir
+        // owned by the test process, deleted in TearDown.
+        const std::string base = api::v1::getEnv("FOXY_AI_WORKDIR", "/tmp");  // NOSONAR(cpp:S5443)
         std::string templ = fmt::format("{}/foxy_ai_stub_XXXXXX", base);
         ASSERT_NE(::mkdtemp(templ.data()), nullptr);
         stubDir = templ;
