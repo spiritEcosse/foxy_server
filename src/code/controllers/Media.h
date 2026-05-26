@@ -1,6 +1,7 @@
 #pragma once
 
 #include "drogon/HttpController.h"
+#include "BaseCRUD.h"
 #include "models/MediaModel.h"
 
 namespace api::v1 {

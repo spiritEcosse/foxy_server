@@ -25,3 +25,11 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     TEST_MIGRATIONS_DIR="${CMAKE_SOURCE_DIR}/migrations"
     TEST_FIXTURES_PATH="${CMAKE_SOURCE_DIR}/fixtures.sql"
 )
+
+# Load .env.test into every gtest_add_tests entry. Each KEY=VALUE line becomes
+# an ENVIRONMENT property so `ctest` works without `source .env` upfront.
+file(STRINGS "${CMAKE_SOURCE_DIR}/.env.test" _env_test_lines
+     REGEX "^[A-Z][A-Z0-9_]*=")
+foreach(_t IN LISTS myTests_targets)
+    set_tests_properties(${_t} PROPERTIES ENVIRONMENT "${_env_test_lines}")
+endforeach()

@@ -27,7 +27,20 @@ CPMAddPackage(
     OPTIONS "BUILD_TESTING OFF"
 )
 
-# cpr
+# Drogon/trantor compile with -Werror; newer clang flags std::future::get() as
+# [[nodiscard]] in syncTaskInQueue. Demote that one warning for upstream targets.
+foreach(_t trantor drogon)
+    if(TARGET ${_t})
+        target_compile_options(${_t} PRIVATE -Wno-error=unused-result)
+    endif()
+endforeach()
+
+# cpr — disable libpsl (cookie public-suffix validation); we only do bearer-token API calls
+set(CPR_CURL_USE_LIBPSL OFF CACHE BOOL "Disable libpsl in bundled curl" FORCE)
+# cpr's bundled curl auto-links brotli/zstd if present on the system. We don't request
+# br/zstd encodings on outbound API calls, so disable to keep the dep surface minimal.
+set(CURL_BROTLI OFF CACHE BOOL "Disable Brotli in bundled curl" FORCE)
+set(CURL_ZSTD OFF CACHE BOOL "Disable Zstd in bundled curl" FORCE)
 CPMAddPackage(NAME cpr VERSION 1.14.2 GITHUB_REPOSITORY libcpr/cpr GIT_TAG 1.14.2)
 
 # fmt

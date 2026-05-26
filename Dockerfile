@@ -23,7 +23,9 @@ RUN apt-get update && \
         curl \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && rm -rf /var/lib/apt/lists/* \
-    && curl -sSf https://atlasgo.sh | sh
+    && curl -sSf https://atlasgo.sh | sh \
+    && curl -fsSL https://claude.ai/install.sh | bash \
+    && ln -s /root/.local/bin/claude /usr/local/bin/claude
 
 # libc++ runtime — binary links against libc++.so.1 (built with -stdlib=libc++)
 RUN --mount=type=bind,from=builder,source=/usr/lib,target=/builder-lib \

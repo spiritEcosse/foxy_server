@@ -15,6 +15,7 @@
 #include "TestOrder.h"
 #include "TestPinterestOAuth.h"
 #include "TestPin.h"
+#include "TestAiAnalyzeImage.h"
 #include "utils/config.h"
 
 #include <future>
@@ -28,6 +29,7 @@ struct DbSetupError : public std::runtime_error {
 class DrogonTestEnvironment : public ::testing::Environment {
     std::jthread appThread;
     std::atomic<bool> appRunning{false};
+
 public:
     void SetUp() override {
         if(!appRunning.exchange(true)) {
