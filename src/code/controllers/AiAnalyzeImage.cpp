@@ -139,7 +139,7 @@ Return strictly valid JSON. Do not wrap in code fences.)";
     private:
         std::string dir_;
 
-        void cleanup() noexcept {
+        void cleanup() const noexcept {
             if(!dir_.empty()) {
                 std::error_code ec;
                 std::filesystem::remove_all(dir_, ec);
@@ -152,12 +152,15 @@ Return strictly valid JSON. Do not wrap in code fences.)";
         std::string filePath;
     };
 
-    // Create a unique per-request directory under the OS temp dir, write the decoded
-    // image inside it. Returns an empty TempImage on failure. The directory is created
-    // with 0700 perms by mkdtemp, so other local users on the host cannot read it.
-    TempImage writeTempImage(const std::string &bytes, std::string_view ext) {
-        const auto base = std::filesystem::temp_directory_path() / "foxy_ai_XXXXXX";
-        std::string templ = base.string();
+    // Create a unique per-request directory under the configured working dir, write
+    // the decoded image inside it. Returns an empty TempImage on failure. The directory
+    // is created via mkdtemp with 0700 perms, so even on a shared base path, only this
+    // process's user can read the contents. The base is overridable via the
+    // FOXY_AI_WORKDIR env var so deployments can point at a dedicated private directory
+    // (e.g. /var/lib/foxy/tmp) instead of the world-writable /tmp default.
+    TempImage writeTempImage(std::string_view bytes, std::string_view ext) {
+        const std::string base = getEnv("FOXY_AI_WORKDIR", "/tmp");
+        std::string templ = fmt::format("{}/foxy_ai_XXXXXX", base);
         const char *dirPath = ::mkdtemp(templ.data());
         if(!dirPath)
             return {};

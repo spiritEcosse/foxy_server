@@ -2,6 +2,7 @@
 
 #include "controllers/AiAnalyzeImage.h"
 #include "utils/Base64.h"
+#include "utils/config.h"
 
 #include "drogon/HttpRequest.h"
 #include "drogon/drogon.h"
@@ -23,8 +24,11 @@ private:
 protected:
     void SetUp() override {
         // mkdtemp creates the directory with 0700 perms — only this process's
-        // user can list/read the stub script we drop inside it.
-        std::string templ = (std::filesystem::temp_directory_path() / "foxy_ai_stub_XXXXXX").string();
+        // user can list/read the stub script we drop inside it. The base path
+        // is configurable via FOXY_AI_WORKDIR for environments where /tmp is
+        // unsuitable.
+        const std::string base = api::v1::getEnv("FOXY_AI_WORKDIR", "/tmp");
+        std::string templ = fmt::format("{}/foxy_ai_stub_XXXXXX", base);
         ASSERT_NE(::mkdtemp(templ.data()), nullptr);
         stubDir = templ;
 
