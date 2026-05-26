@@ -62,6 +62,7 @@ services:
       PG_USER: *db
     volumes:
       - pg_socket:/var/run/postgresql
+      - ${HOME}/.claude:/root/.claude
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.foxy-${PROFILE}.rule=Host(`${HOST}`)"
