@@ -15,15 +15,18 @@
 #include <sys/stat.h>
 
 class AiAnalyzeImageTest : public ::testing::Test {
-protected:
+private:
     std::filesystem::path stubDir;
     std::string originalPath;
     api::v1::AiAnalyzeImage controller;
 
+protected:
     void SetUp() override {
-        stubDir =
-            std::filesystem::temp_directory_path() / fmt::format("foxy_ai_stub_{}", drogon::utils::genRandomString(8));
-        std::filesystem::create_directories(stubDir);
+        // mkdtemp creates the directory with 0700 perms — only this process's
+        // user can list/read the stub script we drop inside it.
+        std::string templ = (std::filesystem::temp_directory_path() / "foxy_ai_stub_XXXXXX").string();
+        ASSERT_NE(::mkdtemp(templ.data()), nullptr);
+        stubDir = templ;
 
         const auto scriptPath = stubDir / "claude";
         std::ofstream(scriptPath) << "#!/bin/sh\n"
@@ -33,7 +36,8 @@ protected:
                                      "{\"title\":\"t\",\"description\":\"d\",\"meta_description\":\"m\","
                                      "\"tags\":[{\"title\":\"X\",\"social_media\":[\"Instagram\"]}]}\n"
                                      "EOF\n";
-        ::chmod(scriptPath.c_str(), 0755);
+        // Owner rwx; no permissions for group/others (S2612).
+        ::chmod(scriptPath.c_str(), S_IRWXU);
 
         if(const char *p = std::getenv("PATH"))
             originalPath = p;
@@ -54,7 +58,7 @@ protected:
 
     static std::string sampleImageBase64() {
         // Content is irrelevant — the stub script ignores it.
-        const std::string bytes(8, '\x00');
+        const std::string bytes(8, '\x{00}');
         return Base64::Encode(bytes);
     }
 

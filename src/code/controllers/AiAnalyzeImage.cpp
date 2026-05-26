@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fcntl.h>
 #include <filesystem>
 #include <fstream>
 #include <list>
@@ -19,9 +20,11 @@
 #include <string>
 #include <string_view>
 #include <sys/wait.h>
+#include <system_error>
 #include <thread>
 #include <unistd.h>
 #include <unordered_map>
+#include <utility>
 
 using namespace api::v1;
 using namespace drogon;
@@ -66,11 +69,20 @@ Return strictly valid JSON. Do not wrap in code fences.)";
         return resp;
     }
 
-    std::string extensionFor(const std::string &mimeType) {
-        static const std::unordered_map<std::string, std::string> map{{"image/jpeg", "jpg"},
-                                                                      {"image/jpg", "jpg"},
-                                                                      {"image/png", "png"},
-                                                                      {"image/webp", "webp"}};
+    struct StringHash {
+        using is_transparent = void;
+
+        std::size_t operator()(std::string_view s) const noexcept {
+            return std::hash<std::string_view>{}(s);
+        }
+    };
+
+    std::string extensionFor(std::string_view mimeType) {
+        static const std::unordered_map<std::string, std::string, StringHash, std::equal_to<>> map{
+            {"image/jpeg", "jpg"},
+            {"image/jpg", "jpg"},
+            {"image/png", "png"},
+            {"image/webp", "webp"}};
         if(const auto it = map.find(mimeType); it != map.end())
             return it->second;
         return {};
@@ -91,39 +103,84 @@ Return strictly valid JSON. Do not wrap in code fences.)";
         return out;
     }
 
-    struct TempFileGuard {
-        std::string path;
+    // Owns a per-request temp directory; removes it (and the image inside) on destruction.
+    // Per-request isolation: claude --add-dir sees only this directory, not all of /tmp,
+    // so concurrent requests cannot access each other's images.
+    class TempDirGuard {
+    public:
+        TempDirGuard() = default;
 
-        ~TempFileGuard() {
-            if(!path.empty())
-                ::unlink(path.c_str());
+        explicit TempDirGuard(std::string dir) : dir_(std::move(dir)) {}
+
+        TempDirGuard(const TempDirGuard &) = delete;
+        TempDirGuard &operator=(const TempDirGuard &) = delete;
+
+        TempDirGuard(TempDirGuard &&other) noexcept : dir_(std::move(other.dir_)) {
+            other.dir_.clear();
+        }
+
+        TempDirGuard &operator=(TempDirGuard &&other) noexcept {
+            if(this != &other) {
+                cleanup();
+                dir_ = std::move(other.dir_);
+                other.dir_.clear();
+            }
+            return *this;
+        }
+
+        ~TempDirGuard() {
+            cleanup();
+        }
+
+        [[nodiscard]] const std::string &dir() const noexcept {
+            return dir_;
+        }
+
+    private:
+        std::string dir_;
+
+        void cleanup() noexcept {
+            if(!dir_.empty()) {
+                std::error_code ec;
+                std::filesystem::remove_all(dir_, ec);
+            }
         }
     };
 
-    // Write the decoded bytes to a unique temp file. Returns the path or empty on failure.
-    std::string writeTempImage(const std::string &bytes, const std::string &ext) {
-        std::string templ = fmt::format("/tmp/foxy_ai_XXXXXX.{}", ext);
-        const int suffixLen = static_cast<int>(ext.size()) + 1;  // ".ext"
-        const int fd = ::mkstemps(templ.data(), suffixLen);
+    struct TempImage {
+        TempDirGuard guard;
+        std::string filePath;
+    };
+
+    // Create a unique per-request directory under the OS temp dir, write the decoded
+    // image inside it. Returns an empty TempImage on failure. The directory is created
+    // with 0700 perms by mkdtemp, so other local users on the host cannot read it.
+    TempImage writeTempImage(const std::string &bytes, std::string_view ext) {
+        const auto base = std::filesystem::temp_directory_path() / "foxy_ai_XXXXXX";
+        std::string templ = base.string();
+        const char *dirPath = ::mkdtemp(templ.data());
+        if(!dirPath)
+            return {};
+
+        TempDirGuard guard(dirPath);
+        const std::string filePath = fmt::format("{}/image.{}", dirPath, ext);
+        const int fd = ::open(filePath.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0600);
         if(fd == -1)
             return {};
-        const ssize_t want = static_cast<ssize_t>(bytes.size());
+
+        const auto want = static_cast<ssize_t>(bytes.size());
         const ssize_t wrote = ::write(fd, bytes.data(), bytes.size());
         ::close(fd);
-        if(wrote != want) {
-            ::unlink(templ.c_str());
+        if(wrote != want)
             return {};
-        }
-        return templ;
+
+        return TempImage{std::move(guard), filePath};
     }
 
     void runClaudeAndRespond(const std::shared_ptr<std::function<void(const HttpResponsePtr &)>> &callbackPtr,
+                             TempDirGuard guard,
                              const std::string &imagePath) {
-        TempFileGuard guard{imagePath};
-
-        const std::filesystem::path p(imagePath);
-        const std::string dir = p.parent_path().string();
-        const std::string basename = p.filename().string();
+        const std::string &dir = guard.dir();
 
         const std::string prompt = getEnv("CLAUDE_ANALYZE_IMAGE_PROMPT", std::string(DEFAULT_PROMPT).c_str());
         const std::string fullPrompt = fmt::format(
@@ -204,8 +261,8 @@ void AiAnalyzeImage::analyze(const HttpRequestPtr &req, std::function<void(const
         return;
     }
 
-    const std::string path = writeTempImage(decoded, ext);
-    if(path.empty()) {
+    TempImage temp = writeTempImage(decoded, ext);
+    if(temp.filePath.empty()) {
         callback(makeError(k500InternalServerError, "Failed to write temp file", std::strerror(errno)));
         return;
     }
@@ -217,7 +274,7 @@ void AiAnalyzeImage::analyze(const HttpRequestPtr &req, std::function<void(const
     // class members (in the header) so dynamic init in this TU also forces
     // HttpController<T>::registrator_ to initialize at startup.
     std::lock_guard lock(workerMutex);
-    workerThreads.emplace_back([callbackPtr, path]() {
-        runClaudeAndRespond(callbackPtr, path);
+    workerThreads.emplace_back([callbackPtr, guard = std::move(temp.guard), path = temp.filePath]() mutable {
+        runClaudeAndRespond(callbackPtr, std::move(guard), path);
     });
 }
