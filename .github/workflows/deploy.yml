@@ -14,9 +14,9 @@ on:
 
 jobs:
   deploy:
-    if: github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+    environment: ${{ (github.event.workflow_run.head_branch || github.event.inputs.branch) == 'main' && 'prod' || 'dev' }}
 
     steps:
       - name: Login to GitHub Container Registry
@@ -27,7 +27,7 @@ jobs:
 
       - name: Extract branch name
         env:
-          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch || github.event.inputs.branch }}
         run: echo "BRANCH_NAME=${HEAD_BRANCH}" >> $GITHUB_ENV
 
       - name: Setup SSH agent
