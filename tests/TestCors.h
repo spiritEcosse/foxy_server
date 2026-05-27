@@ -28,22 +28,18 @@ public:
 
         client->sendRequest(req, [this, promise, expectedStatus, expectCorsHeader, expectPreflightHeaders]
                                  (drogon::ReqResult result, const drogon::HttpResponsePtr &resp) {
-            try {
-                ASSERT_EQ(result, drogon::ReqResult::Ok);
-                EXPECT_EQ(resp->getStatusCode(), expectedStatus);
-                if(expectCorsHeader) {
-                    EXPECT_EQ(resp->getHeader("Access-Control-Allow-Origin"), foxyClient);
-                } else {
-                    EXPECT_TRUE(resp->getHeader("Access-Control-Allow-Origin").empty());
-                }
-                if(expectPreflightHeaders) {
-                    EXPECT_FALSE(resp->getHeader("Access-Control-Allow-Methods").empty());
-                    EXPECT_FALSE(resp->getHeader("Access-Control-Allow-Headers").empty());
-                }
-                promise->set_value();
-            } catch(const std::exception &) {
-                promise->set_exception(std::current_exception());
+            ASSERT_EQ(result, drogon::ReqResult::Ok);
+            EXPECT_EQ(resp->getStatusCode(), expectedStatus);
+            if(expectCorsHeader) {
+                EXPECT_EQ(resp->getHeader("Access-Control-Allow-Origin"), foxyClient);
+            } else {
+                EXPECT_TRUE(resp->getHeader("Access-Control-Allow-Origin").empty());
             }
+            if(expectPreflightHeaders) {
+                EXPECT_FALSE(resp->getHeader("Access-Control-Allow-Methods").empty());
+                EXPECT_FALSE(resp->getHeader("Access-Control-Allow-Headers").empty());
+            }
+            promise->set_value();
         });
 
         future.get();
