@@ -16,7 +16,9 @@
 #include "TestPinterestOAuth.h"
 #include "TestPin.h"
 #include "TestAiAnalyzeImage.h"
+#include "TestCors.h"
 #include "utils/config.h"
+#include "cors.h"
 
 #include <future>
 #include <thread>
@@ -58,6 +60,8 @@ public:
 
             drogon::app()
                 .createDbClient("postgresql", "/var/run/postgresql", 5432, pgDb, pgUser, "", 1, "", "default", true);
+            drogon::app().addListener("127.0.0.1", 18080);
+            cors::registerCorsMiddleware();
 
             auto promise = std::make_shared<std::promise<void>>();
             auto future = promise->get_future();
