@@ -1,5 +1,6 @@
 #include "drogon/drogon.h"
 #include "utils/config.h"
+#include "code/cors.h"
 #if defined(SENTRY_DSN)
 #include <sentry.h>
 #endif
@@ -53,21 +54,13 @@ namespace {
     }
 #endif
 
-    void addCorsHeader(const HttpRequestPtr &req, const HttpResponsePtr &resp) {
-        const auto origin = req->getHeader("Origin");
-        const auto foxyClient = api::v1::getEnv("FOXY_CLIENT", "");
-        const auto foxyAdmin = api::v1::getEnv("FOXY_ADMIN", "");
-        if(origin == foxyClient || origin == foxyAdmin)
-            resp->addHeader("Access-Control-Allow-Origin", origin);
-    }
-
     void registerRoutes() {
         app().registerHandler("/", &rootHandler);
         app().registerHandler("/test?username={name}", &testHandler);
 #if defined(SENTRY_DSN)
         app().registerHandler("/sentry", &sentryHandler);
 #endif
-        app().registerPostHandlingAdvice(&addCorsHeader);
+        cors::registerCorsMiddleware();
     }
 
     void setupDb() {
