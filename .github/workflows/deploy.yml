@@ -5,6 +5,12 @@ on:
     workflows: ["build"]
     branches: [main, dev]
     types: [completed]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: true
+        default: 'dev'
 
 jobs:
   deploy:
