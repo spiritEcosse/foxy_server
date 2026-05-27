@@ -7,13 +7,11 @@
 #include <future>
 
 class CorsTest : public ::testing::Test {
-protected:
+public:
     void SetUp() override {
         foxyClient = api::v1::getEnv("FOXY_CLIENT", "http://localhost:5173");
         client = drogon::HttpClient::newHttpClient("http://127.0.0.1:18080");
     }
-    std::string foxyClient;
-    drogon::HttpClientPtr client;
 
     void sendAndCheck(drogon::HttpMethod method,
                       const std::string &origin,
@@ -43,13 +41,16 @@ protected:
                     EXPECT_FALSE(resp->getHeader("Access-Control-Allow-Headers").empty());
                 }
                 promise->set_value();
-            } catch(...) {
+            } catch(const std::exception &) {
                 promise->set_exception(std::current_exception());
             }
         });
 
         future.get();
     }
+
+    std::string foxyClient;
+    drogon::HttpClientPtr client;
 };
 
 TEST_F(CorsTest, NotFoundPostHasCorsHeader) {

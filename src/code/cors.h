@@ -5,7 +5,7 @@
 
 namespace cors {
 
-inline bool isAllowedOrigin(const std::string &origin) {
+inline bool isAllowedOrigin(std::string_view origin) {
     return !origin.empty() &&
            (origin == api::v1::getEnv("FOXY_CLIENT", "") || origin == api::v1::getEnv("FOXY_ADMIN", ""));
 }
