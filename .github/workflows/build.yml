@@ -5,7 +5,7 @@ on:
     branches:
       - '*'
   pull_request:
-    types: [closed]
+    types: [opened, synchronize, reopened, closed]
     branches:
       - dev
       - main
@@ -17,7 +17,7 @@ on:
 
 jobs:
   build:
-    if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
+    if: github.event_name != 'pull_request' || github.event.action != 'closed' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
