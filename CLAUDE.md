@@ -172,7 +172,7 @@ EOF
 
 ## SonarCloud Quality Checks
 
-Use the `sonar` CLI (`~/.local/share/sonarqube-cli/bin/sonar`) to inspect code quality. Auth is stored in the OS keychain via `sonar auth login`.
+Use the `sonar` CLI (`sonar`) to inspect code quality. Auth is stored in the OS keychain via `sonar auth login`.
 
 ```bash
 # List issues on dev branch
