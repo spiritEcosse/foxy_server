@@ -151,7 +151,7 @@ Custom query builder — not Drogon's built-in ORM:
 
 - **GitHub Issue work**: Create and link a feature branch using `gh issue develop <N> --name issue/<N>-<short-description> --base dev --checkout` — this creates the branch, links it to the issue in GitHub, and checks it out in one step.
 - **Create pull request**: After pushing a feature branch, ALWAYS create a PR with `gh pr create --base dev` including `Closes #<N>` in the body to auto-link and auto-close the issue on merge.
-- **After creating a PR**: Wait 30 seconds, then run `./scripts/sonarcloud-check.sh`. If there are **zero issues** on new code, check CI jobs with `gh pr checks <PR#> --watch`. Only merge after **both** SonarCloud gate AND all CI jobs (ninja-debug, ninja-asan-ubsan, ninja-tsan) pass (`gh pr merge --squash`). If ANY SonarCloud issues or CI failures, fix them all, push, and re-check until clean.
+- **After creating a PR**: Wait 30 seconds, then run `sonar list issues --project spiritEcosse_foxy_server --pull-request <N> --format table`. If there are **zero issues** on new code, check CI jobs with `gh pr checks <PR#> --watch`. Only merge after **both** SonarCloud gate AND all CI jobs (ninja-debug, ninja-asan-ubsan, ninja-tsan) pass (`gh pr merge --squash`). If ANY SonarCloud issues or CI failures, fix them all, push, and re-check until clean.
 - **Close issue after merge**: After merging a feature branch into `dev`, ALWAYS close the issue with `gh issue close <N>`. Do NOT wait to be asked.
 - **Switch to dev after merge**: After merging and closing the issue, ALWAYS run `git checkout dev && git pull` to return to the main branch.
 - **Ad-hoc fixes** (no GitHub Issue): Work directly on `dev`.
@@ -172,36 +172,36 @@ EOF
 
 ## SonarCloud Quality Checks
 
-Use `scripts/sonarcloud-check.sh` to inspect code quality. Requires `SONAR_TOKEN` env var.
+Use the `sonar` CLI (`~/.local/share/sonarqube-cli/bin/sonar`) to inspect code quality. Auth is stored in the OS keychain via `sonar auth login`.
 
 ```bash
-# Check current branch (auto-detects dev/main → branch mode, feature → PR mode)
-./scripts/sonarcloud-check.sh
+# List issues on dev branch
+sonar list issues --project spiritEcosse_foxy_server --branch dev --format table
 
-# Force branch mode for dev
-./scripts/sonarcloud-check.sh --branch dev
+# List issues on a PR (new code only)
+sonar list issues --project spiritEcosse_foxy_server --pull-request 42 --format table
 
-# Check a specific PR
-./scripts/sonarcloud-check.sh --pr 42
+# Quality gate status
+sonar api get "/api/qualitygates/project_status?projectKey=spiritEcosse_foxy_server&branch=dev"
 ```
 
 ### Fix-and-verify workflow
 
 After pushing fixes, SonarCloud takes a few minutes to re-analyze. Follow this loop:
 
-1. Run the check — note all CRITICAL, MAJOR, MINOR issues
+1. Run `sonar list issues` — note all CRITICAL, MAJOR, MINOR issues
 2. Fix every issue in code, build to confirm (`cmake --build --preset ninja-release`)
 3. Commit and push
-4. Wait ~3–5 minutes, then re-run the check
-5. Repeat until no code smell issues remain
+4. Wait ~3–5 minutes, then re-run
+5. Repeat until no issues remain
 
 ```bash
 # Full loop (fix → build → commit → push → wait → verify)
-cmake --build --preset ninja-release 2>&1 | tail -5   # confirm build
+cmake --build --preset ninja-release 2>&1 | tail -5
 git add <files> && git commit -m "fix: ..."
 git push origin dev
 sleep 180  # wait ~3 min for SonarCloud CI to finish
-./scripts/sonarcloud-check.sh --branch dev
+sonar list issues --project spiritEcosse_foxy_server --branch dev --format table
 ```
 
 ### Common fix patterns (from project history)

@@ -47,6 +47,9 @@ Icon?
 *.swo
 *.tmp
 
+# Claude Code
+.claude/scheduled_tasks.lock
+
 # Other generated files
 tags
 TAGS
