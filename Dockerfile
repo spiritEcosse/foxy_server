@@ -8,7 +8,7 @@ RUN --mount=type=cache,target=/root/.cache/CPM \
     CPM_SOURCE_CACHE=/root/.cache/CPM \
     cmake --preset ninja-prod && cmake --build --preset ninja-prod
 
-FROM debian:bookworm-slim AS runtime
+FROM debian:trixie-slim AS runtime
 
 ENV TZ=Europe/Madrid
 
