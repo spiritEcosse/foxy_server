@@ -19,6 +19,7 @@ RUN apt-get update && \
         libpq5 \
         libssl3 \
         zlib1g \
+        libunistring5 \
         wget \
         curl \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
@@ -27,9 +28,9 @@ RUN apt-get update && \
     && curl -fsSL https://claude.ai/install.sh | bash \
     && ln -s /root/.local/bin/claude /usr/local/bin/claude
 
-# libc++ and libunistring runtime — binary links against libc++.so.1 and libunistring.so.5
+# libc++ runtime — binary links against libc++.so.1 (built with -stdlib=libc++)
 RUN --mount=type=bind,from=builder,source=/usr/lib,target=/builder-lib \
-    find /builder-lib -name "libc++.so.1*" -o -name "libc++abi.so.1*" -o -name "libunistring.so.5*" \
+    find /builder-lib -name "libc++.so.1*" -o -name "libc++abi.so.1*" \
     | xargs -I{} cp {} /usr/lib/ && ldconfig
 
 WORKDIR /app
