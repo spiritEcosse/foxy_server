@@ -36,7 +36,7 @@ inline void registerCorsMiddleware() {
         resp->setStatusCode(drogon::k204NoContent);
         resp->addHeader("Access-Control-Allow-Origin", origin);
         resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-        resp->addHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, Cache-Control, Pragma, Expires");
+        resp->addHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, Cache-Control, Pragma, Expires, baggage, sentry-trace");
         resp->addHeader("Access-Control-Max-Age", "86400");
         return resp;
     });
