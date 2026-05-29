@@ -1,17 +1,25 @@
 #pragma once
-#include "BaseClass.h"
+#include "utils/BaseClass.h"
 
 #include <string>
 #include <json/value.h>
 #include <chrono>
-#include "decimal.h"
-#include "QuerySet.h"
+#include "orm/QuerySet.h"
+#include "utils/TransparentStringHash.h"
+
+#include <unordered_map>
 
 namespace api::v1 {
 
     class BaseModelImpl : public BaseClass {
     public:
         using BaseClass::BaseClass;
+        using AllFields =
+            decltype(std::unordered_map<std::string, const BaseField *, TransparentStringHash, std::equal_to<>>());
+        using JoinMap = decltype(std::unordered_map<std::string,
+                                                    std::pair<const BaseField *, const BaseField *>,
+                                                    TransparentStringHash,
+                                                    std::equal_to<>>());
 
     protected:
         struct ModelFieldHasher {
@@ -20,7 +28,6 @@ namespace api::v1 {
 
         template<class V>
         void validateField(const std::string &fieldName, const V &value, Json::Value &fields) const;
-        [[nodiscard]] virtual std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const;
         [[nodiscard]] static std::string timePointToString(std::chrono::system_clock::time_point tp);
     };
 
@@ -33,10 +40,6 @@ namespace api::v1 {
             }
         } else if constexpr(std::is_same_v<VDecayed, std::string_view> || std::is_same_v<VDecayed, std::string>) {
             if(value.empty()) {
-                fields[fieldName] = fieldName + " is required";
-            }
-        } else if constexpr(std::is_same_v<VDecayed, dec::decimal<2>>) {
-            if(value == dec::decimal<2>(0)) {
                 fields[fieldName] = fieldName + " is required";
             }
         } else if constexpr(std::is_same_v<VDecayed, double>) {

@@ -3,7 +3,7 @@
 #include <drogon/drogon.h>
 #include "drogon/HttpController.h"
 #include "BaseCRUD.h"
-#include "ItemModel.h"
+#include "models/ItemModel.h"
 
 namespace api::v1 {
 
@@ -22,9 +22,9 @@ namespace api::v1 {
                           std::function<void(const drogon::HttpResponsePtr &)> &&callback) const;
         void getOne(const drogon::HttpRequestPtr &req,
                     std::function<void(const drogon::HttpResponsePtr &)> &&callback,
-                    const std::string &) const override;
+                    std::string &&stringId) const override;
         void getOneAdmin(const drogon::HttpRequestPtr &req,
                          std::function<void(const drogon::HttpResponsePtr &)> &&callback,
-                         const std::string &) const;
+                         std::string &&stringId) const;
     };
 }

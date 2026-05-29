@@ -2,7 +2,7 @@
 
 #include "drogon/HttpController.h"
 #include "BaseCRUD.h"
-#include "UserModel.h"
+#include "models/UserModel.h"
 
 namespace api::v1 {
     class User final : public drogon::HttpController<User>, public BaseCRUD<UserModel, User> {

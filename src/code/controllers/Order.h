@@ -2,7 +2,7 @@
 
 #include "drogon/HttpController.h"
 #include "BaseCRUD.h"
-#include "OrderModel.h"
+#include "models/OrderModel.h"
 
 namespace api::v1 {
     class Order final : public drogon::HttpController<Order>, public BaseCRUD<OrderModel, Order> {
@@ -24,7 +24,7 @@ namespace api::v1 {
 
         void getOneAdmin(const drogon::HttpRequestPtr &req,
                          std::function<void(const drogon::HttpResponsePtr &)> &&callback,
-                         const std::string &) const;
+                         std::string &&) const;
         void getListAdmin(const drogon::HttpRequestPtr &req,
                           std::function<void(const drogon::HttpResponsePtr &)> &&callback) const;
     };

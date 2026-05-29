@@ -2,7 +2,7 @@
 
 #include "drogon/HttpController.h"
 #include "BaseCRUD.h"
-#include "CountryModel.h"
+#include "models/CountryModel.h"
 
 namespace api::v1 {
     class Country final : public drogon::HttpController<Country>, public BaseCRUD<CountryModel, Country> {

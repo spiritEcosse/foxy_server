@@ -1,15 +1,18 @@
-#include "SocialMedia.h"
-#include "ItemModel.h"
-#include "MediaModel.h"
-#include "QuerySet.h"
+#include "controllers/SocialMedia.h"
+#include "utils/config.h"
+#include "models/ItemModel.h"
+#include "models/MediaModel.h"
+#include "orm/QuerySet.h"
 #include <memory>
 #include <future>
 #include <vector>
-#include "Request.h"
-#include "TagModel.h"
-#include "Pin.h"
-#include "Tweet.h"
-#include "MastodonClient.h"
+#include "utils/request/Request.h"
+#include "models/TagModel.h"
+#include "clients/models/Pin.h"
+#include "clients/models/Tweet.h"
+#include "clients/MastodonClient.h"
+#include "clients/models/YouTube.h"
+
 #include <execution>
 
 #include <string>
@@ -25,8 +28,11 @@ void SocialMedia::handleRow(const auto &row) const {
     auto netsJson = row[5].template as<Json::Value>();
     auto tags = row[6].template as<Json::Value>();
 
-    std::set<std::string, std::less<>> target = {std::string(TwitterClient::clientName),
-                                                 std::string(PinterestClient::clientName)};
+    std::set<std::string, std::less<>> target = {
+        std::string(TwitterClient::clientName),
+        std::string(PinterestClient::clientName),
+        std::string(YouTubeClient::clientName),
+    };
 
     std::vector<std::string> nets;
     for(const auto &net: netsJson) {
@@ -35,7 +41,6 @@ void SocialMedia::handleRow(const auto &row) const {
 
     std::set<std::string, std::less<>> netsSet(nets.begin(), nets.end());
 
-    // Calculate difference: elements in target that do NOT exist in netsSet
     std::set<std::string, std::less<>> diffNets;
     std::ranges::set_difference(target, netsSet, std::inserter(diffNets, diffNets.end()));
 
@@ -45,14 +50,22 @@ void SocialMedia::handleRow(const auto &row) const {
     if(!clientDownloadMedia.downloadMedia())
         return;
 
-    std::future<bool> tweetPost = std::async(std::launch::async, [&]() {
-        return diffNets.contains(TwitterClient::clientName) &&
-               Tweet(itemId, title, slug, "", clientDownloadMedia.media, tags).post();
-    });
-    std::future<bool> pinPost = std::async(std::launch::async, [&]() {
-        return diffNets.contains(PinterestClient::clientName) &&
-               Pin(itemId, title, slug, description, clientDownloadMedia.media, tags).post();
-    });
+    std::future<bool> tweetPost =
+        std::async(std::launch::async, [&diffNets, &clientDownloadMedia, itemId, &title, &slug, &tags]() {
+            return diffNets.contains(TwitterClient::clientName) &&
+                   Tweet(itemId, title, slug, "", clientDownloadMedia.media, tags).post();
+        });
+    std::future<bool> pinPost =
+        std::async(std::launch::async, [&diffNets, &clientDownloadMedia, itemId, &title, &slug, &description, &tags]() {
+            return diffNets.contains(PinterestClient::clientName) &&
+                   Pin(itemId, title, slug, description, clientDownloadMedia.media, tags).post();
+        });
+    std::future<bool> youtubePost =
+        std::async(std::launch::async, [&diffNets, &clientDownloadMedia, itemId, &title, &slug, &description, &tags]() {
+            return diffNets.contains(YouTubeClient::clientName) &&
+                   YouTube(itemId, title, slug, description, clientDownloadMedia.media, tags).post();
+        });
+    youtubePost.get();
     tweetPost.get();
     pinPost.get();
 }
@@ -66,18 +79,14 @@ void SocialMedia::handleSqlResultPublish(const drogon::orm::Result &r) const {
     if(r.empty())
         return;
 
-    // Number of threads to use (can be std::thread::hardware_concurrency() for dynamic detection)
-    // Divide tasks among threads
     std::vector<std::future<void>> futures;
 
     for(const auto &row: r) {
-        // Launch each row as a separate task
         futures.push_back(std::async(std::launch::async, [this, row]() {
             handleRow(row);
         }));
     }
 
-    // Wait for all tasks to complete
     for(auto &fut: futures) {
         fut.get();
     }
@@ -87,29 +96,34 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
                           std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
     const int limit = getInt(req->getParameter("limit"), 1);
 
-    QuerySet qsTag(TagModel::tableName, 0, std::string("_tag"), false);
+    QuerySet<TagModel> qsTag(0, std::string("_tag"), false);
     qsTag.functions(Function(fmt::format("json_agg(json_build_object({}))", TagModel().fieldsJsonObject())))
-        .filter(TagModel::Field::itemId.getFullFieldName(),
-                fmt::format("{}", BaseModel<ItemModel>::Field::id.getFullFieldName()),
-                false);
+        .filter(&TagModel::Field::itemId, &BaseModel<ItemModel>::Field::id);
 
-    QuerySet qsSocialMedia(SocialMediaModel::tableName, 0, std::string("_social_media"), false);
+    QuerySet<SocialMediaModel> qsSocialMedia(0, std::string("_social_media"), false);
     qsSocialMedia.functions(Function(fmt::format("json_agg({})", SocialMediaModel::Field::title.getFullFieldName())))
-        .filter(SocialMediaModel::Field::itemId.getFullFieldName(),
-                fmt::format("{}", BaseModel<ItemModel>::Field::id.getFullFieldName()),
-                false);
+        .filter(&SocialMediaModel::Field::itemId, &BaseModel<ItemModel>::Field::id);
+
+    QuerySet<SocialMediaModel> qsItemCte(0, std::string("item_cte"), false);
+    qsItemCte.right_join<ItemModel>()
+        .only(&BaseModel<ItemModel>::Field::id, std::string("item_id"))
+        .functions(Function(fmt::format("count(distinct {})::integer as {}",
+                                        SocialMediaModel::Field::title.getFullFieldName(),
+                                        "count_net")))
+        .group_by(&BaseModel<ItemModel>::Field::id);
+    std::string alias = qsItemCte.getAlias();
 
     const auto callbackPtr =
         std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
-    auto dbClient = drogon::app().getFastDbClient("default");  // TODO: remove this line after test
-    QuerySet qs(ItemModel::tableName, limit, "items", false);
-    qs.only(std::cref(ItemModel::Field::title),
-            std::cref(BaseModel<ItemModel>::Field::id),
-            std::cref(ItemModel::Field::slug),
-            std::cref(ItemModel::Field::description))
-        .join(MediaModel())
-        .group_by(std::cref(BaseModel<ItemModel>::Field::id))
-        .functions(Function(fmt::format(", json_agg("
+    QuerySet<ItemModel> qs(limit, "items", false);
+    qs.only(&ItemModel::Field::title,
+            &BaseModel<ItemModel>::Field::id,
+            &ItemModel::Field::slug,
+            &ItemModel::Field::description)
+        .join<MediaModel>()
+        .join<SocialMediaModel>(std::move(qsItemCte), std::move(alias), " AND item_cte.count_net < 3")
+        .group_by(&BaseModel<ItemModel>::Field::id)
+        .functions(Function(fmt::format("json_agg("
                                         "json_build_object('type', {0}, 'url', CASE "
                                         "WHEN {0}::text LIKE 'video' THEN format_src({1}, '{3}') "
                                         "ELSE format_src({1}, '{2}') "
@@ -119,8 +133,8 @@ void SocialMedia::publish(const drogon::HttpRequestPtr &req,
                                         "END ASC) AS media_list",
                                         MediaModel::Field::type.getFullFieldName(),
                                         MediaModel::Field::src.getFullFieldName(),
-                                        APP_CLOUD_NAME,
-                                        APP_BUCKET_HOST,
+                                        getEnv("APP_CLOUD_NAME"),
+                                        getEnv("APP_BUCKET_HOST"),
                                         MediaModel::Field::contentType.getFullFieldName())))
         .functions(Function(fmt::format(R"( COALESCE(({}), '[]'::json) AS nets)", qsSocialMedia.buildSelect())))
         .functions(Function(fmt::format(R"( COALESCE(({}), '[]'::json) AS tags)", qsTag.buildSelect())));

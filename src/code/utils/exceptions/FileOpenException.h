@@ -1,5 +1,5 @@
 #pragma once
-#include "BaseException.h"
+#include "utils/exceptions/BaseException.h"
 #include "fmt/format.h"
 
 namespace api::v1 {

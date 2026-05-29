@@ -1,8 +1,8 @@
 #pragma once
 #include <json/json.h>
-#include "FileTransferInfo.h"
+#include "clients/FileTransferInfo.h"
 
-#include <IClientImpl.h>
+#include <clients/IClientImpl.h>
 
 namespace api::v1 {
     class MastodonClient final : public IClientImpl {
@@ -12,7 +12,6 @@ namespace api::v1 {
         explicit MastodonClient(const Json::Value& mediaJson);
         bool downloadMedia();
 
-        // Properties
         std::vector<SharedFileTransferInfo> media;
 
     private:

@@ -1,23 +1,23 @@
-#include "UserModel.h"
-#include "OrderModel.h"
+#include "models/UserModel.h"
+#include "models/OrderModel.h"
 #include <fmt/core.h>
 
 using namespace api::v1;
 
-std::map<std::string, std::pair<std::string, std::string>, std::less<>> UserModel::joinMap() const {
+BaseModelImpl::JoinMap UserModel::joinMap() {
     return {
-        {OrderModel::tableName,
-         {BaseModel::Field::id.getFullFieldName(), OrderModel::Field::userId.getFullFieldName()}},
+        {OrderModel::tableName, {&BaseModel::Field::id, &OrderModel::Field::userId}},
     };
 }
 
 BaseModel<UserModel>::SetMapFieldTypes UserModel::getObjectValues() const {
-    return {{std::cref(Field::email), email},
-            {std::cref(Field::firstName), firstName},
-            {std::cref(Field::lastName), lastName},
-            {std::cref(Field::birthday), birthday},
-            {std::cref(Field::hasNewsletter), hasNewsletter},
-            {std::cref(Field::isAdmin), isAdmin}};
+    ValueVariant birthdayValue = birthday == "" ? ValueVariant{std::nullopt} : ValueVariant{birthday};
+    return {{&Field::email, email},
+            {&Field::firstName, firstName},
+            {&Field::lastName, lastName},
+            {&Field::birthday, birthdayValue},
+            {&Field::hasNewsletter, hasNewsletter},
+            {&Field::isAdmin, isAdmin}};
 }
 
 std::string UserModel::sqlGetOrCreateUser() {

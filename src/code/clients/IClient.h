@@ -1,6 +1,6 @@
 #pragma once
-#include "FileTransferInfo.h"
-#include "IClientImpl.h"
+#include "clients/FileTransferInfo.h"
+#include "clients/IClientImpl.h"
 
 namespace api::v1 {
     template<typename ClientType, typename PostType>
@@ -10,7 +10,13 @@ namespace api::v1 {
 
     public:
         using IClientImpl::IClientImpl;
+
+        std::string accessToken;
+
         virtual bool post(PostType* postType, std::string body = "") const;
+        virtual bool setAccessToken() = 0;
+        virtual std::string getAccessToken() const = 0;
+
         virtual std::string auth() const = 0;
         virtual bool
         setPostId(const cpr::Response& response, const Json::Value& jsonResponse, PostType* tweet) const = 0;

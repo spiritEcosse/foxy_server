@@ -1,7 +1,6 @@
-#include "sentryHelper.h"
+#include "sentry_catcher/sentryHelper.h"
 #include "fmt/format.h"
 
-// Definition moved from the header file
 void sentryHelper(const std::string& error, const std::string& logger) {
     LOG_ERROR << "logger: " << logger << ", error: " << error;
 #if defined(SENTRY_DSN)

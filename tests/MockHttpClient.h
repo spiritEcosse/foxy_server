@@ -1,7 +1,7 @@
 #pragma once
 #include <gmock/gmock.h>
 #include <cpr/cpr.h>
-#include "HttpRequestInterface.h"
+#include "clients/HttpRequestInterface.h"
 
 namespace api::v1 {
     class MockHttpClient final : public HttpRequestInterface {

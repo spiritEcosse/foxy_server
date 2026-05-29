@@ -1,5 +1,7 @@
 DO
 $$
+    DECLARE
+        twitter_title CONSTANT text := 'Twitter';
     BEGIN
 
         -- Mock data for country
@@ -35,7 +37,8 @@ $$
 -- Mock data for media
         INSERT INTO media (src, item_id, sort, type, content_type)
         VALUES ('media1.png', 1, 1, 'image', 'image/png'),
-               ('media2.png', 2, 2, 'image', 'image/png');
+               ('media2.png', 2, 2, 'image', 'image/png'),
+               ('media3.mp4', 1, 3, 'video', 'video/mp4');
 
 -- Mock data for page
         INSERT INTO page (title, slug, meta_description, description, enabled, canonical_url)
@@ -45,7 +48,8 @@ $$
 -- Mock data for shipping_rate
         INSERT INTO shipping_rate (shipping_profile_id, country_id, delivery_days_min, delivery_days_max)
         VALUES (1, 1, 1, 5),
-               (2, 2, 2, 6);
+               (2, 2, 2, 6),
+               (1, NULL, 1, 5);
 
 -- Mock data for basket
         INSERT INTO "basket" (user_id)
@@ -69,17 +73,19 @@ $$
         VALUES (15.00, 'PayPal', 'merchant123', 'merchant001', 'Merchant One'),
                (10.00, 'Stripe', 'merchant456', 'merchant002', 'Merchant Two');
 
--- Mock data for countries_ips
-        INSERT INTO countries_ips (start_range, end_range, country_code, country_name, country_id)
-        VALUES (1, 100, 'US', 'United States of America', 1),
-               (101, 200, 'ES', 'Spain', 2);
-
         INSERT INTO tag (title, social_media, item_id)
         VALUES ('Tag1', ARRAY ['Facebook']::social_media_type[], 1),
-               ('Tag2', ARRAY ['Twitter', 'Facebook']::social_media_type[], 2);
+               ('Tag2', ARRAY [twitter_title, 'Facebook']::social_media_type[], 2);
 
         INSERT INTO social_media (title, item_id, external_id)
-        VALUES ('Facebook', 1, 100),
-               ('Twitter', 2, 20000);
+        VALUES ('YouTube', 1, 100),
+               (twitter_title::social_media_type, 2, 20000),
+               ('Pinterest', 1, 30000),
+               (twitter_title::social_media_type, 1, 40000);
+
+-- Mock data for pinterest_token
+        INSERT INTO pinterest_token (access_token, access_token_expires_at, refresh_token, refresh_token_expires_at, scope)
+        VALUES ('fixture_access_token', '2099-01-01 00:00:00+00', 'fixture_refresh_token', '2099-12-31 00:00:00+00',
+                'pins:read,pins:write,user_accounts:read,boards:read,boards:write');
     END
 $$;

@@ -1,17 +1,17 @@
 #pragma once
-#include "Base64.h"
-#include "BaseClass.h"
+#include "utils/Base64.h"
+#include "utils/BaseClass.h"
 
-#include <MediaModel.h>
+#include <models/MediaModel.h>
 #include <fstream>
 #include <string>
 #include <filesystem>
-#include <iostream>
+#include <drogon/drogon.h>
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
 
-constexpr size_t MAX_FILE_SIZE = 20 * 1024 * 1024;  // 20 MB in bytes
+constexpr size_t MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 namespace api::v1 {
     class Pin;
@@ -37,15 +37,11 @@ namespace api::v1 {
             type(std::move(other.type)), contentType(std::move(other.contentType)),
             responsePin(std::move(other.responsePin)), responseTweet(std::move(other.responseTweet)) {}
 
-        // Destructor to remove the file when the object is destroyed
         ~FileTransferInfo() override {
             try {
-                // Use std::filesystem to remove the file
                 std::filesystem::remove(fileName);
-            } catch(const std::filesystem::__cxx11::filesystem_error& e) {
-                // Optional: Log the error or handle it as appropriate for your application
-                // For example, you might want to log the error or use a logging framework
-                std::cerr << "Error removing file: " << e.what() << std::endl;
+            } catch(const std::filesystem::filesystem_error& e) {
+                LOG_ERROR << "Error removing file: " << e.what();
             }
         }
 
@@ -72,47 +68,37 @@ namespace api::v1 {
         }
 
         [[nodiscard]] size_t getSize() const {
-            try {
-                std::ifstream file(fileName, std::ios::binary | std::ios::ate);
-                if(!file) {
-                    std::cerr << "Failed to open file: " << fileName << " Error: " << std::strerror(errno) << std::endl;
-                    return 0;
-                }
-                return file.tellg();
-            } catch(const std::exception& e) {
-                std::cerr << "Exception in getSize: " << e.what() << std::endl;
+            std::ifstream file(fileName, std::ios::binary | std::ios::ate);
+            if(!file) {
+                LOG_ERROR << "Failed to open file: " << fileName << " Error: " << std::strerror(errno);
                 return 0;
             }
+            return file.tellg();
         }
 
         [[nodiscard]] std::shared_ptr<std::vector<char>> getFileContent() const {
-            try {
-                std::ifstream file(fileName, std::ios::binary);
-                if(!file) {
-                    std::cerr << "Failed to open file: " << fileName << " Error: " << std::strerror(errno) << std::endl;
-                    return nullptr;
-                }
-
-                file.seekg(0, std::ios::end);
-                std::streampos fileSize = file.tellg();
-                file.seekg(0, std::ios::beg);
-
-                if(fileSize > MAX_FILE_SIZE) {
-                    std::cerr << "File too large: " << fileName << " Size: " << fileSize << std::endl;
-                    return nullptr;
-                }
-
-                auto buffer = std::make_shared<std::vector<char>>(static_cast<size_t>(fileSize));
-                if(!file.read(buffer->data(), fileSize)) {
-                    std::cerr << "Failed to read file: " << fileName << " Error: " << std::strerror(errno) << std::endl;
-                    return nullptr;
-                }
-
-                return buffer;
-            } catch(const std::exception& e) {
-                std::cerr << "Exception in getFileContent: " << e.what() << std::endl;
+            std::ifstream file(fileName, std::ios::binary);
+            if(!file) {
+                LOG_ERROR << "Failed to open file: " << fileName << " Error: " << std::strerror(errno);
                 return nullptr;
             }
+
+            file.seekg(0, std::ios::end);
+            std::streampos fileSize = file.tellg();
+            file.seekg(0, std::ios::beg);
+
+            if(fileSize > MAX_FILE_SIZE) {
+                LOG_ERROR << "File too large: " << fileName << " Size: " << fileSize;
+                return nullptr;
+            }
+
+            auto buffer = std::make_shared<std::vector<char>>(static_cast<size_t>(fileSize));
+            if(!file.read(buffer->data(), fileSize)) {
+                LOG_ERROR << "Failed to read file: " << fileName << " Error: " << std::strerror(errno);
+                return nullptr;
+            }
+
+            return buffer;
         }
 
         [[nodiscard]] std::string getFileName() const {
@@ -152,7 +138,6 @@ namespace api::v1 {
             return contentType;
         }
 
-        // function to detect is it video or not
         [[nodiscard]] bool isVideo() const {
             return type == MediaType::VIDEO;
         }

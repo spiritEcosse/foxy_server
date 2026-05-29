@@ -1,12 +1,14 @@
-#include "IClientImpl.h"
+#include "clients/IClientImpl.h"
 #include "fmt/format.h"
+#include <fmt/ranges.h>
+#include <ranges>
 #include <string>
 #include <random>
 #include <openssl/buffer.h>
 #include <openssl/hmac.h>
 #include <map>
 #include <drogon/drogon.h>
-#include "HttpException.h"
+#include "utils/exceptions/HttpException.h"
 #include <functional>
 
 namespace api::v1 {
@@ -14,7 +16,6 @@ namespace api::v1 {
                                     const cpr::Response& response,
                                     const Json::Value& jsonResponse) {
         if(!jsonResponse.isMember(std::string(field))) {
-            // Capture JSON parsing error
             sentryHelper(
                 std::runtime_error(fmt::format("No data or id in PostType to post. Url: {}, Status: {}, Response: {}.",
                                                response.url.str(),
@@ -28,7 +29,6 @@ namespace api::v1 {
 
     bool IClientImpl::parseJson(const cpr::Response& response, Json::Value& jsonResponse) {
         if(Json::Reader reader; !reader.parse(response.text, jsonResponse)) {
-            // Capture JSON parsing error
             sentryHelper(std::runtime_error(fmt::format("JSON parsing error: {}. Url: {}, Status: {}, Response: {}.",
                                                         reader.getFormattedErrorMessages(),
                                                         response.url.str(),
@@ -44,17 +44,15 @@ namespace api::v1 {
         if(!std::ranges::all_of(responses, [status_code](const cpr::Response& response) {
                return response.status_code == status_code;
            })) {
-            std::vector<std::string> errorMessages;
-            std::ranges::transform(responses,
-                                   std::back_inserter(errorMessages),
-                                   [status_code](const cpr::Response& response) {
-                                       return response.status_code != status_code
-                                                  ? fmt::format("Url: {}, Status: {}, Response: {}\n",
-                                                                response.url.str(),
-                                                                response.status_code,
-                                                                response.text)
-                                                  : "";
-                                   });
+            auto errorMessages = responses | std::views::transform([status_code](const cpr::Response& response) {
+                                     return response.status_code != status_code
+                                                ? fmt::format("Url: {}, Status: {}, Response: {}\n",
+                                                              response.url.str(),
+                                                              response.status_code,
+                                                              response.text)
+                                                : "";
+                                 }) |
+                                 std::ranges::to<std::vector>();
             sentryHelper(std::runtime_error(fmt::format("{}", fmt::join(errorMessages, ""))),
                          "IClientImpl::checkResponses");
             return false;
@@ -80,20 +78,17 @@ namespace api::v1 {
                                                      const std::map<std::string, std::string, std::less<>>& params,
                                                      const std::string_view consumerSecret,
                                                      const std::string_view tokenSecret) {
-        // Step 1-5: Create the signature base string
-        std::vector<std::string> encodedParams;
-        std::ranges::transform(params, std::back_inserter(encodedParams), [](const auto& pair) {
-            return fmt::format("{}={}", urlEncode(pair.first), urlEncode(pair.second));
-        });
+        auto encodedParams = params | std::views::transform([](const auto& pair) {
+                                 return fmt::format("{}={}", urlEncode(pair.first), urlEncode(pair.second));
+                             }) |
+                             std::ranges::to<std::vector>();
         const std::string paramString = fmt::to_string(fmt::join(encodedParams, "&"));
 
         const std::string signatureBaseString =
             fmt::format("{}&{}&{}", urlEncode(httpMethod), urlEncode(url), urlEncode(paramString));
 
-        // Step 6: Generate the signing key
         const std::string signingKey = fmt::format("{}&{}", urlEncode(consumerSecret), urlEncode(tokenSecret));
 
-        // Step 7-8: Sign the base string using HMAC-SHA1 and encode in base64
         unsigned int digest_len;
         const unsigned char* digest = HMAC(EVP_sha1(),
                                            signingKey.c_str(),
@@ -103,7 +98,6 @@ namespace api::v1 {
                                            nullptr,
                                            &digest_len);
 
-        // Convert the HMAC digest into base64
         BIO* bmem = BIO_new(BIO_s_mem());
         BIO* b64 = BIO_new(BIO_f_base64());
         bmem = BIO_push(b64, bmem);
@@ -114,7 +108,7 @@ namespace api::v1 {
         BUF_MEM* bptr;
         BIO_get_mem_ptr(bmem, &bptr);
 
-        std::string oauthSignature(bptr->data, bptr->length - 1);  // Exclude the null terminator added by BIO
+        std::string oauthSignature(bptr->data, bptr->length - 1);
 
         BIO_free_all(bmem);
 

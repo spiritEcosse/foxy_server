@@ -1,11 +1,9 @@
 #pragma once
 
 #include <string>
-#include <chrono>
 #include <drogon/drogon.h>
-#include "BaseModel.h"
-#include "BasketModel.h"
-#include "decimal.h"
+#include "models/BaseModel.h"
+#include "models/BasketModel.h"
 
 struct OrderStatus {
     static inline std::string ordered = "Ordered";  // The item has been ordered by the customer.
@@ -37,25 +35,26 @@ namespace api::v1 {
             static inline const auto returned = BaseField("returned", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(status.getFieldName(), std::cref(status));
-                allFields.try_emplace(basketId.getFieldName(), std::cref(basketId));
-                allFields.try_emplace(total.getFieldName(), std::cref(total));
-                allFields.try_emplace(totalExTaxes.getFieldName(), std::cref(totalExTaxes));
-                allFields.try_emplace(taxRate.getFieldName(), std::cref(taxRate));
-                allFields.try_emplace(taxes.getFieldName(), std::cref(taxes));
-                allFields.try_emplace(userId.getFieldName(), std::cref(userId));
-                allFields.try_emplace(reference.getFieldName(), std::cref(reference));
-                allFields.try_emplace(addressId.getFieldName(), std::cref(addressId));
-                allFields.try_emplace(returned.getFieldName(), std::cref(returned));
+                constexpr std::array fields{&status,
+                                            &basketId,
+                                            &total,
+                                            &totalExTaxes,
+                                            &taxRate,
+                                            &taxes,
+                                            &userId,
+                                            &reference,
+                                            &addressId,
+                                            &returned};
+                registerFields(fields);
             }
         };
 
         std::string status = OrderStatus::ordered;
         int basketId{};
-        dec::decimal<2> total{};
-        dec::decimal<2> totalExTaxes{};
-        dec::decimal<2> taxRate{};
-        dec::decimal<2> taxes{};
+        std::string total;
+        std::string totalExTaxes;
+        std::string taxRate;
+        std::string taxes;
         bool returned = false;
         int userId{};
         int addressId{};
@@ -63,10 +62,10 @@ namespace api::v1 {
 
         explicit OrderModel(const Json::Value &json) : BaseModel(json) {
             basketId = json[Field::basketId.getFieldName()].asInt();
-            total = json[Field::total.getFieldName()].asDouble();
-            totalExTaxes = json[Field::totalExTaxes.getFieldName()].asDouble();
-            taxRate = json[Field::taxRate.getFieldName()].asDouble();
-            taxes = json[Field::taxes.getFieldName()].asDouble();
+            total = json[Field::total.getFieldName()].asString();
+            totalExTaxes = json[Field::totalExTaxes.getFieldName()].asString();
+            taxRate = json[Field::taxRate.getFieldName()].asString();
+            taxes = json[Field::taxes.getFieldName()].asString();
             userId = json[Field::userId.getFieldName()].asInt();
             addressId = json[Field::addressId.getFieldName()].asInt();
             returned = json[Field::returned.getFieldName()].asBool();
@@ -87,9 +86,10 @@ namespace api::v1 {
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
         [[nodiscard]] static std::string
         sqlSelectList(int page, int limit, const std::map<std::string, std::string, std::less<>> &params);
-        [[nodiscard]] std::string sqlSelectOne(const std::string &field,
-                                               const std::string &value,
+        [[nodiscard]] std::string sqlSelectOne(const BaseField *field,
+                                               std::string &&value,
                                                const std::map<std::string, std::string, std::less<>> &params) override;
-        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
+
+        [[nodiscard]] static JoinMap joinMap();
     };
 }

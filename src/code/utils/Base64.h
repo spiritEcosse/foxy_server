@@ -1,5 +1,5 @@
 #pragma once
-#include "BaseClass.h"
+#include "utils/BaseClass.h"
 
 #include <openssl/bio.h>
 #include <openssl/evp.h>
@@ -16,7 +16,6 @@ public:
         BIO *bio = BIO_new(BIO_s_mem());
         bio = BIO_push(b64, bio);
 
-        // Disable newline
         BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
 
         BIO_write(bio, input.c_str(), static_cast<int>(input.length()));
@@ -38,7 +37,6 @@ public:
         BIO *bio = BIO_new_mem_buf(input.c_str(), static_cast<int>(input.length()));
         bio = BIO_push(b64, bio);
 
-        // Disable newline
         BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL);
 
         const int decoded_length = BIO_read(bio, buffer.data(), static_cast<int>(input.length()));

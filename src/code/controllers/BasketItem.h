@@ -2,7 +2,7 @@
 
 #include "drogon/HttpController.h"
 #include "BaseCRUD.h"
-#include "BasketItemModel.h"
+#include "models/BasketItemModel.h"
 
 namespace api::v1 {
     class BasketItem final : public drogon::HttpController<BasketItem>, public BaseCRUD<BasketItemModel, BasketItem> {

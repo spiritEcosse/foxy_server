@@ -1,3 +1,1 @@
-#include "SocialMediaTypeImpl.h"
-
-namespace api::v1 {}
+#include "clients/models/SocialMediaTypeImpl.h"

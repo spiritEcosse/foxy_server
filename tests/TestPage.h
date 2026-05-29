@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BaseTestClass.h"
-#include "Page.h"
+#include "controllers/Page.h"
 
 #include <gtest/gtest.h>
 
@@ -39,7 +39,6 @@ class PageControllerTest : public BaseTestClass<PageControllerTest, api::v1::Pag
         getListValues["total"] = 2;
         Json::Value data = Json::arrayValue;
 
-        // TODO: must not be here since it disabled
         {
             Json::Value item;
             item["description"] = "Description2";

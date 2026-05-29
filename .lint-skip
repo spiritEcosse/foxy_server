@@ -1,0 +1,5 @@
+# foxy_server lint exemptions. Each line is `<glob>: <tag-list>`.
+# Tags: file-size, duplicate, complexity, length, parameters, all.
+# Globs are relative to this file (repo root) and use Python pathlib.Path.glob semantics.
+
+tests/BaseTestClass.h: duplicate

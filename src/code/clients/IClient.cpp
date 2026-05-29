@@ -1,7 +1,8 @@
-#include "IClient.h"
+#include "clients/IClient.h"
 
-#include "Tweet.h"
-#include "Pin.h"
+#include "clients/models/Tweet.h"
+#include "clients/models/Pin.h"
+#include "clients/models/YouTube.h"
 
 namespace api::v1 {
     template<typename ClientType, typename PostType>
@@ -12,21 +13,24 @@ namespace api::v1 {
     template<typename ClientType, typename PostType>
     bool IClient<ClientType, PostType>::saveMediaIdString(const std::vector<cpr::Response>& responses,
                                                           const std::vector<SharedFileTransferInfo>& medias) {
-        for(size_t i = 0; const auto& media: medias) {
-            const auto& response = responses[i];
+        for(const auto& [response, media]: std::views::zip(responses, medias)) {
             Json::Value jsonResponse;
             if(!parseJson(response, jsonResponse) || !fieldIsMember(ClientType::field_media_id, response, jsonResponse))
                 return false;
             media->setResponse<PostType>(jsonResponse);
             media->setExternalId<PostType>(jsonResponse[std::string(ClientType::field_media_id)].asString());
-            std::cout << media->getExternalId<PostType>() << " : " << media->getFileName() << std::endl;
-            ++i;
         }
         return true;
     }
 
     template<typename ClientType, typename PostType>
     bool IClient<ClientType, PostType>::post(PostType* postType, std::string body) const {
+        if(getAccessToken().empty()) {
+            sentryHelper(std::runtime_error(fmt::format("{} access token is empty", ClientType::clientName)),
+                         "IClient::post");
+            return false;
+        }
+
         if(body.empty())
             body = postType->toJson();
 
@@ -39,4 +43,5 @@ namespace api::v1 {
 
     template class IClient<PinterestClient, Pin>;
     template class IClient<TwitterClient, Tweet>;
+    template class IClient<YouTubeClient, YouTube>;
 }

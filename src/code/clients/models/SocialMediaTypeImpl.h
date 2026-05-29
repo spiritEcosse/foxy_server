@@ -1,5 +1,5 @@
 #pragma once
-#include "BaseClass.h"
+#include "utils/BaseClass.h"
 
 namespace api::v1 {
     class SocialMediaTypeImpl : public BaseClass {

@@ -1,92 +1,81 @@
-#include "ItemModel.h"
-#include "MediaModel.h"
-#include "ShippingRateModel.h"
-#include "ShippingProfileModel.h"
-#include "BasketItemModel.h"
-#include "QuerySet.h"
-#include "StringUtils.h"
-#include "env.h"
+#include "models/ItemModel.h"
+#include "models/MediaModel.h"
+#include "models/ShippingRateModel.h"
+#include "models/ShippingProfileModel.h"
+#include "models/BasketItemModel.h"
+#include "orm/QuerySet.h"
+#include "models/SocialMediaModel.h"
+#include "utils/db/StringUtils.h"
+#include "utils/config.h"
 #include <fmt/core.h>
 
 using namespace api::v1;
 
-std::map<std::string, std::pair<std::string, std::string>, std::less<>> ItemModel::joinMap() const {
-    return {
-        {MediaModel::tableName,
-         {BaseModel::Field::id.getFullFieldName(), MediaModel::Field::itemId.getFullFieldName()}},
-        {ShippingRateModel::tableName,
-         {Field::shippingProfileId.getFullFieldName(), ShippingRateModel::Field::shippingProfileId.getFullFieldName()}},
-        {ShippingProfileModel::tableName,
-         {Field::shippingProfileId.getFullFieldName(), BaseModel<ShippingProfileModel>::Field::id.getFullFieldName()}},
-        {BasketItemModel::tableName,
-         {BaseModel::Field::id.getFullFieldName(), BasketItemModel::Field::itemId.getFullFieldName()}}};
+BaseModelImpl::JoinMap ItemModel::joinMap() {
+    return {{MediaModel::tableName, {&BaseModel::Field::id, &MediaModel::Field::itemId}},
+            {ShippingRateModel::tableName, {&Field::shippingProfileId, &ShippingRateModel::Field::shippingProfileId}},
+            {ShippingProfileModel::tableName, {&Field::shippingProfileId, &BaseModel<ShippingProfileModel>::Field::id}},
+            {BasketItemModel::tableName, {&BaseModel::Field::id, &BasketItemModel::Field::itemId}}};
 }
 
 BaseModel<ItemModel>::SetMapFieldTypes ItemModel::getObjectValues() const {
-    return {{std::cref(Field::title), title},
-            {std::cref(Field::description), description},
-            {std::cref(Field::metaDescription), metaDescription},
-            {std::cref(Field::slug), slug},
-            {std::cref(Field::shippingProfileId), shippingProfileId},
-            {std::cref(Field::enabled), enabled},
-            {std::cref(Field::price), price}};
+    return {{&Field::title, title},
+            {&Field::description, description},
+            {&Field::metaDescription, metaDescription},
+            {&Field::slug, slug},
+            {&Field::shippingProfileId, shippingProfileId},
+            {&Field::enabled, enabled},
+            {&Field::price, price}};
 }
 
-QuerySet ItemModel::qsCount() {
-    QuerySet qsCount(tableName, "total", false, true);
-    return std::move(qsCount.filter(Field::enabled.getFullFieldName(), std::string("true"), false, std::string("="))
-                         .functions(Function("count(*)::integer")));
+QuerySet<ItemModel> ItemModel::qsCount() {
+    QuerySet<ItemModel> qsCount("total", false, true);
+    return std::move(qsCount.filter(&Field::enabled, true).functions(Function("count(*)::integer")));
 }
 
 std::string ItemModel::sqlSelectList(const int page,
                                      int limit,
                                      [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
-    const auto &orderByItem = std::cref(BaseModel::Field::updatedAt);
-    std::string media_image = "media_image";
+    const auto &orderByItem = &BaseModel::Field::updatedAt;
+    auto qsPage = ItemModel::qsPage(page, limit);
+
     std::string media_video = "media_video";
-    const auto mediaSort = fmt::format(R"("{}".{})", media_image, MediaModel::Field::sort.getFieldName());
-    const auto &itemID = std::cref(BaseModel::Field::id);
+    const auto &itemID = &BaseModel::Field::id;
     auto mediaItemID = MediaModel::Field::itemId.getFullFieldName();
+    QuerySet<MediaModel> qsMedia = MediaModel::qsMediaMinSort();
+    std::string mediaAlias = qsMedia.getAlias();
 
-    QuerySet qsCount = ItemModel::qsCount();
-    QuerySet qsPage = ItemModel::qsPage(page, limit);
-
-    QuerySet qs(tableName, limit, "data");
-    qs.distinct(orderByItem, itemID)
-        .join(MediaModel(), media_image, fmt::format(" AND {}.type = 'image'", media_image))
-        .left_join(MediaModel(), media_video, fmt::format(" AND {}.type = 'video'", media_video))
-        .filter(ItemModel::Field::enabled.getFullFieldName(),
-                std::string("true"),
-                false,
-                std::string("="),
-                std::string("AND"))
-        .filter(mediaSort,
-                std::string(fmt::format("(SELECT MIN({}) FROM {} WHERE {} = {})",
-                                        MediaModel::Field::sort.getFullFieldName(),
-                                        MediaModel::tableName,
-                                        BaseModel::Field::id.getFullFieldName(),
-                                        mediaItemID)),
-                false)
-        .order_by(std::make_pair(orderByItem, false), std::make_pair(itemID, false))
+    QuerySet<ItemModel> qs(limit, "data");
+    qs.join<MediaModel>(std::move(qsMedia),
+                        "image_media",
+                        fmt::format(R"(AND {0}.type = 'image' AND {0}.row_num = 1)", "image_media"))
+        .left_join<MediaModel>(std::move(mediaAlias),
+                               "video_media",
+                               fmt::format(R"(AND {0}.type = 'video' AND {0}.row_num = 1)", "video_media"))
+        .filter(&Field::enabled, true)
+        .order_by(orderByItem, false)
+        .order_by(itemID, false)
         .only(allSetFields())
-        .functions(Function(fmt::format("format_src({}.src, '{}') as src", media_image, APP_CLOUD_NAME)))
-        .functions(Function(fmt::format("format_src({}.src, '{}') as src_video", media_video, APP_BUCKET_HOST)))
+        .functions(Function(fmt::format("format_src({}.src, '{}') as src", "image_media", getEnv("APP_CLOUD_NAME"))))
+        .functions(
+            Function(fmt::format("format_src({}.src, '{}') as src_video", "video_media", getEnv("APP_BUCKET_HOST"))))
         .offset(fmt::format("((SELECT * FROM {}) - 1) * {}", qsPage.alias(), limit));
-    return QuerySet::buildQuery(std::move(qsCount), std::move(qsPage), std::move(qs));
+    return BuildComplexQueries::buildQuery(qsCount(), std::move(qsPage), std::move(qs));
 }
 
-std::string ItemModel::sqlSelectOne(const std::string &field,
-                                    const std::string &value,
+std::string ItemModel::sqlSelectOne(const BaseField *field,
+                                    std::string &&value,
                                     [[maybe_unused]] const std::map<std::string, std::string, std::less<>> &params) {
-    QuerySet qsMedia(MediaModel::tableName, 0, MediaModel::tableName, false);
-    qsMedia.filter(MediaModel::Field::itemId.getFullFieldName(), BaseModel::Field::id.getFullFieldName(), false)
+    QuerySet<MediaModel> qsMedia(0, MediaModel::tableName, false);
+    qsMedia.filter(&MediaModel::Field::itemId, &BaseModel::Field::id)
         .functions(Function(
             fmt::format("json_agg(json_build_object({}) ORDER BY media.sort ASC)", MediaModel().fieldsJsonObject())));
 
-    QuerySet qsItem(tableName, tableName, true, true);
-    qsItem.filter(field, value)
+    QuerySet<ItemModel> qsItem(tableName, true, true);
+    qsItem.filter(field, std::move(value))
         .jsonFields(addExtraQuotes(fieldsJsonObject()))
-        .functions(Function(fmt::format(R"( 'media', COALESCE(({}), '[]'::json))", qsMedia.buildSelect())));
+        .functions(
+            Function(addExtraQuotes(fmt::format(R"( 'media', COALESCE(({}), '[]'::json))", qsMedia.buildSelect()))));
 
     return qsItem.buildSelectOne();
 }

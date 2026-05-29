@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BaseTestClass.h"
-#include "SocialMedia.h"
+#include "controllers/SocialMedia.h"
 
 #include <gtest/gtest.h>
 
@@ -9,24 +9,26 @@ class SocialMediaControllerTest : public BaseTestClass<SocialMediaControllerTest
     void setupExpectedValues() override {
         expectedValues["item_id"] = 1;
         expectedValues["title"] = "Pinterest";
+        expectedValues["external_id"] = "3453453654675rtydfghr645";
     }
 
     void setupUpdatedValues() override {
         updatedValues["title"] = "Twitter";
         updatedValues["item_id"] = 2;
+        updatedValues["external_id"] = "jfwo48ru8y587yer87234";
     }
 
     void setupGetOneValues() override {
         getOneValues["external_id"] = "100";
         getOneValues["id"] = 1;
         getOneValues["item_id"] = 1;
-        getOneValues["social_url"] = "100";
-        getOneValues["title"] = "Facebook";
+        getOneValues["social_url"] = "https://www.youtube.com/watch?v=100";
+        getOneValues["title"] = "YouTube";
     }
 
     void setupGetListValues() override {
         getListValues["_page"] = 1;
-        getListValues["total"] = 2;
+        getListValues["total"] = 4;
 
         Json::Value data = Json::arrayValue;
 
@@ -34,8 +36,8 @@ class SocialMediaControllerTest : public BaseTestClass<SocialMediaControllerTest
         entry1["external_id"] = "100";
         entry1["id"] = 1;
         entry1["item_id"] = 1;
-        entry1["social_url"] = "100";
-        entry1["title"] = "Facebook";
+        entry1["social_url"] = "https://www.youtube.com/watch?v=100";
+        entry1["title"] = "YouTube";
 
         Json::Value entry2;
         entry2["external_id"] = "20000";
@@ -44,10 +46,66 @@ class SocialMediaControllerTest : public BaseTestClass<SocialMediaControllerTest
         entry2["social_url"] = "https://x.com/faithfishart/status/20000";
         entry2["title"] = "Twitter";
 
+        Json::Value entry3;
+        entry3["external_id"] = "30000";
+        entry3["id"] = 3;
+        entry3["item_id"] = 1;
+        entry3["social_url"] = "https://pinterest.com/pin/30000";
+        entry3["title"] = "Pinterest";
+
+        Json::Value entry4;
+        entry4["external_id"] = "40000";
+        entry4["id"] = 4;
+        entry4["item_id"] = 1;
+        entry4["social_url"] = "https://x.com/faithfishart/status/40000";
+        entry4["title"] = "Twitter";
+
         data.append(entry1);
         data.append(entry2);
+        data.append(entry3);
+        data.append(entry4);
 
         getListValues["data"] = data;
+    }
+
+public:
+    void testPublish200() {
+        runAsyncTest<void>([this](auto promise) {
+            drogon::app().getLoop()->queueInLoop([this, promise]() {
+                controller.publish(*reqPtr, [promise](const drogon::HttpResponsePtr &resp) {
+                    try {
+                        EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
+                        EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
+                        const auto json = resp->getJsonObject();
+                        ASSERT_NE(json, nullptr);
+                        ASSERT_TRUE(json->isMember("result"));
+                        EXPECT_NE((*json)["result"].asString().find("You are going to publish"), std::string::npos);
+                        promise->set_value();
+                    } catch(...) {
+                        promise->set_exception(std::current_exception());
+                    }
+                });
+            });
+        }).get();
+    }
+
+    void testPublishWithLimitParam() {
+        req->setParameter("limit", "5");
+        runAsyncTest<void>([this](auto promise) {
+            drogon::app().getLoop()->queueInLoop([this, promise]() {
+                controller.publish(*reqPtr, [promise](const drogon::HttpResponsePtr &resp) {
+                    try {
+                        EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
+                        const auto json = resp->getJsonObject();
+                        ASSERT_NE(json, nullptr);
+                        ASSERT_TRUE(json->isMember("result"));
+                        promise->set_value();
+                    } catch(...) {
+                        promise->set_exception(std::current_exception());
+                    }
+                });
+            });
+        }).get();
     }
 };
 
@@ -93,4 +151,12 @@ TEST_F(SocialMediaControllerTest, testCreateItems) {
 
 TEST_F(SocialMediaControllerTest, testUpdateItems) {
     testUpdateItems();
+}
+
+TEST_F(SocialMediaControllerTest, Publish200) {
+    testPublish200();
+}
+
+TEST_F(SocialMediaControllerTest, PublishWithLimitParam) {
+    testPublishWithLimitParam();
 }

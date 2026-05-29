@@ -1,11 +1,11 @@
 #pragma once
 
-#include "SocialMediaType.h"
-#include "env.h"
+#include "clients/models/SocialMediaType.h"
+#include "utils/config.h"
 
 namespace api::v1 {
     class Pin final : public SocialMediaType<PinterestClient, Pin> {
-        static constexpr std::string_view boardId = PINTEREST_BOARD_ID;
+        static inline const std::string boardId = getEnv("PINTEREST_BOARD_ID");
         SharedFileTransferInfo coverImage;
         SharedFileTransferInfo video;
         [[nodiscard]] bool postVideo();

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "BaseClass.h"
+#include "utils/BaseClass.h"
 #include "drogon/HttpRequest.h"
 #include "drogon/drogon.h"
 #include <ranges>
-#include "env.h"
+#include "utils/config.h"
 
 #include <future>
 #include <gtest/gtest.h>
@@ -66,9 +66,13 @@ public:
             for(Json::ArrayIndex i = 0; i < respJson.size(); ++i) {
                 checkJsonValue(respJson[i], expectedValue[i], buildKeyPath("[" + std::to_string(i) + "]"));
             }
+        } else if(keyPath.ends_with("src_video")) {
+            EXPECT_EQ(respJson.asString(),
+                      fmt::format("https://{}/{}", api::v1::getEnv("APP_BUCKET_HOST", ""), expectedValue.asString()))
+                << "Mismatch at key path: " << keyPath;
         } else if(keyPath.ends_with("src")) {
-            // Special handling for "src"
-            EXPECT_EQ(respJson.asString(), fmt::format("https://{}/{}", APP_CLOUD_NAME, expectedValue.asString()))
+            EXPECT_EQ(respJson.asString(),
+                      fmt::format("https://{}/{}", api::v1::getEnv("APP_CLOUD_NAME", ""), expectedValue.asString()))
                 << "Mismatch at key path: " << keyPath;
         } else {
             // Direct value comparison
@@ -190,27 +194,31 @@ public:
         };
     }
 
+    void checkItemsResponse(const drogon::HttpResponsePtr& resp,
+                            const drogon::HttpStatusCode expectedCode,
+                            const Json::Value& values,
+                            const drogon::orm::DbClientPtr& dbClient) {
+        EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
+        EXPECT_EQ(resp->getStatusCode(), expectedCode);
+        const auto responseJson = resp->getJsonObject();
+        const Json::StreamWriterBuilder builder;
+        std::cout << writeString(builder, *responseJson) << std::endl;
+        if(resp->getStatusCode() == expectedCode) {
+            Json::Value data;
+            Json::Value items = Json::arrayValue;
+            items.append(values);
+            data["items"] = items;
+            this->checkJsonValue(*responseJson, data);
+        }
+        *dbClient << "ROLLBACK;";
+    }
+
     std::function<void(const drogon::HttpResponsePtr&)>
     createItemsCallback(const std::shared_ptr<std::promise<void>>& testPromise,
                         const drogon::orm::DbClientPtr& dbClient) {
         return [this, dbClient, testPromise](const drogon::HttpResponsePtr& resp) {
             try {
-                EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
-                EXPECT_EQ(resp->getStatusCode(), drogon::k201Created);
-
-                const auto responseJson = resp->getJsonObject();
-                const Json::StreamWriterBuilder builder;
-                const std::string jsonString = writeString(builder, *responseJson);
-                std::cout << jsonString << std::endl;
-
-                if(resp->getStatusCode() == drogon::k201Created) {
-                    Json::Value data;
-                    Json::Value items = Json::arrayValue;
-                    items.append(expectedValues);
-                    data["items"] = items;
-                    this->checkJsonValue(*responseJson, data);
-                }
-                *dbClient << "ROLLBACK;";
+                checkItemsResponse(resp, drogon::k201Created, expectedValues, dbClient);
                 testPromise->set_value();
             } catch(const std::exception& e) {
                 testPromise->set_exception(std::current_exception());
@@ -224,22 +232,7 @@ public:
                         const drogon::orm::DbClientPtr& dbClient) {
         return [this, dbClient, testPromise](const drogon::HttpResponsePtr& resp) {
             try {
-                EXPECT_EQ(resp->contentType(), drogon::CT_APPLICATION_JSON);
-                EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
-
-                const auto responseJson = resp->getJsonObject();
-                const Json::StreamWriterBuilder builder;
-                const std::string jsonString = writeString(builder, *responseJson);
-                std::cout << jsonString << std::endl;
-
-                if(resp->getStatusCode() == drogon::k200OK) {
-                    Json::Value data;
-                    Json::Value items = Json::arrayValue;
-                    items.append(updatedValues);
-                    data["items"] = items;
-                    this->checkJsonValue(*responseJson, data);
-                }
-                *dbClient << "ROLLBACK;";
+                checkItemsResponse(resp, drogon::k200OK, updatedValues, dbClient);
                 testPromise->set_value();
             } catch(const std::exception& e) {
                 testPromise->set_exception(std::current_exception());
@@ -263,7 +256,7 @@ public:
                 expected["error"] = "Empty body";
                 EXPECT_EQ(*responseJson, expected);
                 testPromise->set_value();
-            } catch(const std::exception& e) {
+            } catch(const std::exception&) {
                 testPromise->set_exception(std::current_exception());
             }
         };
@@ -280,14 +273,14 @@ public:
                 const Json::StreamWriterBuilder builder;
                 const std::string jsonString = writeString(builder, *responseJson);
                 std::cout << jsonString << std::endl;
-                auto filteredKeys = expectedValues.getMemberNames() | std::views::filter([](const std::string& key) {
+                auto filteredKeys = expectedValues.getMemberNames() | std::views::filter([](std::string_view key) {
                                         return key != "id" && key != "enabled" && key != "status";
                                     });
                 for(const auto& key: filteredKeys) {
                     EXPECT_EQ(responseJson->operator[](key).asString(), fmt::format("{} is required", key));
                 }
                 testPromise->set_value();
-            } catch(const std::exception& e) {
+            } catch(const std::exception&) {
                 testPromise->set_exception(std::current_exception());
             }
         };

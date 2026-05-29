@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SocialMediaType.h"
+#include "clients/models/SocialMediaType.h"
 
 namespace api::v1 {
     class Tweet final : public SocialMediaType<TwitterClient, Tweet> {

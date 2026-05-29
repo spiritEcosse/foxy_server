@@ -21,6 +21,7 @@ compile_commands.json
 bin/
 lib/
 build/
+.cache/
 
 # IDE-specific files
 .vscode/
@@ -37,11 +38,17 @@ ehthumbs.db
 Icon?
 ._*
 
+# Environment files
+.env
+
 # Temporary files
 *.log
 *.swp
 *.swo
 *.tmp
+
+# Claude Code
+.claude/scheduled_tasks.lock
 
 # Other generated files
 tags

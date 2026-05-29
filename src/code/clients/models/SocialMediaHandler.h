@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Pin.h"
+#include "clients/models/Pin.h"
 
 namespace api::v1 {
     class SocialMediaHandler {

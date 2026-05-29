@@ -3,8 +3,7 @@
 #include <string>
 #include <chrono>
 #include <drogon/drogon.h>
-#include "BaseModel.h"
-#include "decimal.h"
+#include "models/BaseModel.h"
 
 namespace api::v1 {
     class ShippingProfileModel final : public BaseModel<ShippingProfileModel> {
@@ -21,26 +20,23 @@ namespace api::v1 {
             static inline const auto shippingUpgradeCost = BaseField("shipping_upgrade_cost", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(title.getFieldName(), std::cref(title));
-                allFields.try_emplace(processingTime.getFieldName(), std::cref(processingTime));
-                allFields.try_emplace(countryId.getFieldName(), std::cref(countryId));
-                allFields.try_emplace(postalCode.getFieldName(), std::cref(postalCode));
-                allFields.try_emplace(shippingUpgradeCost.getFieldName(), std::cref(shippingUpgradeCost));
+                constexpr std::array fields{&title, &processingTime, &countryId, &postalCode, &shippingUpgradeCost};
+                registerFields(fields);
             }
         };
 
         std::string title;
         int processingTime{};
-        int countryId{};  // The country from where the items are shipped.
-        std::string postalCode;  // The postal code from where the items are shipped.
-        dec::decimal<2> shippingUpgradeCost;  // offer buyers the option to pay more for faster shipping.
+        int countryId{};
+        std::string postalCode;
+        std::string shippingUpgradeCost;
 
         explicit ShippingProfileModel(const Json::Value &json) : BaseModel(json) {
             title = json[Field::title.getFieldName()].asString();
             processingTime = json[Field::processingTime.getFieldName()].asInt();
             countryId = json[Field::countryId.getFieldName()].asInt();
             postalCode = json[Field::postalCode.getFieldName()].asString();
-            shippingUpgradeCost = json[Field::shippingUpgradeCost.getFieldName()].asDouble();
+            shippingUpgradeCost = json[Field::shippingUpgradeCost.getFieldName()].asString();
 
             validateField(Field::title.getFieldName(), title, missingFields);
             validateField(Field::processingTime.getFieldName(), processingTime, missingFields);
@@ -49,6 +45,6 @@ namespace api::v1 {
         }
 
         [[nodiscard]] SetMapFieldTypes getObjectValues() const;
-        [[nodiscard]] std::map<std::string, std::pair<std::string, std::string>, std::less<>> joinMap() const override;
+        [[nodiscard]] static JoinMap joinMap();
     };
 }

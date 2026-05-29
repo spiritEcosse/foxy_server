@@ -1,17 +1,15 @@
-#include "TagModel.h"
+#include "models/TagModel.h"
 
-#include "ItemModel.h"
+#include "models/ItemModel.h"
 
 using namespace api::v1;
 
-std::map<std::string, std::pair<std::string, std::string>, std::less<>> TagModel::joinMap() const {
+BaseModelImpl::JoinMap TagModel::joinMap() {
     return {
-        {ItemModel::tableName, {Field::itemId.getFullFieldName(), BaseModel<ItemModel>::Field::id.getFullFieldName()}},
+        {ItemModel::tableName, {&Field::itemId, &BaseModel<ItemModel>::Field::id}},
     };
 }
 
 BaseModel<TagModel>::SetMapFieldTypes TagModel::getObjectValues() const {
-    return {{std::cref(Field::title), title},
-            {std::cref(Field::itemId), itemId},
-            {std::cref(Field::socialMedia), socialMedia}};
+    return {{&Field::title, title}, {&Field::itemId, itemId}, {&Field::socialMedia, socialMedia}};
 }

@@ -1,0 +1,15 @@
+FROM silkeh/clang:21
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        cmake \
+        git \
+        libpq-dev \
+        libssl-dev \
+        ninja-build \
+        pkg-config \
+        zlib1g-dev \
+        uuid-dev \
+        libunistring-dev \
+        ccache \
+    && rm -rf /var/lib/apt/lists/*

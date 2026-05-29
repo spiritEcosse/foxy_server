@@ -1,0 +1,59 @@
+#include "auth/Auth.h"
+#include <drogon/drogon.h>
+#include "models/UserModel.h"
+#include <utils/jwt/JWT.h>
+#include <string>
+#include "filters/JwtGoogleFilter.h"
+
+using namespace api::v1;
+using namespace drogon::orm;
+using namespace api::utils::jwt;
+
+void Auth::googleLogin(const drogon::HttpRequestPtr &request,
+                       std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
+    auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
+    Json::Value responseJson = *request->getJsonObject();
+
+    std::string credentialsStr = responseJson["credentials"].asString();
+
+    auto tokenResult = filters::JwtGoogleFilter::verifyTokenAndRespond(credentialsStr, callbackPtr);
+
+    if(!tokenResult) {
+        return;
+    }
+
+    UserModel item(*tokenResult, true);
+    if(!item.missingFields.empty()) {
+        auto resp = drogon::HttpResponse::newHttpJsonResponse(std::move(item.missingFields));
+        resp->setStatusCode(drogon::HttpStatusCode::k400BadRequest);
+        return (*callbackPtr)(resp);
+    }
+
+    executeSqlQuery(callbackPtr, item.sqlGetOrCreateUser());
+}
+
+void Auth::googleLoginAdmin(const drogon::HttpRequestPtr &request,
+                            std::function<void(const drogon::HttpResponsePtr &)> &&callback) const {
+    auto callbackPtr = std::make_shared<std::function<void(const drogon::HttpResponsePtr &)>>(std::move(callback));
+    Json::Value responseJson = *request->getJsonObject();
+
+    std::string credentialsStr = responseJson["credentials"].asString();
+
+    auto tokenResult = filters::JwtGoogleFilter::verifyTokenAndRespond(credentialsStr, callbackPtr);
+
+    if(!tokenResult) {
+        return;
+    }
+    UserModel item(*tokenResult, true);
+    if(!item.missingFields.empty()) {
+        auto resp = drogon::HttpResponse::newHttpResponse();
+        resp->setStatusCode(drogon::HttpStatusCode::k401Unauthorized);
+        return (*callbackPtr)(resp);
+    }
+
+    QuerySet<UserModel> qsUser("_user");
+    qsUser.filter(&UserModel::Field::email, item.email)
+        .jsonFields(UserModel().fieldsJsonObject())
+        .filter(&UserModel::Field::isAdmin, true);
+    executeSqlQuery(callbackPtr, qsUser.buildSelect());
+}

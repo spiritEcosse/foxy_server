@@ -1,7 +1,6 @@
 #pragma once
 
-#include <decimal.h>
-#include "BaseModel.h"
+#include "models/BaseModel.h"
 
 namespace api::v1 {
     class FinancialDetailsModel final : public BaseModel<FinancialDetailsModel> {
@@ -18,16 +17,13 @@ namespace api::v1 {
             static inline const auto merchantName = BaseField("merchant_name", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(taxRate.getFieldName(), std::cref(taxRate));
-                allFields.try_emplace(gateway.getFieldName(), std::cref(gateway));
-                allFields.try_emplace(gatewayMerchantId.getFieldName(), std::cref(gatewayMerchantId));
-                allFields.try_emplace(merchantId.getFieldName(), std::cref(merchantId));
-                allFields.try_emplace(merchantName.getFieldName(), std::cref(merchantName));
+                constexpr std::array fields{&taxRate, &gateway, &gatewayMerchantId, &merchantId, &merchantName};
+                registerFields(fields);
             }
         };
 
         explicit FinancialDetailsModel(const Json::Value &json) : BaseModel(json) {
-            taxRate = json[Field::taxRate.getFieldName()].asDouble();
+            taxRate = json[Field::taxRate.getFieldName()].asString();
             gateway = json[Field::gateway.getFieldName()].asString();
             gatewayMerchantId = json[Field::gatewayMerchantId.getFieldName()].asString();
             merchantId = json[Field::merchantId.getFieldName()].asString();
@@ -40,7 +36,7 @@ namespace api::v1 {
             validateField(Field::merchantName.getFieldName(), merchantName, missingFields);
         }
 
-        dec::decimal<2> taxRate;
+        std::string taxRate;
         std::string gateway;
         std::string gatewayMerchantId;
         std::string merchantId;

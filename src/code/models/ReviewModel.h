@@ -3,7 +3,7 @@
 #include <string>
 #include <chrono>
 #include <drogon/drogon.h>
-#include "BaseModel.h"
+#include "models/BaseModel.h"
 
 namespace api::v1 {
     class ReviewModel final : public BaseModel<ReviewModel> {
@@ -18,10 +18,8 @@ namespace api::v1 {
             static inline const auto comment = BaseField("comment", tableName);
 
             Field() : BaseModel::Field() {
-                allFields.try_emplace(status.getFieldName(), std::cref(status));
-                allFields.try_emplace(userId.getFieldName(), std::cref(userId));
-                allFields.try_emplace(itemId.getFieldName(), std::cref(itemId));
-                allFields.try_emplace(comment.getFieldName(), std::cref(comment));
+                constexpr std::array fields{&status, &userId, &itemId, &comment};
+                registerFields(fields);
             }
         };
 

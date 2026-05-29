@@ -1,7 +1,8 @@
 #pragma once
 
 #include "drogon/HttpController.h"
-#include "MediaModel.h"
+#include "BaseCRUD.h"
+#include "models/MediaModel.h"
 
 namespace api::v1 {
     class Media final : public drogon::HttpController<Media>, public BaseCRUD<MediaModel, Media> {

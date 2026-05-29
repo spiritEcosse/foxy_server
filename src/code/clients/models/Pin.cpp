@@ -1,4 +1,4 @@
-#include "Pin.h"
+#include "clients/models/Pin.h"
 #include <execution>
 
 namespace api::v1 {
@@ -8,9 +8,10 @@ namespace api::v1 {
              const std::string_view& description,
              const std::vector<SharedFileTransferInfo>& media,
              const Json::Value& tags) : SocialMediaType(itemId, title, slug, description, media, tags) {
-        // formating description
         images = cutMedia(images);
-        this->description = truncateDescription(fmt::format("{} {} {}", description, itemUrl, tagsToString()));
+
+        this->description = truncateDescription(
+            fmt::format("{} {} {}", truncateText(description, maxDescriptionSize - 200), itemUrl, tagsToString()));
     };
 
     Pin::Pin(const int itemId,
@@ -20,7 +21,7 @@ namespace api::v1 {
              const SharedFileTransferInfo& coverImage,
              const SharedFileTransferInfo& video,
              const std::vector<std::string>& tags) :
-        SocialMediaType(itemId, title, slug, description, tags), coverImage(coverImage), video(video){};
+        SocialMediaType(itemId, title, slug, description, tags), coverImage(coverImage), video(video) {};
 
     bool Pin::post() {
         std::future<bool> postVideoFuture = std::async(std::launch::async, [this]() {
@@ -28,12 +29,12 @@ namespace api::v1 {
         });
 
         std::future<bool> postImagesFuture = std::async(std::launch::async, [this]() {
-            return !images.empty() && SocialMediaType::post();
+            return SocialMediaType::post();
         });
 
         const bool postImagesResult = postImagesFuture.get();
         const bool postVideoResult = postVideoFuture.get();
-        return postImagesResult && postVideoResult;
+        return !images.empty() && !videos.empty() && (postImagesResult || postVideoResult);
     }
 
     bool Pin::postVideos() {
@@ -41,7 +42,7 @@ namespace api::v1 {
             std::this_thread::sleep_for(std::chrono::seconds(2));
             std::vector<std::jthread> threads;
             std::ranges::for_each(videos, [this, &threads](const auto& videoItem) {
-                threads.emplace_back([this, &videoItem]() {
+                threads.emplace_back([this, videoItem]() {
                     return Pin(itemId, title, slug, description, images[0], videoItem, tags).postVideo();
                 });
             });
@@ -83,18 +84,24 @@ namespace api::v1 {
 
     std::string Pin::toJson() const {
         Json::Value mediaSource;
-        mediaSource["source_type"] = "multiple_image_base64";
 
-        Json::Value items = Json::arrayValue;
-        std::ranges::for_each(images, [&items, this](const auto& info) {
-            Json::Value item;
-            item["data"] = info->getBase64ContentOfFile();
-            item["content_type"] = info->getContentType();
-            item["link"] = itemUrl;
-            items.append(item);
-        });
+        if(images.size() > 1) {
+            mediaSource["source_type"] = "multiple_image_base64";
+            Json::Value items = Json::arrayValue;
+            std::ranges::for_each(images, [&items, this](const auto& info) {
+                Json::Value item;
+                item["data"] = info->getBase64ContentOfFile();
+                item["content_type"] = info->getContentType();
+                item["link"] = itemUrl;
+                items.append(item);
+            });
 
-        mediaSource["items"] = items;
+            mediaSource["items"] = items;
+        } else {
+            mediaSource["source_type"] = "image_base64";
+            mediaSource["data"] = images[0]->getBase64ContentOfFile();
+            mediaSource["content_type"] = images[0]->getContentType();
+        }
         return toJsonInternal(mediaSource);
     }
 }

@@ -2,7 +2,7 @@
 
 #include "drogon/HttpController.h"
 #include "BaseCRUD.h"
-#include "FinancialDetailsModel.h"
+#include "models/FinancialDetailsModel.h"
 
 namespace api::v1 {
     class FinancialDetails final : public drogon::HttpController<FinancialDetails>,

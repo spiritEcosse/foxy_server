@@ -1,4 +1,4 @@
-#include "Tweet.h"
+#include "clients/models/Tweet.h"
 #include <ranges>
 
 namespace api::v1 {
@@ -8,7 +8,6 @@ namespace api::v1 {
                  const std::string_view& description,
                  const std::vector<SharedFileTransferInfo>& media,
                  const Json::Value& tags) : SocialMediaType(itemId, title, slug, description, cutMedia(media), tags) {
-        // formating title
         this->title = truncateTitle(fmt::format("{} {} {}", title, itemUrl, tagsToString()));
     }
 
@@ -16,7 +15,6 @@ namespace api::v1 {
         Json::Value jsonObj;
         jsonObj["text"] = title;
         Json::Value mediaArray = Json::arrayValue;
-        //must be for_each, because of: no member named 'push_back' in 'Json::Value'
         std::ranges::for_each(concatVectors(videos, images), [&mediaArray](const SharedFileTransferInfo& info) {
             mediaArray.append(info->getExternalId<Tweet>());
         });
@@ -26,7 +24,7 @@ namespace api::v1 {
 
         Json::StreamWriterBuilder builder;
         builder["commentStyle"] = "None";
-        builder["indentation"] = "";  // Compact JSON
+        builder["indentation"] = "";
         return writeString(builder, jsonObj);
     }
 

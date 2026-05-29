@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "BaseClass.h"
+#include "utils/BaseClass.h"
 #include <fmt/core.h>
 
 namespace api::v1 {
@@ -22,6 +22,10 @@ namespace api::v1 {
 
         [[nodiscard]] bool empty() const {
             return fieldName.empty();
+        }
+
+        [[nodiscard]] std::string getTableName() const {
+            return tableName;
         }
 
     private:

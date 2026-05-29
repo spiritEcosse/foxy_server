@@ -1,10 +1,10 @@
 #pragma once
 
-#include "SocialMediaTypeImpl.h"
+#include "clients/models/SocialMediaTypeImpl.h"
 #include <string>
 #include <vector>
 #include <drogon/drogon.h>
-#include "FileTransferInfo.h"
+#include "clients/FileTransferInfo.h"
 
 const std::string INTRODUCTION_TEXT_POST = "Explore #FaithFishArt: Discover and buy inspiring art. Follow for updates!";
 
@@ -13,30 +13,29 @@ namespace api::v1 {
     class SocialMediaType : public SocialMediaTypeImpl {
     public:
         SocialMediaType(const int itemId,
-                        const std::string_view& title,
+                        const std::string_view& titleArg,
                         const std::string_view& slug,
-                        const std::string_view& description,
+                        const std::string_view& descriptionArg,
                         const std::vector<SharedFileTransferInfo>& media,
-                        const Json::Value& tags) :
-            SocialMediaTypeImpl(), title(truncateTitle(title)), slug(slug),
-            description(truncateDescription(description)), itemUrl(createItemUrl(slug)), itemId(itemId),
-            images(getImages(media)), videos(getVideos(media)), tags(extractTags(tags)) {
+                        const Json::Value& tagsArg) :
+            SocialMediaTypeImpl(), title(truncateTitle(titleArg)), slug(slug),
+            description(truncateDescription(descriptionArg)), itemUrl(createItemUrl(slug)), itemId(itemId),
+            images(getImages(media)), videos(getVideos(media)), tags(extractTags(tagsArg)) {
             createClient();
         }
 
         SocialMediaType(const int itemId,
-                        const std::string_view& title,
+                        const std::string_view& titleArg,
                         const std::string_view& slug,
-                        const std::string_view& description,
-                        const std::vector<std::string>& tags) :
-            SocialMediaTypeImpl(), title(truncateTitle(title)), slug(slug),
-            description(truncateDescription(description)), itemUrl(createItemUrl(slug)), itemId(itemId), tags(tags) {
+                        const std::string_view& descriptionArg,
+                        const std::vector<std::string>& tagsArg) :
+            SocialMediaTypeImpl(), title(truncateTitle(titleArg)), slug(slug),
+            description(truncateDescription(descriptionArg)), itemUrl(createItemUrl(slug)), itemId(itemId),
+            tags(tagsArg) {
             createClient();
         }
 
-        // Functions
         static bool isEqualPlatform(const Json::Value& platform);
-        // Params
         std::unique_ptr<ClientType> client;
         std::string title;
         std::string slug;
@@ -64,4 +63,4 @@ namespace api::v1 {
     };
 }
 
-#include "SocialMediaType.inl"
+#include "clients/models/SocialMediaType.inl"

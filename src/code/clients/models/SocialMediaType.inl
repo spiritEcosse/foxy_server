@@ -1,17 +1,19 @@
 #pragma once
-#include "StringUtils.h"
-#include "PinterestClient.h"  // must be because of it : ClientType::clientName
-#include "SocialMediaModel.h"
-#include "TwitterClient.h"  // must be because of it : ClientType::clientName
-#include "sentryHelper.h"
-#include "env.h"
+#include "utils/db/StringUtils.h"
+#include "clients/PinterestClient.h"  // must be because of it : ClientType::clientName
+#include "models/SocialMediaModel.h"
+#include "clients/TwitterClient.h"  // must be because of it : ClientType::clientName
+#include "clients/YouTubeClient.h"  // must be because of it : ClientType::clientName
+#include "sentry_catcher/sentryHelper.h"
+#include "utils/config.h"
+#include <print>
 #include <ranges>
 
 namespace api::v1 {
 
     template<typename ClientType, typename PostType>
     std::string SocialMediaType<ClientType, PostType>::createItemUrl(const std::string_view &slug) {
-        return fmt::format("{}/item/{}", FOXY_CLIENT, slug);
+        return fmt::format("{}/item/{}", getEnv("FOXY_CLIENT", ""), slug);
     }
 
     template<typename ClientType, typename PostType>
@@ -31,12 +33,10 @@ namespace api::v1 {
             return false;
         const SocialMediaModel item(std::string(ClientType::clientName), postId, itemId);
         std::string query = SocialMediaModel().sqlInsert(item);
-        auto dbClient = drogon::app().getDbClient("default_not_fast");
+        auto dbClient = drogon::app().getFastDbClient("default");
         dbClient->execSqlAsync(
             query,
-            [](const drogon::orm::Result &r) {
-                std::cout << "Inserted " << r.affectedRows() << " rows." << std::endl;
-            },
+            [](const drogon::orm::Result &r) { std::println("Inserted {} rows.", r.affectedRows()); },
             [](const drogon::orm::DrogonDbException &e) {
                 const std::string error = e.base().what();
                 sentryHelper(error, "saveToDb");
@@ -51,7 +51,12 @@ namespace api::v1 {
 
     template<typename ClientType, typename PostType>
     std::string SocialMediaType<ClientType, PostType>::truncateDescription(const std::string_view &description) {
-        return truncateText(fmt::format("{} {}", INTRODUCTION_TEXT_POST, description), PostType::maxDescriptionSize);
+        std::string cleanDescription = removeHtmlTags(std::string(description));
+
+        return truncateText(cleanDescription.contains(INTRODUCTION_TEXT_POST)
+                                ? cleanDescription
+                                : fmt::format("{} {}", INTRODUCTION_TEXT_POST, cleanDescription),
+                            PostType::maxDescriptionSize);
     }
 
     template<typename ClientType, typename PostType>
@@ -70,7 +75,6 @@ namespace api::v1 {
     std::vector<std::string> SocialMediaType<ClientType, PostType>::extractTags(const Json::Value &tagsJson) {
         std::vector<std::string> tags;
 
-        //must be for_each, because of: no matching function for call to object of type 'const __transform_fn'
         std::ranges::for_each(tagsJson, [&tags](const auto &tag) {
             std::string tagTitle = tag["title"].asString();
             if(std::ranges::any_of(tag["social_media"], isEqualPlatform))
@@ -83,37 +87,21 @@ namespace api::v1 {
     template<typename ClientType, typename PostType>
     std::vector<SharedFileTransferInfo>
     SocialMediaType<ClientType, PostType>::cutMedia(const std::vector<SharedFileTransferInfo> &mediaOriginal) {
-        std::vector<SharedFileTransferInfo> media;
         const size_t numItems = std::min(static_cast<size_t>(PostType::maxMediaItems), mediaOriginal.size());
-        media.reserve(numItems);
-
-        std::ranges::transform(mediaOriginal | std::ranges::views::take(numItems),
-                               std::back_inserter(media),
-                               [](const auto &mediaObj) {
-                                   return mediaObj;
-                               });
-        return media;
+        return mediaOriginal | std::views::take(numItems) | std::ranges::to<std::vector>();
     }
 
     template<typename ClientType, typename PostType>
     std::vector<SharedFileTransferInfo>
     SocialMediaType<ClientType, PostType>::getImages(const std::vector<SharedFileTransferInfo> &mediaOriginal) {
-        // TODO: replace with ranges::to from c++23
-        std::vector<SharedFileTransferInfo> medias;
-        std::ranges::copy_if(mediaOriginal, std::back_inserter(medias), [](const auto &mediaItem) {
-            return !mediaItem->isVideo();
-        });
-        return medias;
+        return mediaOriginal | std::views::filter([](const auto &mediaItem) { return !mediaItem->isVideo(); }) |
+               std::ranges::to<std::vector>();
     }
 
     template<typename ClientType, typename PostType>
     std::vector<SharedFileTransferInfo>
     SocialMediaType<ClientType, PostType>::getVideos(const std::vector<SharedFileTransferInfo> &mediaOriginal) {
-        // TODO: replace with ranges::to from c++23
-        std::vector<SharedFileTransferInfo> medias;
-        std::ranges::copy_if(mediaOriginal, std::back_inserter(medias), [](const auto &mediaItem) {
-            return mediaItem->isVideo();
-        });
-        return medias;
+        return mediaOriginal | std::views::filter([](const auto &mediaItem) { return mediaItem->isVideo(); }) |
+               std::ranges::to<std::vector>();
     }
 }
