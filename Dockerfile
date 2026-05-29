@@ -27,9 +27,9 @@ RUN apt-get update && \
     && curl -fsSL https://claude.ai/install.sh | bash \
     && ln -s /root/.local/bin/claude /usr/local/bin/claude
 
-# libc++ runtime — binary links against libc++.so.1 (built with -stdlib=libc++)
+# libc++ and libunistring runtime — binary links against libc++.so.1 and libunistring.so.5
 RUN --mount=type=bind,from=builder,source=/usr/lib,target=/builder-lib \
-    find /builder-lib -name "libc++.so.1*" -o -name "libc++abi.so.1*" \
+    find /builder-lib -name "libc++.so.1*" -o -name "libc++abi.so.1*" -o -name "libunistring.so.5*" \
     | xargs -I{} cp {} /usr/lib/ && ldconfig
 
 WORKDIR /app
