@@ -73,3 +73,7 @@ jobs:
         run: |
           echo "Deploying profile=$PROFILE tag=$TAG host=$HOST"
           docker compose -p foxy-${PROFILE} up -d --wait foxy
+
+      - name: Prune unused images
+        if: always()
+        run: docker image prune -f
