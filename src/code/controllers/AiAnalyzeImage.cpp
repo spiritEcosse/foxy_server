@@ -55,6 +55,47 @@ A single tag can be reused for multiple platforms (list every platform it suits 
 Tag titles must be a single CamelCase or PascalCase word without spaces or punctuation.
 Return strictly valid JSON. Do not wrap in code fences.)";
 
+    // Optional per-request character-count limits for the generated fields.
+    // A value of 0 means "not set" → fall back to the default prompt wording.
+    struct SizeOverrides {
+        int title = 0;
+        int description = 0;
+        int metaDescription = 0;
+
+        [[nodiscard]] bool any() const noexcept {
+            return title > 0 || description > 0 || metaDescription > 0;
+        }
+    };
+
+    // Reads an optional positive integer override from the body. Non-numeric or
+    // non-positive values are treated as unset (return 0).
+    int readSize(const Json::Value &body, const char *key) {
+        const Json::Value &v = body[key];
+        if(!v.isIntegral())
+            return 0;
+        const int n = v.asInt();
+        return n > 0 ? n : 0;
+    }
+
+    // Builds the override instruction appended to the prompt. Only lists fields
+    // that were actually set. Returns an empty string when nothing is overridden.
+    std::string sizeOverrideBlock(const SizeOverrides &sizes) {
+        if(!sizes.any())
+            return {};
+        std::string parts;
+        const auto add = [&parts](std::string_view name, int n) {
+            if(n <= 0)
+                return;
+            if(!parts.empty())
+                parts += "; ";
+            parts += fmt::format("{} max {} chars", name, n);
+        };
+        add("title", sizes.title);
+        add("description", sizes.description);
+        add("meta_description", sizes.metaDescription);
+        return fmt::format("\n\nField size overrides (use these exact limits, in characters): {}.", parts);
+    }
+
     Json::Value errorJson(const std::string &error, const std::string &detail = {}) {
         Json::Value json;
         json["error"] = error;
@@ -184,14 +225,16 @@ Return strictly valid JSON. Do not wrap in code fences.)";
 
     void runClaudeAndRespond(const std::shared_ptr<std::function<void(const HttpResponsePtr &)>> &callbackPtr,
                              TempDirGuard guard,
-                             const std::string &imagePath) {
+                             const std::string &imagePath,
+                             const SizeOverrides &sizes) {
         const std::string &dir = guard.dir();
 
         const std::string prompt = getEnv("CLAUDE_ANALYZE_IMAGE_PROMPT", std::string(DEFAULT_PROMPT).c_str());
         const std::string fullPrompt = fmt::format(
-            "{}\n\nUse the Read tool to load the image at {} and then analyze it. Return ONLY the JSON object — "
+            "{}{}\n\nUse the Read tool to load the image at {} and then analyze it. Return ONLY the JSON object — "
             "no prose, no markdown fences, no explanation.",
             prompt,
+            sizeOverrideBlock(sizes),
             imagePath);
 
         const std::string cmd =
@@ -260,6 +303,10 @@ void AiAnalyzeImage::analyze(const HttpRequestPtr &req, std::function<void(const
         return;
     }
 
+    const SizeOverrides sizes{.title = readSize(body, "title_size"),
+                              .description = readSize(body, "description_size"),
+                              .metaDescription = readSize(body, "meta_description_size")};
+
     const std::string decoded = Base64::Decode(image);
     if(decoded.empty()) {
         callback(makeError(k400BadRequest, "Failed to decode base64 image"));
@@ -279,7 +326,7 @@ void AiAnalyzeImage::analyze(const HttpRequestPtr &req, std::function<void(const
     // class members (in the header) so dynamic init in this TU also forces
     // HttpController<T>::registrator_ to initialize at startup.
     std::lock_guard lock(workerMutex);
-    workerThreads.emplace_back([callbackPtr, guard = std::move(temp.guard), path = temp.filePath]() mutable {
-        runClaudeAndRespond(callbackPtr, std::move(guard), path);
+    workerThreads.emplace_back([callbackPtr, guard = std::move(temp.guard), path = temp.filePath, sizes]() mutable {
+        runClaudeAndRespond(callbackPtr, std::move(guard), path, sizes);
     });
 }
