@@ -18,6 +18,7 @@
 class AiAnalyzeImageTest : public ::testing::Test {
 private:
     std::filesystem::path stubDir;
+    std::filesystem::path promptFile;
     std::string originalPath;
     api::v1::AiAnalyzeImage controller;
 
@@ -35,7 +36,11 @@ protected:
         stubDir = templ;
 
         const auto scriptPath = stubDir / "claude";
+        promptFile = stubDir / "prompt.txt";
+        // The stub records every argument it receives (the prompt is the last
+        // arg) so tests can assert what the controller asked claude to do.
         std::ofstream(scriptPath) << "#!/bin/sh\n"
+                                     "printf '%s\\n' \"$@\" > \"$STUB_CLAUDE_PROMPT_FILE\"\n"
                                      "if [ -n \"$STUB_CLAUDE_FAIL\" ]; then echo \"boom\" 1>&2; exit 1; fi\n"
                                      "if [ -n \"$STUB_CLAUDE_GARBAGE\" ]; then echo \"not json\"; exit 0; fi\n"
                                      "cat <<'EOF'\n"
@@ -48,6 +53,7 @@ protected:
         if(const char *p = std::getenv("PATH"))
             originalPath = p;
         setenv("PATH", fmt::format("{}:{}", stubDir.string(), originalPath).c_str(), 1);
+        setenv("STUB_CLAUDE_PROMPT_FILE", promptFile.c_str(), 1);
 
         unsetenv("STUB_CLAUDE_FAIL");
         unsetenv("STUB_CLAUDE_GARBAGE");
@@ -58,8 +64,18 @@ protected:
             setenv("PATH", originalPath.c_str(), 1);
         unsetenv("STUB_CLAUDE_FAIL");
         unsetenv("STUB_CLAUDE_GARBAGE");
+        unsetenv("STUB_CLAUDE_PROMPT_FILE");
         std::error_code ec;
         std::filesystem::remove_all(stubDir, ec);
+    }
+
+    // Returns the full argument list the stub claude was invoked with, including
+    // the prompt. Empty if claude was never called.
+    [[nodiscard]] std::string capturedPrompt() const {
+        std::ifstream in(promptFile);
+        if(!in)
+            return {};
+        return {std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
     }
 
     static std::string sampleImageBase64() {
@@ -146,4 +162,62 @@ TEST_F(AiAnalyzeImageTest, ClaudeFails502) {
 TEST_F(AiAnalyzeImageTest, ClaudeBadJson502) {
     setenv("STUB_CLAUDE_GARBAGE", "1", 1);
     invoke(buildRequest(validBody()), expectStatusAndError(drogon::k502BadGateway, "Invalid JSON from claude"));
+}
+
+TEST_F(AiAnalyzeImageTest, NoSizeOverridesOmitsBlock) {
+    invoke(buildRequest(validBody()), [](const drogon::HttpResponsePtr &resp) {
+        EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
+    });
+    const std::string prompt = capturedPrompt();
+    EXPECT_FALSE(prompt.empty());
+    EXPECT_EQ(prompt.find("Field size overrides"), std::string::npos);
+}
+
+TEST_F(AiAnalyzeImageTest, DescriptionSizeOverrideInjected) {
+    Json::Value body = validBody();
+    body["description_size"] = 300;
+    invoke(buildRequest(body), [](const drogon::HttpResponsePtr &resp) {
+        EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
+    });
+    const std::string prompt = capturedPrompt();
+    EXPECT_NE(prompt.find("Field size overrides"), std::string::npos);
+    EXPECT_NE(prompt.find("description max 300 chars"), std::string::npos);
+    // Fields that were not overridden must not appear in the override block.
+    EXPECT_EQ(prompt.find("title max"), std::string::npos);
+    EXPECT_EQ(prompt.find("meta_description max"), std::string::npos);
+}
+
+TEST_F(AiAnalyzeImageTest, AllSizeOverridesInjected) {
+    Json::Value body = validBody();
+    body["title_size"] = 60;
+    body["description_size"] = 300;
+    body["meta_description_size"] = 200;
+    invoke(buildRequest(body), [](const drogon::HttpResponsePtr &resp) {
+        EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
+    });
+    const std::string prompt = capturedPrompt();
+    EXPECT_NE(prompt.find("title max 60 chars"), std::string::npos);
+    EXPECT_NE(prompt.find("description max 300 chars"), std::string::npos);
+    EXPECT_NE(prompt.find("meta_description max 200 chars"), std::string::npos);
+}
+
+TEST_F(AiAnalyzeImageTest, NonPositiveSizeOverridesIgnored) {
+    Json::Value body = validBody();
+    body["title_size"] = 0;
+    body["description_size"] = -10;
+    invoke(buildRequest(body), [](const drogon::HttpResponsePtr &resp) {
+        EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
+    });
+    const std::string prompt = capturedPrompt();
+    EXPECT_EQ(prompt.find("Field size overrides"), std::string::npos);
+}
+
+TEST_F(AiAnalyzeImageTest, NonNumericSizeOverrideIgnored) {
+    Json::Value body = validBody();
+    body["description_size"] = "not a number";
+    invoke(buildRequest(body), [](const drogon::HttpResponsePtr &resp) {
+        EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
+    });
+    const std::string prompt = capturedPrompt();
+    EXPECT_EQ(prompt.find("Field size overrides"), std::string::npos);
 }
