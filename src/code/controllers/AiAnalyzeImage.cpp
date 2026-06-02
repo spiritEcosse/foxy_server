@@ -96,6 +96,21 @@ Return strictly valid JSON. Do not wrap in code fences.)";
         return fmt::format("\n\nField size overrides (use these exact limits, in characters): {}.", parts);
     }
 
+    // Reads the optional user-supplied prompt from the body. Non-string or empty
+    // values yield an empty string (treated as unset).
+    std::string readExtraPrompt(const Json::Value &body) {
+        const Json::Value &v = body["extra_prompt"];
+        return v.isString() ? v.asString() : std::string{};
+    }
+
+    // Builds the block for the caller-supplied prompt, appended after the size
+    // overrides. Returns an empty string when no extra prompt was provided.
+    std::string extraPromptBlock(const std::string &extraPrompt) {
+        if(extraPrompt.empty())
+            return {};
+        return fmt::format("\n\nAdditional instructions from the request: {}", extraPrompt);
+    }
+
     Json::Value errorJson(const std::string &error, const std::string &detail = {}) {
         Json::Value json;
         json["error"] = error;
@@ -226,15 +241,17 @@ Return strictly valid JSON. Do not wrap in code fences.)";
     void runClaudeAndRespond(const std::shared_ptr<std::function<void(const HttpResponsePtr &)>> &callbackPtr,
                              TempDirGuard guard,
                              const std::string &imagePath,
-                             const SizeOverrides &sizes) {
+                             const SizeOverrides &sizes,
+                             const std::string &extraPrompt) {
         const std::string &dir = guard.dir();
 
         const std::string prompt = getEnv("CLAUDE_ANALYZE_IMAGE_PROMPT", std::string(DEFAULT_PROMPT).c_str());
         const std::string fullPrompt = fmt::format(
-            "{}{}\n\nUse the Read tool to load the image at {} and then analyze it. Return ONLY the JSON object — "
+            "{}{}{}\n\nUse the Read tool to load the image at {} and then analyze it. Return ONLY the JSON object — "
             "no prose, no markdown fences, no explanation.",
             prompt,
             sizeOverrideBlock(sizes),
+            extraPromptBlock(extraPrompt),
             imagePath);
 
         const std::string cmd =
@@ -306,6 +323,7 @@ void AiAnalyzeImage::analyze(const HttpRequestPtr &req, std::function<void(const
     const SizeOverrides sizes{.title = readSize(body, "title_size"),
                               .description = readSize(body, "description_size"),
                               .metaDescription = readSize(body, "meta_description_size")};
+    const std::string extraPrompt = readExtraPrompt(body);
 
     const std::string decoded = Base64::Decode(image);
     if(decoded.empty()) {
@@ -326,7 +344,8 @@ void AiAnalyzeImage::analyze(const HttpRequestPtr &req, std::function<void(const
     // class members (in the header) so dynamic init in this TU also forces
     // HttpController<T>::registrator_ to initialize at startup.
     std::lock_guard lock(workerMutex);
-    workerThreads.emplace_back([callbackPtr, guard = std::move(temp.guard), path = temp.filePath, sizes]() mutable {
-        runClaudeAndRespond(callbackPtr, std::move(guard), path, sizes);
-    });
+    workerThreads.emplace_back(
+        [callbackPtr, guard = std::move(temp.guard), path = temp.filePath, sizes, extraPrompt]() mutable {
+            runClaudeAndRespond(callbackPtr, std::move(guard), path, sizes, extraPrompt);
+        });
 }
