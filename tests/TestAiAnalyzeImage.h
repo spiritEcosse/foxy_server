@@ -117,6 +117,15 @@ protected:
         future.get();
     }
 
+    // Runs the request, asserts a 200 OK, and returns the full prompt the stub
+    // claude was invoked with — the basis for all prompt-content assertions.
+    std::string promptFor(const Json::Value &body) {
+        invoke(buildRequest(body), [](const drogon::HttpResponsePtr &resp) {
+            EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
+        });
+        return capturedPrompt();
+    }
+
     static Check expectStatusAndError(drogon::HttpStatusCode code, const std::string &expectedError) {
         return [code, expectedError](const drogon::HttpResponsePtr &resp) {
             EXPECT_EQ(resp->getStatusCode(), code);
@@ -165,10 +174,7 @@ TEST_F(AiAnalyzeImageTest, ClaudeBadJson502) {
 }
 
 TEST_F(AiAnalyzeImageTest, NoSizeOverridesOmitsBlock) {
-    invoke(buildRequest(validBody()), [](const drogon::HttpResponsePtr &resp) {
-        EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
-    });
-    const std::string prompt = capturedPrompt();
+    const std::string prompt = promptFor(validBody());
     EXPECT_FALSE(prompt.empty());
     EXPECT_EQ(prompt.find("Field size overrides"), std::string::npos);
 }
@@ -176,10 +182,7 @@ TEST_F(AiAnalyzeImageTest, NoSizeOverridesOmitsBlock) {
 TEST_F(AiAnalyzeImageTest, DescriptionSizeOverrideInjected) {
     Json::Value body = validBody();
     body["description_size"] = 300;
-    invoke(buildRequest(body), [](const drogon::HttpResponsePtr &resp) {
-        EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
-    });
-    const std::string prompt = capturedPrompt();
+    const std::string prompt = promptFor(body);
     EXPECT_NE(prompt.find("Field size overrides"), std::string::npos);
     EXPECT_NE(prompt.find("description max 300 chars"), std::string::npos);
     // Fields that were not overridden must not appear in the override block.
@@ -192,10 +195,7 @@ TEST_F(AiAnalyzeImageTest, AllSizeOverridesInjected) {
     body["title_size"] = 60;
     body["description_size"] = 300;
     body["meta_description_size"] = 200;
-    invoke(buildRequest(body), [](const drogon::HttpResponsePtr &resp) {
-        EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
-    });
-    const std::string prompt = capturedPrompt();
+    const std::string prompt = promptFor(body);
     EXPECT_NE(prompt.find("title max 60 chars"), std::string::npos);
     EXPECT_NE(prompt.find("description max 300 chars"), std::string::npos);
     EXPECT_NE(prompt.find("meta_description max 200 chars"), std::string::npos);
@@ -205,19 +205,53 @@ TEST_F(AiAnalyzeImageTest, NonPositiveSizeOverridesIgnored) {
     Json::Value body = validBody();
     body["title_size"] = 0;
     body["description_size"] = -10;
-    invoke(buildRequest(body), [](const drogon::HttpResponsePtr &resp) {
-        EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
-    });
-    const std::string prompt = capturedPrompt();
+    const std::string prompt = promptFor(body);
     EXPECT_EQ(prompt.find("Field size overrides"), std::string::npos);
 }
 
 TEST_F(AiAnalyzeImageTest, NonNumericSizeOverrideIgnored) {
     Json::Value body = validBody();
     body["description_size"] = "not a number";
-    invoke(buildRequest(body), [](const drogon::HttpResponsePtr &resp) {
-        EXPECT_EQ(resp->getStatusCode(), drogon::k200OK);
-    });
-    const std::string prompt = capturedPrompt();
+    const std::string prompt = promptFor(body);
     EXPECT_EQ(prompt.find("Field size overrides"), std::string::npos);
+}
+
+TEST_F(AiAnalyzeImageTest, NoExtraPromptOmitsBlock) {
+    const std::string prompt = promptFor(validBody());
+    EXPECT_FALSE(prompt.empty());
+    EXPECT_EQ(prompt.find("Additional instructions from the request"), std::string::npos);
+}
+
+TEST_F(AiAnalyzeImageTest, ExtraPromptInjected) {
+    Json::Value body = validBody();
+    body["extra_prompt"] = "Focus on the brand name and keep the tone playful.";
+    const std::string prompt = promptFor(body);
+    EXPECT_NE(prompt.find("Additional instructions from the request"), std::string::npos);
+    EXPECT_NE(prompt.find("Focus on the brand name and keep the tone playful."), std::string::npos);
+}
+
+TEST_F(AiAnalyzeImageTest, EmptyExtraPromptIgnored) {
+    Json::Value body = validBody();
+    body["extra_prompt"] = "";
+    const std::string prompt = promptFor(body);
+    EXPECT_EQ(prompt.find("Additional instructions from the request"), std::string::npos);
+}
+
+TEST_F(AiAnalyzeImageTest, NonStringExtraPromptIgnored) {
+    Json::Value body = validBody();
+    body["extra_prompt"] = 123;
+    const std::string prompt = promptFor(body);
+    EXPECT_EQ(prompt.find("Additional instructions from the request"), std::string::npos);
+}
+
+TEST_F(AiAnalyzeImageTest, ExtraPromptAppearsAfterSizeOverrides) {
+    Json::Value body = validBody();
+    body["title_size"] = 60;
+    body["extra_prompt"] = "Emphasize seasonal colors.";
+    const std::string prompt = promptFor(body);
+    const auto sizePos = prompt.find("Field size overrides");
+    const auto extraPos = prompt.find("Additional instructions from the request");
+    ASSERT_NE(sizePos, std::string::npos);
+    ASSERT_NE(extraPos, std::string::npos);
+    EXPECT_LT(sizePos, extraPos);
 }
