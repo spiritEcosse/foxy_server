@@ -67,7 +67,9 @@ jobs:
 
     steps:
       - name: Login to GitHub Container Registry
-        run: echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u spiritEcosse --password-stdin
+        env:
+          CR_PAT: ${{ secrets.CR_PAT }}
+        run: echo "${CR_PAT}" | docker login ghcr.io -u spiritEcosse --password-stdin
 
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -83,9 +85,12 @@ jobs:
         run: echo "${KNOWN_HOSTS}" >> ~/.ssh/known_hosts
 
       - name: Set up Docker context
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
         run: |
           docker context create remote \
-            --docker "host=ssh://${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}"
+            --docker "host=ssh://${DEPLOY_USER}@${DEPLOY_HOST}"
           docker context use remote
 
       - name: Pull latest image
