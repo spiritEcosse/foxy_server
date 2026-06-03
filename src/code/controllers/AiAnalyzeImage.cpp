@@ -30,15 +30,19 @@ using namespace api::v1;
 using namespace drogon;
 
 namespace {
-    constexpr std::string_view DEFAULT_PROMPT =
+    // The default prompt is split around its three placeholder lines (title,
+    // description, meta_description) so buildPrompt() can inject per-field size
+    // targets inline. PREFIX ends just after the JSON shape's opening brace;
+    // SUFFIX begins right after the meta_description line.
+    constexpr std::string_view PROMPT_PREFIX =
         R"(You are an assistant that generates social-media-ready metadata for product images.
 
 Look at the attached image and return ONLY a JSON object (no prose, no markdown) with this exact shape:
 {
-  "title": "<short product title, 5-12 words>",
-  "description": "<2-4 sentence engaging product description>",
-  "meta_description": "<SEO meta description, max 160 chars>",
-  "tags": [
+)";
+
+    constexpr std::string_view PROMPT_SUFFIX =
+        R"(  "tags": [
     { "title": "<TagName>", "social_media": ["Instagram","Pinterest","Twitter","Facebook","TikTok","YouTube"] }
   ]
 }
@@ -61,39 +65,39 @@ Return strictly valid JSON. Do not wrap in code fences.)";
         int title = 0;
         int description = 0;
         int metaDescription = 0;
-
-        [[nodiscard]] bool any() const noexcept {
-            return title > 0 || description > 0 || metaDescription > 0;
-        }
     };
 
-    // Reads an optional positive integer override from the body. Non-numeric or
-    // non-positive values are treated as unset (return 0).
-    int readSize(const Json::Value &body, const char *key) {
+    // Assembles the default prompt with per-field size targets injected inline
+    // into the three JSON-shape placeholders. A field with size > 0 uses the
+    // "approximately N characters" target wording (enabling shrink AND expand);
+    // an unset field (0) keeps its natural default wording.
+    std::string buildPrompt(const SizeOverrides &sizes) {
+        const std::string title =
+            sizes.title > 0 ? fmt::format(R"(  "title": "<product title, approximately {} characters>",)", sizes.title)
+                            : std::string(R"(  "title": "<short product title, 5-12 words>",)");
+        const std::string description =
+            sizes.description > 0
+                ? fmt::format(R"(  "description": "<engaging product description, approximately {} characters>",)",
+                              sizes.description)
+                : std::string(R"(  "description": "<2-4 sentence engaging product description>",)");
+        const std::string metaDescription =
+            sizes.metaDescription > 0
+                ? fmt::format(R"(  "meta_description": "<SEO meta description, approximately {} characters>",)",
+                              sizes.metaDescription)
+                : std::string(R"(  "meta_description": "<SEO meta description, max 160 chars>",)");
+
+        return fmt::format("{}{}\n{}\n{}\n{}", PROMPT_PREFIX, title, description, metaDescription, PROMPT_SUFFIX);
+    }
+
+    // Reads an optional character-count override from the body and validates it
+    // against the field's [min, max] range. Non-integral, below-min, or above-max
+    // values are treated as unset (return 0 → default prompt wording for the field).
+    int readSize(const Json::Value &body, const char *key, int min, int max) {
         const Json::Value &v = body[key];
         if(!v.isIntegral())
             return 0;
         const int n = v.asInt();
-        return n > 0 ? n : 0;
-    }
-
-    // Builds the override instruction appended to the prompt. Only lists fields
-    // that were actually set. Returns an empty string when nothing is overridden.
-    std::string sizeOverrideBlock(const SizeOverrides &sizes) {
-        if(!sizes.any())
-            return {};
-        std::string parts;
-        const auto add = [&parts](std::string_view name, int n) {
-            if(n <= 0)
-                return;
-            if(!parts.empty())
-                parts += "; ";
-            parts += fmt::format("{} max {} chars", name, n);
-        };
-        add("title", sizes.title);
-        add("description", sizes.description);
-        add("meta_description", sizes.metaDescription);
-        return fmt::format("\n\nField size overrides (use these exact limits, in characters): {}.", parts);
+        return (n >= min && n <= max) ? n : 0;
     }
 
     // Reads the optional user-supplied prompt from the body. Non-string or empty
@@ -245,12 +249,10 @@ Return strictly valid JSON. Do not wrap in code fences.)";
                              const std::string &extraPrompt) {
         const std::string &dir = guard.dir();
 
-        const std::string prompt = getEnv("CLAUDE_ANALYZE_IMAGE_PROMPT", std::string(DEFAULT_PROMPT).c_str());
         const std::string fullPrompt = fmt::format(
-            "{}{}{}\n\nUse the Read tool to load the image at {} and then analyze it. Return ONLY the JSON object — "
+            "{}{}\n\nUse the Read tool to load the image at {} and then analyze it. Return ONLY the JSON object — "
             "no prose, no markdown fences, no explanation.",
-            prompt,
-            sizeOverrideBlock(sizes),
+            buildPrompt(sizes),
             extraPromptBlock(extraPrompt),
             imagePath);
 
@@ -320,9 +322,9 @@ void AiAnalyzeImage::analyze(const HttpRequestPtr &req, std::function<void(const
         return;
     }
 
-    const SizeOverrides sizes{.title = readSize(body, "title_size"),
-                              .description = readSize(body, "description_size"),
-                              .metaDescription = readSize(body, "meta_description_size")};
+    const SizeOverrides sizes{.title = readSize(body, "title_size", 10, 60),
+                              .description = readSize(body, "description_size", 50, 1000),
+                              .metaDescription = readSize(body, "meta_description_size", 50, 160)};
     const std::string extraPrompt = readExtraPrompt(body);
 
     const std::string decoded = Base64::Decode(image);

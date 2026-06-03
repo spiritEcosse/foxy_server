@@ -173,32 +173,119 @@ TEST_F(AiAnalyzeImageTest, ClaudeBadJson502) {
     invoke(buildRequest(validBody()), expectStatusAndError(drogon::k502BadGateway, "Invalid JSON from claude"));
 }
 
-TEST_F(AiAnalyzeImageTest, NoSizeOverridesOmitsBlock) {
+TEST_F(AiAnalyzeImageTest, NoSizeOverridesKeepsDefaultWording) {
     const std::string prompt = promptFor(validBody());
     EXPECT_FALSE(prompt.empty());
-    EXPECT_EQ(prompt.find("Field size overrides"), std::string::npos);
+    EXPECT_EQ(prompt.find("approximately"), std::string::npos);
+    EXPECT_NE(prompt.find("short product title, 5-12 words"), std::string::npos);
+    EXPECT_NE(prompt.find("2-4 sentence engaging product description"), std::string::npos);
+    EXPECT_NE(prompt.find("SEO meta description, max 160 chars"), std::string::npos);
 }
 
 TEST_F(AiAnalyzeImageTest, DescriptionSizeOverrideInjected) {
     Json::Value body = validBody();
     body["description_size"] = 300;
     const std::string prompt = promptFor(body);
-    EXPECT_NE(prompt.find("Field size overrides"), std::string::npos);
-    EXPECT_NE(prompt.find("description max 300 chars"), std::string::npos);
-    // Fields that were not overridden must not appear in the override block.
-    EXPECT_EQ(prompt.find("title max"), std::string::npos);
-    EXPECT_EQ(prompt.find("meta_description max"), std::string::npos);
+    EXPECT_NE(prompt.find("engaging product description, approximately 300 characters"), std::string::npos);
+    // Other fields keep their default wording.
+    EXPECT_NE(prompt.find("short product title, 5-12 words"), std::string::npos);
+    EXPECT_NE(prompt.find("SEO meta description, max 160 chars"), std::string::npos);
 }
 
 TEST_F(AiAnalyzeImageTest, AllSizeOverridesInjected) {
     Json::Value body = validBody();
     body["title_size"] = 60;
     body["description_size"] = 300;
-    body["meta_description_size"] = 200;
+    body["meta_description_size"] = 150;
     const std::string prompt = promptFor(body);
-    EXPECT_NE(prompt.find("title max 60 chars"), std::string::npos);
-    EXPECT_NE(prompt.find("description max 300 chars"), std::string::npos);
-    EXPECT_NE(prompt.find("meta_description max 200 chars"), std::string::npos);
+    EXPECT_NE(prompt.find("product title, approximately 60 characters"), std::string::npos);
+    EXPECT_NE(prompt.find("engaging product description, approximately 300 characters"), std::string::npos);
+    EXPECT_NE(prompt.find("SEO meta description, approximately 150 characters"), std::string::npos);
+    // No default wording remains for the overridden fields.
+    EXPECT_EQ(prompt.find("5-12 words"), std::string::npos);
+    EXPECT_EQ(prompt.find("2-4 sentence"), std::string::npos);
+    EXPECT_EQ(prompt.find("max 160 chars"), std::string::npos);
+}
+
+TEST_F(AiAnalyzeImageTest, TitleSizeAboveMaxFallsBack) {
+    Json::Value body = validBody();
+    body["title_size"] = 200;  // > 60
+    const std::string prompt = promptFor(body);
+    EXPECT_EQ(prompt.find("title, approximately"), std::string::npos);
+    EXPECT_NE(prompt.find("short product title, 5-12 words"), std::string::npos);
+}
+
+TEST_F(AiAnalyzeImageTest, DescriptionSizeAboveMaxFallsBack) {
+    Json::Value body = validBody();
+    body["description_size"] = 5000;  // > 1000
+    const std::string prompt = promptFor(body);
+    EXPECT_EQ(prompt.find("description, approximately"), std::string::npos);
+    EXPECT_NE(prompt.find("2-4 sentence engaging product description"), std::string::npos);
+}
+
+TEST_F(AiAnalyzeImageTest, MetaDescriptionSizeAboveMaxFallsBack) {
+    Json::Value body = validBody();
+    body["meta_description_size"] = 500;  // > 160
+    const std::string prompt = promptFor(body);
+    EXPECT_EQ(prompt.find("meta description, approximately"), std::string::npos);
+    EXPECT_NE(prompt.find("SEO meta description, max 160 chars"), std::string::npos);
+}
+
+TEST_F(AiAnalyzeImageTest, TitleSizeBelowMinFallsBack) {
+    Json::Value body = validBody();
+    body["title_size"] = 3;  // < 10
+    const std::string prompt = promptFor(body);
+    EXPECT_EQ(prompt.find("title, approximately"), std::string::npos);
+    EXPECT_NE(prompt.find("short product title, 5-12 words"), std::string::npos);
+}
+
+TEST_F(AiAnalyzeImageTest, DescriptionSizeBelowMinFallsBack) {
+    Json::Value body = validBody();
+    body["description_size"] = 10;  // < 50
+    const std::string prompt = promptFor(body);
+    EXPECT_EQ(prompt.find("description, approximately"), std::string::npos);
+    EXPECT_NE(prompt.find("2-4 sentence engaging product description"), std::string::npos);
+}
+
+TEST_F(AiAnalyzeImageTest, MetaDescriptionSizeBelowMinFallsBack) {
+    Json::Value body = validBody();
+    body["meta_description_size"] = 10;  // < 50
+    const std::string prompt = promptFor(body);
+    EXPECT_EQ(prompt.find("meta description, approximately"), std::string::npos);
+    EXPECT_NE(prompt.find("SEO meta description, max 160 chars"), std::string::npos);
+}
+
+TEST_F(AiAnalyzeImageTest, TitleSizeBoundariesInject) {
+    Json::Value max = validBody();
+    max["title_size"] = 60;  // == max
+    EXPECT_NE(promptFor(max).find("product title, approximately 60 characters"), std::string::npos);
+
+    Json::Value min = validBody();
+    min["title_size"] = 10;  // == min
+    EXPECT_NE(promptFor(min).find("product title, approximately 10 characters"), std::string::npos);
+}
+
+TEST_F(AiAnalyzeImageTest, TitleSizeJustOutsideBoundariesFallBack) {
+    Json::Value over = validBody();
+    over["title_size"] = 61;  // max + 1
+    EXPECT_EQ(promptFor(over).find("title, approximately"), std::string::npos);
+
+    Json::Value under = validBody();
+    under["title_size"] = 9;  // min - 1
+    EXPECT_EQ(promptFor(under).find("title, approximately"), std::string::npos);
+}
+
+TEST_F(AiAnalyzeImageTest, MixedSizeOverridesInjectOnlyInRange) {
+    Json::Value body = validBody();
+    body["title_size"] = 50;  // in range → inject
+    body["description_size"] = 5000;  // out of range → fall back
+    // meta_description_size unset → fall back
+    const std::string prompt = promptFor(body);
+    EXPECT_NE(prompt.find("product title, approximately 50 characters"), std::string::npos);
+    EXPECT_NE(prompt.find("2-4 sentence engaging product description"), std::string::npos);
+    EXPECT_NE(prompt.find("SEO meta description, max 160 chars"), std::string::npos);
+    EXPECT_EQ(prompt.find("description, approximately"), std::string::npos);
+    EXPECT_EQ(prompt.find("meta description, approximately"), std::string::npos);
 }
 
 TEST_F(AiAnalyzeImageTest, NonPositiveSizeOverridesIgnored) {
@@ -206,14 +293,17 @@ TEST_F(AiAnalyzeImageTest, NonPositiveSizeOverridesIgnored) {
     body["title_size"] = 0;
     body["description_size"] = -10;
     const std::string prompt = promptFor(body);
-    EXPECT_EQ(prompt.find("Field size overrides"), std::string::npos);
+    EXPECT_EQ(prompt.find("approximately"), std::string::npos);
+    EXPECT_NE(prompt.find("short product title, 5-12 words"), std::string::npos);
+    EXPECT_NE(prompt.find("2-4 sentence engaging product description"), std::string::npos);
 }
 
 TEST_F(AiAnalyzeImageTest, NonNumericSizeOverrideIgnored) {
     Json::Value body = validBody();
     body["description_size"] = "not a number";
     const std::string prompt = promptFor(body);
-    EXPECT_EQ(prompt.find("Field size overrides"), std::string::npos);
+    EXPECT_EQ(prompt.find("approximately"), std::string::npos);
+    EXPECT_NE(prompt.find("2-4 sentence engaging product description"), std::string::npos);
 }
 
 TEST_F(AiAnalyzeImageTest, NoExtraPromptOmitsBlock) {
@@ -249,7 +339,7 @@ TEST_F(AiAnalyzeImageTest, ExtraPromptAppearsAfterSizeOverrides) {
     body["title_size"] = 60;
     body["extra_prompt"] = "Emphasize seasonal colors.";
     const std::string prompt = promptFor(body);
-    const auto sizePos = prompt.find("Field size overrides");
+    const auto sizePos = prompt.find("product title, approximately 60 characters");
     const auto extraPos = prompt.find("Additional instructions from the request");
     ASSERT_NE(sizePos, std::string::npos);
     ASSERT_NE(extraPos, std::string::npos);
