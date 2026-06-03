@@ -154,7 +154,7 @@ Custom query builder — not Drogon's built-in ORM:
 - **After creating a PR**: Wait 30 seconds, then run `sonar list issues --project spiritEcosse_foxy_server --pull-request <N> --format table`. If there are **zero issues** on new code, check CI jobs with `gh pr checks <PR#> --watch`. Only merge after **both** SonarCloud gate AND all CI jobs (ninja-debug, ninja-asan-ubsan, ninja-tsan) pass (`gh pr merge --squash`). If ANY SonarCloud issues or CI failures, fix them all, push, and re-check until clean.
 - **Close issue after merge**: After merging a feature branch into `dev`, ALWAYS close the issue with `gh issue close <N>`. Do NOT wait to be asked.
 - **Switch to dev after merge**: After merging and closing the issue, ALWAYS run `git checkout dev && git pull` to return to the main branch.
-- **Ad-hoc fixes** (no GitHub Issue): Work directly on `dev`.
+- **Ad-hoc fixes** (no GitHub Issue): `dev` and `main` are protected — direct pushes are blocked. Create a feature branch (e.g. `git checkout -b fix/<short-description>`), push it, and open a PR with `gh pr create --base dev`. All changes reach `dev`/`main` via PR.
 
 Before implementing any feature or fix: if a GitHub issue exists for it, create a branch using `gh issue develop` as described above.
 

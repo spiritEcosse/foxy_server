@@ -1,0 +1,128 @@
+name: _deploy
+
+# Reusable deploy workflow. Called by deploy.yml with a literal environment
+# name per target so GitHub's deployment-branch-protection gate can resolve the
+# environment statically (a dynamic `environment:` expression defeats the gate
+# and makes a dev deploy get checked against prod's protection rules).
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Image tag / branch to deploy'
+        required: true
+        type: string
+      env_name:
+        description: 'GitHub environment to deploy to (dev or prod)'
+        required: true
+        type: string
+    secrets:
+      CR_PAT:
+        required: true
+      DEPLOY_SSH_KEY:
+        required: true
+      DEPLOY_SSH_KNOWN_HOSTS:
+        required: true
+      DEPLOY_USER:
+        required: true
+      DEPLOY_HOST:
+        required: true
+      FOXY_CLIENT:
+        required: true
+      FOXY_ADMIN:
+        required: true
+      APP_CLOUD_NAME:
+        required: true
+      APP_BUCKET_HOST:
+        required: true
+      PINTEREST_API_HOST:
+        required: true
+      PINTEREST_BOARD_ID:
+        required: true
+      PINTEREST_CLIENT_ID:
+        required: true
+      PINTEREST_CLIENT_SECRET:
+        required: true
+      YOUTUBE_REFRESH_TOKEN:
+        required: true
+      YOUTUBE_CLIENT_ID:
+        required: true
+      YOUTUBE_CLIENT_SECRET:
+        required: true
+      TWITTER_API_KEY:
+        required: true
+      TWITTER_API_SECRET:
+        required: true
+      TWITTER_ACCESS_TOKEN:
+        required: true
+      TWITTER_ACCESS_TOKEN_SECRET:
+        required: true
+      TWITTER_BEARER_TOKEN:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.env_name }}
+
+    steps:
+      - name: Login to GitHub Container Registry
+        env:
+          CR_PAT: ${{ secrets.CR_PAT }}
+        run: echo "${CR_PAT}" | docker login ghcr.io -u spiritEcosse --password-stdin
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@dc588b651fe13675774614f8e6a936a468676387 # v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Add known hosts
+        env:
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+        run: echo "${KNOWN_HOSTS}" >> ~/.ssh/known_hosts
+
+      - name: Set up Docker context
+        env:
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          docker context create remote \
+            --docker "host=ssh://${DEPLOY_USER}@${DEPLOY_HOST}"
+          docker context use remote
+
+      - name: Pull latest image
+        env:
+          TAG: ${{ inputs.tag }}
+        run: docker pull "ghcr.io/spiritecosse/foxy_server:${TAG}"
+
+      - name: Deploy
+        env:
+          FOXY_CLIENT: ${{ secrets.FOXY_CLIENT }}
+          FOXY_ADMIN: ${{ secrets.FOXY_ADMIN }}
+          APP_CLOUD_NAME: ${{ secrets.APP_CLOUD_NAME }}
+          APP_BUCKET_HOST: ${{ secrets.APP_BUCKET_HOST }}
+          PINTEREST_API_HOST: ${{ secrets.PINTEREST_API_HOST }}
+          PINTEREST_BOARD_ID: ${{ secrets.PINTEREST_BOARD_ID }}
+          PINTEREST_CLIENT_ID: ${{ secrets.PINTEREST_CLIENT_ID }}
+          PINTEREST_CLIENT_SECRET: ${{ secrets.PINTEREST_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          TWITTER_API_KEY: ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET: ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+          TWITTER_BEARER_TOKEN: ${{ secrets.TWITTER_BEARER_TOKEN }}
+          PROFILE: ${{ vars.PROFILE }}
+          HOST: ${{ vars.HOST }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          echo "Deploying profile=$PROFILE tag=$TAG host=$HOST"
+          docker compose -p foxy-${PROFILE} up -d --wait foxy
+
+      - name: Prune unused images
+        if: always()
+        run: docker image prune -f
