@@ -46,7 +46,9 @@ jobs:
           docker context use remote
 
       - name: Pull latest image
-        run: docker pull ghcr.io/spiritecosse/foxy_server:${{ inputs.tag }}
+        env:
+          TAG: ${{ inputs.tag }}
+        run: docker pull "ghcr.io/spiritecosse/foxy_server:${TAG}"
 
       - name: Deploy
         env:
