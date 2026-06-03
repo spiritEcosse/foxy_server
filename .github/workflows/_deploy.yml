@@ -16,6 +16,49 @@ on:
         description: 'GitHub environment to deploy to (dev or prod)'
         required: true
         type: string
+    secrets:
+      CR_PAT:
+        required: true
+      DEPLOY_SSH_KEY:
+        required: true
+      DEPLOY_SSH_KNOWN_HOSTS:
+        required: true
+      DEPLOY_USER:
+        required: true
+      DEPLOY_HOST:
+        required: true
+      FOXY_CLIENT:
+        required: true
+      FOXY_ADMIN:
+        required: true
+      APP_CLOUD_NAME:
+        required: true
+      APP_BUCKET_HOST:
+        required: true
+      PINTEREST_API_HOST:
+        required: true
+      PINTEREST_BOARD_ID:
+        required: true
+      PINTEREST_CLIENT_ID:
+        required: true
+      PINTEREST_CLIENT_SECRET:
+        required: true
+      YOUTUBE_REFRESH_TOKEN:
+        required: true
+      YOUTUBE_CLIENT_ID:
+        required: true
+      YOUTUBE_CLIENT_SECRET:
+        required: true
+      TWITTER_API_KEY:
+        required: true
+      TWITTER_API_SECRET:
+        required: true
+      TWITTER_ACCESS_TOKEN:
+        required: true
+      TWITTER_ACCESS_TOKEN_SECRET:
+        required: true
+      TWITTER_BEARER_TOKEN:
+        required: true
 
 jobs:
   deploy:
@@ -30,7 +73,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
+        uses: webfactory/ssh-agent@dc588b651fe13675774614f8e6a936a468676387 # v0.9.0
         with:
           ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
 
