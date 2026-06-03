@@ -55,9 +55,14 @@ wording for that field.
 
 | Field            | `*_size` body key        | Unit  | min | max  | Default wording when not overridden            |
 |------------------|--------------------------|-------|-----|------|------------------------------------------------|
-| title            | `title_size`             | chars | 10  | 100  | `<short product title, 5-12 words>`            |
+| title            | `title_size`             | chars | 10  | 60   | `<short product title, 5-12 words>`            |
 | description      | `description_size`       | chars | 50  | 1000 | `<2-4 sentence engaging product description>`  |
 | meta_description | `meta_description_size`  | chars | 50  | 160  | `<SEO meta description, max 160 chars>`         |
+
+The `title` max is capped at **60** to match Google's SERP title truncation
+(~50–60 chars / ~600px desktop), since the title doubles as the SEO page title.
+The `description` field is product *content* (not a meta tag), so Google imposes
+no length rule — its 50–1000 range is just sane bounds.
 
 The `meta_description` max is capped at **160** to match Google's SERP snippet
 truncation point (~155–160 chars desktop). Google has no official required
@@ -104,7 +109,7 @@ Call sites pass the bounds:
 
 ```cpp
 const SizeOverrides sizes{
-    .title           = readSize(body, "title_size", 10, 100),
+    .title           = readSize(body, "title_size", 10, 60),
     .description     = readSize(body, "description_size", 50, 1000),
     .metaDescription = readSize(body, "meta_description_size", 50, 160)};
 ```
