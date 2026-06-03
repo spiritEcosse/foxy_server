@@ -57,7 +57,12 @@ wording for that field.
 |------------------|--------------------------|-------|-----|------|------------------------------------------------|
 | title            | `title_size`             | chars | 10  | 100  | `<short product title, 5-12 words>`            |
 | description      | `description_size`       | chars | 50  | 1000 | `<2-4 sentence engaging product description>`  |
-| meta_description | `meta_description_size`  | chars | 50  | 300  | `<SEO meta description, max 160 chars>`         |
+| meta_description | `meta_description_size`  | chars | 50  | 160  | `<SEO meta description, max 160 chars>`         |
+
+The `meta_description` max is capped at **160** to match Google's SERP snippet
+truncation point (~155–160 chars desktop). Google has no official required
+length and may rewrite snippets, but ~160 is the established SEO-safe target, so
+allowing longer overrides would just get truncated in results.
 
 When overridden and in range, the placeholder becomes:
 
@@ -101,7 +106,7 @@ Call sites pass the bounds:
 const SizeOverrides sizes{
     .title           = readSize(body, "title_size", 10, 100),
     .description     = readSize(body, "description_size", 50, 1000),
-    .metaDescription = readSize(body, "meta_description_size", 50, 300)};
+    .metaDescription = readSize(body, "meta_description_size", 50, 160)};
 ```
 
 ### 3. Remove `sizeOverrideBlock()`
