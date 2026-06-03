@@ -149,26 +149,50 @@ is no downstream impact.
 
 ## Testing
 
-The valuable, deterministic coverage is the prompt-building / validation logic,
-which is pure (no network, no `popen`):
+`tests/TestAiAnalyzeImage.h` already exists and tests prompt content **without**
+touching internal functions: a stub `claude` script is placed on `PATH`, records
+the exact prompt it was invoked with, and the tests assert against that captured
+string (`promptFor(body)` → `capturedPrompt()`). This means the anonymous
+namespace is **not** an obstacle — there is no need to move `buildPrompt` /
+`readSize` out of it or to expose any internal symbol. We drive the real
+`analyze()` endpoint and inspect the real prompt.
 
-- `readSize` bounds: for each field, assert below-min, in-range, above-max,
-  non-integral, and missing → correct `0`-or-value result.
-- `buildPrompt`: for each field, assert that an in-range override produces
-  `approximately N characters` and that an unset field keeps its default wording.
-  Spot-check a mixed case (one field overridden, two default).
+The existing tests encode the **old** appended-block behavior and must be updated
+to the new inline wording. Concretely:
 
-The `popen`/CLI execution path is left as-is (unchanged behavior, hard to unit
-test without invoking the CLI).
+**Rewrite (asserted old `"Field size overrides"` block — now gone):**
+- `NoSizeOverridesOmitsBlock` → assert the prompt keeps the *default* placeholder
+  wording (`5-12 words`, `2-4 sentence`, `max 160 chars`) and contains no
+  `approximately N characters`.
+- `DescriptionSizeOverrideInjected` → with `description_size` in range, assert the
+  prompt contains `engaging product description, approximately N characters` and
+  that title/meta keep their default wording.
+- `AllSizeOverridesInjected` → assert all three placeholders switch to
+  `approximately N characters` with the right N (use in-range values:
+  title ≤ 60, description 50–1000, meta ≤ 160).
+- `ExtraPromptAppearsAfterSizeOverrides` → rework: it currently locates the old
+  block. Assert instead that the inline-overridden placeholder text appears before
+  the appended `Additional instructions from the request:` block.
 
-**Testability note:** `buildPrompt` and `readSize` currently live in an anonymous
-namespace (`namespace {` at the top of the TU), so they are not linkable from a
-test translation unit. To unit-test them, they must be exposed — either moved out
-of the anonymous namespace into `api::v1` (and declared in a header), or the pure
-logic extracted to a small testable helper. The implementation plan must pick one;
-the recommendation is to move both into `api::v1` with a header declaration,
-matching how other testable helpers in the project are organized. Confirm this
-against an existing controller's test setup before finalizing.
+**Keep (still valid — fallback to unset):**
+- `NonPositiveSizeOverridesIgnored`, `NonNumericSizeOverrideIgnored` → still fall
+  back to default wording; update assertions to check default wording is present
+  and `approximately` is absent.
+- All `extra_prompt` tests except the reworked ordering one.
+
+**Add (new per-field bounds — the core of this change):**
+- For each field, an **above-max** override (e.g. `title_size = 200`,
+  `description_size = 5000`, `meta_description_size = 500`) → falls back to that
+  field's default wording, no `approximately`.
+- For each field, a **below-min** override (e.g. `title_size = 3`,
+  `description_size = 10`, `meta_description_size = 10`) → same fallback.
+- A **boundary** check at each min and max (e.g. `title_size = 60` and `= 10`
+  inject; `= 61` and `= 9` fall back).
+- A **mixed** case: one field in range, one out of range, one unset → only the
+  in-range field shows `approximately`.
+
+The `popen`/CLI execution path is left as-is (the stub script already covers the
+success, failure, and bad-JSON branches).
 
 ## Out of scope
 
