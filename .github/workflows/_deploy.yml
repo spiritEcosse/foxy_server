@@ -1,6 +1,6 @@
 name: _deploy
 
-# Reusable deploy workflow. Called by deploy.yml with a literal environment
+# Reusable deploy workflow. Called by deploy-dev.yml / deploy-prod.yml with a literal environment
 # name per target so GitHub's deployment-branch-protection gate can resolve the
 # environment statically (a dynamic `environment:` expression defeats the gate
 # and makes a dev deploy get checked against prod's protection rules).
