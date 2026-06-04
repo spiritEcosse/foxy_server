@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - '*'
+      - '!main'   # main is built+deployed by deploy-prod.yml (workflow_call)
   pull_request:
     types: [opened, synchronize, reopened]
     branches:
