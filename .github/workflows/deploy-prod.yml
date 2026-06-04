@@ -1,26 +1,31 @@
-name: deploy-dev
+name: deploy-prod
 
-# Dev deploy. Triggered by a successful build on dev (workflow_run). Prod is
-# handled separately in deploy-prod.yml (triggered by push to main) so the prod
-# environment-protection gate is only ever evaluated on a main ref — a dev build
-# can never instantiate a prod job and trip the gate.
+# Production deploy. Triggered directly by a push to main (e.g. a dev->main
+# promotion merge), NOT by workflow_run. Because the run's ref is always main,
+# the prod environment-protection gate always sees an allowed branch and passes.
+# This avoids the failure where a dev-triggered deploy run instantiated a prod
+# job and was rejected ("Branch dev is not allowed to deploy to prod").
+#
+# The build is run inline via workflow_call so prod only deploys after a green
+# build of the main commit.
 
 on:
-  workflow_run:
-    workflows: ["build"]
-    branches: [dev]
-    types: [completed]
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
-  deploy-dev:
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'dev')
+  build:
+    uses: ./.github/workflows/build.yml
+    secrets:
+      CR_PAT: ${{ secrets.CR_PAT }}
+
+  deploy:
+    needs: build
     uses: ./.github/workflows/_deploy.yml
     with:
-      tag: dev
-      env_name: dev
+      tag: main
+      env_name: prod
     secrets:
       CR_PAT: ${{ secrets.CR_PAT }}
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
