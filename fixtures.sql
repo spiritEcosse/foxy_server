@@ -87,5 +87,16 @@ $$
         INSERT INTO pinterest_token (access_token, access_token_expires_at, refresh_token, refresh_token_expires_at, scope)
         VALUES ('fixture_access_token', '2099-01-01 00:00:00+00', 'fixture_refresh_token', '2099-12-31 00:00:00+00',
                 'pins:read,pins:write,user_accounts:read,boards:read,boards:write');
+
+-- Mock data for collection
+        INSERT INTO collection (title, slug, description, meta_description, enabled)
+        VALUES ('Collection1', 'collection1', 'Collection description 1', 'Collection meta 1', true),
+               ('Collection2', 'collection2', 'Collection description 2', 'Collection meta 2', false);
+
+-- Mock data for collection_item (item 1 appears in both collections)
+        INSERT INTO collection_item (collection_id, item_id)
+        VALUES (1, 1),
+               (1, 2),
+               (2, 1);
     END
 $$;
