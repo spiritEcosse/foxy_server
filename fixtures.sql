@@ -90,8 +90,8 @@ $$
 
 -- Mock data for collection
         INSERT INTO collection (title, slug, description, meta_description, enabled)
-        VALUES ('Collection1', 'collection1', 'Description1', 'Meta1', true),
-               ('Collection2', 'collection2', 'Description2', 'Meta2', false);
+        VALUES ('Collection1', 'collection1', 'Collection description 1', 'Collection meta 1', true),
+               ('Collection2', 'collection2', 'Collection description 2', 'Collection meta 2', false);
 
 -- Mock data for collection_item (item 1 appears in both collections)
         INSERT INTO collection_item (collection_id, item_id)

@@ -26,8 +26,8 @@ class CollectionControllerTest : public BaseTestClass<CollectionControllerTest, 
         getOneValues["id"] = 1;
         getOneValues["title"] = "Collection1";
         getOneValues["slug"] = "collection1";
-        getOneValues["description"] = "Description1";
-        getOneValues["meta_description"] = "Meta1";
+        getOneValues["description"] = "Collection description 1";
+        getOneValues["meta_description"] = "Collection meta 1";
         getOneValues["enabled"] = true;
 
         // collection1 holds item 1 and item 2 (ordered by item.id ASC)
@@ -66,8 +66,8 @@ class CollectionControllerTest : public BaseTestClass<CollectionControllerTest, 
         collection["id"] = 1;
         collection["title"] = "Collection1";
         collection["slug"] = "collection1";
-        collection["description"] = "Description1";
-        collection["meta_description"] = "Meta1";
+        collection["description"] = "Collection description 1";
+        collection["meta_description"] = "Collection meta 1";
         collection["enabled"] = true;
 
         data.append(collection);
