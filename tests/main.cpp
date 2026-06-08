@@ -16,6 +16,8 @@
 #include "TestPinterestOAuth.h"
 #include "TestPin.h"
 #include "TestAiAnalyzeImage.h"
+#include "TestCollection.h"
+#include "TestCollectionItem.h"
 #include "TestCors.h"
 #include "utils/config.h"
 #include "cors.h"
